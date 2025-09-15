@@ -1,69 +1,55 @@
-# React + TypeScript + Vite
+# Frontend - "Agatha Christie's Death on the Cards" game
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Este proyecto frontend es la interfaz de usuario para el juego de cartas
+**"Agatha Christie's Death on the Cards"**. Construido con [React](https://react.dev/) y
+[TypeScript](https://www.typescriptlang.org/docs/), utiliza [Vite](https://vite.dev/) para un desarrollo rápido, [TailwindCSS](https://tailwindcss.com/) y
+[react-router](https://reactrouter.com/home) para la navegación entre las diferentes vistas de la app.
 
-Currently, two official plugins are available:
+## Requisitos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Asegúrate de tener instalado lo siguiente en tu sistema:
 
-## Expanding the ESLint configuration
+- Node.js v22 (LTS)
+- npm u otro gestor de paquetes de tu preferencia.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Desarrollo
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Instalar Node: https://nodejs.org/es/download. Se puede ejecutar `node -v` para comprobar que la instalación se realizó correctamente.
+   > En ese enlace se encuentran varias formas recomendadas de instalar la última versión.
+2. Clonar el repositorio (de usar SSH u otras herramientas, referir a su documentación).
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone https://github.com/ingsoft1-losopentowork/frontend.git
+cd frontend
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+3. Instalar las dependencias con npm:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
+
+4. Correr el entorno de desarrollo de Vite:
+
+```
+npm run dev
+```
+
+> La aplicación estará disponible en [http://localhost:5173](http://localhost:5173) (por defecto).
+
+## Construcción (Build)
+
+Para crear una versión optimizada y lista para producción de la aplicación,
+utiliza el siguiente comando:
+
+```bash
+npm run build
+```
+
+> Los archivos se generarán en la carpeta dist.
+
+---
+
+# Créditos
+
+Trabajo realizado para la materia Ingeniería del Software 1 - FAMAF - UNC 🏛️
