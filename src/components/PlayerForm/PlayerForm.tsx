@@ -5,6 +5,9 @@ const avatars = [
   '/avatars/icono2.png',
   '/avatars/icono3.png',
   '/avatars/icono4.png',
+  '/avatars/icono5.png',
+  '/avatars/icono6.png',
+  '/avatars/icono7.png'
 ];
 
 interface FormData {
@@ -120,8 +123,8 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white dark:bg-black-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-600 w-full max-w-md">
+    <div className="flex justify-center items-center min-h-screen">
+      <div className="bg-white dark:bg-black-800 rounded-lg shadow-md p-6 border border-gray-200 dark:border-gray-600 w-full max-w-2xl mt-[-250px]">
         <h2 className="text-xl font-bold text-black-900 dark:text-black mb-4 text-center">
           Create your player
         </h2>
@@ -178,7 +181,7 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
             <label className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1">
               Avatar *
             </label>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="flex flex-nowrap gap-2">
               {avatars.map((url) => (
                 <img
                   key={url}
