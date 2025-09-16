@@ -1,30 +1,33 @@
 import React, { useState } from 'react';
+import type { Player } from '../../../types/player';
 
 const avatars = [
-  '/avatars/icono1.png',
-  '/avatars/icono2.png',
-  '/avatars/icono3.png',
-  '/avatars/icono4.png',
-  '/avatars/icono5.png',
-  '/avatars/icono6.png',
-  '/avatars/icono7.png'
+  { path: '/avatars/icono1.png' , name: 'Harley Quinn'},
+  { path: '/avatars/icono2.png' , name: 'Lady Brent'},
+  { path: '/avatars/icono3.png' , name: 'Tuppence Beresford'},
+  { path: '/avatars/icono4.png' , name: 'Hercule Poirot'},
+  { path: '/avatars/icono5.png' , name: 'Ariadne Oliver'},
+  { path: '/avatars/icono6.png' , name: 'Mr Satterthwaite'},
+  { path: '/avatars/icono7.png' , name: 'Miss Marple'},
 ];
 
-interface FormData {
-  nickname: string;
-  birthdate: string;
-  avatar: string;
+type PlayerData = {
+    name: string;
+    avatar: string;
+    birthday: string;
 }
+
+export type PlayerInput = Omit<Player, 'id'>;
 
 interface PlayerFormProps {
-  onSubmit: (formData: FormData) => Promise<void>;
+  handleCreatePlayer: (playerData: PlayerInput) => Promise<void>;
 }
 
-const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
-  const [formData, setFormData] = useState<FormData>({
-    nickname: '',
-    birthdate: '',
+const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => {
+  const [formData, setFormData] = useState<PlayerData>({
+    name: '',
     avatar: '',
+    birthday: '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -32,9 +35,9 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
-      case 'nickname':
+      case 'name':
         return !value.trim() ? 'El nickname es obligatorio' : '';
-      case 'birthdate':
+      case 'birthday':
         return !value ? 'La fecha de nacimiento es obligatoria' : '';
       case 'avatar':
         return !value.trim() ? 'El avatar es obligatorio' : '';
@@ -79,7 +82,7 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
     let isValid = true;
 
     Object.keys(formData).forEach(key => {
-      const error = validateField(key, formData[key as keyof FormData]);
+      const error = validateField(key, formData[key as keyof PlayerData]);
       if (error) {
         newErrors[key] = error;
         isValid = false;
@@ -98,11 +101,16 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
     setIsSubmitting(true);
 
     try {
-      await onSubmit(formData);
+        const newPlayer: PlayerInput = {
+        name: formData.name,
+        avatar: formData.avatar,
+        birthday: new Date(formData.birthday),
+      };
+      await handleCreatePlayer(newPlayer);
       setFormData({
-        nickname: '',
-        birthdate: '',
+        name: '',
         avatar: '',
+        birthday: '',
       });
       setErrors({});
     } catch (error) {
@@ -132,24 +140,24 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
         <div className="space-y-4">
           <div>
             <label
-              htmlFor="nickname"
+              htmlFor="name"
               className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1"
             >
-              Nickname *
+              Nickname <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="nickname"
-              name="nickname"
-              value={formData.nickname}
+              id="name"
+              name="name"
+              value={formData.name}
               onChange={handleChange}
               required
-              className={getInputClassName('nickname')}
+              className={getInputClassName('name')}
               placeholder="Enter nickname"
             />
-            {errors.nickname && (
+            {errors.name && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.nickname}
+                {errors.name}
               </p>
             )}
           </div>
@@ -159,40 +167,41 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
               htmlFor="birthdate"
               className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1"
             >
-              Birthdate *
+              Birthdate <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
-              id="birthdate"
-              name="birthdate"
-              value={formData.birthdate}
+              id="birthday"
+              name="birthday"
+              value={formData.birthday}
               onChange={handleChange}
               required
-              className={getInputClassName('birthdate')}
+              className={getInputClassName('birthday')}
             />
-            {errors.birthdate && (
+            {errors.birthday && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.birthdate}
+                {errors.birthday}
               </p>
             )}
           </div>
 
           <div>
             <label className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1">
-              Avatar *
+              Avatar <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-nowrap gap-2">
-              {avatars.map((url) => (
+              {avatars.map((avatar) => (
                 <img
-                  key={url}
-                  src={url}
-                  alt="Player Avatar"
+                  key={avatar.path}
+                  src={avatar.path}
+                  alt={`Avatar: ${avatar.name}`}
+                  title={avatar.name}
                   className={`w-16 h-16 rounded-full cursor-pointer object-cover transition-transform transform hover:scale-110 ${
-                    formData.avatar === url
+                    formData.avatar === avatar.path
                       ? 'border-4 border-blue-500'
                       : 'border-4 border-transparent'
                   }`}
-                  onClick={() => handleAvatarChange(url)}
+                  onClick={() => handleAvatarChange(avatar.path)}
                 />
               ))}
             </div>
@@ -221,4 +230,4 @@ const PlayerForm: React.FC<PlayerFormProps> = ({ onSubmit }) => {
   );
 };
 
-export default PlayerForm;
+export default CreatePlayerForm;
