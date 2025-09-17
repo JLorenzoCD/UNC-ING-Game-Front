@@ -164,10 +164,10 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
 
           <div>
             <label
-              htmlFor="birthdate"
+              htmlFor="birthday"
               className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1"
             >
-              Birthdate <span className="text-red-500">*</span>
+              Birthday <span className="text-red-500">*</span>
             </label>
             <input
               type="date"
