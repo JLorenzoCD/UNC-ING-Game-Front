@@ -1,3 +1,4 @@
+import type { Player } from "../types/player";
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
 export function createHttpService() {
@@ -38,7 +39,15 @@ export function createHttpService() {
     }
   }
 
+  const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
+    return request("/players", {
+      method: "POST",
+      body: JSON.stringify(player),
+    });
+  }
+
   return {
-    request
+    request,
+    createPlayer
   }
 }
