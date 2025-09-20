@@ -53,7 +53,7 @@ type CardProps = Pick<CardSchema, "name" | "description" >
 
 function EmptyCard() {
   return (
-    <div className="w-40 border-2 border-gray-400 border-dashed">
+    <div className="w-40 h-60 flex items-center border-2 border-gray-400 border-dashed">
       <div className="text-center text-gray-400 italic p-4">
         No image available
       </div>
@@ -71,6 +71,6 @@ export default function Card({ name, description }: CardProps) {
   }
 
   return (
-    <img src={imagePath} alt={description} className="w-40" />
+    <img src={imagePath} alt={description} className="w-40 h-60 object-cover" />
   )
 }
