@@ -9,7 +9,7 @@ export interface Card {
 
 	/**
 	 * El nombre de la carta
-	 * @example "Hercule Poirot"
+	 * @example "POIROT"
 	 */
 	name: string
 
