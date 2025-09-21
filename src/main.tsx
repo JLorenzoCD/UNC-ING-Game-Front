@@ -6,7 +6,7 @@ import './index.css'
 
 import App from './App.tsx'
 import MainLayout from './containers/MainLayout'
-import CreateMachPage from './containers/CreateMachPage.tsx'
+import CreateMachPage from './containers/CreateMachPage/CreateMachPage'
 
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 
