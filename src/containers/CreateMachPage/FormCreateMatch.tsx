@@ -1,6 +1,6 @@
 import Button from '@/components/Button'
 import Input from '@/components/Input'
-import AlertErrorList from '@/components/AlertErrorList'
+import AlertErrorList from './components/AlertErrorList'
 
 import useFormCreateMatch from './useFormCreateMatch'
 
@@ -23,7 +23,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 			<section className='mb-5'>
 				{haveError && (
 					<AlertErrorList
-						title='There are errors in the form, please note the following'
+						title='There are errors in the form, please note the following:'
 						errorList={Object.values(formError).map((err, index) => ({ key: index, error: err }))}
 					/>
 				)}
