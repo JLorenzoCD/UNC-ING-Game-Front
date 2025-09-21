@@ -4,6 +4,8 @@ import AlertErrorList from '@/components/AlertErrorList'
 
 import useFormCreateMatch from './useFormCreateMatch'
 
+import { RANGE_PLAYERS } from './constants'
+
 import type { Match } from '@/types/match'
 import type { MatchToCreate } from './type'
 
@@ -45,9 +47,9 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 							onChange={handleChange}
 							name='min_players'
 							type='number'
-							min={2}
-							max={6}
-							placeholder='default 2'
+							min={RANGE_PLAYERS.MIN}
+							max={RANGE_PLAYERS.MAX}
+							placeholder={`default ${RANGE_PLAYERS.MIN}`}
 						/>
 					</label>
 					<label className='block mb-2 font-medium'>
@@ -57,9 +59,9 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 							onChange={handleChange}
 							name='max_players'
 							type='number'
-							min={2}
-							max={6}
-							placeholder='default 6'
+							min={RANGE_PLAYERS.MIN}
+							max={RANGE_PLAYERS.MAX}
+							placeholder={`default ${RANGE_PLAYERS.MAX}`}
 						/>
 					</label>
 				</div>
