@@ -1,9 +1,11 @@
 import Button from '@/components/Button'
 import Input from '@/components/Input'
+import AlertErrorList from '@/components/AlertErrorList'
+
+import useFormCreateMatch from './useFormCreateMatch'
 
 import type { Match } from '@/types/match'
 import type { MatchToCreate } from './type'
-import useFormCreateMatch from './useFormCreateMatch'
 
 interface Props {
 	handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match>
@@ -18,15 +20,13 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 			<hr className='my-2' />
 			<section className='mb-5'>
 				{haveError && (
-					<span className='block bg-red-400 text-white font-bold p-2 mb-2'>
-						Error:{' '}
-						{Object.values(formError).map((err, index) => (
-							<p key={index}>{err}</p>
-						))}
-					</span>
+					<AlertErrorList
+						title='There are errors in the form, please note the following'
+						errorList={Object.values(formError).map((err, index) => ({ key: index, error: err }))}
+					/>
 				)}
 				<label className='block my-5 font-medium'>
-					<span className={formError.name ? 'text-rose-600' : ''}>Name of the match</span>{' '}
+					<span className={formError.name ? 'text-red-800' : ''}>Name of the match</span>{' '}
 					<span className='text-amber-600'>*</span>
 					<Input
 						value={formData.name}
@@ -39,7 +39,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 				</label>
 				<div className='grid sm:grid-cols-2 sm:gap-6'>
 					<label className='block mb-2 font-medium'>
-						<span className={formError.min_players ? 'text-rose-600' : ''}>Minimum number of desired players</span>
+						<span className={formError.min_players ? 'text-red-800' : ''}>Minimum number of desired players</span>
 						<Input
 							value={formData.min_players}
 							onChange={handleChange}
@@ -51,7 +51,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 						/>
 					</label>
 					<label className='block mb-2 font-medium'>
-						<span className={formError.max_players ? 'text-rose-600' : ''}>Maximum number of desired players</span>
+						<span className={formError.max_players ? 'text-red-800' : ''}>Maximum number of desired players</span>
 						<Input
 							value={formData.max_players}
 							onChange={handleChange}
@@ -65,7 +65,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 				</div>
 			</section>
 			<Button type='submit' className='block w-xl mx-auto' disabled={!!haveError}>
-				{loading ? 'loading...' : 'Create match'}
+				{loading ? 'Loading...' : 'Create match'}
 			</Button>
 		</form>
 	)
