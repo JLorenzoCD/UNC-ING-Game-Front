@@ -4,28 +4,31 @@ import Button from '@/components/Button'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
-import type { MachListItem } from '../types'
+import { isInvalidMatch } from '../utils'
+
+import type { MatchListItem } from '../types'
 
 interface Props {
-	mach: MachListItem
+	match: MatchListItem
 }
 
-function ListItemMach({ mach }: Props) {
-	const name = mach.name.length < 35 ? mach.name : mach.name.substring(0, 32) + '...'
+function ListItemMatch({ match }: Props) {
+	const name = match.name.length < 35 ? match.name : match.name.substring(0, 32) + '...'
+
+	if (isInvalidMatch(match)) return null
 
 	return (
 		<li className='flex justify-between items-center p-3 bg-white mb-2 rounded-xl border'>
 			<p>{name}</p>
 			<span className='flex gap-5 items-center'>
 				<p>
-					{mach.min_players}/{mach.max_players}
+					{match.min_players}/{match.max_players}
 				</p>
 				<p>-</p>
 				<p>
-					{mach.current_palyer >= mach.min_players ? '🟢' : '🟡'} {mach.current_palyer}
+					{match.current_palyer >= match.min_players ? '🟢' : '🟡'} {match.current_palyer}
 				</p>
 
-				{/* <Link to={`${PATHS_MACH.MATCH_LIST}/${mach.id}`} className='ml-5'> */}
 				<Link to={FRONTEND_PATHS.MATCH_LIST} className='ml-5'>
 					<Button>Join</Button>
 				</Link>
@@ -34,4 +37,4 @@ function ListItemMach({ mach }: Props) {
 	)
 }
 
-export default ListItemMach
+export default ListItemMatch
