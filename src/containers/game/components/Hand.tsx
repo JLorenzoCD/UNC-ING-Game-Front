@@ -4,7 +4,7 @@ import Card from "./Card";
 export const HAND_SIZE = 6; // Número máximo (y necesario al princio de cada ronda) de cartas en la mano
 
 interface HandProps {
-  cards: HandCard[];
+  cards: Array<HandCard | null> // Un valor `null` representa una posición vacía en la mano;
 }
 
 function EmptyHandPosition() {
