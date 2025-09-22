@@ -40,27 +40,32 @@ export default function useFormCreateMatch() {
 
 			if (isNameEmpty) {
 				setFormError((prevErr) => ({ ...prevErr, name: ERROR_MESSAGES.NAME_EMPTY }))
-			} else if (isMinPlayersNaN) {
+			}
+			if (isMinPlayersNaN) {
 				setFormError((prevErr) => ({
 					...prevErr,
 					min_players: ERROR_MESSAGES.MIN_PLAYERS_EMPTY,
 				}))
-			} else if (isMaxPlayersNaN) {
+			}
+			if (isMaxPlayersNaN) {
 				setFormError((prevErr) => ({
 					...prevErr,
 					min_players: ERROR_MESSAGES.MAX_PLAYERS_EMPTY,
 				}))
-			} else if (isMinPlayersOutRange) {
+			}
+			if (isMinPlayersOutRange) {
 				setFormError((prevErr) => ({
 					...prevErr,
 					min_players: ERROR_MESSAGES.MIN_PLAYERS_OUT_RANGE,
 				}))
-			} else if (isMaxPlayersOutRange) {
+			}
+			if (isMaxPlayersOutRange) {
 				setFormError((prevErr) => ({
 					...prevErr,
 					max_players: ERROR_MESSAGES.MAX_PLAYERS_OUT_RANGE,
 				}))
-			} else if (isMaxLessMin) {
+			}
+			if (isMaxLessMin) {
 				setFormError((prevErr) => ({
 					...prevErr,
 					min_players: ERROR_MESSAGES.MIN_PLAYERS_GREATER_MAX_PLAYERS,
@@ -79,9 +84,8 @@ export default function useFormCreateMatch() {
 					max_players,
 				})
 
-				// navigate(`${FRONTEND_PATHS.MATCH_LOBBY}/${res.id}`)
 				console.log('Se recibe: ', { res })
-				navigate(FRONTEND_PATHS.HOME)
+				navigate(`${FRONTEND_PATHS.MATCH_LOBBY}/${res.id}`)
 			} catch (err) {
 				console.error(err)
 				alert('The match could not be created.')

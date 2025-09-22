@@ -29,7 +29,7 @@ function CreateMachPage() {
 
 	return (
 		<>
-			<Link to={FRONTEND_PATHS.HOME} className='ml-5'>
+			<Link to={FRONTEND_PATHS.MATCH_LIST} className='ml-5'>
 				<Button className='block mx-auto w-60 my-5'>List of matches</Button>
 			</Link>
 			<FormCreateMatch handleCreateMatch={handleCreateMatch} />
