@@ -5,8 +5,9 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
 
 import App from './App.tsx'
-import MainLayout from './containers/MainLayout.tsx'
-import MachesPage from './containers/MachesPage/MachesPage.tsx'
+import MainLayout from './containers/MainLayout'
+import MatchesPage from './containers/MatchesPage/MatchesPage'
+import CreateMatchPage from './containers/MatchesPage/CreateMatchPage'
 
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 
@@ -16,7 +17,8 @@ createRoot(document.getElementById('root')!).render(
 			<Routes>
 				<Route path={FRONTEND_PATHS.HOME} element={<App />} />
 				<Route element={<MainLayout />}>
-					<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MachesPage />} />
+					<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesPage />} />
+					<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
