@@ -66,9 +66,9 @@ describe("Hand", () => {
     },
   ]
 
-  const partialHand = fullHand.slice(0, 4); // 4 cartas, 2 espacios vacíos
+  const partialHand = [fullHand[0], null, fullHand[1], null, fullHand[2], fullHand[3]]; // 4 cartas, 2 espacios vacíos en medio
 
-  const emptyHand: HandCard[] = []; // 0 cartas, 6 espacios vacíos
+  const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
 
   describe("Rendering", () => {
     it("renders a full hand of cards", () => {
@@ -89,18 +89,6 @@ describe("Hand", () => {
 
       expect(cardElements.length).toBe(4);
       expect(emptyElements.length).toBe(2);
-    })
-
-    it("renders empty slots at the end of the hand", () => {
-      render(<Hand cards={partialHand} />);
-
-      const handContainer = screen.getByTestId("hand");
-      const children = Array.from(handContainer.children);
-      const lastTwo = children.slice(-2);
-
-      lastTwo.forEach(child => {
-        expect(child.textContent).toBe("Draw a card here");
-      });
     })
 
     it("renders an empty hand with all slots empty", () => {
