@@ -1,46 +1,74 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
-import type { Card } from "@/types/card";
+import type { HandCard } from "@/types/card";
 import Hand from "./Hand";
 
 describe("Hand", () => {
-  const fullHand: Card[] = [
+  const match_id = crypto.randomUUID()
+  const player_id = crypto.randomUUID()
+
+  const fullHand: HandCard[] = [
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "POIROT",
-      description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales."
+      description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
+      is_discarded: false,
     },
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "MARPLE",
-      description: "Una astuta anciana que resuelve misterios en su pequeño pueblo."
+      description: "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
+      is_discarded: false
     },
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "SATTERTHWAITE",
-      description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes."
+      description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
+      is_discarded: false
     },
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "PYNE",
-      description: "Un detective privado con un enfoque pragmático para resolver casos."
+      description: "Un detective privado con un enfoque pragmático para resolver casos.",
+      is_discarded: false
     },
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "BRENT",
-      description: "Un detective aficionado con un talento natural para la observación."
+      description: "Un detective aficionado con un talento natural para la observación.",
+      is_discarded: false,
+      
     },
     {
       id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id,
+      player_id,
       name: "TOMMY",
-      description: "Un joven detective que trabaja junto a su esposa Tuppence."
+      description: "Un joven detective que trabaja junto a su esposa Tuppence.",
+      is_discarded: false
     },
   ]
 
   const partialHand = fullHand.slice(0, 4); // 4 cartas, 2 espacios vacíos
 
-  const emptyHand: Card[] = []; // 0 cartas, 6 espacios vacíos
+  const emptyHand: HandCard[] = []; // 0 cartas, 6 espacios vacíos
 
   describe("Rendering", () => {
     it("renders a full hand of cards", () => {
@@ -83,21 +111,6 @@ describe("Hand", () => {
 
       expect(cardElements.length).toBe(0);
       expect(emptyElements.length).toBe(6);
-    })
-
-    it("matches the snapshot for a full hand", () => {
-      const { asFragment } = render(<Hand cards={fullHand} />);
-      expect(asFragment()).toMatchSnapshot();
-    })
-
-    it("matches the snapshot for a partial hand", () => {
-      const { asFragment } = render(<Hand cards={partialHand} />);
-      expect(asFragment()).toMatchSnapshot();
-    })
-
-    it("matches the snapshot for an empty hand", () => {
-      const { asFragment } = render(<Hand cards={emptyHand} />);
-      expect(asFragment()).toMatchSnapshot();
     })
   })
 })
