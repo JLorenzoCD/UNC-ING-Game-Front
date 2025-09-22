@@ -23,7 +23,7 @@ function CreateMachPage() {
 			min_players: matchToCreate.min_players,
 			max_players: matchToCreate.max_players,
 			owner_id,
-			current_player_order: 2,
+			current_player_order: null,
 		}
 	}
 
