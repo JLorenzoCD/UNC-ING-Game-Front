@@ -50,6 +50,7 @@ export function createHttpService() {
 				max_players: 6,
 				owner_id: crypto.randomUUID(),
 				current_palyer: 5,
+				current_player_order: null,
 			},
 			{
 				id: crypto.randomUUID(),
@@ -59,6 +60,7 @@ export function createHttpService() {
 				max_players: 6,
 				owner_id: crypto.randomUUID(),
 				current_palyer: 3,
+				current_player_order: null,
 			},
 			{
 				id: crypto.randomUUID(),
@@ -68,6 +70,7 @@ export function createHttpService() {
 				max_players: 5,
 				owner_id: crypto.randomUUID(),
 				current_palyer: 4,
+				current_player_order: null,
 			},
 			{
 				id: crypto.randomUUID(),
@@ -77,6 +80,7 @@ export function createHttpService() {
 				max_players: 6,
 				owner_id: crypto.randomUUID(),
 				current_palyer: 4,
+				current_player_order: null,
 			},
 		] as MatchListItem[]
 	}
