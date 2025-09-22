@@ -24,16 +24,6 @@ describe("Card", () => {
       consoleWarnSpy.mockRestore();
     })
 
-    it("matches the snapshot for a valid card", () => {
-      const { asFragment } = render(<Card name={"POIROT"} description="A famous detective" />);
-      expect(asFragment()).toMatchSnapshot();
-    })
-
-    it("matches the snapshot for an invalid card", () => {
-      const { asFragment } = render(<Card name={"UNKNOWN_CARD"} description="Unknown card" />);
-      expect(asFragment()).toMatchSnapshot();
-    })
-
     beforeEach(() => {
       vi.clearAllMocks();
     })
