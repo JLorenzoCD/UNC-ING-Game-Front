@@ -1,3 +1,5 @@
+import { Link } from 'react-router'
+
 import Button from '@/components/Button'
 import Input from '@/components/Input'
 import AlertErrorList from './components/AlertErrorList'
@@ -5,6 +7,7 @@ import AlertErrorList from './components/AlertErrorList'
 import useFormCreateMatch from './useFormCreateMatch'
 
 import { RANGE_PLAYERS } from './constants'
+import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
 import type { Match } from '@/types/match'
 import type { MatchToCreate } from './type'
@@ -70,9 +73,16 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 					</label>
 				</div>
 			</section>
-			<Button type='submit' className='block w-xl mx-auto' disabled={!!haveError}>
-				{loading ? 'Loading...' : 'Create'}
-			</Button>
+			<div className='flex gap-2'>
+				<Link to={FRONTEND_PATHS.MATCH_LIST} className='flex-grow'>
+					<Button type='button' className='w-full' data-testid='cancel'>
+						Cancel
+					</Button>
+				</Link>
+				<Button type='submit' className='flex-grow' disabled={!!haveError}>
+					{loading ? 'Loading...' : 'Create'}
+				</Button>
+			</div>
 		</form>
 	)
 }

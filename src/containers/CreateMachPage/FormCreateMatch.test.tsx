@@ -59,6 +59,19 @@ vi.mock('./useFormCreateMatch', () => ({
 	default: vi.fn(() => mockUseFormCreateMatch),
 }))
 
+// Mock para evitar problemas de contexto por el Link
+vi.mock('react-router', async (importOriginal) => {
+	const mod = await importOriginal<typeof import('react-router')>()
+	return {
+		...mod,
+		Link: vi.fn(({ to, children, ...props }) => (
+			<a href={to} {...props}>
+				{children}
+			</a>
+		)),
+	}
+})
+
 describe('FormCreateMatch', () => {
 	const handleCreateMatchMock = vi.fn()
 
@@ -91,11 +104,17 @@ describe('FormCreateMatch', () => {
 		// Como son valores validos, no debería de estar el componente AlertErrorList
 		expect(screen.queryByTestId('mock-alert-error-list')).not.toBeInTheDocument()
 
-		// El boton se debe de mostrar el texto normal (no de carga) y estar habilitado
+		// El botón de crear se debe de mostrar el texto normal (no de carga) y estar habilitado
 		const submitButton = screen.getByRole('button', { name: /create/i })
 		expect(submitButton).toBeInTheDocument()
 		expect(submitButton).not.toBeDisabled()
 		expect(submitButton).toHaveTextContent('Create')
+
+		// El botón de cancelar debe de estar habilitado
+		const cancelButton = screen.getByRole('button', { name: /cancel/i })
+		expect(cancelButton).toBeInTheDocument()
+		expect(cancelButton).not.toBeDisabled()
+		expect(cancelButton).toHaveTextContent('Cancel')
 	})
 
 	it('should call handleCreateMatch on form submission with valid data', async () => {
