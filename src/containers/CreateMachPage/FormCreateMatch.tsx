@@ -17,7 +17,11 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 	const { formData, handleChange, formError, haveError, createHandleSubmit, loading } = useFormCreateMatch()
 
 	return (
-		<form onSubmit={createHandleSubmit(handleCreateMatch)} className='bg-white rounded-xl p-6 max-w-3xl mx-auto'>
+		<form
+			onSubmit={createHandleSubmit(handleCreateMatch)}
+			className='bg-white rounded-xl p-6 max-w-3xl mx-auto'
+			role='form'
+		>
 			<h1 className='text-center text-4xl font-bold'>Create match</h1>
 			<hr className='my-2' />
 			<section className='mb-5'>
@@ -67,7 +71,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
 				</div>
 			</section>
 			<Button type='submit' className='block w-xl mx-auto' disabled={!!haveError}>
-				{loading ? 'Loading...' : 'Create match'}
+				{loading ? 'Loading...' : 'Create'}
 			</Button>
 		</form>
 	)
