@@ -66,12 +66,22 @@ export function createHttpService() {
 				id: crypto.randomUUID(),
 				name: 'OPENTOWORK',
 				status: 'pending',
-				min_players: 7,
+				min_players: 5,
 				max_players: 5,
 				owner_id: crypto.randomUUID(),
 				current_player: 4,
 				current_player_order: 0,
 			},
+			/* 			{
+				id: crypto.randomUUID(),
+				name: 'Invalid',
+				status: 'pending',
+				min_players: 5,
+				max_players: 7,
+				owner_id: crypto.randomUUID(),
+				current_player: 4,
+				current_player_order: 0,
+			}, */
 			{
 				id: crypto.randomUUID(),
 				name: 'Al pedo',
