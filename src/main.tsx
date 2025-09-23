@@ -7,7 +7,7 @@ import './index.css'
 import App from './App.tsx'
 import MainLayout from './containers/MainLayout'
 import MatchesPage from './containers/MatchesPage/MatchesPage'
-import CreateMatchPage from './containers/MatchesPage/CreateMatchPage'
+import CreateMatchPage from './containers/CreateMatchPage'
 
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 
