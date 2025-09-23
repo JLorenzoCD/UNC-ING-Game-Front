@@ -13,9 +13,9 @@ interface Props {
 }
 
 function ListItemMatch({ match }: Props) {
-	const name = match.name.length < 35 ? match.name : match.name.substring(0, 32) + '...'
-
 	if (isInvalidMatch(match)) return null
+
+	const name = match.name.length < 35 ? match.name : match.name.substring(0, 32) + '...'
 
 	return (
 		<li className='flex justify-between items-center p-3 bg-white mb-2 rounded-xl border'>
