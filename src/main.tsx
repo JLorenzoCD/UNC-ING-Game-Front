@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
-import { WebSocketServiceProvider } from './contexts/WebSocketContext.tsx'
+import { WebSocketServiceProvider } from './contexts/WebSocketServiceContext.tsx'
 
 import './index.css'
 import App from './App.tsx'
