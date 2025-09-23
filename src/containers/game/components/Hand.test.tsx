@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HandCard } from "@/types/card";
 import Hand from "./Hand";
@@ -70,9 +70,12 @@ describe("Hand", () => {
 
   const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
 
+  const mockOnSelect = vi.fn();
+  const mockIsSelected = vi.fn().mockReturnValue(false);
+
   describe("Rendering", () => {
     it("renders a full hand of cards", () => {
-      render(<Hand cards={fullHand} />);
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.queryAllByText("Draw a card here");
@@ -82,7 +85,7 @@ describe("Hand", () => {
     })
 
     it("renders a partial hand with empty slots", () => {
-      render(<Hand cards={partialHand} />);
+      render(<Hand cards={partialHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
@@ -92,7 +95,7 @@ describe("Hand", () => {
     })
 
     it("renders an empty hand with all slots empty", () => {
-      render(<Hand cards={emptyHand} />);
+      render(<Hand cards={emptyHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.queryAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
@@ -100,5 +103,49 @@ describe("Hand", () => {
       expect(cardElements.length).toBe(0);
       expect(emptyElements.length).toBe(6);
     })
+  })
+
+  describe("Interactions", () => {
+    it("calls onSelect when a card is clicked", () => {
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements[0].click();
+
+      expect(mockOnSelect).toHaveBeenCalledOnce()
+    })
+
+    it("calls onSelect with the correct card", () => {
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements[1].click();
+
+      expect(mockOnSelect).toHaveBeenCalledWith(fullHand[1]);
+    })
+
+    it("applies selected styling when isSelected returns true", () => {
+      mockIsSelected.mockReturnValueOnce(true); // La primera carta estará seleccionada
+      
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      expect(cardElements[0].className).toContain("ring-4 ring-blue-200");
+    });
+
+    it("does not apply selected styling when isSelected returns false", () => {
+      mockIsSelected.mockReturnValue(false); // Ninguna carta estará seleccionada
+
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements.forEach(card => {
+        expect(card.className).not.toContain("ring-4 ring-blue-200");
+      });
+    });
+  })
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   })
 })

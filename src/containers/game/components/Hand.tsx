@@ -29,9 +29,9 @@ export default function Hand({
   
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
-      {cards.map((card) => 
+      {cards.map((card, index) => 
         card === null
-          ? <EmptyHandPosition key={`empty-${Math.random()}`} />
+          ? <EmptyHandPosition key={`empty-${index}`} />
           : (
             <div
               key={card.id}
