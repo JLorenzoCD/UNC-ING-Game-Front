@@ -19,7 +19,7 @@ describe("DiscardPile", () => {
       expect(screen.getByText("Discard pile is empty")).toBeInTheDocument();
     })
 
-    it("renders the discar pile with cards", () => {
+    it("renders the discard pile with cards", () => {
       render(<DiscardPile topCard={testCard}/>);
 
       const cardElement = screen.getByRole("img");
