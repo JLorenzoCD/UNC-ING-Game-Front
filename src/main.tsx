@@ -11,6 +11,7 @@ import App from './App.tsx'
 import MainLayout from './containers/MainLayout'
 import MatchesPage from './containers/MatchesPage/MatchesPage'
 import CreateMatchPage from './containers/CreateMatchPage'
+import LobbyPage from './containers/LobbyPage'
 
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')!).render(
 							<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesPage />} />
 							<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
 						</Route>
+						<Route path={FRONTEND_PATHS.MATCH_LOBBY(':matchId')} element={<LobbyPage />} />
 					</Routes>
 				</BrowserRouter>
 			</WebSocketServiceProvider>
