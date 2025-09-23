@@ -1,33 +1,14 @@
-import { useEffect, useState } from 'react'
-
+import Loading from '@/components/Loading'
 import ListItemMatch from './ListItemMatch'
 
 import type { MatchListItem } from '../types'
-import Loading from '@/components/Loading'
 
 interface Props {
-	getMatches: () => Promise<MatchListItem[]>
+	matches: MatchListItem[]
+	loading: boolean
 }
 
-function ListMatches({ getMatches }: Props) {
-	const [matches, setMatches] = useState<MatchListItem[]>([])
-	const [loading, setLoading] = useState(false)
-
-	useEffect(() => {
-		;(async () => {
-			try {
-				setLoading(true)
-				const matches = await getMatches()
-				setMatches(matches)
-			} catch (err) {
-				console.error(err)
-				alert('Could not connect to the server.')
-			} finally {
-				setLoading(false)
-			}
-		})()
-	}, [getMatches])
-
+function ListMatches({ matches, loading }: Props) {
 	return (
 		<div className='bg-white rounded-xl p-6 max-w-3xl mx-auto'>
 			<h1 className='text-center text-4xl font-bold'>List of matches</h1>
