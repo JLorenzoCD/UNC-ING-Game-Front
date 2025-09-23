@@ -3,21 +3,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 
 type WSService = ReturnType<typeof createWsService>;
 
-interface WebSocketContextType {
+interface WebSocketServiceContextType {
   wsService: WSService | null;
   isConnected: boolean;
 }
 
-export const WebSocketContext = createContext<WebSocketContextType>({
+export const WebSocketServiceContext = createContext<WebSocketServiceContextType>({
   wsService: null,
   isConnected: false,
 })
 
-interface WebSocketProviderProps {
+interface WebSocketServiceProviderProps {
   children: ReactNode;
 }
 
-export function WebSocketProvider({ children }: WebSocketProviderProps) {
+export function WebSocketServiceProvider({ children }: WebSocketServiceProviderProps) {
   const [wsService] = useState<WSService>(() => createWsService());
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
@@ -32,14 +32,14 @@ export function WebSocketProvider({ children }: WebSocketProviderProps) {
   }, [wsService]);
 
   return (
-    <WebSocketContext.Provider value={{ wsService, isConnected }}>
+    <WebSocketServiceContext.Provider value={{ wsService, isConnected }}>
       {children}
-    </WebSocketContext.Provider>
+    </WebSocketServiceContext.Provider>
   )
 }
 
-export function useWebSocket() {
-  const context = useContext(WebSocketContext);
+export function useWebSocketService() {
+  const context = useContext(WebSocketServiceContext);
 
   if (!context || !context.wsService) {
     throw new Error("useWebSocket must be used within a WebSocketProvider");
