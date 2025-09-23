@@ -5,6 +5,9 @@ export const HAND_SIZE = 6; // Número máximo (y necesario al princio de cada r
 
 interface HandProps {
   cards: Array<HandCard | null> // Un valor `null` representa una posición vacía en la mano;
+
+  onSelect: (card: HandCard) => void // Callback que se ejecuta al seleccionar una carta
+  isSelected: (card: HandCard) => boolean // Función para determinar si una carta está seleccionada
 }
 
 function EmptyHandPosition() {
@@ -17,13 +20,31 @@ function EmptyHandPosition() {
   )
 }
 
-export default function Hand({ cards }: HandProps) {
+export default function Hand({
+  cards,
+  onSelect,
+  isSelected,
+}: HandProps) {
+  const selectedCardClassName = "ring-4 ring-blue-200"
+  
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
       {cards.map((card) => 
         card === null
           ? <EmptyHandPosition key={`empty-${Math.random()}`} />
-          : <Card key={card.id} name={card.name} description={card.description} />
+          : (
+            <div
+              key={card.id}
+              data-testid="hand-card"
+              onClick={() => onSelect(card)}
+              className={`
+                cursor-pointer hover:scale-105 transform transition-transform
+                ${isSelected(card) ? selectedCardClassName : ""}
+              `}
+            >
+              <Card key={card.id} name={card.name} description={card.description} />
+            </div>
+          )
       )}
     </div>
   )
