@@ -172,7 +172,7 @@ describe('useFormCreateMatch', () => {
 				max_players: RANGE_PLAYERS.MAX,
 				status: 'in_progress',
 				owner_id: 'mock-uuid-owner',
-				current_player_order: null,
+				current_player_order: 0,
 			}
 
 			mockHandleCreateMatch.mockResolvedValueOnce(mockMatch)

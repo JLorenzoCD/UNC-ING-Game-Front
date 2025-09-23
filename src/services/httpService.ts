@@ -54,7 +54,7 @@ export function createHttpService() {
 			min_players: matchToCreate.min_players,
 			max_players: matchToCreate.max_players,
 			owner_id,
-			current_player_order: null,
+			current_player_order: 0,
 		}
 	}
 

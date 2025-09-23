@@ -137,7 +137,7 @@ describe('FormCreateMatch', () => {
 			max_players: parseInt(mockUseFormCreateMatch.formData.max_players),
 			status: 'in_progress',
 			owner_id: 'mock-uuid-owner-123',
-			current_player_order: null,
+			current_player_order: 0,
 		}
 		handleCreateMatchMock.mockResolvedValueOnce(newMatch)
 
