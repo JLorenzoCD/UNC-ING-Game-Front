@@ -33,7 +33,7 @@ function ListItemMatch({ match }: Props) {
 				</p>
 				<p>-</p>
 				<p>
-					{match.current_palyer >= match.min_players ? '🟢' : '🟡'} {match.current_palyer}
+					{match.current_player >= match.min_players ? '🟢' : '🟡'} {match.current_player}
 				</p>
 
 				<Button className='ml-5' onClick={handleClick}>

@@ -26,7 +26,7 @@ describe('ListItemMatch', () => {
 		min_players: 2,
 		max_players: 5,
 		status: 'pending',
-		current_palyer: 3,
+		current_player: 3,
 		owner_id: crypto.randomUUID() as UUID,
 		current_player_order: 0,
 	}
@@ -36,7 +36,7 @@ describe('ListItemMatch', () => {
 		name: 'This is a match name that is way too long to be fully visible',
 		min_players: 4,
 		max_players: 6,
-		current_palyer: 5,
+		current_player: 5,
 		status: 'pending',
 		owner_id: crypto.randomUUID() as UUID,
 		current_player_order: 0,
@@ -48,7 +48,7 @@ describe('ListItemMatch', () => {
 		min_players: 1,
 		max_players: 10,
 		status: 'in_progress',
-		current_palyer: 0,
+		current_player: 100,
 		owner_id: crypto.randomUUID() as UUID,
 		current_player_order: 0,
 	}
@@ -64,7 +64,7 @@ describe('ListItemMatch', () => {
 
 		// Comprobar que los jugadores se muestran correctamente
 		expect(screen.getByText(`${mockMatch.min_players}/${mockMatch.max_players}`)).toBeInTheDocument()
-		expect(screen.getByText(`🟢 ${mockMatch.current_palyer}`)).toBeInTheDocument()
+		expect(screen.getByText(`🟢 ${mockMatch.current_player}`)).toBeInTheDocument()
 
 		// Comprobar que el botón Join está presente
 		const joinButton = screen.getByRole('button', { name: /join/i })
@@ -101,7 +101,7 @@ describe('ListItemMatch', () => {
 			name: 'Full Match',
 			min_players: 2,
 			max_players: 5,
-			current_palyer: 3,
+			current_player: 3,
 			status: 'pending',
 			owner_id: crypto.randomUUID() as UUID,
 			current_player_order: 0,
@@ -115,7 +115,7 @@ describe('ListItemMatch', () => {
 			name: 'Not enough players',
 			min_players: 5,
 			max_players: 5,
-			current_palyer: 1,
+			current_player: 1,
 			status: 'pending',
 			owner_id: crypto.randomUUID() as UUID,
 			current_player_order: 0,
