@@ -20,8 +20,8 @@ function ListMatches({ getMatches }: Props) {
 				const matches = await getMatches()
 				setMatches(matches)
 			} catch (err) {
-				// TODO: mostrar notificación
 				console.error(err)
+				alert('Could not connect to the server.')
 			} finally {
 				setLoading(false)
 			}
