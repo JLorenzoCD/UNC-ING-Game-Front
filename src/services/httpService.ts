@@ -1,6 +1,6 @@
 import type { Match, MatchStatus } from '@/types/match'
 import type { UUID } from '@/types/common'
-import type { MatchToCreate } from '@/containers/CreateMachPage/type'
+import type { MatchToCreate } from '@/containers/CreateMatchPage/type'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 

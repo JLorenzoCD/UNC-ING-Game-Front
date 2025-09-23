@@ -8,7 +8,7 @@ import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
 import { createHttpService } from '@/services/httpService'
 
-function CreateMachPage() {
+function CreateMatchPage() {
 	const httpService = useMemo(() => createHttpService(), [])
 
 	return (
@@ -21,4 +21,4 @@ function CreateMachPage() {
 	)
 }
 
-export default CreateMachPage
+export default CreateMatchPage
