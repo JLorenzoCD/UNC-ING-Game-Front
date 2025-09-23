@@ -10,7 +10,7 @@ import ListItemMatch from './ListItemMatch'
 // Mock de isValidMatch
 const isValidMatch = vi.fn()
 vi.mock('../utils', () => ({
-	isValidMatch: () => isValidMatch,
+	isValidMatch,
 }))
 
 // Mock de useNavigate para evitar errores de contexto
@@ -76,9 +76,8 @@ describe('ListItemMatch', () => {
 	it('should not render anything if the match is invalid', () => {
 		// Match invalido
 		isValidMatch.mockReturnValue(false)
-		const { container } = render(<ListItemMatch match={mockInvalidMatch} />)
-		screen.debug()
 
+		const { container } = render(<ListItemMatch match={mockInvalidMatch} />)
 		expect(container.firstChild).toBeNull()
 	})
 
@@ -124,4 +123,6 @@ describe('ListItemMatch', () => {
 		render(<ListItemMatch match={matchWithInsufficientPlayers} />)
 		expect(screen.getByText('🟡 1')).toBeInTheDocument()
 	})
+
+	// ! La acción de unirse a una partida se realiza en otro ticket
 })

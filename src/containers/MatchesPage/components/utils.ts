@@ -1,6 +1,6 @@
-import { RANGE_PLAYERS } from './components/constantes'
+import { RANGE_PLAYERS } from './constantes'
 
-import type { MatchListItem } from './types'
+import type { MatchListItem } from '../types'
 
 export function isValidMatch(match: MatchListItem) {
 	const isValidName = !!match.name.trim()
