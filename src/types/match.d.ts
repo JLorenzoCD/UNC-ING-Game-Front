@@ -43,5 +43,5 @@ export interface Match {
 	 * El orden del jugador que actualmente tiene el turno
 	 * @example 4
 	 */
-	current_player_order: number | null
+	current_player_order: number
 }

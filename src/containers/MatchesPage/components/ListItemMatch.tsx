@@ -1,10 +1,10 @@
-import { Link } from 'react-router'
+import { useNavigate } from 'react-router'
 
 import Button from '@/components/Button'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
-import { isInvalidMatch } from '../utils'
+import { isValidMatch } from '../utils'
 
 import type { MatchListItem } from '../types'
 
@@ -13,9 +13,16 @@ interface Props {
 }
 
 function ListItemMatch({ match }: Props) {
-	if (isInvalidMatch(match)) return null
+	const navigate = useNavigate()
+
+	if (!isValidMatch(match)) return null
 
 	const name = match.name.length < 35 ? match.name : match.name.substring(0, 32) + '...'
+
+	function handleClick() {
+		//! El correcto funcionamiento se realiza en otro ticket
+		navigate(FRONTEND_PATHS.MATCH_LOBBY(match.id))
+	}
 
 	return (
 		<li className='flex justify-between items-center p-3 bg-white mb-2 rounded-xl border'>
@@ -29,9 +36,9 @@ function ListItemMatch({ match }: Props) {
 					{match.current_palyer >= match.min_players ? '🟢' : '🟡'} {match.current_palyer}
 				</p>
 
-				<Link to={FRONTEND_PATHS.MATCH_LIST} className='ml-5'>
-					<Button>Join</Button>
-				</Link>
+				<Button className='ml-5' onClick={handleClick}>
+					Join
+				</Button>
 			</span>
 		</li>
 	)
