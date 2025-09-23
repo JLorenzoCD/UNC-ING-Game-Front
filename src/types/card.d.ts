@@ -9,7 +9,7 @@ export interface Card {
 
 	/**
 	 * El nombre de la carta
-	 * @example "Hercule Poirot"
+	 * @example "POIROT"
 	 */
 	name: string
 
@@ -52,3 +52,10 @@ export interface MatchCard {
 	 */
 	is_discarded: boolean
 }
+
+/**
+ * Tipo extendido de MatchCard para poder utilizar
+ * los campos de `name` y `description`, útiles en
+ * distintos componentes. 
+ */
+export type HandCard = MatchCard & Card
