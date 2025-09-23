@@ -1,4 +1,4 @@
-import type { Match, MatchStatus } from '@/types/match'
+import type { Match } from '@/types/match'
 import type { UUID } from '@/types/common'
 import type { MatchToCreate } from '@/containers/CreateMatchPage/type'
 
@@ -42,20 +42,10 @@ export function createHttpService() {
 		}
 	}
 
-	const createMatch = async (matchToCreate: MatchToCreate): Promise<Match> => {
-		const id = 'a1b2c3d4-e5f6-7890-1234-567890abcdef' as UUID
-		const owner_id = 'f6e5d4c3-b2a1-0987-6543-210fedcba987' as UUID
-		const status = 'in_progress' as MatchStatus
-
-		return {
-			id,
-			name: matchToCreate.name,
-			status,
-			min_players: matchToCreate.min_players,
-			max_players: matchToCreate.max_players,
-			owner_id,
-			current_player_order: 0,
-		}
+	const createMatch = async (matchToCreate: MatchToCreate) => {
+		const owner_id = crypto.randomUUID() as UUID
+		const options = { method: 'POST', body: JSON.stringify({ ...matchToCreate, owner_id }) }
+		return await request<Match>('/matches', options)
 	}
 
 	return {
