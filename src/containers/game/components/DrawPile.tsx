@@ -1,4 +1,6 @@
-const cardBack = { "CARD_BACK": "/cards/01-card_back.png" }
+import cardBackimage from "@/assets/01-card_back.png"
+
+const cardBack = { "CARD BACK": cardBackimage }
 
 type DrawPileProps = {
   cardCount: number;
@@ -6,9 +8,9 @@ type DrawPileProps = {
 
 export default function DrawPile({ cardCount }: DrawPileProps) {
   return (
-    <div className="w-40 h-50 position absolute top-90 left-235">
-      <img src={cardBack["CARD_BACK"]} />
-        <div className="text-white">REMAINING: {cardCount}</div>
+    <div className="position absolute top-90 left-235">
+      <img src={cardBack["CARD BACK"]} className="w-40 h-60 object-cover" />
+      <div className="text-white">REMAINING: {cardCount}</div>
     </div>
   )
 }

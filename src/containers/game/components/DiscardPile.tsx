@@ -1,14 +1,14 @@
-import type { Card } from "../../../types/card.d.ts";
-import GameCard from "./GameCard.tsx";
+import type { Card as CardSchema} from "@/types/card.d.ts";
+import Card from "./Card.tsx";
 
 
 type DiscardPileProps = {
-  topCard: Card | null;
+  topCard: CardSchema | null;
 };
 
 const DefaultCardImage = () => {
   return (
-    <div className="w-40 h-56 border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
+    <div className="w-40 h-60 border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
     <span className="p-2">Discard pile is empty</span>
     </div>
   );
@@ -16,9 +16,9 @@ const DefaultCardImage = () => {
 
 export default function DiscardPile({ topCard }: DiscardPileProps) {
   return (
-    <div className="w-40 position absolute top-89.5 left-185">
+    <div className="position absolute top-89.5 left-185">
       {topCard ? (
-        <GameCard card={topCard}/>
+        <Card name={topCard.name} description={topCard.description}/>
       ) : (
         <DefaultCardImage/>
       )}
