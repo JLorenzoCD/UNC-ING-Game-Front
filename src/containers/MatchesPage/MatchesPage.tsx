@@ -24,11 +24,12 @@ function MatchesPage() {
 
 		const init = async () => {
 			try {
+				// Se obtienen los datos mediante http
 				setLoading(true)
 				const matches = await httpService.getMatches()
 				setMatches(matches)
 
-				// Initialize WebSocket
+				// Inicializando WebSocket
 				if (isConnected) {
 					console.warn('WebSocket is already connected. Reusing existing connection.')
 				} else {
