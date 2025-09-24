@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import type { ChangeEvent, FormEvent } from 'react'
+import type { UUID } from '@/types/common'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 import { ERROR_MESSAGES, RANGE_PLAYERS } from './constants'
@@ -162,7 +163,6 @@ describe('useFormCreateMatch', () => {
 		})
 
 		it('should call handleCreateMatch with correct data on successful submit', async () => {
-			const { result } = renderHook(() => useFormCreateMatch())
 			const mockHandleCreateMatch = vi.fn()
 			const mockEvent = { preventDefault: vi.fn() } as unknown as FormEvent<HTMLFormElement>
 			const mockMatch = {
@@ -174,6 +174,9 @@ describe('useFormCreateMatch', () => {
 				owner_id: 'mock-uuid-owner',
 				current_player_order: 0,
 			}
+			vi.spyOn(crypto, 'randomUUID').mockReturnValue(mockMatch.owner_id as UUID)
+
+			const { result } = renderHook(() => useFormCreateMatch())
 
 			mockHandleCreateMatch.mockResolvedValueOnce(mockMatch)
 
@@ -190,6 +193,7 @@ describe('useFormCreateMatch', () => {
 			})
 
 			expect(mockHandleCreateMatch).toHaveBeenCalledWith({
+				owner_id: mockMatch.owner_id,
 				name: mockMatch.name,
 				min_players: mockMatch.min_players,
 				max_players: mockMatch.max_players,

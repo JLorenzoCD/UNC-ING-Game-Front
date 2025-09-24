@@ -123,6 +123,7 @@ describe('FormCreateMatch', () => {
 			(callback: (matchToCreate: MatchToCreate) => Promise<Match>) => (e: FormEvent<HTMLFormElement>) => {
 				e.preventDefault()
 				callback({
+					owner_id: 'mock-uuid-owner-123',
 					name: mockUseFormCreateMatch.formData.name,
 					min_players: parseInt(mockUseFormCreateMatch.formData.min_players),
 					max_players: parseInt(mockUseFormCreateMatch.formData.max_players),
@@ -149,6 +150,7 @@ describe('FormCreateMatch', () => {
 
 		await waitFor(() => {
 			expect(handleCreateMatchMock).toHaveBeenCalledWith({
+				owner_id: 'mock-uuid-owner-123',
 				name: newMatch.name,
 				min_players: newMatch.min_players,
 				max_players: newMatch.max_players,

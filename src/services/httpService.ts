@@ -1,5 +1,4 @@
 import type { Match } from '@/types/match'
-import type { UUID } from '@/types/common'
 import type { MatchToCreate } from '@/containers/CreateMatchPage/type'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
@@ -43,8 +42,7 @@ export function createHttpService() {
 	}
 
 	const createMatch = async (matchToCreate: MatchToCreate) => {
-		const owner_id = crypto.randomUUID() as UUID
-		const options = { method: 'POST', body: JSON.stringify({ ...matchToCreate, owner_id }) }
+		const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
 		return await request<Match>('/matches', options)
 	}
 

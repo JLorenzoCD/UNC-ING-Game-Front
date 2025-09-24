@@ -21,6 +21,7 @@ export default function useFormCreateMatch() {
 		max_players: '',
 	})
 	const [loading, setLoading] = useState(false)
+	const playerId = crypto.randomUUID()
 
 	const navigate = useNavigate()
 
@@ -46,6 +47,7 @@ export default function useFormCreateMatch() {
 				console.log('Se envía:', { formData })
 				setLoading(true)
 				const res = await handleCreateMatch({
+					owner_id: playerId,
 					name: formData.name.trim(),
 					min_players,
 					max_players,
