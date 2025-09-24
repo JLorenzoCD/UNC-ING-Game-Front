@@ -42,7 +42,7 @@ export default function Hand({
                 ${isSelected(card) ? selectedCardClassName : ""}
               `}
             >
-              <Card key={card.id} name={card.name} description={card.description} />
+              <Card name={card.name} description={card.description} />
             </div>
           )
       )}
