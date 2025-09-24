@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router'
+import { usePlayer } from '@/contexts/usePlayer'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 import { RANGE_PLAYERS } from './constants'
@@ -21,9 +22,9 @@ export default function useFormCreateMatch() {
 		max_players: '',
 	})
 	const [loading, setLoading] = useState(false)
-	const playerId = crypto.randomUUID()
 
 	const navigate = useNavigate()
+	const playerData = usePlayer()
 
 	const createHandleSubmit =
 		(handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match>) =>
@@ -44,14 +45,16 @@ export default function useFormCreateMatch() {
 			const max_players = parseInt(formData.max_players)
 
 			try {
-				console.log('Se envía:', { formData })
-				setLoading(true)
-				const res = await handleCreateMatch({
-					owner_id: playerId,
+				const matchToCreate = {
+					owner_id: playerData.playerId,
 					name: formData.name.trim(),
 					min_players,
 					max_players,
-				})
+				}
+				console.log('Se envía:', { matchToCreate })
+
+				setLoading(true)
+				const res = await handleCreateMatch(matchToCreate)
 
 				console.log('Se recibe: ', { res })
 				navigate(`${FRONTEND_PATHS.MATCH_LOBBY}/${res.id}`)
