@@ -11,8 +11,8 @@ function CreateMatchPage() {
 
 	return (
 		<>
-			<Link to={FRONTEND_PATHS.MATCH_LIST} className='ml-5'>
-				<Button className='block mx-auto w-60 my-5'>List of matches</Button>
+			<Link to={FRONTEND_PATHS.MATCH_LIST} className='block mx-auto w-60 my-5'>
+				<Button className='w-full'>List of matches</Button>
 			</Link>
 			{httpService != null && <FormCreateMatch handleCreateMatch={httpService.createMatch} />}
 		</>
