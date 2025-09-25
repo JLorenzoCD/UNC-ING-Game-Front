@@ -1,5 +1,5 @@
 import type { Player } from "../types/player";
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
 interface PlayerContextType {
     player : Player | null;
@@ -18,7 +18,13 @@ interface PlayerProviderProps {
 export function PlayerProvider({ children }: PlayerProviderProps) {
   const [player , setPlayer] = useState<Player | null>(null);
     
-  setPlayer 
+  useEffect(() => {
+    const storedPlayer = localStorage.getItem("player");
+    if (storedPlayer) {
+      setPlayer(JSON.parse(storedPlayer));
+    }
+  }, []);
+
   return (
     <PlayerContext.Provider value={{ player, setPlayer }}>
       {children}
