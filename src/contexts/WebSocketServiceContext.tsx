@@ -1,7 +1,5 @@
-import { createWsService } from "@/services/wsService";
+import { createWsService, type WSService } from "@/services/wsService";
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-
-type WSService = ReturnType<typeof createWsService>;
 
 interface WebSocketServiceContextType {
   wsService: WSService | null;

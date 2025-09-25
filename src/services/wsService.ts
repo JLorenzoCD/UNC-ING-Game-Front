@@ -3,13 +3,23 @@ const MAX_RECONNECT_DELAY = 30000; // 30 segundos
 
 type EventCallback = (data: any) => void;
 
+export type WSService = ReturnType<typeof createWsService>;
+
+function isWsUrlDefined(): boolean {
+  return typeof import.meta.env.VITE_WS_URL === "string"
+    && import.meta.env.VITE_WS_URL.length > 0;
+}
+
 export function createWsService() {
   let websocket: WebSocket | null = null;
   let isConnected = false;
   let reconnectTimeout: number | null = null;
   let reconnectAttempts = 0;
 
-  const baseUrl = String(import.meta.env.VITE_WS_URL) || "ws://localhost:8000/ws";
+  const baseUrl = isWsUrlDefined()
+    ? import.meta.env.VITE_WS_URL
+    : "ws://localhost:8000/ws";
+
   const listeners = new Map<string, EventCallback[]>();
   
   const connect = () => {
@@ -135,7 +145,7 @@ export function createWsService() {
     send,
     connect,
     disconnect,
-    get isConnected() { return isConnected; },
+    isConnected: () => isConnected,
   };
 }
   
