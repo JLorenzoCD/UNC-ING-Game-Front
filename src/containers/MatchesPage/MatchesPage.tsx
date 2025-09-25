@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 
 import { Link } from 'react-router'
-import Button from '../../components/Button'
+import Button from '@/components/Button'
 import ListMatches from './components/ListMatches'
+import ListItemMatch from './components/ListItemMatch'
 
 import { useHttpService } from '@/contexts/HttpServiceContext'
 import { useWebSocketService } from '@/contexts/WebSocketServiceContext'
@@ -72,7 +73,13 @@ function MatchesPage() {
 			<Link to={FRONTEND_PATHS.MATCH_CREATE} className='ml-5'>
 				<Button className='block mx-auto w-60 my-5'>Create match</Button>
 			</Link>
-			{httpService != null && <ListMatches matches={matches} loading={loading} />}
+			{httpService != null && (
+				<ListMatches isLoading={loading}>
+					{matches.map((m) => (
+						<ListItemMatch key={m.id} match={m} />
+					))}
+				</ListMatches>
+			)}
 		</>
 	)
 }

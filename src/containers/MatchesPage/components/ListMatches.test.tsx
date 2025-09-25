@@ -12,20 +12,21 @@ vi.mock('@/components/Loading', () => ({
 }))
 
 // Mock componente ListItemMatch
-vi.mock('./ListItemMatch', () => ({
-	default: vi.fn(({ match }: { match: MatchListItem }) => {
-		//* Se busca representar validaciones básicas, no todas (para no llamar la fun de validación)
-		if (match.status != 'pending' || match.min_players > match.max_players) return null
+const ListItemMatch = ({ match }: { match: MatchListItem }) => {
+	//* Se busca representar validaciones básicas, no todas (para no llamar la fun de validación)
+	if (match.status != 'pending' || match.min_players > match.max_players) return null
 
-		return (
-			<div data-testid='mock-item-match'>
-				<p data-testid='mock-match-name'>{match.name}</p>
-				<p data-testid='mock-match-min-players'>{match.min_players}</p>
-				<p data-testid='mock-match-max-players'>{match.max_players}</p>
-				<p data-testid='mock-match-current-players'>{match.current_player}</p>
-			</div>
-		)
-	}),
+	return (
+		<div data-testid='mock-item-match'>
+			<p data-testid='mock-match-name'>{match.name}</p>
+			<p data-testid='mock-match-min-players'>{match.min_players}</p>
+			<p data-testid='mock-match-max-players'>{match.max_players}</p>
+			<p data-testid='mock-match-current-players'>{match.current_player}</p>
+		</div>
+	)
+}
+vi.mock('./ListItemMatch', () => ({
+	default: vi.fn(ListItemMatch),
 }))
 
 // Datos de prueba
@@ -82,7 +83,13 @@ describe('ListMatches', () => {
 	})
 
 	it('should show the loading component when loading is true', () => {
-		render(<ListMatches matches={[]} loading={true} />)
+		render(
+			<ListMatches isLoading={true}>
+				{[].map((m) => (
+					<ListItemMatch match={m} />
+				))}
+			</ListMatches>
+		)
 
 		expect(screen.getByTestId('mock-loading')).toBeInTheDocument()
 		expect(screen.queryByText("There are no games available, why don't you create one?")).not.toBeInTheDocument()
@@ -90,7 +97,13 @@ describe('ListMatches', () => {
 	})
 
 	it('should show the "no games available" message when the matches list is empty and not loading', () => {
-		render(<ListMatches matches={[]} loading={false} />)
+		render(
+			<ListMatches isLoading={false}>
+				{[].map((m) => (
+					<ListItemMatch match={m} />
+				))}
+			</ListMatches>
+		)
 
 		expect(screen.getByText("There are no games available, why don't you create one?")).toBeInTheDocument()
 		expect(screen.queryByTestId('mock-loading')).not.toBeInTheDocument()
@@ -98,7 +111,13 @@ describe('ListMatches', () => {
 	})
 
 	it('should render the correct ListItemMatch components when a list of matches is provided', () => {
-		render(<ListMatches matches={[...testValidMatches, ...testInValidMatches]} loading={false} />)
+		render(
+			<ListMatches isLoading={false}>
+				{[...testValidMatches, ...testInValidMatches].map((m) => (
+					<ListItemMatch match={m} />
+				))}
+			</ListMatches>
+		)
 
 		// Se espera que se muestren 2 de los 3 mocks, ya que uno es inválido
 		const renderedMatches = screen.getAllByTestId('mock-item-match')
