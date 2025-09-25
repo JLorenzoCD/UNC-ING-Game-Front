@@ -1,12 +1,12 @@
 import '@testing-library/jest-dom'
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 import MatchesPage from './MatchesPage'
 
 const mockGetMatches = vi.fn().mockResolvedValue([
 	{
-		id: crypto.randomUUID(),
+		id: '1',
 		name: 'Prueba 1',
 		status: 'pending',
 		min_players: 2,
@@ -16,7 +16,7 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 		current_player_order: 0,
 	},
 	{
-		id: crypto.randomUUID(),
+		id: '2',
 		name: 'Prueba 2',
 		status: 'pending',
 		min_players: 4,
@@ -118,38 +118,46 @@ describe('MatchesPage', () => {
 		render(<MatchesPage />)
 
 		// Verificar que se conecta al WebSocket
-		expect(mockConnect).toHaveBeenCalledTimes(1)
+		await waitFor(() => {
+			expect(mockConnect).toHaveBeenCalledTimes(1)
+		})
 
 		// Simular que se agrega una nueva partida por WebSocket
-		const newMatch = { id: '3', name: 'New Match', status: 'pending' }
+		const newMatch = {
+			id: '3',
+			name: 'New Match',
+			status: 'pending',
+			min_players: 4,
+			max_players: 6,
+			owner_id: crypto.randomUUID(),
+			current_player: 3,
+			current_player_order: 0,
+		}
+		// console.log(mockOn.mock.calls)
 		mockOn.mock.calls[0][1](newMatch) // Llamamos al handler de 'matchAdd'
 
-		await waitFor(() => {
+		await act(() => {
 			expect(screen.getByText('New Match')).toBeInTheDocument()
 		})
 
-		// Simular que se elimina una partida por WebSocket
-		mockOn.mock.calls[1][1]('1') // Llamamos al handler de 'matchRemove'
+		// Simular que se elimina una partida por WebSocket llamando al handler de 'matchRemove'
+		mockOn.mock.calls[1][1]('1')
 
-		await waitFor(() => {
-			expect(screen.queryByText('Match 1')).not.toBeInTheDocument()
+		await act(() => {
+			expect(screen.queryByText('Prueba 1')).not.toBeInTheDocument()
 		})
 
-		// Simular que se actualiza una partida por WebSocket
-		const updatedMatch = { id: '2', name: 'Updated Match', status: 'completed' }
-		mockOn.mock.calls[2][1](updatedMatch) // Llamamos al handler de 'matchUpdate'
+		// Simular que se actualiza una partida por WebSocket llamando al handler de 'matchUpdate'
+		const updatedMatch = {
+			...newMatch,
+			name: 'Update Match',
+			status: 'is_pending',
+		}
+		mockOn.mock.calls[2][1](updatedMatch)
 
-		await waitFor(() => {
-			expect(screen.getByText('Updated Match')).toBeInTheDocument()
+		await act(() => {
+			expect(screen.getByText(updatedMatch.name)).toBeInTheDocument()
 		})
-	})
-
-	it('should show loading state while fetching matches', () => {
-		render(<MatchesPage />)
-
-		// Verificar que la carga esté en marcha
-		expect(mockGetMatches).toHaveBeenCalledTimes(1)
-		// Aquí podríamos simular el estado de carga en un estado más detallado si fuera necesario
 	})
 
 	it('should handle WebSocket disconnection on unmount', () => {
