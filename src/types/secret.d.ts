@@ -1,6 +1,6 @@
 import type { UUID } from './common'
 
-export type SecretType = 'accomplice' | 'innocent' | 'murderer'
+export type SecretType = "ACCOMPLICE" | "INNOCENT" | "MURDERER"
 
 export interface Secret {
 	/**
@@ -46,4 +46,17 @@ export interface MatchSecret {
 	 * @example "550e8400-e29b-41d4-a716-446655440000"
 	 */
 	player_id: UUID | null
+
+	/**
+	 * Indica si el secreto ha sido revelado
+	 * @example true
+	 */
+	is_revealed: boolean
 }
+
+/**
+ * Tipo extendido de MatchCard para poder utilizar
+ * los campos de `type` y `content`, útiles en
+ * distintos componentes. 
+ */
+export type HandSecret = MatchSecret & Secret
