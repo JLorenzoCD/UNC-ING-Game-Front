@@ -73,7 +73,7 @@ function MatchesPage() {
 			<Link to={FRONTEND_PATHS.MATCH_CREATE} className='ml-5'>
 				<Button className='block mx-auto w-60 my-5'>Create match</Button>
 			</Link>
-			{httpService != null && (
+			{httpService != null && wsService != null && (
 				<ListMatches isLoading={loading}>
 					{matches.map((m) => (
 						<ListItemMatch key={m.id} match={m} />
