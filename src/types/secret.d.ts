@@ -53,3 +53,10 @@ export interface MatchSecret {
 	 */
 	is_revealed: boolean
 }
+
+/**
+ * Tipo extendido de MatchCard para poder utilizar
+ * los campos de `type` y `content`, útiles en
+ * distintos componentes. 
+ */
+export type HandSecret = MatchSecret & Secret
