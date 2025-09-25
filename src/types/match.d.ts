@@ -1,6 +1,6 @@
 import type { UUID } from './common'
 
-export type MatchStatus = 'pending' | 'in_progress' | 'completed'
+export type MatchStatus = "WAITING" | "IN_PROGRESS" | "COMPLETED"
 
 export interface Match {
 	/**
