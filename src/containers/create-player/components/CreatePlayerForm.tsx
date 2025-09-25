@@ -1,20 +1,28 @@
 import React, { useState } from 'react';
 import type { Player } from '../../../types/player';
 
-const avatars = [
-  { path: '/avatars/icono1.png' , name: 'Harley Quinn'},
-  { path: '/avatars/icono2.png' , name: 'Lady Brent'},
-  { path: '/avatars/icono3.png' , name: 'Tuppence Beresford'},
-  { path: '/avatars/icono4.png' , name: 'Hercule Poirot'},
-  { path: '/avatars/icono5.png' , name: 'Ariadne Oliver'},
-  { path: '/avatars/icono6.png' , name: 'Mr Satterthwaite'},
-  { path: '/avatars/icono7.png' , name: 'Miss Marple'},
+import quinAvatar from "@/assets/avatars/icono1.png"
+import ladyAvatar from "@/assets/avatars/icono2.png"
+import tuppenceAvatar from "@/assets/avatars/icono3.png"
+import poirotAvatar from "@/assets/avatars/icono4.png"
+import oliverAvatar from "@/assets/avatars/icono5.png"
+import sattertwhiteAvatar from "@/assets/avatars/icono6.png"
+import marpleAvatar from "@/assets/avatars/icono7.png"
+
+const AVATARS_IMAGE_PATHS : { path: string, name: string }[] = [
+  { path: quinAvatar, name: 'Quin'},
+  { path: ladyAvatar, name: 'Lady'},
+  { path: tuppenceAvatar, name: 'Tuppence'},
+  { path: poirotAvatar, name: 'Harly Quinn'},
+  { path: oliverAvatar, name: 'Oliver'},
+  { path: sattertwhiteAvatar, name: 'Satterwhite'},
+  { path: marpleAvatar, name: 'Marple'},
 ];
 
 type PlayerData = {
-    name: string;
-    avatar: string;
-    birthday: string;
+  name: string;
+  avatar: string;
+  birthday: string;
 }
 
 export type PlayerInput = Omit<Player, 'id'>;
@@ -101,10 +109,10 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
     setIsSubmitting(true);
 
     try {
-        const newPlayer: PlayerInput = {
-        name: formData.name,
-        avatar: formData.avatar,
-        birthday: new Date(formData.birthday),
+      const newPlayer: PlayerInput = {
+      name: formData.name,
+      avatar: formData.avatar,
+      birthday: new Date(formData.birthday),
       };
       await handleCreatePlayer(newPlayer);
       setFormData({
@@ -136,7 +144,6 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
         <h2 className="text-xl font-bold text-black-900 dark:text-black mb-4 text-center">
           Create your player
         </h2>
-
         <div className="space-y-4">
           <div>
             <label
@@ -190,7 +197,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
               Avatar <span className="text-red-500">*</span>
             </label>
             <div className="flex flex-nowrap gap-2">
-              {avatars.map((avatar) => (
+              {AVATARS_IMAGE_PATHS.map((avatar) => (
                 <img
                   key={avatar.path}
                   src={avatar.path}
