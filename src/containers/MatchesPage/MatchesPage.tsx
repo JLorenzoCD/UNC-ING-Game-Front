@@ -9,6 +9,7 @@ import { useHttpService } from '@/contexts/HttpServiceContext'
 import { useWebSocketService } from '@/contexts/WebSocketServiceContext'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
+import { BACKEND_SOCKETS_EVENTS } from '@/constants/backend'
 
 import type { UUID } from '@/types/common'
 import type { MatchListItem } from './types'
@@ -35,18 +36,18 @@ function MatchesPage() {
 					console.warn('WebSocket is already connected. Reusing existing connection.')
 				} else {
 					wsService.connect()
-					wsService.on('matchAdd', (newMatch: MatchListItem) => {
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, (newMatch: MatchListItem) => {
 						setMatches((prev) => {
 							const exists = prev.some((match) => match.id === newMatch.id)
 							return exists ? prev : [...prev, newMatch]
 						})
 					})
 
-					wsService.on('matchRemove', (deletedMatchId: UUID) => {
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, (deletedMatchId: UUID) => {
 						setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId))
 					})
 
-					wsService.on('matchUpdate', (updatedMatch: Partial<MatchListItem>) => {
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, (updatedMatch: Partial<MatchListItem>) => {
 						setMatches((prev) => {
 							return prev.map((match) => (match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match))
 						})

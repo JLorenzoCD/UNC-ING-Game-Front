@@ -93,6 +93,21 @@ vi.mock('@/constants/frontendPaths', () => ({
 	},
 }))
 
+//! OJO - Tiene que ser iguales, da problemas la herramienta de testing
+const mockSocketsEvents = {
+	MATCHES_ADD: 'matchAdd',
+	MATCHES_REMOVE: 'matchRemove',
+	MATCHES_UPDATE: 'matchUpdate',
+}
+vi.mock('@/constants/backend', () => ({
+	BACKEND_SOCKETS_EVENTS: {
+		MATCHES_ADD: 'matchAdd',
+		MATCHES_REMOVE: 'matchRemove',
+		MATCHES_UPDATE: 'matchUpdate',
+	},
+}))
+//! Termina
+
 describe('MatchesPage', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
@@ -133,9 +148,9 @@ describe('MatchesPage', () => {
 		})
 
 		// Verifica el registro de eventos WebSocket.
-		expect(mockOn).toHaveBeenCalledWith('matchAdd', expect.any(Function))
-		expect(mockOn).toHaveBeenCalledWith('matchRemove', expect.any(Function))
-		expect(mockOn).toHaveBeenCalledWith('matchUpdate', expect.any(Function))
+		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_ADD, expect.any(Function))
+		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_REMOVE, expect.any(Function))
+		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_UPDATE, expect.any(Function))
 	})
 
 	it('should handle the "matchAdd" event and display the new match', async () => {
@@ -147,7 +162,7 @@ describe('MatchesPage', () => {
 		})
 
 		// Simulamos el evento 'matchAdd'.
-		const addHandler = getEventHandler('matchAdd')
+		const addHandler = getEventHandler(mockSocketsEvents.MATCHES_ADD)
 		act(() => {
 			addHandler({
 				id: '3',
@@ -176,7 +191,7 @@ describe('MatchesPage', () => {
 		})
 
 		// Simulamos un evento 'matchRemove' (asumiendo que 'Prueba 1' existe inicialmente).
-		const removeHandler = getEventHandler('matchRemove')
+		const removeHandler = getEventHandler(mockSocketsEvents.MATCHES_REMOVE)
 		act(() => {
 			removeHandler('1') // Eliminamos el match con id '1' ('Prueba 1').
 		})
@@ -196,7 +211,7 @@ describe('MatchesPage', () => {
 		})
 
 		// Simulamos un evento 'matchUpdate' (asumiendo que 'Prueba 2' existe con id '2').
-		const updateHandler = getEventHandler('matchUpdate')
+		const updateHandler = getEventHandler(mockSocketsEvents.MATCHES_UPDATE)
 		act(() => {
 			updateHandler({
 				id: '2',
