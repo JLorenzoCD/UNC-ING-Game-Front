@@ -40,7 +40,7 @@ export function createHttpService() {
   }
 
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
-    return request("/players", {
+    return request<Player>("/players", {
       method: "POST",
       body: JSON.stringify(player),
     });
