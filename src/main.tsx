@@ -4,9 +4,9 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { HttpServiceProvider } from './contexts/HttpServiceContext.tsx'
 import { WebSocketServiceProvider } from './contexts/WebSocketServiceContext.tsx'
+import { PlayerProvider } from './contexts/PlayerContext.tsx'
 
 import './index.css'
-
 import App from './App.tsx'
 
 import MainLayout from './containers/MainLayout'
@@ -21,16 +21,18 @@ createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<HttpServiceProvider>
 			<WebSocketServiceProvider>
-				<BrowserRouter>
-					<Routes>
-						<Route path={FRONTEND_PATHS.HOME} element={<App />} />
-						<Route element={<MainLayout />}>
-							<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
-							<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchListPage />} />
-						</Route>
-						<Route path={`${FRONTEND_PATHS.MATCH_LOBBY}/:matchId`} element={<LobbyPage />} />
-					</Routes>
-				</BrowserRouter>
+				<PlayerProvider>
+					<BrowserRouter>
+						<Routes>
+							<Route path={FRONTEND_PATHS.HOME} element={<App />} />
+							<Route element={<MainLayout />}>
+								<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
+								<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchListPage />} />
+							</Route>
+							<Route path={`${FRONTEND_PATHS.MATCH_LOBBY}/:matchId`} element={<LobbyPage />} />
+						</Routes>
+					</BrowserRouter>
+				</PlayerProvider>
 			</WebSocketServiceProvider>
 		</HttpServiceProvider>
 	</StrictMode>

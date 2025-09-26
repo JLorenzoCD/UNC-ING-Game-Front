@@ -55,3 +55,5 @@ export interface MatchPlayer {
 	 */
 	order: number | null
 }
+
+export type PlayerInput = Omit<Player, 'id'>;

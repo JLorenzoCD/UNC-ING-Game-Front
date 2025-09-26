@@ -1,3 +1,4 @@
+import type { Player } from '../types/player'
 import type { Match } from '@/types/match'
 import type { MatchToCreate } from '@/containers/CreateMatchPage/type'
 
@@ -46,8 +47,16 @@ export function createHttpService() {
 		return await request<Match>('/matches', options)
 	}
 
+	const createPlayer = async (player: Omit<Player, 'id'>): Promise<Player> => {
+		return request<Player>('/players', {
+			method: 'POST',
+			body: JSON.stringify(player),
+		})
+	}
+
 	return {
 		request,
+		createPlayer,
 		createMatch,
 	}
 }

@@ -1,78 +1,85 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { HandCard } from "@/types/card";
 import Hand from "./Hand";
 
+const match_id = crypto.randomUUID()
+const player_id = crypto.randomUUID()
+
+const fullHand: HandCard[] = [
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "POIROT",
+    description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
+    is_discarded: false,
+  },
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "MARPLE",
+    description: "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
+    is_discarded: false
+  },
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "SATTERTHWAITE",
+    description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
+    is_discarded: false
+  },
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "PYNE",
+    description: "Un detective privado con un enfoque pragmático para resolver casos.",
+    is_discarded: false
+  },
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "BRENT",
+    description: "Un detective aficionado con un talento natural para la observación.",
+    is_discarded: false,
+    
+  },
+  {
+    id: crypto.randomUUID(),
+    card_id: crypto.randomUUID(),
+    match_id,
+    player_id,
+    name: "TOMMY",
+    description: "Un joven detective que trabaja junto a su esposa Tuppence.",
+    is_discarded: false
+  },
+]
+
+const partialHand = [fullHand[0], null, fullHand[1], null, fullHand[2], fullHand[3]]; // 4 cartas, 2 espacios vacíos en medio
+
+const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
+
 describe("Hand", () => {
-  const match_id = crypto.randomUUID()
-  const player_id = crypto.randomUUID()
+  const mockOnSelect = vi.fn();
+  const mockIsSelected = vi.fn().mockReturnValue(false);
 
-  const fullHand: HandCard[] = [
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "POIROT",
-      description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
-      is_discarded: false,
-    },
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "MARPLE",
-      description: "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
-      is_discarded: false
-    },
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "SATTERTHWAITE",
-      description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
-      is_discarded: false
-    },
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "PYNE",
-      description: "Un detective privado con un enfoque pragmático para resolver casos.",
-      is_discarded: false
-    },
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "BRENT",
-      description: "Un detective aficionado con un talento natural para la observación.",
-      is_discarded: false,
-      
-    },
-    {
-      id: crypto.randomUUID(),
-      card_id: crypto.randomUUID(),
-      match_id,
-      player_id,
-      name: "TOMMY",
-      description: "Un joven detective que trabaja junto a su esposa Tuppence.",
-      is_discarded: false
-    },
-  ]
-
-  const partialHand = [fullHand[0], null, fullHand[1], null, fullHand[2], fullHand[3]]; // 4 cartas, 2 espacios vacíos en medio
-
-  const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
+  beforeEach(() => {
+    vi.clearAllMocks();
+  })
 
   describe("Rendering", () => {
     it("renders a full hand of cards", () => {
-      render(<Hand cards={fullHand} />);
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.queryAllByText("Draw a card here");
@@ -82,7 +89,7 @@ describe("Hand", () => {
     })
 
     it("renders a partial hand with empty slots", () => {
-      render(<Hand cards={partialHand} />);
+      render(<Hand cards={partialHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
@@ -92,7 +99,7 @@ describe("Hand", () => {
     })
 
     it("renders an empty hand with all slots empty", () => {
-      render(<Hand cards={emptyHand} />);
+      render(<Hand cards={emptyHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
 
       const cardElements = screen.queryAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
@@ -100,5 +107,45 @@ describe("Hand", () => {
       expect(cardElements.length).toBe(0);
       expect(emptyElements.length).toBe(6);
     })
+  })
+
+  describe("Interactions", () => {
+    it("calls onSelect when a card is clicked", () => {
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements[0].click();
+
+      expect(mockOnSelect).toHaveBeenCalledOnce()
+    })
+
+    it("calls onSelect with the correct card", () => {
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements[1].click();
+
+      expect(mockOnSelect).toHaveBeenCalledWith(fullHand[1]);
+    })
+
+    it("applies selected styling when isSelected returns true", () => {
+      mockIsSelected.mockReturnValueOnce(true); // La primera carta estará seleccionada
+      
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      expect(cardElements[0].className).toContain("ring-4 ring-blue-200");
+    });
+
+    it("does not apply selected styling when isSelected returns false", () => {
+      mockIsSelected.mockReturnValue(false); // Ninguna carta estará seleccionada
+
+      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements.forEach(card => {
+        expect(card.className).not.toContain("ring-4 ring-blue-200");
+      });
+    });
   })
 })
