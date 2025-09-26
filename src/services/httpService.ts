@@ -1,3 +1,5 @@
+import { BACKEND_ENDPOINTS } from '@/constants/backend'
+
 import type { MatchListItem } from '@/containers/MatchesPage/types'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
@@ -41,58 +43,7 @@ export function createHttpService() {
 	}
 
 	const getMatches = async () => {
-		return [
-			{
-				id: crypto.randomUUID(),
-				name: 'Prueba 1',
-				status: 'pending',
-				min_players: 2,
-				max_players: 6,
-				owner_id: crypto.randomUUID(),
-				current_player: 5,
-				current_player_order: 0,
-			},
-			{
-				id: crypto.randomUUID(),
-				name: 'Prueba con nombre largo, pero muy muy largo',
-				status: 'pending',
-				min_players: 4,
-				max_players: 6,
-				owner_id: crypto.randomUUID(),
-				current_player: 3,
-				current_player_order: 0,
-			},
-			{
-				id: crypto.randomUUID(),
-				name: 'OPENTOWORK',
-				status: 'pending',
-				min_players: 5,
-				max_players: 5,
-				owner_id: crypto.randomUUID(),
-				current_player: 4,
-				current_player_order: 0,
-			},
-			/* 			{
-				id: crypto.randomUUID(),
-				name: 'Invalid',
-				status: 'pending',
-				min_players: 5,
-				max_players: 7,
-				owner_id: crypto.randomUUID(),
-				current_player: 4,
-				current_player_order: 0,
-			}, */
-			{
-				id: crypto.randomUUID(),
-				name: 'Al pedo',
-				status: 'pending',
-				min_players: 3,
-				max_players: 6,
-				owner_id: crypto.randomUUID(),
-				current_player: 4,
-				current_player_order: 0,
-			},
-		] as MatchListItem[]
+		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES)
 	}
 
 	return {
