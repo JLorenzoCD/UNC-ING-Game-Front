@@ -94,7 +94,7 @@ describe('CreateMatchPage', () => {
 		mockCreateMatch.mockResolvedValue({
 			...mockMatchToCreate,
 			id: 'test-match-id',
-			status: 'pending',
+			status: 'WAITING',
 			current_player_order: 0,
 		})
 

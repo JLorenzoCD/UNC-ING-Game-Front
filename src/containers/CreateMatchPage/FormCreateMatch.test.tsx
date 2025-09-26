@@ -136,7 +136,7 @@ describe('FormCreateMatch', () => {
 			name: mockUseFormCreateMatch.formData.name,
 			min_players: parseInt(mockUseFormCreateMatch.formData.min_players),
 			max_players: parseInt(mockUseFormCreateMatch.formData.max_players),
-			status: 'in_progress',
+			status: 'WAITING',
 			owner_id: 'mock-uuid-owner-123',
 			current_player_order: 0,
 		}

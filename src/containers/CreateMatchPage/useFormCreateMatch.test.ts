@@ -176,7 +176,7 @@ describe('useFormCreateMatch', () => {
 				name: 'Test Match',
 				min_players: RANGE_PLAYERS.MIN,
 				max_players: RANGE_PLAYERS.MAX,
-				status: 'in_progress',
+				status: 'WAITING',
 				owner_id: 'mock-uuid-owner',
 				current_player_order: 0,
 			}
