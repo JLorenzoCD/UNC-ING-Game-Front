@@ -17,7 +17,10 @@ function App() {
 	return (
 		<div>
 			<h1>Here comes our page content.</h1>
-			<div className='min-h-screen flex justify-center items-center'>
+			<div className='min-h-screen flex justify-center items-center gap-2'>
+				<Link to={FRONTEND_PATHS.PLAYER_CREATE} className='bg-white p-2 rounded-lg'>
+					Create player (luego se elimina esto)
+				</Link>
 				<Link to={FRONTEND_PATHS.MATCH_CREATE} className='bg-white p-2 rounded-lg'>
 					Create match (luego se elimina esto)
 				</Link>
@@ -26,4 +29,4 @@ function App() {
 	)
 }
 
-export default App;
+export default App

@@ -14,9 +14,9 @@ const mockNavigate = vi.fn()
 vi.mock('react-router', () => ({
 	useNavigate: () => mockNavigate,
 }))
-vi.mock('@/contexts/usePlayer', () => ({
+vi.mock('@/contexts/PlayerContext', () => ({
 	usePlayer: () => ({
-		playerId: 'mock-uuid-owner',
+		player: { id: 'mock-uuid-owner' },
 	}),
 }))
 

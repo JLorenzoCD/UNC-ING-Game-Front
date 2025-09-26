@@ -1,6 +1,6 @@
 import { useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router'
-import { usePlayer } from '@/contexts/usePlayer'
+import { usePlayer } from '@/contexts/PlayerContext'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 import { RANGE_PLAYERS } from './constants'
@@ -45,8 +45,12 @@ export default function useFormCreateMatch() {
 			const max_players = parseInt(formData.max_players)
 
 			try {
+				if (playerData.player == null) {
+					throw new Error('Player is null.')
+				}
+
 				const matchToCreate = {
-					owner_id: playerData.playerId,
+					owner_id: playerData.player.id,
 					name: formData.name.trim(),
 					min_players,
 					max_players,

@@ -43,7 +43,7 @@ vi.mock('./FormCreateMatch', () => ({
 
 vi.mock('@/constants/frontendPaths', () => ({
 	FRONTEND_PATHS: {
-		MATCH_LIST: '/match',
+		MATCH_LIST: '/matches',
 	},
 }))
 
@@ -112,7 +112,7 @@ describe('CreateMatchPage', () => {
 		render(<CreateMatchPage />)
 
 		const linkButton = screen.getByTestId('mock-link-button')
-		expect(linkButton).toHaveAttribute('href', '/match')
+		expect(linkButton).toHaveAttribute('href', '/matches')
 	})
 
 	it('should not render FormCreateMatch if httpService is null', () => {
