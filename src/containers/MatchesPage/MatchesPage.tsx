@@ -46,9 +46,9 @@ function MatchesPage() {
 						setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId))
 					})
 
-					wsService.on('matchUpdate', (updatedMatch: MatchListItem) => {
+					wsService.on('matchUpdate', (updatedMatch: Partial<MatchListItem>) => {
 						setMatches((prev) => {
-							return prev.map((match) => (match.id === updatedMatch.id ? updatedMatch : match))
+							return prev.map((match) => (match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match))
 						})
 					})
 				}
