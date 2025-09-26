@@ -25,6 +25,12 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     }
   }, []);
 
+  useEffect(() => {
+    if (player) {
+      localStorage.setItem("player", JSON.stringify(player));
+    }
+  }, [player]);
+
   return (
     <PlayerContext.Provider value={{ player, setPlayer }}>
       {children}
@@ -32,7 +38,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   );
 };
 
-export const usePlayer = () => {
+export function usePlayer() {
   const context = useContext(PlayerContext);
   if (!context) {
     throw new Error("usePlayerContext must be used within a PlayerProvider");
