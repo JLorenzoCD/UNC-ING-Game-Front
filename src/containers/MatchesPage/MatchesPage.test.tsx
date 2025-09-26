@@ -27,11 +27,6 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 	},
 ])
 
-const mockConnect = vi.fn()
-const mockDisconnect = vi.fn()
-const mockOn = vi.fn()
-const mockOff = vi.fn()
-
 // Mock de los servicios
 vi.mock('@/contexts/HttpServiceContext', () => ({
 	useHttpService: vi.fn(() => ({
@@ -40,6 +35,11 @@ vi.mock('@/contexts/HttpServiceContext', () => ({
 		},
 	})),
 }))
+
+const mockConnect = vi.fn()
+const mockDisconnect = vi.fn()
+const mockOn = vi.fn()
+const mockOff = vi.fn()
 
 vi.mock('@/contexts/WebSocketServiceContext', () => ({
 	useWebSocketService: vi.fn(() => ({
@@ -53,6 +53,15 @@ vi.mock('@/contexts/WebSocketServiceContext', () => ({
 	})),
 }))
 
+// Función auxiliar para obtener el handler por el nombre del evento
+const getEventHandler = (eventName: string) => {
+	const call = mockOn.mock.calls.find((call) => call[0] === eventName)
+	if (!call) throw new Error(`Handler for event ${eventName} not found.`)
+
+	return call[1] // El handler es el segundo elemento del array [nombre, handler]
+}
+
+// Mock de los componentes
 vi.mock('@/components/Button', () => ({
 	default: vi.fn(({ children }) => <button data-testid='mock-button'>{children}</button>),
 }))
@@ -63,12 +72,6 @@ vi.mock('./components/ListMatches', () => ({
 
 vi.mock('./components/ListItemMatch', () => ({
 	default: vi.fn(({ match }) => <div>{match.name}</div>),
-}))
-
-vi.mock('@/constants/frontendPaths', () => ({
-	FRONTEND_PATHS: {
-		MATCH_CREATE: '/match/create',
-	},
 }))
 
 vi.mock('react-router', async (importOriginal) => {
@@ -83,9 +86,24 @@ vi.mock('react-router', async (importOriginal) => {
 	}
 })
 
+// Mock de las constantes
+vi.mock('@/constants/frontendPaths', () => ({
+	FRONTEND_PATHS: {
+		MATCH_CREATE: '/match/create',
+	},
+}))
+
 describe('MatchesPage', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
+	})
+
+	it('should call getMatches on mount', async () => {
+		render(<MatchesPage />)
+
+		await waitFor(() => {
+			expect(mockGetMatches).toHaveBeenCalledTimes(1)
+		})
 	})
 
 	it('should render the page correctly', async () => {
@@ -106,57 +124,95 @@ describe('MatchesPage', () => {
 		})
 	})
 
-	it('should call getMatches on mount', async () => {
+	it('should connect to WebSocket and register all necessary event handlers on mount', async () => {
 		render(<MatchesPage />)
 
-		await waitFor(() => {
-			expect(mockGetMatches).toHaveBeenCalledTimes(1)
-		})
-	})
-
-	it('should handle WebSocket connection and events', async () => {
-		render(<MatchesPage />)
-
-		// Verificar que se conecta al WebSocket
+		// Verifica la conexión: La conexión debería llamarse una vez ya que isConnected es false.
 		await waitFor(() => {
 			expect(mockConnect).toHaveBeenCalledTimes(1)
 		})
 
-		// Simular que se agrega una nueva partida por WebSocket
-		const newMatch = {
-			id: '3',
-			name: 'New Match',
-			status: 'pending',
-			min_players: 4,
-			max_players: 6,
-			owner_id: crypto.randomUUID(),
-			current_player: 3,
-			current_player_order: 0,
-		}
-		// console.log(mockOn.mock.calls)
-		mockOn.mock.calls[0][1](newMatch) // Llamamos al handler de 'matchAdd'
+		// Verifica el registro de eventos WebSocket.
+		expect(mockOn).toHaveBeenCalledWith('matchAdd', expect.any(Function))
+		expect(mockOn).toHaveBeenCalledWith('matchRemove', expect.any(Function))
+		expect(mockOn).toHaveBeenCalledWith('matchUpdate', expect.any(Function))
+	})
 
-		await act(() => {
-			expect(screen.getByText('New Match')).toBeInTheDocument()
+	it('should handle the "matchAdd" event and display the new match', async () => {
+		render(<MatchesPage />)
+
+		// Esperamos a la conexión inicial (aunque no es el foco, es necesario para el setup).
+		await waitFor(() => {
+			expect(mockConnect).toHaveBeenCalledTimes(1)
 		})
 
-		// Simular que se elimina una partida por WebSocket llamando al handler de 'matchRemove'
-		mockOn.mock.calls[1][1]('1')
+		// Simulamos el evento 'matchAdd'.
+		const addHandler = getEventHandler('matchAdd')
+		act(() => {
+			addHandler({
+				id: '3',
+				name: 'New match',
+				status: 'pending',
+				min_players: 2,
+				max_players: 4,
+				owner_id: crypto.randomUUID(),
+				current_player: 1,
+				current_player_order: 0,
+			})
+		})
 
-		await act(() => {
+		// Verificamos que el nuevo match se renderiza.
+		await waitFor(() => {
+			expect(screen.getByText('New match')).toBeInTheDocument()
+		})
+	})
+
+	it('should handle "matchRemove" events correctly', async () => {
+		render(<MatchesPage />)
+
+		// Esperamos a la conexión inicial.
+		await waitFor(() => {
+			expect(mockConnect).toHaveBeenCalledTimes(1)
+		})
+
+		// Simulamos un evento 'matchRemove' (asumiendo que 'Prueba 1' existe inicialmente).
+		const removeHandler = getEventHandler('matchRemove')
+		act(() => {
+			removeHandler('1') // Eliminamos el match con id '1' ('Prueba 1').
+		})
+
+		// Verificamos que el match eliminado ya NO está en el documento.
+		await waitFor(() => {
 			expect(screen.queryByText('Prueba 1')).not.toBeInTheDocument()
 		})
+	})
 
-		// Simular que se actualiza una partida por WebSocket llamando al handler de 'matchUpdate'
-		const updatedMatch = {
-			...newMatch,
-			name: 'Update Match',
-			status: 'is_pending',
-		}
-		mockOn.mock.calls[2][1](updatedMatch)
+	it('should handle "matchUpdate" events correctly', async () => {
+		render(<MatchesPage />)
 
-		await act(() => {
-			expect(screen.getByText(updatedMatch.name)).toBeInTheDocument()
+		// Esperamos a la conexión inicial.
+		await waitFor(() => {
+			expect(mockConnect).toHaveBeenCalledTimes(1)
+		})
+
+		// Simulamos un evento 'matchUpdate' (asumiendo que 'Prueba 2' existe con id '2').
+		const updateHandler = getEventHandler('matchUpdate')
+		act(() => {
+			updateHandler({
+				id: '2',
+				name: 'Update match', // Nuevo nombre
+				status: 'pending',
+				min_players: 4,
+				max_players: 6,
+				owner_id: crypto.randomUUID(),
+				current_player: 5,
+				current_player_order: 0,
+			})
+		})
+
+		// Verificamos que el match actualizado con el nuevo nombre se renderiza.
+		await waitFor(() => {
+			expect(screen.getByText('Update match')).toBeInTheDocument()
 		})
 	})
 
