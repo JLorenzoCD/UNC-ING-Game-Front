@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import type { Player } from '../../../types/player';
+import type { PlayerInput } from '../../../types/player';
 
 import quinAvatar from "@/assets/avatars/icono1.png"
 import ladyAvatar from "@/assets/avatars/icono2.png"
@@ -25,8 +25,6 @@ type PlayerData = {
   birthday: string;
 }
 
-export type PlayerInput = Omit<Player, 'id'>;
-
 interface PlayerFormProps {
   handleCreatePlayer: (playerData: PlayerInput) => Promise<void>;
 }
@@ -44,11 +42,25 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
   const validateField = (name: string, value: string): string => {
     switch (name) {
       case 'name':
-        return !value.trim() ? 'El nickname es obligatorio' : '';
+        if (!value.trim()) {
+          return 'The nickname is required';
+        }
+        if (value.includes(' ')) {
+          return 'The nickname must not contain spaces';
+        }
+        return '';
+
       case 'birthday':
-        return !value ? 'La fecha de nacimiento es obligatoria' : '';
+        if (!value) {
+          return 'The birthdate is required';
+        }
+        const age = Math.floor((new Date().getTime() - new Date(value).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
+        if (age < 5  || age > 110) {
+          return 'The birthdate must be between 5 and 110 years ago';
+        }
+        return '';
       case 'avatar':
-        return !value.trim() ? 'El avatar es obligatorio' : '';
+        return !value.trim() ? 'The avatar is required' : '';
       default:
         return '';
     }

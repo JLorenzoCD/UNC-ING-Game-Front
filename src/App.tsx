@@ -1,7 +1,6 @@
 import { useEffect, useMemo } from 'react'
 import { createHttpService } from './services/httpService';
 
-// Iniciar los servicios aqui
 function App() {
   const httpService = useMemo(() => createHttpService(), []);
 
