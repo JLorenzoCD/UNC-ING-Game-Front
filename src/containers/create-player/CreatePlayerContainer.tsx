@@ -19,7 +19,7 @@ export default function CreatePlayerContainer() {
 
       setPlayer(newPlayer);
 
-      navigate('/match');
+      navigate('/matches');
 
     } catch (error) {
       console.error('Error creating player:', error);
