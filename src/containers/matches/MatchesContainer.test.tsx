@@ -36,20 +36,16 @@ vi.mock('@/contexts/HttpServiceContext', () => ({
 	})),
 }))
 
-const mockConnect = vi.fn()
-const mockDisconnect = vi.fn()
 const mockOn = vi.fn()
 const mockOff = vi.fn()
 
 vi.mock('@/contexts/WebSocketServiceContext', () => ({
 	useWebSocketService: vi.fn(() => ({
 		wsService: {
-			connect: mockConnect,
-			disconnect: mockDisconnect,
 			on: mockOn,
 			off: mockOff,
 		},
-		isConnected: false,
+		isConnected: true,
 	})),
 }))
 
@@ -142,23 +138,19 @@ describe('MatchesContainer', () => {
 	it('should connect to WebSocket and register all necessary event handlers on mount', async () => {
 		render(<MatchesContainer />)
 
-		// Verifica la conexión: La conexión debería llamarse una vez ya que isConnected es false.
-		await waitFor(() => {
-			expect(mockConnect).toHaveBeenCalledTimes(1)
-		})
-
 		// Verifica el registro de eventos WebSocket.
-		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_ADD, expect.any(Function))
-		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_REMOVE, expect.any(Function))
-		expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_UPDATE, expect.any(Function))
+		await waitFor(() => {
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_ADD, expect.any(Function))
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_REMOVE, expect.any(Function))
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_UPDATE, expect.any(Function))
+		})
 	})
 
 	it('should handle the "matchAdd" event and display the new match', async () => {
 		render(<MatchesContainer />)
 
-		// Esperamos a la conexión inicial (aunque no es el foco, es necesario para el setup).
 		await waitFor(() => {
-			expect(mockConnect).toHaveBeenCalledTimes(1)
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_ADD, expect.any(Function))
 		})
 
 		// Simulamos el evento 'matchAdd'.
@@ -185,9 +177,8 @@ describe('MatchesContainer', () => {
 	it('should handle "matchRemove" events correctly', async () => {
 		render(<MatchesContainer />)
 
-		// Esperamos a la conexión inicial.
 		await waitFor(() => {
-			expect(mockConnect).toHaveBeenCalledTimes(1)
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_REMOVE, expect.any(Function))
 		})
 
 		// Simulamos un evento 'matchRemove' (asumiendo que 'Prueba 1' existe inicialmente).
@@ -205,9 +196,8 @@ describe('MatchesContainer', () => {
 	it('should handle "matchUpdate" events correctly', async () => {
 		render(<MatchesContainer />)
 
-		// Esperamos a la conexión inicial.
 		await waitFor(() => {
-			expect(mockConnect).toHaveBeenCalledTimes(1)
+			expect(mockOn).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_UPDATE, expect.any(Function))
 		})
 
 		// Simulamos un evento 'matchUpdate' (asumiendo que 'Prueba 2' existe con id '2').
@@ -231,11 +221,14 @@ describe('MatchesContainer', () => {
 		})
 	})
 
-	it('should handle WebSocket disconnection on unmount', () => {
+	it('should off events on unmount, the WebSocket', () => {
 		const { unmount } = render(<MatchesContainer />)
 
-		// Verificar que al desmontar se desconecte el WebSocket
+		// Verificar que al desmontar deja de escuchar los eventos
 		unmount()
-		expect(mockDisconnect).toHaveBeenCalledTimes(1)
+
+		expect(mockOff).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_ADD, expect.any(Function))
+		expect(mockOff).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_REMOVE, expect.any(Function))
+		expect(mockOff).toHaveBeenCalledWith(mockSocketsEvents.MATCHES_UPDATE, expect.any(Function))
 	})
 })

@@ -24,6 +24,23 @@ function MatchesContainer() {
 	useEffect(() => {
 		if (httpService == null || wsService == null) return
 
+		const handleMatchAdd = (newMatch: MatchListItem) => {
+			setMatches((prev) => {
+				const exists = prev.some((match) => match.id === newMatch.id)
+				return exists ? prev : [...prev, newMatch]
+			})
+		}
+
+		const handleMatchRemove = (deletedMatchId: UUID) => {
+			setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId))
+		}
+
+		const handleMatchUpdate = (updatedMatch: Partial<MatchListItem>) => {
+			setMatches((prev) => {
+				return prev.map((match) => (match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match))
+			})
+		}
+
 		const init = async () => {
 			try {
 				// Se obtienen los datos mediante http
@@ -31,27 +48,12 @@ function MatchesContainer() {
 				const matches = await httpService.getMatches()
 				setMatches(matches)
 
-				// Inicializando WebSocket
 				if (isConnected) {
-					console.warn('WebSocket is already connected. Reusing existing connection.')
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, handleMatchAdd)
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, handleMatchRemove)
+					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, handleMatchUpdate)
 				} else {
-					wsService.connect()
-					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, (newMatch: MatchListItem) => {
-						setMatches((prev) => {
-							const exists = prev.some((match) => match.id === newMatch.id)
-							return exists ? prev : [...prev, newMatch]
-						})
-					})
-
-					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, (deletedMatchId: UUID) => {
-						setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId))
-					})
-
-					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, (updatedMatch: Partial<MatchListItem>) => {
-						setMatches((prev) => {
-							return prev.map((match) => (match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match))
-						})
-					})
+					throw new Error('Could not connect to the server.')
 				}
 			} catch (err) {
 				console.error(err)
@@ -62,10 +64,10 @@ function MatchesContainer() {
 		}
 
 		init()
-
-		// Cleanup WebSocket on unmount
 		return () => {
-			wsService.disconnect()
+			wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, handleMatchAdd)
+			wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, handleMatchRemove)
+			wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, handleMatchUpdate)
 		}
 	}, [httpService, wsService, isConnected])
 
