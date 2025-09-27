@@ -1,4 +1,4 @@
-import type { Card as CardSchema } from "@/types/card"
+import type { CardName, Card as CardSchema } from "@/types/card"
 
 // Imports de las imágenes de las cartas.
 // Estos son manejados por Vite y, dependiendo del entorno,
@@ -25,28 +25,28 @@ import cardPointSuspicions from "@/assets/25-event_pointsuspicions.png"
 import cardBlackMailed from "@/assets/26-devious_blackmailed.png"
 import cardFauxPas from "@/assets/27-devious_fauxpas.png"
 
-const CARD_IMAGE_PATHS: Record<string, string> = {
-  "POIROT": cardPoirot,
-  "MARPLE": cardMarple,
-  "SATTERTHWAITE": cardSatterhwaite,
-  "PYNE": cardPyne,
-  "BRENT": cardBrent,
-  "TOMMY": cardTommy,
-  "TUPPENCE": cardTuppence,
-  "QUIN": cardQuin,
-  "OLIVER": cardOliver,
+const CARD_IMAGE_PATHS: Record<CardName, string> = {
+  "HERCULE POIROT": cardPoirot,
+  "MISS MARPLE": cardMarple,
+  "MR SATTERTHWAITE": cardSatterhwaite,
+  "PARKER PYNE": cardPyne,
+  "LADY EILEEN": cardBrent,
+  "TOMMY BERESFORD": cardTommy,
+  "TUPPENCE BERESFORD": cardTuppence,
+  "HARLEY QUIN WILDCARD": cardQuin,
+  "ARIADNE OLIVER": cardOliver,
   "NOT SO FAST": cardNotSoFast,
   "CARDS OFF THE TABLE": cardCardsOffTheTable,
   "ANOTHER VICTIM": cardAnotherVictim,
   "DEAD CARD FOLLY": cardDeadCardFolly,
-  "LOOK ASHES": cardLookAshes,
+  "LOOK INTO THE ASHES": cardLookAshes,
   "CARD TRADE": cardCardTrade,
-  "ONE MORE": cardOneMore,
-  "DELAY ESCAPE": cardDelayEscape,
-  "EARLY TRAIN": cardEarlyTrain,
-  "POINT SUSPICIONS": cardPointSuspicions,
-  "BLACK MAILED": cardBlackMailed,
-  "FAUX PAS": cardFauxPas
+  "AND THEN THERE WAS ONE MORE": cardOneMore,
+  "DELAY THE MURDERER ESCAPE": cardDelayEscape,
+  "EARLY TRAIN TO PADDINGTON": cardEarlyTrain,
+  "POINT YOUR SUSPICIONS": cardPointSuspicions,
+  "BLACKMAILED": cardBlackMailed,
+  "SOCIAL FAUX PAS": cardFauxPas
 }
 
 type CardProps = Pick<CardSchema, "name" | "description" >
