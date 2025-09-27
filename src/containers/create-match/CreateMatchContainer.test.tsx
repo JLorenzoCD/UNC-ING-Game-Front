@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 import type { MatchToCreate } from './type'
 import type { Match } from '@/types/match'
 
-import CreateMatchPage from './CreateMatchPage'
+import CreateMatchContainer from './CreateMatchContainer'
 
 // Mock de los componentes dependientes FormCreateMatch, Button (se asume que
 // están bien y con tests)
@@ -71,14 +71,14 @@ vi.mock('react-router', async (importOriginal) => {
 	}
 })
 
-describe('CreateMatchPage', () => {
+describe('CreateMatchContainer', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 		vi.resetAllMocks()
 	})
 
 	it('should render the page correctly', () => {
-		render(<CreateMatchPage />)
+		render(<CreateMatchContainer />)
 
 		// El enlace hacia la lista de partidas se renderiza
 		const linkButton = screen.getByTestId('mock-link-button')
@@ -98,7 +98,7 @@ describe('CreateMatchPage', () => {
 			current_player_order: 0,
 		})
 
-		render(<CreateMatchPage />)
+		render(<CreateMatchContainer />)
 
 		const form = screen.getByTestId('mock-form')
 		fireEvent.submit(form)
@@ -109,7 +109,7 @@ describe('CreateMatchPage', () => {
 	})
 
 	it('should render the button for list of matches with correct link', () => {
-		render(<CreateMatchPage />)
+		render(<CreateMatchContainer />)
 
 		const linkButton = screen.getByTestId('mock-link-button')
 		expect(linkButton).toHaveAttribute('href', '/matches')
@@ -117,7 +117,7 @@ describe('CreateMatchPage', () => {
 
 	it('should not render FormCreateMatch if httpService is null', () => {
 		vi.mocked(useHttpService).mockReturnValueOnce({ httpService: null })
-		render(<CreateMatchPage />)
+		render(<CreateMatchContainer />)
 
 		const form = screen.queryByTestId('mock-form')
 		expect(form).not.toBeInTheDocument()
@@ -126,7 +126,7 @@ describe('CreateMatchPage', () => {
 	it('should handle form submission error correctly', async () => {
 		mockCreateMatch.mockRejectedValue(new Error('Failed to create match'))
 
-		render(<CreateMatchPage />)
+		render(<CreateMatchContainer />)
 
 		const form = screen.getByTestId('mock-form')
 		fireEvent.submit(form)

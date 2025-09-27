@@ -6,7 +6,7 @@ import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
 import { useHttpService } from '@/contexts/HttpServiceContext'
 
-function CreateMatchPage() {
+function CreateMatchContainer() {
 	const { httpService } = useHttpService()
 
 	return (
@@ -19,4 +19,4 @@ function CreateMatchPage() {
 	)
 }
 
-export default CreateMatchPage
+export default CreateMatchContainer

@@ -18,7 +18,7 @@ function App() {
 		<div>
 			<h1>Here comes our page content.</h1>
 			<div className='min-h-screen flex justify-center items-center gap-2'>
-				<Link to={FRONTEND_PATHS.PLAYER_CREATE} className='bg-white p-2 rounded-lg'>
+				<Link to={'/players'} className='bg-white p-2 rounded-lg'>
 					Create player (luego se elimina esto)
 				</Link>
 				<Link to={FRONTEND_PATHS.MATCH_CREATE} className='bg-white p-2 rounded-lg'>
