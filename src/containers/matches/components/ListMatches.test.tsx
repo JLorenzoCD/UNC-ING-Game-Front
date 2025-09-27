@@ -14,7 +14,7 @@ vi.mock('@/components/Loading', () => ({
 // Mock componente ListItemMatch
 const ListItemMatch = ({ match }: { match: MatchListItem }) => {
 	//* Se busca representar validaciones básicas, no todas (para no llamar la fun de validación)
-	if (match.status != 'pending' || match.min_players > match.max_players) return null
+	if (match.status != 'WAITING' || match.min_players > match.max_players) return null
 
 	return (
 		<div data-testid='mock-item-match'>
@@ -34,7 +34,7 @@ const testValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Prueba 1',
-		status: 'pending',
+		status: 'WAITING',
 		min_players: 2,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
@@ -44,7 +44,7 @@ const testValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Prueba 2',
-		status: 'pending',
+		status: 'WAITING',
 		min_players: 4,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
@@ -57,7 +57,7 @@ const testInValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Invalid match item 1',
-		status: 'in_progress',
+		status: 'IN_PROGRESS',
 		min_players: 4,
 		max_players: 10,
 		owner_id: crypto.randomUUID(),
@@ -67,7 +67,7 @@ const testInValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Invalid match item 2',
-		status: 'pending',
+		status: 'WAITING',
 		min_players: 100,
 		max_players: 10,
 		owner_id: crypto.randomUUID(),

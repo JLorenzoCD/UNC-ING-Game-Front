@@ -8,7 +8,7 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 	{
 		id: '1',
 		name: 'Prueba 1',
-		status: 'pending',
+		status: 'WAITING',
 		min_players: 2,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
@@ -18,7 +18,7 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 	{
 		id: '2',
 		name: 'Prueba 2',
-		status: 'pending',
+		status: 'WAITING',
 		min_players: 4,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
@@ -167,7 +167,7 @@ describe('MatchesContainer', () => {
 			addHandler({
 				id: '3',
 				name: 'New match',
-				status: 'pending',
+				status: 'WAITING',
 				min_players: 2,
 				max_players: 4,
 				owner_id: crypto.randomUUID(),
@@ -216,7 +216,7 @@ describe('MatchesContainer', () => {
 			updateHandler({
 				id: '2',
 				name: 'Update match', // Nuevo nombre
-				status: 'pending',
+				status: 'WAITING',
 				min_players: 4,
 				max_players: 6,
 				owner_id: crypto.randomUUID(),
