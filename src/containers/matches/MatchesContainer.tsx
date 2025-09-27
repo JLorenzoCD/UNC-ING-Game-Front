@@ -53,7 +53,9 @@ function MatchesContainer() {
 					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, handleMatchRemove)
 					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, handleMatchUpdate)
 				} else {
-					throw new Error('Could not connect to the server.')
+					throw new Error(
+						'An error occurred while connecting to the server. Matches cannot be updated when adding players or adding new matches.'
+					)
 				}
 			} catch (err) {
 				console.error(err)
@@ -76,7 +78,7 @@ function MatchesContainer() {
 			<Link to={FRONTEND_PATHS.MATCH_CREATE} className='block mx-auto w-60 my-5'>
 				<Button className='w-full'>Create match</Button>
 			</Link>
-			{httpService != null && wsService != null && (
+			{httpService != null && (
 				<ListMatches isLoading={loading}>
 					{matches.map((m) => (
 						<ListItemMatch key={m.id} match={m} />

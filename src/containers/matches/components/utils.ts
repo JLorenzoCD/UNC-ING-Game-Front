@@ -9,7 +9,7 @@ export function isValidMatch(match: MatchListItem) {
 	const isValidMaxPlayersInRange = match.max_players >= RANGE_PLAYERS.MIN && match.max_players <= RANGE_PLAYERS.MAX
 	const isValidCurrentPlayerCount = match.current_player <= match.max_players
 	const isValidPlayerOrder = match.current_player_order < match.max_players
-	const isWaiting = match.status === 'WAITING'
+	const isWaiting = match.status.toUpperCase() === 'WAITING'
 
 	return (
 		isValidName &&

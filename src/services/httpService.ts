@@ -66,7 +66,8 @@ export function createHttpService() {
   }
 
 	const getMatches = async () => {
-		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES)
+    	const options = { method: 'GET' }
+		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES, options)
 	}
 
 	return {
