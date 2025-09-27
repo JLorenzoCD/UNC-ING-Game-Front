@@ -1,4 +1,7 @@
 import type { Player } from "../types/player";
+import type { Match } from "@/types/match";
+import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
+
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
 export function createHttpService() {
@@ -46,8 +49,14 @@ export function createHttpService() {
     });
   }
 
+  const createMatch = async (matchToCreate: MatchToCreate) => {
+	const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+	return await request<Match>('/matches', options)
+  }
+
   return {
     request,
-    createPlayer
+    createPlayer,
+	createMatch
   }
 }

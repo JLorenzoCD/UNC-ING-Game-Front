@@ -1,18 +1,9 @@
-import { useEffect, useMemo } from 'react'
-import { createHttpService } from './services/httpService';
+// import { useHttpService } from './contexts/HttpServiceContext'
 
 function App() {
-  const httpService = useMemo(() => createHttpService(), []);
+	// const httpService = useHttpService()
 
-  useEffect(() => {
-    if (!httpService) return;
-
-    console.log("HTTP Service initialized:", httpService);
-  }, [httpService]);
-
-  return (
-    <div>Here comes our page content.</div>
-  )
+	return <div>Here comes our page content.</div>
 }
 
-export default App;
+export default App
