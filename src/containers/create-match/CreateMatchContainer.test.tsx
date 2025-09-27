@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useHttpService } from '@/contexts/HttpServiceContext'
 
 import type { ReactNode } from 'react'
-import type { MatchToCreate } from './type'
+import type { MatchToCreate } from './components/FormCreateMatch/type'
 import type { Match } from '@/types/match'
 
 import CreateMatchContainer from './CreateMatchContainer'

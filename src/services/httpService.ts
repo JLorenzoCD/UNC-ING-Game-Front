@@ -1,6 +1,6 @@
 import type { Player } from '../types/player'
 import type { Match } from '@/types/match'
-import type { MatchToCreate } from '@/containers/create-match/type'
+import type { MatchToCreate } from '@/containers/create-match/components/FormCreateMatch/type'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 

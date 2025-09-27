@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import Button from '@/components/Button'
-import FormCreateMatch from './FormCreateMatch'
+import FormCreateMatch from './components/FormCreateMatch'
 
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 

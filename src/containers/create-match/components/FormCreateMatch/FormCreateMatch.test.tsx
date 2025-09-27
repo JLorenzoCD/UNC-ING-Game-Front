@@ -8,7 +8,7 @@ import type { FormEvent } from 'react'
 import type { MatchToCreate } from './type'
 import type { Match } from '@/types/match'
 
-import FormCreateMatch from './FormCreateMatch'
+import FormCreateMatch from './index'
 
 // Mock de los componentes dependientes AlertErrorList, Input (se asume que
 // están bien y con tests)
