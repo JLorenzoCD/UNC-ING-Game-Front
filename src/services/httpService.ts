@@ -1,62 +1,62 @@
-import type { Player } from '../types/player'
-import type { Match } from '@/types/match'
-import type { MatchToCreate } from '@/containers/create-match/components/FormCreateMatch/type'
+import type { Player } from "../types/player";
+import type { Match } from "@/types/match";
+import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
 
-const DEFAULT_BASE_URL = 'http://localhost:8000'
+const DEFAULT_BASE_URL = "http://localhost:8000";
 
 export function createHttpService() {
-	const baseUrl = String(import.meta.env.VITE_API_URL) || DEFAULT_BASE_URL
+  const baseUrl = String(import.meta.env.VITE_API_URL) || DEFAULT_BASE_URL;
 
-	/**
-	 * Realiza una petición HTTP a una ruta específica de la API con las opciones proporcionadas.
-	 * @param route La ruta de la API a la que se realizará la petición.
-	 * @param options Opciones de configuración para la petición HTTP.
-	 * @returns Una promesa que resuelve con la respuesta de la API en formato JSON.
-	 * @throws Un error si la petición falla o si la respuesta no es exitosa.
-	 * @template T El tipo de datos esperado en la respuesta.
-	 * @example
-	 * const data = await httpService.request<MyDataType>("/my-endpoint", { method: "GET" });
-	 * console.log(data); // `data` es de tipo `MyDataType`
-	 */
-	const request = async <T = unknown>(route: string, options?: RequestInit): Promise<T> => {
-		const url = baseUrl.concat(route)
+  /**
+   * Realiza una petición HTTP a una ruta específica de la API con las opciones proporcionadas.
+   * @param route La ruta de la API a la que se realizará la petición.
+   * @param options Opciones de configuración para la petición HTTP.
+   * @returns Una promesa que resuelve con la respuesta de la API en formato JSON.
+   * @throws Un error si la petición falla o si la respuesta no es exitosa.
+   * @template T El tipo de datos esperado en la respuesta.
+   * @example
+   * const data = await httpService.request<MyDataType>("/my-endpoint", { method: "GET" });
+   * console.log(data); // `data` es de tipo `MyDataType`
+   */
+  const request = async<T = unknown>(route: string, options?: RequestInit): Promise<T> => {
+    const url = baseUrl.concat(route);
+    
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options?.headers || {}),
+        },
+      });
 
-		try {
-			const response = await fetch(url, {
-				...options,
-				headers: {
-					'Content-Type': 'application/json',
-					...(options?.headers || {}),
-				},
-			})
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-			if (!response.ok) {
-				throw new Error(`HTTP error! status: ${response.status}`)
-			}
+      return await response.json();
+    } catch (error) {
+      console.error("API request failed with error:", error);
 
-			return await response.json()
-		} catch (error) {
-			console.error('API request failed with error:', error)
+      throw error;
+    }
+  }
 
-			throw error
-		}
-	}
+  const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
+    return request<Player>("/players", {
+      method: "POST",
+      body: JSON.stringify(player),
+    });
+  }
 
-	const createMatch = async (matchToCreate: MatchToCreate) => {
-		const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-		return await request<Match>('/matches', options)
-	}
+  const createMatch = async (matchToCreate: MatchToCreate) => {
+	const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+	return await request<Match>('/matches', options)
+  }
 
-	const createPlayer = async (player: Omit<Player, 'id'>): Promise<Player> => {
-		return request<Player>('/players', {
-			method: 'POST',
-			body: JSON.stringify(player),
-		})
-	}
-
-	return {
-		request,
-		createPlayer,
-		createMatch,
-	}
+  return {
+    request,
+    createPlayer,
+	createMatch
+  }
 }
