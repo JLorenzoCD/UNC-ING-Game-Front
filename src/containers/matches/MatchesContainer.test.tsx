@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import MatchesPage from './MatchesPage'
+import MatchesContainer from './MatchesContainer'
 
 const mockGetMatches = vi.fn().mockResolvedValue([
 	{
@@ -108,13 +108,13 @@ vi.mock('@/constants/backend', () => ({
 }))
 //! Termina
 
-describe('MatchesPage', () => {
+describe('MatchesContainer', () => {
 	beforeEach(() => {
 		vi.clearAllMocks()
 	})
 
 	it('should call getMatches on mount', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		await waitFor(() => {
 			expect(mockGetMatches).toHaveBeenCalledTimes(1)
@@ -122,7 +122,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should render the page correctly', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		// El botón de creación de partida se renderiza
 		const createButton = screen.getByTestId('mock-button')
@@ -140,7 +140,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should connect to WebSocket and register all necessary event handlers on mount', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		// Verifica la conexión: La conexión debería llamarse una vez ya que isConnected es false.
 		await waitFor(() => {
@@ -154,7 +154,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should handle the "matchAdd" event and display the new match', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		// Esperamos a la conexión inicial (aunque no es el foco, es necesario para el setup).
 		await waitFor(() => {
@@ -183,7 +183,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should handle "matchRemove" events correctly', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		// Esperamos a la conexión inicial.
 		await waitFor(() => {
@@ -203,7 +203,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should handle "matchUpdate" events correctly', async () => {
-		render(<MatchesPage />)
+		render(<MatchesContainer />)
 
 		// Esperamos a la conexión inicial.
 		await waitFor(() => {
@@ -232,7 +232,7 @@ describe('MatchesPage', () => {
 	})
 
 	it('should handle WebSocket disconnection on unmount', () => {
-		const { unmount } = render(<MatchesPage />)
+		const { unmount } = render(<MatchesContainer />)
 
 		// Verificar que al desmontar se desconecte el WebSocket
 		unmount()

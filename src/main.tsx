@@ -10,8 +10,8 @@ import './index.css'
 import App from './App.tsx'
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 import MainLayout from './containers/MainLayout.tsx'
-import MatchesPage from './containers/MatchesPage/MatchesPage.tsx'
-import CreateMatchPage from './containers/CreateMatchPage.tsx'
+import MatchesContainer from './containers/matches/MatchesContainer.tsx'
+import CreateMatchContainer from './containers/create-match/CreateMatchContainer.tsx'
 import LobbyPage from './containers/LobbyPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
@@ -23,8 +23,8 @@ createRoot(document.getElementById('root')!).render(
 						<Routes>
 							<Route path={FRONTEND_PATHS.HOME} element={<App />} />
 							<Route element={<MainLayout />}>
-								<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesPage />} />
-								<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
+								<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesContainer />} />
+								<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchContainer />} />
 							</Route>
 							<Route path={FRONTEND_PATHS.MATCH_LOBBY(':matchId')} element={<LobbyPage />} />
 						</Routes>

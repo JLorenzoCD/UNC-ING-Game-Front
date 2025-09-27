@@ -14,7 +14,7 @@ import { BACKEND_SOCKETS_EVENTS } from '@/constants/backend'
 import type { UUID } from '@/types/common'
 import type { MatchListItem } from './types'
 
-function MatchesPage() {
+function MatchesContainer() {
 	const { httpService } = useHttpService()
 	const { wsService, isConnected } = useWebSocketService()
 
@@ -71,8 +71,8 @@ function MatchesPage() {
 
 	return (
 		<>
-			<Link to={FRONTEND_PATHS.MATCH_CREATE} className='ml-5'>
-				<Button className='block mx-auto w-60 my-5'>Create match</Button>
+			<Link to={FRONTEND_PATHS.MATCH_CREATE} className='block mx-auto w-60 my-5'>
+				<Button className='w-full'>Create match</Button>
 			</Link>
 			{httpService != null && wsService != null && (
 				<ListMatches isLoading={loading}>
@@ -85,4 +85,4 @@ function MatchesPage() {
 	)
 }
 
-export default MatchesPage
+export default MatchesContainer

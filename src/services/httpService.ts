@@ -2,7 +2,7 @@ import type { Player } from '../types/player'
 import type { Match } from '@/types/match'
 import type { MatchToCreate } from '@/containers/create-match/components/FormCreateMatch/type'
 import { BACKEND_ENDPOINTS } from '@/constants/backend'
-import type { MatchListItem } from '@/containers/MatchesPage/types'
+import type { MatchListItem } from '@/containers/matches/types'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 
