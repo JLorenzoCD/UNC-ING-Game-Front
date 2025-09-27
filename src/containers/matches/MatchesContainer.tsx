@@ -12,19 +12,19 @@ import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 import { BACKEND_SOCKETS_EVENTS } from '@/constants/backend'
 
 import type { UUID } from '@/types/common'
-import type { MatchListItem } from './types'
+import type { Match } from '@/types/match'
 
 function MatchesContainer() {
 	const { httpService } = useHttpService()
 	const { wsService, isConnected } = useWebSocketService()
 
-	const [matches, setMatches] = useState<MatchListItem[]>([])
+	const [matches, setMatches] = useState<Match[]>([])
 	const [loading, setLoading] = useState(true)
 
 	useEffect(() => {
 		if (httpService == null || wsService == null) return
 
-		const handleMatchAdd = (newMatch: MatchListItem) => {
+		const handleMatchAdd = (newMatch: Match) => {
 			setMatches((prev) => {
 				const exists = prev.some((match) => match.id === newMatch.id)
 				return exists ? prev : [...prev, newMatch]
@@ -35,7 +35,7 @@ function MatchesContainer() {
 			setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId))
 		}
 
-		const handleMatchUpdate = (updatedMatch: Partial<MatchListItem>) => {
+		const handleMatchUpdate = (updatedMatch: Partial<Match>) => {
 			setMatches((prev) => {
 				return prev.map((match) => (match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match))
 			})

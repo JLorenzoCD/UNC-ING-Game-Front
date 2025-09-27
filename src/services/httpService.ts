@@ -3,8 +3,6 @@ import { BACKEND_ENDPOINTS } from "@/constants/backend";
 import type { Player } from "../types/player";
 import type { Match, MatchCreateInput } from '@/types/match'
 
-import type { MatchListItem } from "@/containers/matches/types";
-
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 
 function isApiUrlDefined(): boolean {
@@ -67,7 +65,7 @@ export function createHttpService() {
 
 	const getMatches = async () => {
     	const options = { method: 'GET' }
-		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES, options)
+		return await request<Match[]>(BACKEND_ENDPOINTS.GET_MATCHES, options)
 	}
 
 	return {

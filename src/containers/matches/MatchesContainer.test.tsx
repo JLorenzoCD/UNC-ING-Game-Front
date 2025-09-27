@@ -12,7 +12,6 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 		min_players: 2,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
-		current_player: 5,
 		current_player_order: 0,
 	},
 	{
@@ -22,7 +21,6 @@ const mockGetMatches = vi.fn().mockResolvedValue([
 		min_players: 4,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
-		current_player: 3,
 		current_player_order: 0,
 	},
 ])
@@ -163,7 +161,6 @@ describe('MatchesContainer', () => {
 				min_players: 2,
 				max_players: 4,
 				owner_id: crypto.randomUUID(),
-				current_player: 1,
 				current_player_order: 0,
 			})
 		})
@@ -210,7 +207,6 @@ describe('MatchesContainer', () => {
 				min_players: 4,
 				max_players: 6,
 				owner_id: crypto.randomUUID(),
-				current_player: 5,
 				current_player_order: 0,
 			})
 		})
