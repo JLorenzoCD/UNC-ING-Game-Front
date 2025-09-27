@@ -45,3 +45,5 @@ export interface Match {
 	 */
 	current_player_order: number
 }
+
+export type MatchCreateInput = Pick<Match, 'name' | 'min_players' | 'max_players' | 'owner_id'>

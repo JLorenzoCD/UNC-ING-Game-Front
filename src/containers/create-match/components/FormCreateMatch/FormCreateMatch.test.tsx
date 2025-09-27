@@ -5,8 +5,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ERROR_MESSAGES, RANGE_PLAYERS } from './constants'
 
 import type { FormEvent } from 'react'
-import type { MatchToCreate } from './type'
-import type { Match } from '@/types/match'
+import type { UUID } from '@/types/common'
+import type { Match, MatchCreateInput } from '@/types/match'
 
 import FormCreateMatch from './index'
 
@@ -120,10 +120,10 @@ describe('FormCreateMatch', () => {
 	it('should call handleCreateMatch on form submission with valid data', async () => {
 		// Mockea una respuesta exitosa del hook y la función de prop
 		mockUseFormCreateMatch.createHandleSubmit = vi.fn(
-			(callback: (matchToCreate: MatchToCreate) => Promise<Match>) => (e: FormEvent<HTMLFormElement>) => {
+			(callback: (matchToCreate: MatchCreateInput) => Promise<Match>) => (e: FormEvent<HTMLFormElement>) => {
 				e.preventDefault()
 				callback({
-					owner_id: 'mock-uuid-owner-123',
+					owner_id: 'mock-uuid-owner-123' as UUID,
 					name: mockUseFormCreateMatch.formData.name,
 					min_players: parseInt(mockUseFormCreateMatch.formData.min_players),
 					max_players: parseInt(mockUseFormCreateMatch.formData.max_players),

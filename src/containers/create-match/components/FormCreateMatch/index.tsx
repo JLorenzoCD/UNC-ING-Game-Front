@@ -9,11 +9,10 @@ import useFormCreateMatch from './useFormCreateMatch'
 import { RANGE_PLAYERS } from './constants'
 import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
-import type { Match } from '@/types/match'
-import type { MatchToCreate } from './type'
+import type { Match, MatchCreateInput } from '@/types/match'
 
 interface Props {
-	handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match>
+	handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>
 }
 
 function FormCreateMatch({ handleCreateMatch }: Props) {
