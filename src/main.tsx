@@ -4,31 +4,32 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 
 import { HttpServiceProvider } from './contexts/HttpServiceContext.tsx'
 import { WebSocketServiceProvider } from './contexts/WebSocketServiceContext.tsx'
+import { PlayerProvider } from './contexts/PlayerContext.tsx'
 
 import './index.css'
-
 import App from './App.tsx'
-import MainLayout from './containers/MainLayout'
-import MatchesPage from './containers/MatchesPage/MatchesPage'
-import CreateMatchPage from './containers/CreateMatchPage'
-import LobbyPage from './containers/LobbyPage'
-
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
+import MainLayout from './containers/MainLayout.tsx'
+import MatchesPage from './containers/MatchesPage/MatchesPage.tsx'
+import CreateMatchPage from './containers/CreateMatchPage.tsx'
+import LobbyPage from './containers/LobbyPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
 	<StrictMode>
 		<HttpServiceProvider>
 			<WebSocketServiceProvider>
-				<BrowserRouter>
-					<Routes>
-						<Route path={FRONTEND_PATHS.HOME} element={<App />} />
-						<Route element={<MainLayout />}>
-							<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesPage />} />
-							<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
-						</Route>
-						<Route path={FRONTEND_PATHS.MATCH_LOBBY(':matchId')} element={<LobbyPage />} />
-					</Routes>
-				</BrowserRouter>
+				<PlayerProvider>
+					<BrowserRouter>
+						<Routes>
+							<Route path={FRONTEND_PATHS.HOME} element={<App />} />
+							<Route element={<MainLayout />}>
+								<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchesPage />} />
+								<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
+							</Route>
+							<Route path={FRONTEND_PATHS.MATCH_LOBBY(':matchId')} element={<LobbyPage />} />
+						</Routes>
+					</BrowserRouter>
+				</PlayerProvider>
 			</WebSocketServiceProvider>
 		</HttpServiceProvider>
 	</StrictMode>

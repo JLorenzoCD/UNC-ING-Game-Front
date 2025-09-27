@@ -1,5 +1,7 @@
+import type { Player } from '../types/player'
+import type { Match } from '@/types/match'
+import type { MatchToCreate } from '@/containers/create-match/components/FormCreateMatch/type'
 import { BACKEND_ENDPOINTS } from '@/constants/backend'
-
 import type { MatchListItem } from '@/containers/MatchesPage/types'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
@@ -37,9 +39,20 @@ export function createHttpService() {
 			return await response.json()
 		} catch (error) {
 			console.error('API request failed with error:', error)
-
 			throw error
 		}
+	}
+
+	const createPlayer = async (player: Omit<Player, 'id'>): Promise<Player> => {
+		return request<Player>('/players', {
+			method: 'POST',
+			body: JSON.stringify(player),
+		})
+	}
+
+	const createMatch = async (matchToCreate: MatchToCreate) => {
+		const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+		return await request<Match>('/matches', options)
 	}
 
 	const getMatches = async () => {
@@ -48,6 +61,8 @@ export function createHttpService() {
 
 	return {
 		request,
+		createPlayer,
+		createMatch,
 		getMatches,
 	}
 }
