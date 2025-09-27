@@ -1,32 +1,9 @@
-import { useEffect, useMemo } from 'react'
-import { Link } from 'react-router'
-
-import { createHttpService } from './services/httpService'
-
-import { FRONTEND_PATHS } from './constants/frontendPaths'
+// import { useHttpService } from './contexts/HttpServiceContext'
 
 function App() {
-	const httpService = useMemo(() => createHttpService(), [])
+	// const httpService = useHttpService()
 
-	useEffect(() => {
-		if (!httpService) return
-
-		console.log('HTTP Service initialized:', httpService)
-	}, [httpService])
-
-	return (
-		<div>
-			<h1>Here comes our page content.</h1>
-			<div className='min-h-screen flex justify-center items-center gap-2'>
-				<Link to={'/players'} className='bg-white p-2 rounded-lg'>
-					Create player (luego se elimina esto)
-				</Link>
-				<Link to={FRONTEND_PATHS.MATCH_CREATE} className='bg-white p-2 rounded-lg'>
-					Create match (luego se elimina esto)
-				</Link>
-			</div>
-		</div>
-	)
+	return <div>Here comes our page content.</div>
 }
 
 export default App
