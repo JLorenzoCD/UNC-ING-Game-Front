@@ -55,12 +55,10 @@ export default function useFormCreateMatch() {
 					min_players,
 					max_players,
 				}
-				console.log('Se envía:', { matchToCreate })
 
 				setLoading(true)
 				const res = await handleCreateMatch(matchToCreate)
 
-				console.log('Se recibe: ', { res })
 				navigate(FRONTEND_PATHS.MATCH_LOBBY(res.id))
 			} catch (err) {
 				console.error(err)
