@@ -1,19 +1,20 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { HandCard } from "@/types/card";
+import type { GameCard } from "@/types/card";
 import Hand from "./Hand";
 
 const match_id = crypto.randomUUID()
 const player_id = crypto.randomUUID()
 
-const fullHand: HandCard[] = [
+const fullHand: GameCard[] = [
   {
     id: crypto.randomUUID(),
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "POIROT",
+    name: "HERCULE POIROT",
+    type: "DETECTIVE",
     description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
     is_discarded: false,
   },
@@ -22,7 +23,8 @@ const fullHand: HandCard[] = [
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "MARPLE",
+    name: "MISS MARPLE",
+    type: "DETECTIVE",
     description: "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
     is_discarded: false
   },
@@ -31,7 +33,8 @@ const fullHand: HandCard[] = [
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "SATTERTHWAITE",
+    name: "MR SATTERTHWAITE",
+    type: "DETECTIVE",
     description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
     is_discarded: false
   },
@@ -40,7 +43,8 @@ const fullHand: HandCard[] = [
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "PYNE",
+    name: "PARKER PYNE",
+    type: "DETECTIVE",
     description: "Un detective privado con un enfoque pragmático para resolver casos.",
     is_discarded: false
   },
@@ -49,17 +53,18 @@ const fullHand: HandCard[] = [
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "BRENT",
+    name: "LADY EILEEN",
+    type: "DETECTIVE",
     description: "Un detective aficionado con un talento natural para la observación.",
     is_discarded: false,
-    
   },
   {
     id: crypto.randomUUID(),
     card_id: crypto.randomUUID(),
     match_id,
     player_id,
-    name: "TOMMY",
+    name: "TOMMY BERESFORD",
+    type: "DETECTIVE",
     description: "Un joven detective que trabaja junto a su esposa Tuppence.",
     is_discarded: false
   },
