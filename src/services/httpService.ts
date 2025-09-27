@@ -1,12 +1,16 @@
-import type { Player } from "../types/player";
 import type { Match } from "@/types/match";
+import type { GameCard } from "@/types/card";
+import type { GameSecret } from "@/types/secret";
+import type { GamePlayer, Player } from "@/types/player";
+
+// TODO: cambiar este import a "@/types/..."
 import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
 function isApiUrlDefined(): boolean {
   return typeof import.meta.env.VITE_API_URL === "string"
-  && import.meta.env.VITE_API_URL.length > 0;
+    && import.meta.env.VITE_API_URL.length > 0;
 }
 
 export type HttpService = ReturnType<typeof createHttpService>;
@@ -29,7 +33,7 @@ export function createHttpService() {
    */
   const request = async<T = unknown>(route: string, options?: RequestInit): Promise<T> => {
     const url = baseUrl.concat(route);
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -59,13 +63,33 @@ export function createHttpService() {
   }
 
   const createMatch = async (matchToCreate: MatchToCreate) => {
-	const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-	return await request<Match>('/matches', options)
+    const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+    return request<Match>('/matches', options)
+  }
+
+  const getMatch = async (matchId: string): Promise<Match> => {
+    return request<Match>(`/matches/${matchId}`)
+  }
+
+  const getMatchPlayers = async (matchId: string): Promise<GamePlayer[]> => {
+    return request<GamePlayer[]>(`/matches/${matchId}/players`)
+  }
+
+  const getMatchCards = async (matchId: string): Promise<GameCard[]> => {
+    return request<GameCard[]>(`/matches/${matchId}/cards`)
+  }
+
+  const getMatchSecrets = async (matchId: string): Promise<GameSecret[]> => {
+    return request<GameSecret[]>(`/matches/${matchId}/secrets`)
   }
 
   return {
     request,
     createPlayer,
-	createMatch
+    createMatch,
+    getMatch,
+    getMatchPlayers,
+    getMatchCards,
+    getMatchSecrets,
   }
 }
