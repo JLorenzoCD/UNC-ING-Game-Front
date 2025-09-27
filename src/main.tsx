@@ -27,11 +27,11 @@ createRoot(document.getElementById('root')!).render(
 						<Routes>
 							<Route path={FRONTEND_PATHS.HOME} element={<App />} />
 							<Route element={<MainLayout />}>
-								<Route path={FRONTEND_PATHS.PLAYER_CREATE} element={<CreatePlayerContainer />} />
+								<Route path={'/players'} element={<CreatePlayerContainer />} />
 								<Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchPage />} />
 								<Route path={FRONTEND_PATHS.MATCH_LIST} element={<MatchListPage />} />
 							</Route>
-							<Route path={`${FRONTEND_PATHS.MATCH_LOBBY}/:matchId`} element={<LobbyPage />} />
+							<Route path={FRONTEND_PATHS.MATCH_LOBBY(':matchId')} element={<LobbyPage />} />
 						</Routes>
 					</BrowserRouter>
 				</PlayerProvider>

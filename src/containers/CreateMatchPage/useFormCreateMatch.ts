@@ -61,7 +61,7 @@ export default function useFormCreateMatch() {
 				const res = await handleCreateMatch(matchToCreate)
 
 				console.log('Se recibe: ', { res })
-				navigate(`${FRONTEND_PATHS.MATCH_LOBBY}/${res.id}`)
+				navigate(FRONTEND_PATHS.MATCH_LOBBY(res.id))
 			} catch (err) {
 				console.error(err)
 				alert('The match could not be created.')

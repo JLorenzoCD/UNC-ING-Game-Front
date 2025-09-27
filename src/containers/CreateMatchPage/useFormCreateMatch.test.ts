@@ -202,7 +202,7 @@ describe('useFormCreateMatch', () => {
 				max_players: mockMatch.max_players,
 			})
 			expect(result.current.loading).toBe(false)
-			expect(mockNavigate).toHaveBeenCalledWith(`${FRONTEND_PATHS.MATCH_LOBBY}/${mockMatch.id}`)
+			expect(mockNavigate).toHaveBeenCalledWith(FRONTEND_PATHS.MATCH_LOBBY(mockMatch.id))
 		})
 
 		it('should handle errors from handleCreateMatch gracefully', async () => {
