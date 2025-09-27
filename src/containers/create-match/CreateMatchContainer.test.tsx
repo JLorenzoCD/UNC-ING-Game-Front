@@ -26,7 +26,7 @@ const mockMatchToCreate = {
 	min_players: 2,
 	max_players: 6,
 } as MatchToCreate
-vi.mock('./FormCreateMatch', () => ({
+vi.mock('./components/FormCreateMatch', () => ({
 	default: vi.fn((props: { handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match> }) => (
 		<form
 			data-testid='mock-form'

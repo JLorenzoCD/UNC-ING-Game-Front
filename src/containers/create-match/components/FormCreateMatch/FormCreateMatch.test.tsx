@@ -12,7 +12,7 @@ import FormCreateMatch from './index'
 
 // Mock de los componentes dependientes AlertErrorList, Input (se asume que
 // están bien y con tests)
-vi.mock('./components/AlertErrorList', () => ({
+vi.mock('../AlertErrorList', () => ({
 	default: vi.fn(
 		({
 			title,
