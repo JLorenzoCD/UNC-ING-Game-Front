@@ -4,8 +4,17 @@ import type { MatchToCreate } from "@/containers/create-match/components/FormCre
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
+function isApiUrlDefined(): boolean {
+  return typeof import.meta.env.VITE_API_URL === "string"
+  && import.meta.env.VITE_API_URL.length > 0;
+}
+
+export type HttpService = ReturnType<typeof createHttpService>;
+
 export function createHttpService() {
-  const baseUrl = String(import.meta.env.VITE_API_URL) || DEFAULT_BASE_URL;
+  const baseUrl = isApiUrlDefined()
+    ? import.meta.env.VITE_API_URL
+    : DEFAULT_BASE_URL;
 
   /**
    * Realiza una petición HTTP a una ruta específica de la API con las opciones proporcionadas.
