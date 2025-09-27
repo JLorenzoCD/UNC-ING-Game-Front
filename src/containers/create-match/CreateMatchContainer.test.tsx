@@ -5,8 +5,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useHttpService } from '@/contexts/HttpServiceContext'
 
 import type { ReactNode } from 'react'
-import type { MatchToCreate } from './components/FormCreateMatch/type'
-import type { Match } from '@/types/match'
+import type { UUID } from '@/types/common'
+import type { Match, MatchCreateInput } from '@/types/match'
 
 import CreateMatchContainer from './CreateMatchContainer'
 
@@ -22,12 +22,12 @@ vi.mock('@/components/Button', () => ({
 
 const mockMatchToCreate = {
 	name: 'Partida',
-	owner_id: 'test-owner_id-1',
+	owner_id: 'test-owner_id-1' as UUID,
 	min_players: 2,
 	max_players: 6,
-} as MatchToCreate
+} as MatchCreateInput
 vi.mock('./components/FormCreateMatch', () => ({
-	default: vi.fn((props: { handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match> }) => (
+	default: vi.fn((props: { handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match> }) => (
 		<form
 			data-testid='mock-form'
 			onSubmit={(e) => {

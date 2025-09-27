@@ -1,13 +1,23 @@
-import type { Player } from '../types/player'
-import type { Match } from '@/types/match'
-import type { MatchToCreate } from '@/containers/create-match/components/FormCreateMatch/type'
-import { BACKEND_ENDPOINTS } from '@/constants/backend'
-import type { MatchListItem } from '@/containers/matches/types'
+import { BACKEND_ENDPOINTS } from "@/constants/backend";
+
+import type { Player } from "../types/player";
+import type { Match, MatchCreateInput } from '@/types/match'
+
+import type { MatchListItem } from "@/containers/matches/types";
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 
+function isApiUrlDefined(): boolean {
+  return typeof import.meta.env.VITE_API_URL === "string"
+  && import.meta.env.VITE_API_URL.length > 0;
+}
+
+export type HttpService = ReturnType<typeof createHttpService>;
+
 export function createHttpService() {
-	const baseUrl = String(import.meta.env.VITE_API_URL) || DEFAULT_BASE_URL
+  const baseUrl = isApiUrlDefined()
+    ? import.meta.env.VITE_API_URL
+    : DEFAULT_BASE_URL;
 
 	/**
 	 * Realiza una petición HTTP a una ruta específica de la API con las opciones proporcionadas.
@@ -50,10 +60,10 @@ export function createHttpService() {
 		})
 	}
 
-	const createMatch = async (matchToCreate: MatchToCreate) => {
-		const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-		return await request<Match>('/matches', options)
-	}
+  const createMatch = async (matchToCreate: MatchCreateInput) => {
+    const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+    return await request<Match>('/matches', options)
+  }
 
 	const getMatches = async () => {
 		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES)
