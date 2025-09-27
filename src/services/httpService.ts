@@ -1,6 +1,5 @@
 import type { Player } from "../types/player";
-import type { Match } from "@/types/match";
-import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
+import type { Match, MatchCreateInput } from '@/types/match'
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -58,9 +57,9 @@ export function createHttpService() {
     });
   }
 
-  const createMatch = async (matchToCreate: MatchToCreate) => {
-	const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-	return await request<Match>('/matches', options)
+  const createMatch = async (matchToCreate: MatchCreateInput) => {
+    const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
+    return await request<Match>('/matches', options)
   }
 
   return {
