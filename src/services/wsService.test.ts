@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Match } from "@/types/match";
 import { createWsService, type WSService } from "./wsService";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const global: any;
 
 global.WebSocket = vi.fn();
@@ -62,7 +63,7 @@ describe("wsService", () => {
 
       wsService.connect();
 
-      // @ts-ignore - necesitamos "abrir" la conexión manualmente
+      // @ts-expect-error - necesitamos "abrir" la conexión manualmente
       mockWebSocket.onopen();
 
       expect(wsService.isConnected()).toBe(true);
@@ -87,7 +88,7 @@ describe("wsService", () => {
       
       wsService.connect();
 
-      // @ts-ignore - necesitamos "fallar" la conexión manualmente
+      // @ts-expect-error - necesitamos "fallar" la conexión manualmente
       mockWebSocket.onerror(error);
 
       expect(wsService.isConnected()).toBe(false);
@@ -110,7 +111,7 @@ describe("wsService", () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
       wsService.connect();
 
-      // @ts-ignore - necesitamos "cerrar" la conexión manualmente
+      // @ts-expect-error - necesitamos "cerrar" la conexión manualmente
       mockWebSocket.onclose();
 
       expect(wsService.isConnected()).toBe(false);
@@ -161,7 +162,7 @@ describe("wsService", () => {
         data: JSON.stringify({ event: "testEvent", payload: "test data" })
       }
   
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
       
       expect(callbackOne).not.toHaveBeenCalled();
@@ -181,7 +182,7 @@ describe("wsService", () => {
         })
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
 
       expect(callback).toHaveBeenCalledWith(mockMatchCreatePayload);
@@ -202,7 +203,7 @@ describe("wsService", () => {
         })
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
 
       expect(callbackOne).toHaveBeenCalledWith(mockMatchCreatePayload);
@@ -223,7 +224,7 @@ describe("wsService", () => {
         })
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageUnhandledEvent);
       expect(callback).not.toHaveBeenCalled();
 
@@ -233,7 +234,7 @@ describe("wsService", () => {
         })
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageMissingPayload);
       expect(callback).toHaveBeenCalledWith(undefined);
     })
@@ -246,7 +247,7 @@ describe("wsService", () => {
         data: "{ event: 'testEvent', payload: 'data' " // JSON malformado
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(malformedMessageEvent);
 
       expect(consoleSpy).toHaveBeenCalled();
@@ -264,7 +265,7 @@ describe("wsService", () => {
       }
 
       expect(() => {
-        // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+        // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
         mockWebSocket.onmessage(messageEvent);
       }).to.not.throw();
     })
@@ -284,7 +285,7 @@ describe("wsService", () => {
         })
       }
 
-      // @ts-ignore - necesitamos "recibir" un mensaje manualmente
+      // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
 
       expect(callback).toHaveBeenCalledWith(longPayload);

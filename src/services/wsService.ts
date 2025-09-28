@@ -1,6 +1,7 @@
 const MAX_RECONNECT_ATTEMPTS = 5;
 const MAX_RECONNECT_DELAY = 30000; // 30 segundos
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventCallback = (data: any) => void;
 
 export type WSService = ReturnType<typeof createWsService>;
@@ -87,6 +88,7 @@ export function createWsService() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const emit = (event: string, data: any) => {
     if (listeners.has(event)) {
       const listener = listeners.get(event);
@@ -115,6 +117,7 @@ export function createWsService() {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const send = (event: string, payload?: any) => {
     if (websocket && isConnected) {
       websocket.send(JSON.stringify({ event, payload }));
