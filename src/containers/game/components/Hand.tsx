@@ -1,7 +1,7 @@
 import type { GameCard } from "@/types/card";
 import Card from "./Card";
 
-export const HAND_SIZE = 6; // Número máximo (y necesario al princio de cada ronda) de cartas en la mano
+export const HAND_SIZE = 6; // Número máximo (y necesario al principio de cada ronda) de cartas en la mano
 
 interface HandProps {
   cards: Array<GameCard | null> // Un valor `null` representa una posición vacía en la mano;

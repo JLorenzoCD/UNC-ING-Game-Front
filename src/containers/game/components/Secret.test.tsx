@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
 
+import type { GameSecret } from "@/types/secret";
 import { usePlayer } from '@/contexts/PlayerContext';
 import Secret from './Secret';
 
@@ -24,34 +25,34 @@ vi.mock('@/assets/03-secret_murderer.png', () => ({
 const mockUsePlayer = usePlayer as Mock;
 
 describe('Secret Component', () => {
-  const mockPlayer = { id: 'b3e2af7a-7736-4833-95c0-3a927c7effda', name: 'TestPlayer' };
+  const mockPlayer = { id: crypto.randomUUID(), name: 'TestPlayer' };
   
-  const mockSecrets = {
+  const mockSecrets: Record<string, GameSecret> = {
     innocent: {
-      type: 'INNOCENT' as const,
-      content: 'You are innocent',
-      id: '517872ad-9a41-45be-a7cc-d1498fdce7d5' as `${string}-${string}-${string}-${string}-${string}`,
+      type: "INNOCENT",
+      content: "You are innocent",
+      id: crypto.randomUUID(),
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
-      player_id: 'b3e2af7a-7736-4833-95c0-3a927c7effda' as `${string}-${string}-${string}-${string}-${string}`,
+      player_id: mockPlayer.id,
       is_revealed: false
     },
     accomplice: {
-      type: 'ACCOMPLICE' as const,
-      id: '7ed7fd80-a542-4158-9a0d-1c2e0edb3fbf' as `${string}-${string}-${string}-${string}-${string}`,
-      content: 'You are the accomplice',
+      type: "ACCOMPLICE",
+      id: crypto.randomUUID(),
+      content: "You are the accomplice",
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
-      player_id: 'b3e2af7a-7736-4833-95c0-3a927c7effda' as `${string}-${string}-${string}-${string}-${string}`,
+      player_id: mockPlayer.id,
       is_revealed: false
     },
     murderer: {
-      type: 'MURDERER' as const,
-      id: '9690f15b-394d-406d-a2a5-e64381e491eb' as `${string}-${string}-${string}-${string}-${string}`,
+      type: "MURDERER",
+      id: crypto.randomUUID(),
       content: 'You are the murderer',
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
-      player_id: 'b3e2af7a-7736-4833-95c0-3a927c7effda' as `${string}-${string}-${string}-${string}-${string}`,
+      player_id: mockPlayer.id,
       is_revealed: false
     }
   };

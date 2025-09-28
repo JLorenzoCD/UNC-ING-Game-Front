@@ -71,6 +71,6 @@ export default function Card({ name, description }: CardProps) {
   }
 
   return (
-    <img src={imagePath} alt={description} className="w-40 h-60 object-cover" />
+    <img data-testid="card" src={imagePath} alt={description} className="w-40 h-60 object-cover" />
   )
 }

@@ -21,6 +21,7 @@ export default function Secret({ secret }: SecretProps) {
 
   if (!secret) {
     console.warn('Secret component: secret prop is missing');
+    
     return null;
   }
 
@@ -34,6 +35,6 @@ export default function Secret({ secret }: SecretProps) {
   if (!imagePath) return null;
   
   return (
-    <img src={imagePath} alt={`Secret card: ${secret.type}`} className={`object-cover w-40 h-60`} />
+    <img data-testid="secret" src={imagePath} alt={`Secret card: ${secret.type}`} className={`object-cover w-40 h-60`} />
   )
 }
