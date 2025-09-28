@@ -1,7 +1,7 @@
 import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
 import type { Player } from "../types/player";
-import type { Match, MatchCreateInput } from '@/types/match'
+import type { Match, MatchCreateInput, MatchListItem } from '@/types/match'
 
 const DEFAULT_BASE_URL = 'http://localhost:8000'
 
@@ -65,7 +65,7 @@ export function createHttpService() {
 
 	const getMatches = async () => {
     	const options = { method: 'GET' }
-		return await request<Match[]>(BACKEND_ENDPOINTS.GET_MATCHES, options)
+		return await request<MatchListItem[]>(BACKEND_ENDPOINTS.GET_MATCHES, options)
 	}
 
 	return {

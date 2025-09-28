@@ -6,10 +6,10 @@ import { FRONTEND_PATHS } from '@/constants/frontendPaths'
 
 import { isValidMatch } from './utils'
 
-import type { Match } from '@/types/match'
+import type { MatchListItem } from '@/types/match'
 
 interface Props {
-	match: Match
+	match: MatchListItem
 }
 
 function ListItemMatch({ match }: Props) {
@@ -30,6 +30,10 @@ function ListItemMatch({ match }: Props) {
 			<span className='flex gap-5 items-center'>
 				<p>
 					{match.min_players}/{match.max_players}
+				</p>
+				<p>-</p>
+				<p>
+					{match.current_player_count >= match.min_players ? '🟢' : '🟡'} {match.current_player_count}
 				</p>
 
 				<Button className='ml-5' onClick={handleClick}>

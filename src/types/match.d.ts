@@ -1,6 +1,6 @@
 import type { UUID } from './common'
 
-export type MatchStatus = "WAITING" | "IN_PROGRESS" | "COMPLETED"
+export type MatchStatus = 'WAITING' | 'IN_PROGRESS' | 'COMPLETED'
 
 export interface Match {
 	/**
@@ -47,3 +47,4 @@ export interface Match {
 }
 
 export type MatchCreateInput = Pick<Match, 'name' | 'min_players' | 'max_players' | 'owner_id'>
+export type MatchListItem = Match & { current_player_count: number }

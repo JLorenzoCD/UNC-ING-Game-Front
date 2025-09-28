@@ -2,7 +2,7 @@ import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import type { Match } from '@/types/match'
+import type { MatchListItem } from '@/types/match'
 
 import ListMatches from './ListMatches'
 
@@ -12,7 +12,7 @@ vi.mock('@/components/Loading', () => ({
 }))
 
 // Mock componente ListItemMatch
-const ListItemMatch = ({ match }: { match: Match }) => {
+const ListItemMatch = ({ match }: { match: MatchListItem }) => {
 	//* Se busca representar validaciones básicas, no todas (para no llamar la fun de validación)
 	if (match.status != 'WAITING' || match.min_players > match.max_players) return null
 
@@ -21,6 +21,7 @@ const ListItemMatch = ({ match }: { match: Match }) => {
 			<p data-testid='mock-match-name'>{match.name}</p>
 			<p data-testid='mock-match-min-players'>{match.min_players}</p>
 			<p data-testid='mock-match-max-players'>{match.max_players}</p>
+			<p data-testid='mock-match-current-players'>{match.current_player_count}</p>
 		</div>
 	)
 }
@@ -29,7 +30,7 @@ vi.mock('./ListItemMatch', () => ({
 }))
 
 // Datos de prueba
-const testValidMatches: Match[] = [
+const testValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Prueba 1',
@@ -37,6 +38,7 @@ const testValidMatches: Match[] = [
 		min_players: 2,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
+		current_player_count: 5,
 		current_player_order: 0,
 	},
 	{
@@ -46,11 +48,12 @@ const testValidMatches: Match[] = [
 		min_players: 4,
 		max_players: 6,
 		owner_id: crypto.randomUUID(),
+		current_player_count: 3,
 		current_player_order: 0,
 	},
 ]
 
-const testInValidMatches: Match[] = [
+const testInValidMatches: MatchListItem[] = [
 	{
 		id: crypto.randomUUID(),
 		name: 'Invalid match item 1',
@@ -58,6 +61,7 @@ const testInValidMatches: Match[] = [
 		min_players: 4,
 		max_players: 10,
 		owner_id: crypto.randomUUID(),
+		current_player_count: 3,
 		current_player_order: 0,
 	},
 	{
@@ -67,6 +71,7 @@ const testInValidMatches: Match[] = [
 		min_players: 100,
 		max_players: 10,
 		owner_id: crypto.randomUUID(),
+		current_player_count: 3,
 		current_player_order: 0,
 	},
 ]
