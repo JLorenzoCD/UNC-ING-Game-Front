@@ -5,6 +5,7 @@ import type { GamePlayer, Player } from "@/types/player";
 
 // TODO: cambiar este import a "@/types/..."
 import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
+import type { UUID } from "@/types/common";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -67,19 +68,19 @@ export function createHttpService() {
     return request<Match>('/matches', options)
   }
 
-  const getMatch = async (matchId: string): Promise<Match> => {
+  const getMatch = async (matchId: UUID): Promise<Match> => {
     return request<Match>(`/matches/${matchId}`)
   }
 
-  const getMatchPlayers = async (matchId: string): Promise<GamePlayer[]> => {
+  const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
     return request<GamePlayer[]>(`/matches/${matchId}/players`)
   }
 
-  const getMatchCards = async (matchId: string): Promise<GameCard[]> => {
+  const getMatchCards = async (matchId: UUID): Promise<GameCard[]> => {
     return request<GameCard[]>(`/matches/${matchId}/cards`)
   }
 
-  const getMatchSecrets = async (matchId: string): Promise<GameSecret[]> => {
+  const getMatchSecrets = async (matchId: UUID): Promise<GameSecret[]> => {
     return request<GameSecret[]>(`/matches/${matchId}/secrets`)
   }
 
