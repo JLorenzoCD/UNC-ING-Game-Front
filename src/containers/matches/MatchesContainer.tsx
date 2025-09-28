@@ -14,6 +14,10 @@ import { BACKEND_SOCKETS_EVENTS } from '@/constants/backend'
 import type { UUID } from '@/types/common'
 import type { MatchListItem } from '@/types/match'
 
+interface WSError extends Error {
+	showUser: boolean
+}
+
 function MatchesContainer() {
 	const { httpService } = useHttpService()
 	const { wsService, isConnected } = useWebSocketService()
@@ -53,13 +57,23 @@ function MatchesContainer() {
 					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, handleMatchRemove)
 					wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, handleMatchUpdate)
 				} else {
-					throw new Error(
+					const err = new Error(
 						'An error occurred while connecting to the server. Matches cannot be updated when adding players or adding new matches.'
-					)
+					) as WSError
+					err.showUser = true
+					console.log('error')
+
+					throw err
 				}
 			} catch (err) {
 				console.error(err)
-				alert('Could not connect to the server.')
+				const error = err as Error
+
+				if ((error as WSError).showUser) {
+					alert(error.message)
+				} else {
+					alert('Could not connect to the server.')
+				}
 			} finally {
 				setLoading(false)
 			}
