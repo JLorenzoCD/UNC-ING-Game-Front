@@ -1,39 +1,41 @@
-import { useState } from 'react';
-import type { PlayerInput } from '@/types/player';
+import { useState } from "react";
+import type { PlayerInput } from "@/types/player";
 
-import quinAvatar from "@/assets/avatars/icono1.png"
-import ladyAvatar from "@/assets/avatars/icono2.png"
-import tuppenceAvatar from "@/assets/avatars/icono3.png"
-import poirotAvatar from "@/assets/avatars/icono4.png"
-import oliverAvatar from "@/assets/avatars/icono5.png"
-import sattertwhiteAvatar from "@/assets/avatars/icono6.png"
-import marpleAvatar from "@/assets/avatars/icono7.png"
+import quinAvatar from "@/assets/avatars/icono1.png";
+import ladyAvatar from "@/assets/avatars/icono2.png";
+import tuppenceAvatar from "@/assets/avatars/icono3.png";
+import poirotAvatar from "@/assets/avatars/icono4.png";
+import oliverAvatar from "@/assets/avatars/icono5.png";
+import sattertwhiteAvatar from "@/assets/avatars/icono6.png";
+import marpleAvatar from "@/assets/avatars/icono7.png";
 
-const AVATARS_IMAGE_PATHS : { path: string, name: string }[] = [
-  { path: quinAvatar, name: 'Quin'},
-  { path: ladyAvatar, name: 'Lady'},
-  { path: tuppenceAvatar, name: 'Tuppence'},
-  { path: poirotAvatar, name: 'Harly Quinn'},
-  { path: oliverAvatar, name: 'Oliver'},
-  { path: sattertwhiteAvatar, name: 'Satterwhite'},
-  { path: marpleAvatar, name: 'Marple'},
+const AVATARS_IMAGE_PATHS: { path: string; name: string }[] = [
+  { path: quinAvatar, name: "Quin" },
+  { path: ladyAvatar, name: "Lady" },
+  { path: tuppenceAvatar, name: "Tuppence" },
+  { path: poirotAvatar, name: "Harly Quinn" },
+  { path: oliverAvatar, name: "Oliver" },
+  { path: sattertwhiteAvatar, name: "Satterwhite" },
+  { path: marpleAvatar, name: "Marple" },
 ];
 
 type PlayerData = {
   name: string;
   avatar: string;
   birthday: string;
-}
+};
 
 interface PlayerFormProps {
   handleCreatePlayer: (playerData: PlayerInput) => Promise<void>;
 }
 
-const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => {
+const CreatePlayerForm: React.FC<PlayerFormProps> = ({
+  handleCreatePlayer,
+}) => {
   const [formData, setFormData] = useState<PlayerData>({
-    name: '',
-    avatar: '',
-    birthday: '',
+    name: "",
+    avatar: "",
+    birthday: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -41,50 +43,51 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
 
   const validateName = (name: string): string => {
     if (!name.trim()) {
-      return 'The nickname is required';
+      return "The nickname is required";
     }
 
-    if (name.includes(' ')) {
-      return 'The nickname must not contain spaces';
+    if (name.includes(" ")) {
+      return "The nickname must not contain spaces";
     }
 
-    return '';
-  }
+    return "";
+  };
 
   const validateBirthday = (dateString: string): string => {
     if (!dateString) {
-      return 'The birthdate is required';
+      return "The birthdate is required";
     }
 
     const age = Math.floor(
-      (new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+      (new Date().getTime() - new Date(dateString).getTime()) /
+        (1000 * 60 * 60 * 24 * 365.25),
     );
 
     if (age < 5 || age > 110) {
-      return 'The birthdate must be between 5 and 110 years ago';
+      return "The birthdate must be between 5 and 110 years ago";
     }
 
-    return '';
-  }
+    return "";
+  };
 
   const validateAvatar = (avatar: string): string => {
     if (!avatar.trim()) {
-      return 'The avatar is required';
+      return "The avatar is required";
     }
 
-    return '';
-  }
+    return "";
+  };
 
   const validateField = (name: string, value: string): string => {
     switch (name) {
-      case 'name':
+      case "name":
         return validateName(value);
-      case 'birthday':
+      case "birthday":
         return validateBirthday(value);
-      case 'avatar':
+      case "avatar":
         return validateAvatar(value);
       default:
-        return '';
+        return "";
     }
   };
 
@@ -93,13 +96,13 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
 
     // Validar el campo al instante
     const error = validateField(name, value);
-    setErrors(prev => ({
+    setErrors((prev) => ({
       ...prev,
       [name]: error,
     }));
 
     // Actualizar el estado del formulario
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
@@ -107,13 +110,13 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
 
   const handleAvatarChange = (url: string) => {
     // Validar el campo de avatar al seleccionarlo
-    const error = validateField('avatar', url);
-    setErrors(prev => ({
+    const error = validateField("avatar", url);
+    setErrors((prev) => ({
       ...prev,
       avatar: error,
     }));
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       avatar: url,
     }));
@@ -123,7 +126,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
     const newErrors: Record<string, string> = {};
     let isValid = true;
 
-    Object.keys(formData).forEach(key => {
+    Object.keys(formData).forEach((key) => {
       const error = validateField(key, formData[key as keyof PlayerData]);
       if (error) {
         newErrors[key] = error;
@@ -144,20 +147,20 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
 
     try {
       const newPlayer: PlayerInput = {
-      name: formData.name,
-      avatar: formData.avatar,
-      birthday: new Date(formData.birthday),
+        name: formData.name,
+        avatar: formData.avatar,
+        birthday: new Date(formData.birthday),
       };
       await handleCreatePlayer(newPlayer);
       setFormData({
-        name: '',
-        avatar: '',
-        birthday: '',
+        name: "",
+        avatar: "",
+        birthday: "",
       });
       setErrors({});
     } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Failed to create player. Please check your input and try again.');
+      console.error("Error submitting form:", error);
+      alert("Failed to create player. Please check your input and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -195,7 +198,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
               value={formData.name}
               onChange={handleChange}
               required
-              className={getInputClassName('name')}
+              className={getInputClassName("name")}
               placeholder="Enter nickname"
             />
             {errors.name && (
@@ -219,7 +222,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
               value={formData.birthday}
               onChange={handleChange}
               required
-              className={getInputClassName('birthday')}
+              className={getInputClassName("birthday")}
             />
             {errors.birthday && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
@@ -241,8 +244,8 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
                   title={avatar.name}
                   className={`w-16 h-16 rounded-full cursor-pointer object-cover transition-transform transform hover:scale-110 ${
                     formData.avatar === avatar.path
-                      ? 'border-4 border-blue-500'
-                      : 'border-4 border-transparent'
+                      ? "border-4 border-blue-500"
+                      : "border-4 border-transparent"
                   }`}
                   onClick={() => handleAvatarChange(avatar.path)}
                 />
@@ -259,12 +262,11 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
             <button
               onClick={handleSubmit}
               disabled={
-                isSubmitting ||
-                Object.keys(errors).some(key => errors[key])
+                isSubmitting || Object.keys(errors).some((key) => errors[key])
               }
               className="w-full bg-black text-white font-bold py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isSubmitting ? 'Creating...' : 'Create Player'}
+              {isSubmitting ? "Creating..." : "Create Player"}
             </button>
           </div>
         </div>

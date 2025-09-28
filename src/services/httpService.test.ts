@@ -46,7 +46,7 @@ describe("httpService", () => {
     it("uses default base URL when VITE_API_URL is not defined", () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce({ test: "data" })
+        json: vi.fn().mockResolvedValueOnce({ test: "data" }),
       });
 
       httpService.request("/test");
@@ -64,7 +64,7 @@ describe("httpService", () => {
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce({ test: "data" })
+        json: vi.fn().mockResolvedValueOnce({ test: "data" }),
       });
 
       customHttpService.request("/test");
@@ -82,7 +82,7 @@ describe("httpService", () => {
       const mockData = { id: "1", name: "Test" };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData)
+        json: vi.fn().mockResolvedValueOnce(mockData),
       });
 
       const result = await httpService.request<typeof mockData>("/test");
@@ -100,12 +100,12 @@ describe("httpService", () => {
       const requestBody = { name: "Test" };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData)
+        json: vi.fn().mockResolvedValueOnce(mockData),
       });
 
       const result = await httpService.request<typeof mockData>("/test", {
         method: "POST",
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/test", {
@@ -123,79 +123,109 @@ describe("httpService", () => {
       const mockData = { test: "data" };
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData)
+        json: vi.fn().mockResolvedValueOnce(mockData),
       });
 
       await httpService.request("/test", {
         headers: {
-          "Authorization": "Bearer token",
-          "Custom-Header": "value"
-        }
+          Authorization: "Bearer token",
+          "Custom-Header": "value",
+        },
       });
 
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/test", {
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer token",
-          "Custom-Header": "value"
+          Authorization: "Bearer token",
+          "Custom-Header": "value",
         },
       });
     });
 
     it("handles HTTP error responses", async () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       mockFetch.mockResolvedValueOnce({
         ok: false,
-        status: 404
+        status: 404,
       });
 
-      await expect(httpService.request("/test")).rejects.toThrow("HTTP error! status: 404");
-      expect(consoleSpy).toHaveBeenCalledWith("API request failed with error:", expect.any(Error));
+      await expect(httpService.request("/test")).rejects.toThrow(
+        "HTTP error! status: 404",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "API request failed with error:",
+        expect.any(Error),
+      );
       consoleSpy.mockRestore();
     });
 
     it("handles network errors", async () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       const networkError = new Error("Network error");
       mockFetch.mockRejectedValueOnce(networkError);
 
-      await expect(httpService.request("/test")).rejects.toThrow("Network error");
-      expect(consoleSpy).toHaveBeenCalledWith("API request failed with error:", networkError);
+      await expect(httpService.request("/test")).rejects.toThrow(
+        "Network error",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "API request failed with error:",
+        networkError,
+      );
       consoleSpy.mockRestore();
     });
 
     it("handles JSON parsing errors", async () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockRejectedValueOnce(new Error("Invalid JSON"))
+        json: vi.fn().mockRejectedValueOnce(new Error("Invalid JSON")),
       });
 
-      await expect(httpService.request("/test")).rejects.toThrow("Invalid JSON");
-      expect(consoleSpy).toHaveBeenCalledWith("API request failed with error:", expect.any(Error));
+      await expect(httpService.request("/test")).rejects.toThrow(
+        "Invalid JSON",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "API request failed with error:",
+        expect.any(Error),
+      );
       consoleSpy.mockRestore();
     });
 
     it("constructs URLs correctly with different routes", async () => {
       mockFetch.mockResolvedValue({
         ok: true,
-        json: vi.fn().mockResolvedValue({})
+        json: vi.fn().mockResolvedValue({}),
       });
 
       await httpService.request("/users");
-      expect(mockFetch).toHaveBeenLastCalledWith("http://localhost:8000/users", expect.any(Object));
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        "http://localhost:8000/users",
+        expect.any(Object),
+      );
 
       await httpService.request("/api/v1/data");
-      expect(mockFetch).toHaveBeenLastCalledWith("http://localhost:8000/api/v1/data", expect.any(Object));
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        "http://localhost:8000/api/v1/data",
+        expect.any(Object),
+      );
 
       await httpService.request("/");
-      expect(mockFetch).toHaveBeenLastCalledWith("http://localhost:8000/", expect.any(Object));
+      expect(mockFetch).toHaveBeenLastCalledWith(
+        "http://localhost:8000/",
+        expect.any(Object),
+      );
     });
 
     it("handles undefined and null options", async () => {
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce({ test: "data" })
+        json: vi.fn().mockResolvedValueOnce({ test: "data" }),
       });
 
       await httpService.request("/test", undefined);
@@ -208,17 +238,21 @@ describe("httpService", () => {
     });
 
     it("handles various HTTP status codes", async () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
 
       const statusCodes = [400, 401, 403, 404, 500, 502, 503];
 
       for (const status of statusCodes) {
         mockFetch.mockResolvedValueOnce({
           ok: false,
-          status
+          status,
         });
 
-        await expect(httpService.request("/test")).rejects.toThrow(`HTTP error! status: ${status}`);
+        await expect(httpService.request("/test")).rejects.toThrow(
+          `HTTP error! status: ${status}`,
+        );
       }
 
       consoleSpy.mockRestore();

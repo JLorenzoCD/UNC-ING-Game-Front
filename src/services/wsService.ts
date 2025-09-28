@@ -7,8 +7,10 @@ type EventCallback = (data: any) => void;
 export type WSService = ReturnType<typeof createWsService>;
 
 function isWsUrlDefined(): boolean {
-  return typeof import.meta.env.VITE_WS_URL === "string"
-    && import.meta.env.VITE_WS_URL.length > 0;
+  return (
+    typeof import.meta.env.VITE_WS_URL === "string" &&
+    import.meta.env.VITE_WS_URL.length > 0
+  );
 }
 
 export function createWsService() {
@@ -22,7 +24,7 @@ export function createWsService() {
     : "ws://localhost:8000/ws";
 
   const listeners = new Map<string, EventCallback[]>();
-  
+
   const connect = () => {
     try {
       websocket = new WebSocket(baseUrl);
@@ -33,8 +35,8 @@ export function createWsService() {
         isConnected = true;
         reconnectAttempts = 0;
 
-        emit('connection', true);
-        
+        emit("connection", true);
+
         console.log("WebSocket connected");
       };
 
@@ -54,22 +56,27 @@ export function createWsService() {
       // De hacerlo, simplemente emitimos un evento de error.
       websocket.onclose = () => {
         isConnected = false;
-        emit('connection', false);
+        emit("connection", false);
 
         if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
           // Cada vez que se intenta reconectar, se duplica el tiempo de espera hasta un máximo de 30 segundos.
-          const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+          const delay = Math.min(
+            1000 * Math.pow(2, reconnectAttempts),
+            MAX_RECONNECT_DELAY,
+          );
 
-          console.log(`WebSocket disconnected, reconnecting in ${delay}ms (attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`);
+          console.log(
+            `WebSocket disconnected, reconnecting in ${delay}ms (attempt ${reconnectAttempts + 1}/${MAX_RECONNECT_ATTEMPTS})`,
+          );
 
           reconnectTimeout = window.setTimeout(() => {
             reconnectAttempts++;
             connect();
           }, delay);
         } else {
-          console.error('Max reconnection attempts reached');
+          console.error("Max reconnection attempts reached");
 
-          emit('error', { type: 'max_reconnect_attempts' });
+          emit("error", { type: "max_reconnect_attempts" });
         }
       };
 
@@ -77,7 +84,7 @@ export function createWsService() {
       // y marcamos la conexión como cerrada.
       websocket.onerror = (error) => {
         isConnected = false;
-        emit('connection', false);
+        emit("connection", false);
 
         console.error("WebSocket error:", error);
       };
@@ -86,7 +93,7 @@ export function createWsService() {
 
       console.error("WebSocket connection failed:", error);
     }
-  }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const emit = (event: string, data: any) => {
@@ -97,15 +104,15 @@ export function createWsService() {
 
       listener.forEach((callback) => callback(data));
     }
-  }
-  
+  };
+
   const on = (event: string, callback: EventCallback) => {
     if (!listeners.has(event)) {
       listeners.set(event, []);
     }
 
     listeners.get(event)!.push(callback);
-  }
+  };
 
   const off = (event: string, callback: EventCallback) => {
     const eventListeners = listeners.get(event);
@@ -115,7 +122,7 @@ export function createWsService() {
     if (index !== -1) {
       eventListeners.splice(index, 1);
     }
-  }
+  };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const send = (event: string, payload?: any) => {
@@ -136,7 +143,7 @@ export function createWsService() {
     }
 
     if (websocket) {
-      websocket.close(1000, 'Client disconnecting');
+      websocket.close(1000, "Client disconnecting");
       websocket = null;
       isConnected = false;
     }
@@ -151,4 +158,3 @@ export function createWsService() {
     isConnected: () => isConnected,
   };
 }
-  

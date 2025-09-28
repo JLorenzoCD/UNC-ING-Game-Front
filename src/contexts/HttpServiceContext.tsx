@@ -9,7 +9,7 @@ interface HttpServiceContextType {
 
 const HttpServiceContext = createContext<HttpServiceContextType>({
   httpService: null,
-})
+});
 
 interface HttpServiceProviderProps {
   children: ReactNode;
@@ -22,7 +22,7 @@ export function HttpServiceProvider({ children }: HttpServiceProviderProps) {
     <HttpServiceContext.Provider value={{ httpService }}>
       {children}
     </HttpServiceContext.Provider>
-  )
+  );
 }
 
 export function useHttpService() {

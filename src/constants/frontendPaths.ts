@@ -1,9 +1,9 @@
 const FRONTEND_PATHS = {
-	HOME: '/',
-	MATCH_LIST: '/matches',
-	MATCH_CREATE: '/match/create',
+  HOME: "/",
+  MATCH_LIST: "/matches",
+  MATCH_CREATE: "/match/create",
 
-	MATCH_LOBBY: (id: string) => `/match/${id}/lobby`,
-} as const
+  MATCH_LOBBY: (id: string) => `/match/${id}/lobby`,
+} as const;
 
-export { FRONTEND_PATHS }
+export { FRONTEND_PATHS };

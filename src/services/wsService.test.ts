@@ -11,8 +11,8 @@ global.WebSocket = vi.fn();
 vi.mock("import.meta", () => ({
   env: {
     VITE_WS_URL: undefined,
-  }
-}))
+  },
+}));
 
 describe("wsService", () => {
   let mockWebSocket: Partial<WebSocket>;
@@ -31,17 +31,17 @@ describe("wsService", () => {
       onclose: null,
       onmessage: null,
       onerror: null,
-    }
-  
+    };
+
     global.WebSocket.mockImplementation(() => mockWebSocket);
-  
+
     wsService = createWsService();
-  
+
     afterEach(() => {
       vi.useRealTimers();
       vi.restoreAllMocks();
-    })
-  })
+    });
+  });
 
   describe("Service creation", () => {
     it("creates a WebSocket service with correct initial state", () => {
@@ -52,7 +52,7 @@ describe("wsService", () => {
       expect(wsService).toHaveProperty("on");
       expect(wsService).toHaveProperty("off");
       expect(wsService.isConnected()).toBe(false);
-    })
+    });
 
     it("creates independent service instances", () => {
       const anotherWsService = createWsService();
@@ -68,8 +68,8 @@ describe("wsService", () => {
 
       expect(wsService.isConnected()).toBe(true);
       expect(anotherWsService.isConnected()).toBe(false);
-    })
-  })
+    });
+  });
 
   describe("Connection management", () => {
     it("establishes a WebSocket connection", () => {
@@ -80,12 +80,14 @@ describe("wsService", () => {
       expect(mockWebSocket.onclose).toBeDefined();
       expect(mockWebSocket.onmessage).toBeDefined();
       expect(mockWebSocket.onerror).toBeDefined();
-    })
+    });
 
     it("handles connection errors", () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       const error = new Error("Connection failed");
-      
+
       wsService.connect();
 
       // @ts-expect-error - necesitamos "fallar" la conexión manualmente
@@ -94,18 +96,25 @@ describe("wsService", () => {
       expect(wsService.isConnected()).toBe(false);
       expect(consoleSpy).toHaveBeenCalledWith("WebSocket error:", error);
       consoleSpy.mockRestore();
-    })
+    });
 
     it("handles WebSocket constructor failure", () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       const error = new Error("WebSocket creation failed");
-      global.WebSocket.mockImplementation(() => { throw error; });
+      global.WebSocket.mockImplementation(() => {
+        throw error;
+      });
       wsService.connect();
 
       expect(wsService.isConnected()).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith("WebSocket connection failed:", error);
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "WebSocket connection failed:",
+        error,
+      );
       consoleSpy.mockRestore();
-    })
+    });
 
     it("reconnects automatically on connection close", () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -115,27 +124,29 @@ describe("wsService", () => {
       mockWebSocket.onclose();
 
       expect(wsService.isConnected()).toBe(false);
-      expect(consoleSpy).toHaveBeenCalledWith("WebSocket disconnected, reconnecting in 1000ms (attempt 1/5)");
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "WebSocket disconnected, reconnecting in 1000ms (attempt 1/5)",
+      );
 
       // Simulamos el paso del tiempo para la reconexión
       vi.advanceTimersByTime(1000);
       expect(global.WebSocket).toHaveBeenCalledTimes(2);
       consoleSpy.mockRestore();
-    })
+    });
 
     it("closes WebSocket connection on disconnect", () => {
       wsService.connect();
       wsService.disconnect();
 
       expect(mockWebSocket.close).toHaveBeenCalledTimes(1);
-    })
-  })
+    });
+  });
 
   describe("Event handling", () => {
     const mockMatchCreatePayload: Pick<Match, "id" | "name" | "status"> = {
       id: "550e8400-e29b-41d4-a716-446655440000",
       name: "Partida de prueba",
-      status: "WAITING"
+      status: "WAITING",
     };
 
     it("registers and emits events correctly", () => {
@@ -146,28 +157,28 @@ describe("wsService", () => {
       wsService.on("testEvent", callbackTwo);
       wsService.on("anotherEvent", callbackOne);
       expect(typeof wsService.on).toBe("function");
-    })
+    });
 
     it("removes event listeners correctly", () => {
       const callbackOne = vi.fn();
       const callbackTwo = vi.fn();
-  
+
       wsService.on("testEvent", callbackOne);
       wsService.on("testEvent", callbackTwo);
       wsService.off("testEvent", callbackOne);
-  
+
       wsService.connect();
-  
+
       const messageEvent = {
-        data: JSON.stringify({ event: "testEvent", payload: "test data" })
-      }
-  
+        data: JSON.stringify({ event: "testEvent", payload: "test data" }),
+      };
+
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
-      
+
       expect(callbackOne).not.toHaveBeenCalled();
       expect(callbackTwo).toHaveBeenCalledWith("test data");
-    })
+    });
 
     it("process incoming WebSocket messages", () => {
       const callback = vi.fn();
@@ -178,15 +189,15 @@ describe("wsService", () => {
       const messageEvent = {
         data: JSON.stringify({
           event: "matchCreate",
-          payload: mockMatchCreatePayload
-        })
-      }
+          payload: mockMatchCreatePayload,
+        }),
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
 
       expect(callback).toHaveBeenCalledWith(mockMatchCreatePayload);
-    })
+    });
 
     it("handles multiple listeners for the same event", () => {
       const callbackOne = vi.fn();
@@ -199,9 +210,9 @@ describe("wsService", () => {
       const messageEvent = {
         data: JSON.stringify({
           event: "matchCreate",
-          payload: mockMatchCreatePayload
-        })
-      }
+          payload: mockMatchCreatePayload,
+        }),
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
@@ -209,7 +220,7 @@ describe("wsService", () => {
       expect(callbackOne).toHaveBeenCalledWith(mockMatchCreatePayload);
 
       expect(callbackTwo).toHaveBeenCalledWith(mockMatchCreatePayload);
-    })
+    });
 
     it("handles messages with no listeners gracefully", () => {
       const callback = vi.fn();
@@ -220,9 +231,9 @@ describe("wsService", () => {
       const messageUnhandledEvent = {
         data: JSON.stringify({
           event: "unhandledEvent",
-          payload: "some data"
-        })
-      }
+          payload: "some data",
+        }),
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageUnhandledEvent);
@@ -230,29 +241,31 @@ describe("wsService", () => {
 
       const messageMissingPayload = {
         data: JSON.stringify({
-          event: "testEvent"
-        })
-      }
+          event: "testEvent",
+        }),
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageMissingPayload);
       expect(callback).toHaveBeenCalledWith(undefined);
-    })
+    });
 
     it("handles malformed JSON messages gracefully", () => {
-      const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
       wsService.connect();
 
       const malformedMessageEvent = {
-        data: "{ event: 'testEvent', payload: 'data' " // JSON malformado
-      }
+        data: "{ event: 'testEvent', payload: 'data' ", // JSON malformado
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(malformedMessageEvent);
 
       expect(consoleSpy).toHaveBeenCalled();
       consoleSpy.mockRestore();
-    })
+    });
 
     it("ignores events with no registered listeners", () => {
       wsService.connect();
@@ -260,15 +273,15 @@ describe("wsService", () => {
       const messageEvent = {
         data: JSON.stringify({
           event: "unregisteredEvent",
-          payload: "data"
-        })
-      }
+          payload: "data",
+        }),
+      };
 
       expect(() => {
         // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
         mockWebSocket.onmessage(messageEvent);
       }).to.not.throw();
-    })
+    });
 
     it("handles extremely long event names and payloads", () => {
       const callback = vi.fn();
@@ -281,14 +294,14 @@ describe("wsService", () => {
       const messageEvent = {
         data: JSON.stringify({
           event: longEventName,
-          payload: longPayload
-        })
-      }
+          payload: longPayload,
+        }),
+      };
 
       // @ts-expect-error - necesitamos "recibir" un mensaje manualmente
       mockWebSocket.onmessage(messageEvent);
 
       expect(callback).toHaveBeenCalledWith(longPayload);
-    })
-  })
-})
+    });
+  });
+});
