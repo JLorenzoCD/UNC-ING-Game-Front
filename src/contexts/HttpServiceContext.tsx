@@ -7,7 +7,7 @@ interface HttpServiceContextType {
   httpService: HTTPService | null;
 }
 
-export const HttpServiceContext = createContext<HttpServiceContextType>({
+const HttpServiceContext = createContext<HttpServiceContextType>({
   httpService: null,
 })
 

@@ -6,7 +6,7 @@ interface WebSocketServiceContextType {
   isConnected: boolean;
 }
 
-export const WebSocketServiceContext = createContext<WebSocketServiceContextType>({
+const WebSocketServiceContext = createContext<WebSocketServiceContextType>({
   wsService: null,
   isConnected: false,
 })
