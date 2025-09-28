@@ -1,39 +1,34 @@
-import { createContext, useCallback, useContext, useEffect, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from "react";
+import { useParams } from "react-router";
 
 import type { Match } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 
-import { useParams } from "react-router";
 import { useHttpService } from "./HttpServiceContext";
+import { isUUID } from "@/utils";
 
 export interface GameContextType {
   match: Match | null;
-  setMatch: Dispatch<SetStateAction<Match | null>>;
-
   cards: GameCard[];
-  setCards: Dispatch<SetStateAction<GameCard[]>>;
-
   secrets: GameSecret[];
-  setSecrets: Dispatch<SetStateAction<GameSecret[]>>;
-
   players: GamePlayer[];
-  setPlayers: Dispatch<SetStateAction<GamePlayer[]>>;
+
+  isLoading: boolean;
+  hasError: boolean;
+  error: Error | null;
 }
 
 const GameContext = createContext<GameContextType>({
   match: null,
-  setMatch: () => {},
-
   cards: [],
-  setCards: () => {},
-
   secrets: [],
-  setSecrets: () => {},
-
   players: [],
-  setPlayers: () => {},
+
+  isLoading: false,
+  hasError: false,
+  error: null,
 })
 
 export interface GameContextProviderProps {
@@ -46,6 +41,10 @@ export default function GameContextProvider({ children }: GameContextProviderPro
   const params = useParams();
   const matchId = params.matchId;
 
+  const [error, setError] = useState<Error | null>(null);
+  const [hasError, setHasError] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
   const [match, setMatch] = useState<Match | null>(null);
   const [cards, setCards] = useState<GameCard[]>([]);
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
@@ -55,36 +54,63 @@ export default function GameContextProvider({ children }: GameContextProviderPro
     // Si no tenemos el id de la partida o el servicio HTTP, no hacemos nada.
     if (!matchId || !httpService) return;
 
-    const [match, cards, secrets, players] = await Promise.all([
-      httpService.getMatch(matchId),
-      httpService.getMatchCards(matchId),
-      httpService.getMatchSecrets(matchId),
-      httpService.getMatchPlayers(matchId),
-    ])
+    if (!isUUID(matchId)) {
+      console.error("Match ID is not a valid UUID:", matchId);
 
-    setMatch(match);
-    setCards(cards);
-    setSecrets(secrets);
-    setPlayers(players);
+      return;
+    }
+
+    setError(null);
+    setHasError(false);
+    setIsLoading(true);
+
+    try {
+      const [match, cards, secrets, players] = await Promise.all([
+        httpService.getMatch(matchId),
+        httpService.getMatchCards(matchId),
+        httpService.getMatchSecrets(matchId),
+        httpService.getMatchPlayers(matchId),
+      ])
+
+      setMatch(match);
+      setCards(cards);
+      setSecrets(secrets);
+      setPlayers(players);
+    } catch (error) {
+      console.error("Error fetching match data:", error);
+    
+      setError(error as Error);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, [httpService, matchId]);
 
   useEffect(() => {
     fetchMatchData();
   }, [fetchMatchData])
 
-  const contextValue: GameContextType = {
+  // Memoizamos el valor del contexto para evitar renders innecesarios.
+  // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
+  const contextValue: GameContextType = useMemo(() => ({
     match,
-    setMatch,
-
     cards,
-    setCards,
-
     secrets,
-    setSecrets,
-
     players,
-    setPlayers,
-  }
+
+    isLoading,
+    hasError,
+    error,
+  }), [
+    match,
+    cards,
+    secrets,
+    players,
+
+    isLoading,
+    hasError,
+    error,
+  ])
 
   return (
     <GameContext.Provider value={contextValue}>
