@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import type { PlayerInput } from '../../../types/player';
+import { useState } from 'react';
+import type { PlayerInput } from '@/types/player';
 
 import quinAvatar from "@/assets/avatars/icono1.png"
 import ladyAvatar from "@/assets/avatars/icono2.png"
@@ -39,28 +39,50 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const validateName = (name: string): string => {
+    if (!name.trim()) {
+      return 'The nickname is required';
+    }
+
+    if (name.includes(' ')) {
+      return 'The nickname must not contain spaces';
+    }
+
+    return '';
+  }
+
+  const validateBirthday = (dateString: string): string => {
+    if (!dateString) {
+      return 'The birthdate is required';
+    }
+
+    const age = Math.floor(
+      (new Date().getTime() - new Date(dateString).getTime()) / (1000 * 60 * 60 * 24 * 365.25)
+    );
+
+    if (age < 5 || age > 110) {
+      return 'The birthdate must be between 5 and 110 years ago';
+    }
+
+    return '';
+  }
+
+  const validateAvatar = (avatar: string): string => {
+    if (!avatar.trim()) {
+      return 'The avatar is required';
+    }
+
+    return '';
+  }
+
   const validateField = (name: string, value: string): string => {
     switch (name) {
       case 'name':
-        if (!value.trim()) {
-          return 'The nickname is required';
-        }
-        if (value.includes(' ')) {
-          return 'The nickname must not contain spaces';
-        }
-        return '';
-
+        return validateName(value);
       case 'birthday':
-        if (!value) {
-          return 'The birthdate is required';
-        }
-        const age = Math.floor((new Date().getTime() - new Date(value).getTime()) / (1000 * 60 * 60 * 24 * 365.25));
-        if (age < 5  || age > 110) {
-          return 'The birthdate must be between 5 and 110 years ago';
-        }
-        return '';
+        return validateBirthday(value);
       case 'avatar':
-        return !value.trim() ? 'The avatar is required' : '';
+        return validateAvatar(value);
       default:
         return '';
     }
@@ -144,9 +166,11 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({ handleCreatePlayer }) => 
   const getInputClassName = (fieldName: string) => {
     const baseClasses =
       "w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-colors";
+
     const errorClasses = errors[fieldName]
       ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
       : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400";
+
     return `${baseClasses} ${errorClasses}`;
   };
 

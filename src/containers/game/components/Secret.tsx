@@ -12,7 +12,7 @@ const SECRET_IMAGE_PATHS : Record <SecretType ,string> = {
 }
 
 type SecretProps = {
-  secret: HandSecret
+  secret: HandSecret | null
 }
 
 export default function Secret({ secret }: SecretProps) {

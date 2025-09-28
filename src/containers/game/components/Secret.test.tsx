@@ -121,7 +121,7 @@ describe('Secret Component', () => {
     it('should not render when secret prop is null', () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
       
-      render(<Secret secret={null as any} />);
+      render(<Secret secret={null} />);
       
       expect(screen.queryByRole('img')).not.toBeInTheDocument();
     });
@@ -129,6 +129,9 @@ describe('Secret Component', () => {
 
     it('should not render when secret.type is missing', () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
+
+      // Forzamos un tipo inválido 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const invalidSecret = { ...mockSecrets.innocent, type: undefined as any };
       
       render(<Secret secret={invalidSecret} />);
@@ -139,6 +142,9 @@ describe('Secret Component', () => {
 
     it('should not render when secret.player_id is missing', () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
+
+      // Forzamos un player_id inválido
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const invalidSecret = { ...mockSecrets.innocent, player_id: undefined as any };
       
       render(<Secret secret={invalidSecret} />);
