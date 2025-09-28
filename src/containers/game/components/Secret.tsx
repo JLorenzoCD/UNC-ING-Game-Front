@@ -1,5 +1,6 @@
-import type { HandSecret, Secret, SecretType } from "@/types/secret";
-import { usePlayer } from "../../../contexts/PlayerContext";
+import type { GameSecret, Secret, SecretType } from "@/types/secret";
+
+import { usePlayer } from "@/contexts/PlayerContext";
 
 import secretFront from "@/assets/06-secret_front.png"
 import secretAccomplice from "@/assets/04-secret_accomplice.png"
@@ -11,8 +12,8 @@ const SECRET_IMAGE_PATHS : Record <SecretType ,string> = {
   "MURDERER" : secretMurder
 }
 
-type SecretProps = {
-  secret: HandSecret
+interface SecretProps {
+  secret: GameSecret
 }
 
 export default function Secret({ secret }: SecretProps) {
@@ -29,9 +30,10 @@ export default function Secret({ secret }: SecretProps) {
   }
 
   const imagePath = (player?.id === secret.player_id) ? SECRET_IMAGE_PATHS[secret.type] : null;
+  
+  if (!imagePath) return null;
+  
   return (
-    <>
-      {imagePath && <img src={imagePath} alt={`Secret card: ${secret.type}`} className={`object-cover w-40 h-60`} />}
-    </>
+    <img src={imagePath} alt={`Secret card: ${secret.type}`} className={`object-cover w-40 h-60`} />
   )
 }

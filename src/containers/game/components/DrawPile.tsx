@@ -1,8 +1,8 @@
 import cardBackImage from "@/assets/01-card_back.png"
 
-type DrawPileProps = {
+interface DrawPileProps {
   cardCount: number;
-};
+}
 
 export default function DrawPile({ cardCount }: DrawPileProps) {
   return (

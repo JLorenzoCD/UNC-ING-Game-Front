@@ -1,11 +1,12 @@
 import "@testing-library/jest-dom";
 import { render, screen } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
+
+import { usePlayer } from '@/contexts/PlayerContext';
 import Secret from './Secret';
-import { usePlayer } from '../../../contexts/PlayerContext';
 
 // Mock del contexto de jugador
-vi.mock('../../../contexts/PlayerContext', () => ({
+vi.mock('@/contexts/PlayerContext', () => ({
   usePlayer: vi.fn(),
 }));
 

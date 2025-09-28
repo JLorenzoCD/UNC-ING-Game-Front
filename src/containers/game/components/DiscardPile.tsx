@@ -1,10 +1,9 @@
-import type { Card as CardSchema} from "@/types/card.d.ts";
+import type { GameCard} from "@/types/card.d.ts";
 import Card from "./Card.tsx";
 
-
-type DiscardPileProps = {
-  topCard: CardSchema | null;
-};
+interface DiscardPileProps {
+  topCard: GameCard | null;
+}
 
 const DefaultCardImage = () => {
   return (
