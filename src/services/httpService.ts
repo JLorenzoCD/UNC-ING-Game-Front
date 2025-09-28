@@ -1,11 +1,13 @@
 import type { Player } from "../types/player";
-import type { Match, MatchCreateInput } from '@/types/match'
+import type { Match, MatchCreateInput } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
 function isApiUrlDefined(): boolean {
-  return typeof import.meta.env.VITE_API_URL === "string"
-  && import.meta.env.VITE_API_URL.length > 0;
+  return (
+    typeof import.meta.env.VITE_API_URL === "string" &&
+    import.meta.env.VITE_API_URL.length > 0
+  );
 }
 
 export type HttpService = ReturnType<typeof createHttpService>;
@@ -26,9 +28,12 @@ export function createHttpService() {
    * const data = await httpService.request<MyDataType>("/my-endpoint", { method: "GET" });
    * console.log(data); // `data` es de tipo `MyDataType`
    */
-  const request = async<T = unknown>(route: string, options?: RequestInit): Promise<T> => {
+  const request = async <T = unknown>(
+    route: string,
+    options?: RequestInit,
+  ): Promise<T> => {
     const url = baseUrl.concat(route);
-    
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -48,23 +53,23 @@ export function createHttpService() {
 
       throw error;
     }
-  }
+  };
 
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
     return request<Player>("/players", {
       method: "POST",
       body: JSON.stringify(player),
     });
-  }
+  };
 
   const createMatch = async (matchToCreate: MatchCreateInput) => {
-    const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-    return await request<Match>('/matches', options)
-  }
+    const options = { method: "POST", body: JSON.stringify(matchToCreate) };
+    return await request<Match>("/matches", options);
+  };
 
   return {
     request,
     createPlayer,
-	createMatch
-  }
+    createMatch,
+  };
 }
