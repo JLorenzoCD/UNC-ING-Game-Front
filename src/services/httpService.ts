@@ -1,11 +1,8 @@
-import type { Match } from "@/types/match";
+import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer, Player } from "@/types/player";
-
-// TODO: cambiar este import a "@/types/..."
-import type { MatchToCreate } from "@/containers/create-match/components/FormCreateMatch/type";
-import type { UUID } from "@/types/common";
+import type { Match, MatchCreateInput } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -63,9 +60,9 @@ export function createHttpService() {
     });
   }
 
-  const createMatch = async (matchToCreate: MatchToCreate) => {
+  const createMatch = async (matchToCreate: MatchCreateInput) => {
     const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-    return request<Match>('/matches', options)
+    return await request<Match>('/matches', options)
   }
 
   const getMatch = async (matchId: UUID): Promise<Match> => {

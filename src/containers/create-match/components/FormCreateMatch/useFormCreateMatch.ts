@@ -7,8 +7,8 @@ import { RANGE_PLAYERS } from './constants'
 
 import { validateForm } from './utils'
 
-import type { Match } from '@/types/match'
-import type { MatchForm, MatchFormError, MatchToCreate } from './type'
+import type { Match, MatchCreateInput } from '@/types/match'
+import type { MatchForm, MatchFormError } from './type'
 
 export default function useFormCreateMatch() {
 	const [formData, setFormData] = useState<MatchForm>({
@@ -27,7 +27,7 @@ export default function useFormCreateMatch() {
 	const playerData = usePlayer()
 
 	const createHandleSubmit =
-		(handleCreateMatch: (matchToCreate: MatchToCreate) => Promise<Match>) =>
+		(handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>) =>
 		async (e: React.FormEvent<HTMLFormElement>) => {
 			e.preventDefault()
 
