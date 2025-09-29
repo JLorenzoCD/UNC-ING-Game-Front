@@ -14,7 +14,7 @@ import { FRONTEND_PATHS } from "@/constants/frontendPaths";
 import { isUUID } from "@/utils";
 
 import type { UUID } from "@/types/common";
-import type { Match } from "@/types/match";
+import type { Match, MatchListItem } from "@/types/match";
 import type { Player } from "@/types/player";
 
 function fillAndShufflePlayers(
@@ -60,8 +60,17 @@ function LobbyContainer() {
   useEffect(() => {
     if (httpService == null || wsService == null) return;
 
-    const handleLobbyJoin = (updatedPlayer: Partial<Player>) => {
-      console.log(updatedPlayer);
+    const handleLobbyJoin = (newPlayer: Player) => {
+      setPlayers((prev) => [...prev, newPlayer]);
+    };
+
+    const handleMatchStart = (updateMatch: MatchListItem) => {
+      if (
+        updateMatch.id === matchId &&
+        updateMatch.status.toLocaleUpperCase() === "IN_PROGRESS"
+      ) {
+        navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+      }
     };
 
     const init = async () => {
@@ -77,6 +86,7 @@ function LobbyContainer() {
 
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
+          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
         } else {
           const err = new Error(
             "An error occurred while connecting to the server. Matches cannot be updated when adding players or adding new matches.",
@@ -105,6 +115,7 @@ function LobbyContainer() {
     init();
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
+      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
     };
   }, [httpService, wsService, isConnected, navigate, matchId]);
 
