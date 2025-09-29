@@ -1,18 +1,20 @@
-import { useState } from "react";
+import { useState } from "react"
 
-import type { UUID } from "@/types/common";
-import type { MatchCard } from "@/types/card";
+import type { UUID } from "@/types/common"
+import type { GameCard } from "@/types/card"
+
+import { useGame } from "@/contexts/GameContext"
 
 export default function GameContainer() {
-  const [selectedCards, setSelectedCards] = useState<Record<UUID, MatchCard>>(
-    {},
-  );
+  const { match } = useGame();
 
-  const isCardSelected = (card: MatchCard) => {
-    return !!selectedCards[card.id];
-  };
+  const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>({})
 
-  const handleSelectCard = (card: MatchCard) => {
+  const isCardSelected = (card: GameCard) => {
+    return !!selectedCards[card.id]
+  }
+
+  const handleSelectCard = (card: GameCard) => {
     if (!selectedCards[card.id]) {
       setSelectedCards({ ...selectedCards, [card.id]: card });
     } else {
@@ -24,6 +26,7 @@ export default function GameContainer() {
 
   return (
     <div data-testid="game-container" className="h-screen p-4 flex flex-col">
+      {match && <p>match: {JSON.stringify(match)}</p>}
       {/* Componentes de mano, tablero, etc. */}
 
       <div className="mt-auto self-center">

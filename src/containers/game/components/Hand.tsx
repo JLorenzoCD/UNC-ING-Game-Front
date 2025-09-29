@@ -1,13 +1,13 @@
-import type { HandCard } from "@/types/card";
+import type { GameCard } from "@/types/card";
 import Card from "./Card";
 
-export const HAND_SIZE = 6; // Número máximo (y necesario al princio de cada ronda) de cartas en la mano
+export const HAND_SIZE = 6; // Número máximo (y necesario al principio de cada ronda) de cartas en la mano
 
 interface HandProps {
-  cards: Array<HandCard | null>; // Un valor `null` representa una posición vacía en la mano;
+  cards: Array<GameCard | null> // Un valor `null` representa una posición vacía en la mano;
 
-  onSelect: (card: HandCard) => void; // Callback que se ejecuta al seleccionar una carta
-  isSelected: (card: HandCard) => boolean; // Función para determinar si una carta está seleccionada
+  onSelect: (card: GameCard) => void // Callback que se ejecuta al seleccionar una carta
+  isSelected: (card: GameCard) => boolean // Función para determinar si una carta está seleccionada
 }
 
 function EmptyHandPosition() {

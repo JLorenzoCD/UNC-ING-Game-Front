@@ -1,13 +1,14 @@
-import type { Player } from "../types/player";
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
+import type { GameSecret } from "@/types/secret";
+import type { GamePlayer, Player } from "@/types/player";
 import type { Match, MatchCreateInput } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
 function isApiUrlDefined(): boolean {
-  return (
-    typeof import.meta.env.VITE_API_URL === "string" &&
-    import.meta.env.VITE_API_URL.length > 0
-  );
+  return typeof import.meta.env.VITE_API_URL === "string"
+    && import.meta.env.VITE_API_URL.length > 0;
 }
 
 export type HttpService = ReturnType<typeof createHttpService>;
@@ -67,9 +68,29 @@ export function createHttpService() {
     return await request<Match>("/matches", options);
   };
 
+  const getMatch = async (matchId: UUID): Promise<Match> => {
+    return request<Match>(`/matches/${matchId}`)
+  }
+
+  const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
+    return request<GamePlayer[]>(`/matches/${matchId}/players`)
+  }
+
+  const getMatchCards = async (matchId: UUID): Promise<GameCard[]> => {
+    return request<GameCard[]>(`/matches/${matchId}/cards`)
+  }
+
+  const getMatchSecrets = async (matchId: UUID): Promise<GameSecret[]> => {
+    return request<GameSecret[]>(`/matches/${matchId}/secrets`)
+  }
+
   return {
     request,
     createPlayer,
     createMatch,
-  };
+    getMatch,
+    getMatchPlayers,
+    getMatchCards,
+    getMatchSecrets,
+  }
 }

@@ -1,11 +1,8 @@
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+
 import { createWsService, type WSService } from "@/services/wsService";
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+
+import { usePlayer } from "./PlayerContext";
 
 interface WebSocketServiceContextType {
   wsService: WSService | null;
@@ -21,13 +18,21 @@ interface WebSocketServiceProviderProps {
   children: ReactNode;
 }
 
-export function WebSocketServiceProvider({
-  children,
-}: WebSocketServiceProviderProps) {
-  const [wsService] = useState<WSService>(() => createWsService());
+export function WebSocketServiceProvider({ children }: WebSocketServiceProviderProps) {
+  const { player } = usePlayer();
+  
+  const [wsService, setWsService] = useState<WSService | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
 
   useEffect(() => {
+    if (!player) return;
+
+    setWsService(createWsService(player.id));
+  }, [player])
+
+  useEffect(() => {
+    if (!wsService) return;
+
     wsService.on("connection", setIsConnected);
     wsService.connect();
 
