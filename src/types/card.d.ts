@@ -89,4 +89,4 @@ export interface MatchCard {
  * los campos de `name` y `description`, útiles en
  * distintos componentes.
  */
-export type HandCard = MatchCard & Card;
+export type GameCard = MatchCard & Card;

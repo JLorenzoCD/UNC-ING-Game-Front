@@ -1,12 +1,18 @@
 import "@testing-library/jest-dom";
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import type { Card } from "../../../types/card";
+
+import type { GameCard } from "@/types/card";
 import DiscardPile from "./DiscardPile";
 
-const testCard: Card = {
+const testCard: GameCard = {
   id: crypto.randomUUID(),
-  name: "SATTERTHWAITE",
+  card_id: crypto.randomUUID(),
+  match_id: crypto.randomUUID(),
+  player_id: crypto.randomUUID(),
+  is_discarded: true,
+  name: "MR SATTERTHWAITE",
+  type: "DETECTIVE",
   description:
     "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
 };

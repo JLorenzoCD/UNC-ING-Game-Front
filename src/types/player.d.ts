@@ -57,3 +57,5 @@ export interface MatchPlayer {
 }
 
 export type PlayerInput = Omit<Player, "id">;
+
+export type GamePlayer = MatchPlayer & Player;

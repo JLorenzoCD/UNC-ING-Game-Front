@@ -4,7 +4,7 @@ import Container from "@/components/Container";
 
 import logoGame from "@/assets/logo.png";
 
-function MainLayout() {
+export default function MainLayout() {
   return (
     <>
       <header className="px-135">
@@ -18,5 +18,3 @@ function MainLayout() {
     </>
   );
 }
-
-export default MainLayout;
