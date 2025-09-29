@@ -13,16 +13,21 @@ import MainLayout from "./containers/MainLayout.tsx";
 import MatchesContainer from "./containers/matches/MatchesContainer.tsx";
 import CreateMatchContainer from "./containers/create-match/CreateMatchContainer.tsx";
 import LobbyPage from "./containers/LobbyPage.tsx";
+import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <HttpServiceProvider>
-      <WebSocketServiceProvider>
-        <PlayerProvider>
+    <PlayerProvider>
+      <HttpServiceProvider>
+        <WebSocketServiceProvider>
           <BrowserRouter>
             <Routes>
               <Route path={FRONTEND_PATHS.HOME} element={<App />} />
               <Route element={<MainLayout />}>
+                <Route
+                  path={FRONTEND_PATHS.PLAYER_CREATE}
+                  element={<CreatePlayerContainer />}
+                />
                 <Route
                   path={FRONTEND_PATHS.MATCH_LIST}
                   element={<MatchesContainer />}
@@ -38,8 +43,8 @@ createRoot(document.getElementById("root")!).render(
               />
             </Routes>
           </BrowserRouter>
-        </PlayerProvider>
-      </WebSocketServiceProvider>
-    </HttpServiceProvider>
+        </WebSocketServiceProvider>
+      </HttpServiceProvider>
+    </PlayerProvider>
   </StrictMode>,
 );

@@ -1,6 +1,7 @@
 const FRONTEND_PATHS = {
   HOME: "/",
-  MATCH_LIST: "/matches",
+  PLAYER_CREATE: "/player/create",
+  MATCH_LIST: "/matches/",
   MATCH_CREATE: "/match/create",
 
   MATCH_LOBBY: (id: string) => `/match/${id}/lobby`,

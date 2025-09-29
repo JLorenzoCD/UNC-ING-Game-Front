@@ -93,15 +93,11 @@ vi.mock("@/constants/frontendPaths", () => ({
 
 //! OJO - Tiene que ser iguales, da problemas la herramienta de testing
 const mockSocketsEvents = {
-  MATCHES_ADD: "matchAdd",
-  MATCHES_REMOVE: "matchRemove",
-  MATCHES_UPDATE: "matchUpdate",
+  MATCHES: "match",
 };
 vi.mock("@/constants/backend", () => ({
   BACKEND_SOCKETS_EVENTS: {
-    MATCHES_ADD: "matchAdd",
-    MATCHES_REMOVE: "matchRemove",
-    MATCHES_UPDATE: "matchUpdate",
+    MATCHES: "match",
   },
 }));
 //! Termina
@@ -143,32 +139,24 @@ describe("MatchesContainer", () => {
     // Verifica el registro de eventos WebSocket.
     await waitFor(() => {
       expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_ADD,
-        expect.any(Function),
-      );
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_REMOVE,
-        expect.any(Function),
-      );
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_UPDATE,
+        mockSocketsEvents.MATCHES,
         expect.any(Function),
       );
     });
   });
 
-  it('should handle the "matchAdd" event and display the new match', async () => {
+  it('should handle the "match" event and display the new match', async () => {
     render(<MatchesContainer />);
 
     await waitFor(() => {
       expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_ADD,
+        mockSocketsEvents.MATCHES,
         expect.any(Function),
       );
     });
 
-    // Simulamos el evento 'matchAdd'.
-    const addHandler = getEventHandler(mockSocketsEvents.MATCHES_ADD);
+    // Simulamos el evento 'añadir match'.
+    const addHandler = getEventHandler(mockSocketsEvents.MATCHES);
     act(() => {
       addHandler({
         id: "3",
@@ -188,20 +176,29 @@ describe("MatchesContainer", () => {
     });
   });
 
-  it('should handle "matchRemove" events correctly', async () => {
+  it('should handle the "match" event and remove the match', async () => {
     render(<MatchesContainer />);
 
     await waitFor(() => {
       expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_REMOVE,
+        mockSocketsEvents.MATCHES,
         expect.any(Function),
       );
     });
 
-    // Simulamos un evento 'matchRemove' (asumiendo que 'Prueba 1' existe inicialmente).
-    const removeHandler = getEventHandler(mockSocketsEvents.MATCHES_REMOVE);
+    // Simulamos un evento 'eliminar match' (asumiendo que 'Prueba 1' existe inicialmente).
+    const removeHandler = getEventHandler(mockSocketsEvents.MATCHES);
     act(() => {
-      removeHandler("1"); // Eliminamos el match con id '1' ('Prueba 1').
+      removeHandler({
+        id: "1",
+        name: "Prueba 1",
+        status: "IN_PROGRESS",
+        min_players: 2,
+        max_players: 6,
+        owner_id: crypto.randomUUID(),
+        current_player_count: 5,
+        current_player_order: 0,
+      }); // Eliminamos el match 'Prueba 1'.
     });
 
     // Verificamos que el match eliminado ya NO está en el documento.
@@ -210,18 +207,18 @@ describe("MatchesContainer", () => {
     });
   });
 
-  it('should handle "matchUpdate" events correctly', async () => {
+  it('should handle the "match" event and update match', async () => {
     render(<MatchesContainer />);
 
     await waitFor(() => {
       expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES_UPDATE,
+        mockSocketsEvents.MATCHES,
         expect.any(Function),
       );
     });
 
-    // Simulamos un evento 'matchUpdate' (asumiendo que 'Prueba 2' existe con id '2').
-    const updateHandler = getEventHandler(mockSocketsEvents.MATCHES_UPDATE);
+    // Simulamos un evento 'actualizar match' (asumiendo que 'Prueba 2' existe con id '2').
+    const updateHandler = getEventHandler(mockSocketsEvents.MATCHES);
     act(() => {
       updateHandler({
         id: "2",
@@ -248,15 +245,7 @@ describe("MatchesContainer", () => {
     unmount();
 
     expect(mockOff).toHaveBeenCalledWith(
-      mockSocketsEvents.MATCHES_ADD,
-      expect.any(Function),
-    );
-    expect(mockOff).toHaveBeenCalledWith(
-      mockSocketsEvents.MATCHES_REMOVE,
-      expect.any(Function),
-    );
-    expect(mockOff).toHaveBeenCalledWith(
-      mockSocketsEvents.MATCHES_UPDATE,
+      mockSocketsEvents.MATCHES,
       expect.any(Function),
     );
   });
