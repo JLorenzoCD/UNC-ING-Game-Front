@@ -3,13 +3,18 @@ import type { GamePlayer } from "@/types/player";
 type PlayersProps = {
   player: GamePlayer;
   position: { x: number; y: number };
+  isYourTurn: boolean;
 };
 
 const truncateName = (name: string, maxLength = 15) => {
   return name.length > maxLength ? `${name.slice(0, maxLength)}...` : name;
 };
 
-export default function Players({ player, position }: PlayersProps) {
+export default function Players({
+  player,
+  position,
+  isYourTurn,
+}: PlayersProps) {
   return (
     <div
       key={player.id}
@@ -19,7 +24,13 @@ export default function Players({ player, position }: PlayersProps) {
         top: `${position.y}px`,
       }}
     >
-      <div className="relative w-20 h-20 rounded-full border-4">
+      <div
+        className={`relative w-20 h-20 rounded-full border-4 ${
+          isYourTurn
+            ? "border-green-400 shadow-lg shadow-green-400/50 animate-pulse"
+            : ""
+        }`}
+      >
         {player.avatar ? (
           <img
             src={player.avatar}

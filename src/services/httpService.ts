@@ -80,6 +80,16 @@ export function createHttpService() {
     );
   };
 
+  const joinMatch = async (playerId: UUID, matchId: UUID) => {
+    const options = {
+      method: "POST",
+    };
+    return await request<{ match_id: UUID }>(
+      BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
+      options,
+    );
+  };
+
   const getMatch = async (matchId: UUID): Promise<Match> => {
     return request<Match>(`/matches/${matchId}`);
   };
@@ -108,6 +118,7 @@ export function createHttpService() {
     createMatch,
     startMatch,
     getMatches,
+    joinMatch,
     getMatch,
     getMatchPlayers,
     getMatchCards,

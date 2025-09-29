@@ -4,6 +4,8 @@ const BACKEND_ENDPOINTS = {
   GET_MATCHES: "/matches/",
   CREATE_MATCHES: "/matches/",
 
+  JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
+    `/matches/${matchId}/join?player_id=${playerId}`,
   START_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/start?player_id=${playerId}`,
 } as const;

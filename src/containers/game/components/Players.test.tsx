@@ -33,7 +33,13 @@ describe("Players Component", () => {
   const defaultPosition = { x: 100, y: 200 };
 
   it("should render player with avatar", () => {
-    render(<Players player={mockPlayer} position={defaultPosition} />);
+    render(
+      <Players
+        player={mockPlayer}
+        position={defaultPosition}
+        isYourTurn={false}
+      />,
+    );
 
     const avatar = screen.getByAltText("Avatar de TestPlayer");
     expect(avatar).toBeInTheDocument();
@@ -45,7 +51,11 @@ describe("Players Component", () => {
 
   it("should truncate long player names", () => {
     render(
-      <Players player={mockPlayerWithLongName} position={defaultPosition} />,
+      <Players
+        player={mockPlayerWithLongName}
+        position={defaultPosition}
+        isYourTurn={false}
+      />,
     );
 
     const truncatedName = screen.getByText("Thisisaver...");
@@ -60,7 +70,7 @@ describe("Players Component", () => {
   it("should position player correctly", () => {
     const position = { x: 300, y: 400 };
     const { container } = render(
-      <Players player={mockPlayer} position={position} />,
+      <Players player={mockPlayer} position={position} isYourTurn={false} />,
     );
 
     const playerDiv = container.firstChild as HTMLElement;
@@ -68,5 +78,44 @@ describe("Players Component", () => {
       left: "300px",
       top: "400px",
     });
+  });
+
+  it("should show green pulsing border when it is player's turn", () => {
+    const { container } = render(
+      <Players
+        player={mockPlayer}
+        position={defaultPosition}
+        isYourTurn={true}
+      />,
+    );
+    const avatarContainer = container.querySelector(
+      ".relative.w-20.h-20.rounded-full.border-4",
+    );
+
+    expect(avatarContainer).toBeInTheDocument();
+    expect(avatarContainer).toHaveClass("border-green-400");
+    expect(avatarContainer).toHaveClass("shadow-lg");
+    expect(avatarContainer).toHaveClass("shadow-green-400/50");
+    expect(avatarContainer).toHaveClass("animate-pulse");
+  });
+
+  it("should not show green border when it is not player's turn", () => {
+    const { container } = render(
+      <Players
+        player={mockPlayer}
+        position={defaultPosition}
+        isYourTurn={false}
+      />,
+    );
+
+    const avatarContainer = container.querySelector(
+      ".relative.w-20.h-20.rounded-full.border-4",
+    );
+
+    expect(avatarContainer).toBeInTheDocument();
+
+    expect(avatarContainer).not.toHaveClass("border-green-400");
+    expect(avatarContainer).not.toHaveClass("shadow-green-400/50");
+    expect(avatarContainer).not.toHaveClass("animate-pulse");
   });
 });
