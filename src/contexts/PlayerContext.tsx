@@ -5,7 +5,7 @@ import {
   useEffect,
   useState,
   type ReactNode,
-  type SetStateAction
+  type SetStateAction,
 } from "react";
 
 import type { Player } from "../types/player";
@@ -17,8 +17,8 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType>({
   player: null,
-  setPlayer: () => { },
-})
+  setPlayer: () => {},
+});
 
 interface PlayerProviderProps {
   children: ReactNode;

@@ -7,5 +7,5 @@ export default function GameLayout() {
     <GameContextProvider>
       <Outlet />
     </GameContextProvider>
-  )
+  );
 }

@@ -13,8 +13,9 @@ const testCard: GameCard = {
   is_discarded: true,
   name: "MR SATTERTHWAITE",
   type: "DETECTIVE",
-  description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes."
-}
+  description:
+    "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
+};
 
 describe("DiscardPile", () => {
   describe("Rendering", () => {

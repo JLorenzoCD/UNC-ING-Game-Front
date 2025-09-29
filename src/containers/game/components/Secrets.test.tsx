@@ -1,13 +1,13 @@
 import "@testing-library/jest-dom";
-import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
+import { render, screen } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach, type Mock } from "vitest";
 
 import type { GameSecret } from "@/types/secret";
-import { usePlayer } from '@/contexts/PlayerContext';
-import Secrets from './Secrets';
+import { usePlayer } from "@/contexts/PlayerContext";
+import Secrets from "./Secrets";
 
 // Mock del contexto de jugador
-vi.mock('@/contexts/PlayerContext', () => ({
+vi.mock("@/contexts/PlayerContext", () => ({
   usePlayer: vi.fn(),
 }));
 
@@ -21,37 +21,37 @@ vi.mock("@/assets/03-secret_murderer.png", () => ({
 
 const mockUsePlayer = usePlayer as Mock;
 
-describe('Secrets', () => {
-  const mockPlayer = { id: crypto.randomUUID(), name: 'TestPlayer' };
-  
+describe("Secrets", () => {
+  const mockPlayer = { id: crypto.randomUUID(), name: "TestPlayer" };
+
   const mockSecrets: GameSecret[] = [
     {
-      type: 'INNOCENT',
-      content: 'You are innocent',
+      type: "INNOCENT",
+      content: "You are innocent",
       id: crypto.randomUUID(),
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
+      is_revealed: false,
     },
     {
-      type: 'INNOCENT',
+      type: "INNOCENT",
       id: crypto.randomUUID(),
-      content: 'You are the innocent',
+      content: "You are the innocent",
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
+      is_revealed: false,
     },
     {
-      type: 'MURDERER',
+      type: "MURDERER",
       id: crypto.randomUUID(),
-      content: 'You are the murderer',
+      content: "You are the murderer",
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
-    }
+      is_revealed: false,
+    },
   ];
 
   beforeEach(() => {

@@ -1,4 +1,4 @@
-import type { CardName, Card as CardSchema } from "@/types/card"
+import type { CardName, Card as CardSchema } from "@/types/card";
 
 // Imports de las imágenes de las cartas.
 // Estos son manejados por Vite y, dependiendo del entorno,
@@ -45,9 +45,9 @@ const CARD_IMAGE_PATHS: Record<CardName, string> = {
   "DELAY THE MURDERER ESCAPE": cardDelayEscape,
   "EARLY TRAIN TO PADDINGTON": cardEarlyTrain,
   "POINT YOUR SUSPICIONS": cardPointSuspicions,
-  "BLACKMAILED": cardBlackMailed,
-  "SOCIAL FAUX PAS": cardFauxPas
-}
+  BLACKMAILED: cardBlackMailed,
+  "SOCIAL FAUX PAS": cardFauxPas,
+};
 
 type CardProps = Pick<CardSchema, "name" | "description">;
 
@@ -71,6 +71,11 @@ export default function Card({ name, description }: CardProps) {
   }
 
   return (
-    <img data-testid="card" src={imagePath} alt={description} className="w-40 h-60 object-cover" />
-  )
+    <img
+      data-testid="card"
+      src={imagePath}
+      alt={description}
+      className="w-40 h-60 object-cover"
+    />
+  );
 }

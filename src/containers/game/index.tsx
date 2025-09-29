@@ -1,18 +1,20 @@
-import { useState } from "react"
+import { useState } from "react";
 
-import type { UUID } from "@/types/common"
-import type { GameCard } from "@/types/card"
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
 
-import { useGame } from "@/contexts/GameContext"
+import { useGame } from "@/contexts/GameContext";
 
 export default function GameContainer() {
   const { match } = useGame();
 
-  const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>({})
+  const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
+    {},
+  );
 
   const isCardSelected = (card: GameCard) => {
-    return !!selectedCards[card.id]
-  }
+    return !!selectedCards[card.id];
+  };
 
   const handleSelectCard = (card: GameCard) => {
     if (!selectedCards[card.id]) {

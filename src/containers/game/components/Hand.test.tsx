@@ -15,7 +15,8 @@ const fullHand: GameCard[] = [
     player_id,
     name: "HERCULE POIROT",
     type: "DETECTIVE",
-    description: "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
+    description:
+      "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
     is_discarded: false,
   },
   {
@@ -25,8 +26,9 @@ const fullHand: GameCard[] = [
     player_id,
     name: "MISS MARPLE",
     type: "DETECTIVE",
-    description: "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
-    is_discarded: false
+    description:
+      "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
+    is_discarded: false,
   },
   {
     id: crypto.randomUUID(),
@@ -35,8 +37,9 @@ const fullHand: GameCard[] = [
     player_id,
     name: "MR SATTERTHWAITE",
     type: "DETECTIVE",
-    description: "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
-    is_discarded: false
+    description:
+      "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
+    is_discarded: false,
   },
   {
     id: crypto.randomUUID(),
@@ -45,8 +48,9 @@ const fullHand: GameCard[] = [
     player_id,
     name: "PARKER PYNE",
     type: "DETECTIVE",
-    description: "Un detective privado con un enfoque pragmático para resolver casos.",
-    is_discarded: false
+    description:
+      "Un detective privado con un enfoque pragmático para resolver casos.",
+    is_discarded: false,
   },
   {
     id: crypto.randomUUID(),
@@ -55,7 +59,8 @@ const fullHand: GameCard[] = [
     player_id,
     name: "LADY EILEEN",
     type: "DETECTIVE",
-    description: "Un detective aficionado con un talento natural para la observación.",
+    description:
+      "Un detective aficionado con un talento natural para la observación.",
     is_discarded: false,
   },
   {

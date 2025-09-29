@@ -6,7 +6,7 @@ import DrawPile from "./DrawPile";
 describe("DrawPile", () => {
   describe("Rendering", () => {
     it("renders the draw pile with 40 cards", () => {
-      render(<DrawPile cardCount={40}/>);
+      render(<DrawPile cardCount={40} />);
 
       const cardElement = screen.getByRole("img");
 
@@ -16,6 +16,6 @@ describe("DrawPile", () => {
         expect.stringContaining("card_back.png"),
       );
       expect(screen.getByText("REMAINING: 40")).toBeInTheDocument();
-    })
-  })
-})
+    });
+  });
+});

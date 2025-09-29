@@ -1,13 +1,13 @@
 import "@testing-library/jest-dom";
-import { render, screen } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
+import { render, screen } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach, type Mock } from "vitest";
 
 import type { GameSecret } from "@/types/secret";
-import { usePlayer } from '@/contexts/PlayerContext';
-import Secret from './Secret';
+import { usePlayer } from "@/contexts/PlayerContext";
+import Secret from "./Secret";
 
 // Mock del contexto de jugador
-vi.mock('@/contexts/PlayerContext', () => ({
+vi.mock("@/contexts/PlayerContext", () => ({
   usePlayer: vi.fn(),
 }));
 
@@ -24,9 +24,9 @@ vi.mock("@/assets/03-secret_murderer.png", () => ({
 
 const mockUsePlayer = usePlayer as Mock;
 
-describe('Secret Component', () => {
-  const mockPlayer = { id: crypto.randomUUID(), name: 'TestPlayer' };
-  
+describe("Secret Component", () => {
+  const mockPlayer = { id: crypto.randomUUID(), name: "TestPlayer" };
+
   const mockSecrets: Record<string, GameSecret> = {
     innocent: {
       type: "INNOCENT",
@@ -35,7 +35,7 @@ describe('Secret Component', () => {
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
+      is_revealed: false,
     },
     accomplice: {
       type: "ACCOMPLICE",
@@ -44,17 +44,17 @@ describe('Secret Component', () => {
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
+      is_revealed: false,
     },
     murderer: {
       type: "MURDERER",
       id: crypto.randomUUID(),
-      content: 'You are the murderer',
+      content: "You are the murderer",
       match_id: crypto.randomUUID(),
       secret_id: crypto.randomUUID(),
       player_id: mockPlayer.id,
-      is_revealed: false
-    }
+      is_revealed: false,
+    },
   };
 
   beforeEach(() => {

@@ -1,3 +1,3 @@
 export default function App() {
-	return <div>Here comes our page content.</div>
+  return <div>Here comes our page content.</div>;
 }

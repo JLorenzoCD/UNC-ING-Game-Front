@@ -7,12 +7,12 @@ describe("utils", () => {
       const validUUID = crypto.randomUUID();
 
       expect(isUUID(validUUID)).toBe(true);
-    })
+    });
 
     it("should return false for invalid UUIDs", () => {
       const invalidUUID = "invalid-uuid-string";
 
       expect(isUUID(invalidUUID)).toBe(false);
-    })
-  })
-})
+    });
+  });
+});

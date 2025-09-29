@@ -1,25 +1,25 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor, renderHook } from '@testing-library/react';
-import '@testing-library/jest-dom';
-import { useParams } from 'react-router';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor, renderHook } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { useParams } from "react-router";
 
-import GameContextProvider, { useGame } from './GameContext';
-import { useHttpService } from './HttpServiceContext';
-import type { Match } from '@/types/match';
-import type { GameCard } from '@/types/card';
-import type { GameSecret } from '@/types/secret';
-import type { GamePlayer } from '@/types/player';
+import GameContextProvider, { useGame } from "./GameContext";
+import { useHttpService } from "./HttpServiceContext";
+import type { Match } from "@/types/match";
+import type { GameCard } from "@/types/card";
+import type { GameSecret } from "@/types/secret";
+import type { GamePlayer } from "@/types/player";
 
 // Mock dependencies
-vi.mock('./HttpServiceContext');
-vi.mock('react-router', () => ({
-  useParams: vi.fn()
+vi.mock("./HttpServiceContext");
+vi.mock("react-router", () => ({
+  useParams: vi.fn(),
 }));
 
 // Mock console.error to avoid noise in tests
-const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-describe('GameContext', () => {
+describe("GameContext", () => {
   const mockHttpService = {
     getMatch: vi.fn(),
     getMatchCards: vi.fn(),
@@ -38,7 +38,7 @@ describe('GameContext', () => {
     birthday: new Date("2001-01-01"),
     order: 0,
     role: "INNOCENT",
-  }
+  };
 
   const mockPlayerTwo: GamePlayer = {
     id: crypto.randomUUID(),
@@ -49,14 +49,14 @@ describe('GameContext', () => {
     birthday: new Date("2002-02-02"),
     order: 1,
     role: "MURDERER",
-  }
+  };
 
   const mockMatch: Match = {
     id: crypto.randomUUID(),
     name: "Test Match",
     status: "WAITING",
     min_players: 2,
-    max_players: 6, 
+    max_players: 6,
     current_player_order: 0,
     owner_id: mockPlayerOne.player_id,
   } as Match;
@@ -81,7 +81,7 @@ describe('GameContext', () => {
       type: "DETECTIVE",
       description: "Description of Miss Marple",
       is_discarded: false,
-    }
+    },
   ];
 
   const mockSecrets: GameSecret[] = [
@@ -92,7 +92,7 @@ describe('GameContext', () => {
       match_id: mockMatchId,
       secret_id: crypto.randomUUID(),
       player_id: mockPlayerOne.player_id,
-      is_revealed: false
+      is_revealed: false,
     },
     {
       type: "MURDERER",
@@ -101,9 +101,9 @@ describe('GameContext', () => {
       match_id: mockMatchId,
       secret_id: crypto.randomUUID(),
       player_id: mockPlayerTwo.player_id,
-      is_revealed: false
-    }
-  ]
+      is_revealed: false,
+    },
+  ];
 
   const mockPlayers: GamePlayer[] = [mockPlayerOne, mockPlayerTwo];
 
@@ -117,25 +117,27 @@ describe('GameContext', () => {
     consoleSpy.mockClear();
   });
 
-  describe('GameContextProvider', () => {
-    it('renders children correctly', () => {
+  describe("GameContextProvider", () => {
+    it("renders children correctly", () => {
       render(
         <GameContextProvider>
           <div data-testid="test-child">Test Child</div>
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
-      expect(screen.getByTestId('test-child')).toBeInTheDocument();
+      expect(screen.getByTestId("test-child")).toBeInTheDocument();
     });
 
-    it('provides initial context values', () => {
+    it("provides initial context values", () => {
       const TestComponent = () => {
         const context = useGame();
         return (
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
             <span data-testid="has-error">{context.hasError.toString()}</span>
-            <span data-testid="match">{context.match ? 'has-match' : 'no-match'}</span>
+            <span data-testid="match">
+              {context.match ? "has-match" : "no-match"}
+            </span>
             <span data-testid="cards-count">{context.cards.length}</span>
           </div>
         );
@@ -144,16 +146,16 @@ describe('GameContext', () => {
       render(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
-      expect(screen.getByTestId('loading')).toHaveTextContent('true');
-      expect(screen.getByTestId('has-error')).toHaveTextContent('false');
-      expect(screen.getByTestId('match')).toHaveTextContent('no-match');
-      expect(screen.getByTestId('cards-count')).toHaveTextContent('0');
+      expect(screen.getByTestId("loading")).toHaveTextContent("true");
+      expect(screen.getByTestId("has-error")).toHaveTextContent("false");
+      expect(screen.getByTestId("match")).toHaveTextContent("no-match");
+      expect(screen.getByTestId("cards-count")).toHaveTextContent("0");
     });
 
-    it('fetches data successfully when matchId is valid', async () => {
+    it("fetches data successfully when matchId is valid", async () => {
       mockHttpService.getMatch.mockResolvedValue(mockMatch);
       mockHttpService.getMatchCards.mockResolvedValue(mockCards);
       mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
@@ -165,7 +167,9 @@ describe('GameContext', () => {
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
             <span data-testid="has-error">{context.hasError.toString()}</span>
-            <span data-testid="match-name">{context.match?.name || 'no-match'}</span>
+            <span data-testid="match-name">
+              {context.match?.name || "no-match"}
+            </span>
             <span data-testid="cards-count">{context.cards.length}</span>
             <span data-testid="secrets-count">{context.secrets.length}</span>
             <span data-testid="players-count">{context.players.length}</span>
@@ -176,18 +180,18 @@ describe('GameContext', () => {
       render(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('loading')).toHaveTextContent('false');
+        expect(screen.getByTestId("loading")).toHaveTextContent("false");
       });
 
-      expect(screen.getByTestId('has-error')).toHaveTextContent('false');
-      expect(screen.getByTestId('match-name')).toHaveTextContent('Test Match');
-      expect(screen.getByTestId('cards-count')).toHaveTextContent('2');
-      expect(screen.getByTestId('secrets-count')).toHaveTextContent('2');
-      expect(screen.getByTestId('players-count')).toHaveTextContent('2');
+      expect(screen.getByTestId("has-error")).toHaveTextContent("false");
+      expect(screen.getByTestId("match-name")).toHaveTextContent("Test Match");
+      expect(screen.getByTestId("cards-count")).toHaveTextContent("2");
+      expect(screen.getByTestId("secrets-count")).toHaveTextContent("2");
+      expect(screen.getByTestId("players-count")).toHaveTextContent("2");
 
       expect(mockHttpService.getMatch).toHaveBeenCalledWith(mockMatchId);
       expect(mockHttpService.getMatchCards).toHaveBeenCalledWith(mockMatchId);
@@ -195,8 +199,8 @@ describe('GameContext', () => {
       expect(mockHttpService.getMatchPlayers).toHaveBeenCalledWith(mockMatchId);
     });
 
-    it('handles fetch errors correctly', async () => {
-      const testError = new Error('Network error');
+    it("handles fetch errors correctly", async () => {
+      const testError = new Error("Network error");
       mockHttpService.getMatch.mockRejectedValue(testError);
       mockHttpService.getMatchCards.mockRejectedValue(testError);
       mockHttpService.getMatchSecrets.mockRejectedValue(testError);
@@ -208,7 +212,9 @@ describe('GameContext', () => {
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
             <span data-testid="has-error">{context.hasError.toString()}</span>
-            <span data-testid="error-message">{context.error?.message || 'no-error'}</span>
+            <span data-testid="error-message">
+              {context.error?.message || "no-error"}
+            </span>
           </div>
         );
       };
@@ -216,25 +222,30 @@ describe('GameContext', () => {
       render(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('loading')).toHaveTextContent('false');
+        expect(screen.getByTestId("loading")).toHaveTextContent("false");
       });
 
-      expect(screen.getByTestId('has-error')).toHaveTextContent('true');
-      expect(screen.getByTestId('error-message')).toHaveTextContent('Network error');
-      expect(consoleSpy).toHaveBeenCalledWith('Error fetching match data:', testError);
+      expect(screen.getByTestId("has-error")).toHaveTextContent("true");
+      expect(screen.getByTestId("error-message")).toHaveTextContent(
+        "Network error",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Error fetching match data:",
+        testError,
+      );
     });
 
-    it('does not fetch data when matchId is missing', () => {
+    it("does not fetch data when matchId is missing", () => {
       (useParams as any).mockReturnValue({ matchId: undefined });
 
       render(
         <GameContextProvider>
           <div>Test</div>
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
@@ -243,34 +254,37 @@ describe('GameContext', () => {
       expect(mockHttpService.getMatchPlayers).not.toHaveBeenCalled();
     });
 
-    it('does not fetch data when httpService is not available', () => {
+    it("does not fetch data when httpService is not available", () => {
       (useHttpService as any).mockReturnValue({ httpService: null });
 
       render(
         <GameContextProvider>
           <div>Test</div>
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
     });
 
-    it('handles invalid UUID matchId', () => {
-      (useParams as any).mockReturnValue({ matchId: 'invalid-uuid' });
+    it("handles invalid UUID matchId", () => {
+      (useParams as any).mockReturnValue({ matchId: "invalid-uuid" });
 
       render(
         <GameContextProvider>
           <div>Test</div>
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('Match ID is not a valid UUID:', 'invalid-uuid');
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Match ID is not a valid UUID:",
+        "invalid-uuid",
+      );
     });
 
-    it('clears error state before new fetch', async () => {
+    it("clears error state before new fetch", async () => {
       // First render with error
-      const testError = new Error('First error');
+      const testError = new Error("First error");
       mockHttpService.getMatch.mockRejectedValueOnce(testError);
       mockHttpService.getMatchCards.mockRejectedValueOnce(testError);
       mockHttpService.getMatchSecrets.mockRejectedValueOnce(testError);
@@ -281,7 +295,9 @@ describe('GameContext', () => {
         return (
           <div>
             <span data-testid="has-error">{context.hasError.toString()}</span>
-            <span data-testid="error-message">{context.error?.message || 'no-error'}</span>
+            <span data-testid="error-message">
+              {context.error?.message || "no-error"}
+            </span>
           </div>
         );
       };
@@ -289,11 +305,11 @@ describe('GameContext', () => {
       const { rerender } = render(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('has-error')).toHaveTextContent('true');
+        expect(screen.getByTestId("has-error")).toHaveTextContent("true");
       });
 
       // Setup successful responses for re-render
@@ -303,35 +319,35 @@ describe('GameContext', () => {
       mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
 
       // Change matchId to trigger refetch
-      (useParams as any).mockReturnValue({ matchId: 'new-valid-uuid' });
+      (useParams as any).mockReturnValue({ matchId: "new-valid-uuid" });
 
       rerender(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId('has-error')).toHaveTextContent('false');
+        expect(screen.getByTestId("has-error")).toHaveTextContent("false");
       });
 
-      expect(screen.getByTestId('error-message')).toHaveTextContent('no-error');
+      expect(screen.getByTestId("error-message")).toHaveTextContent("no-error");
     });
   });
 
-  describe('useGame hook', () => {
-    it('throws error when used outside GameContextProvider', () => {
+  describe("useGame hook", () => {
+    it("throws error when used outside GameContextProvider", () => {
       const TestComponent = () => {
         useGame();
         return <div>Test</div>;
       };
 
       expect(() => render(<TestComponent />)).toThrow(
-        'useGame must be used within a GameContextProvider'
+        "useGame must be used within a GameContextProvider",
       );
     });
 
-    it('returns context value when used within provider', () => {
+    it("returns context value when used within provider", () => {
       const { result } = renderHook(() => useGame(), {
         wrapper: ({ children }) => (
           <GameContextProvider>{children}</GameContextProvider>
@@ -350,8 +366,8 @@ describe('GameContext', () => {
     });
   });
 
-  describe('Context value memoization', () => {
-    it('does not cause unnecessary re-renders when values do not change', () => {
+  describe("Context value memoization", () => {
+    it("does not cause unnecessary re-renders when values do not change", () => {
       let renderCount = 0;
 
       const TestComponent = () => {
@@ -363,20 +379,20 @@ describe('GameContext', () => {
       const { rerender } = render(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
-      expect(screen.getByTestId('render-count')).toHaveTextContent('1');
+      expect(screen.getByTestId("render-count")).toHaveTextContent("1");
 
       // Force a re-render without changing any context values
       rerender(
         <GameContextProvider>
           <TestComponent />
-        </GameContextProvider>
+        </GameContextProvider>,
       );
 
       // Should not cause additional renders due to memoization
-      expect(screen.getByTestId('render-count')).toHaveTextContent('1');
+      expect(screen.getByTestId("render-count")).toHaveTextContent("1");
     });
   });
 });

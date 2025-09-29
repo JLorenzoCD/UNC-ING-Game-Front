@@ -13,15 +13,15 @@ const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
 };
 
 interface SecretProps {
-  secret: GameSecret | null
+  secret: GameSecret | null;
 }
 
 export default function Secret({ secret }: SecretProps) {
   const { player } = usePlayer();
 
   if (!secret) {
-    console.warn('Secret component: secret prop is missing');
-    
+    console.warn("Secret component: secret prop is missing");
+
     return null;
   }
 
@@ -30,11 +30,17 @@ export default function Secret({ secret }: SecretProps) {
     return null;
   }
 
-  const imagePath = (player?.id === secret.player_id) ? SECRET_IMAGE_PATHS[secret.type] : null;
-  
+  const imagePath =
+    player?.id === secret.player_id ? SECRET_IMAGE_PATHS[secret.type] : null;
+
   if (!imagePath) return null;
-  
+
   return (
-    <img data-testid="secret" src={imagePath} alt={`Secret card: ${secret.type}`} className={`object-cover w-40 h-60`} />
-  )
+    <img
+      data-testid="secret"
+      src={imagePath}
+      alt={`Secret card: ${secret.type}`}
+      className={`object-cover w-40 h-60`}
+    />
+  );
 }

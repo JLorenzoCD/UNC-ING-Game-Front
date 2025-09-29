@@ -87,7 +87,9 @@ describe("wsService", () => {
       const wsServiceWithPlayer = createWsService(playerId);
       wsServiceWithPlayer.connect();
 
-      expect(global.WebSocket).toHaveBeenCalledWith(`ws://localhost:8000/ws?player_id=${playerId}`);
+      expect(global.WebSocket).toHaveBeenCalledWith(
+        `ws://localhost:8000/ws?player_id=${playerId}`,
+      );
       expect(mockWebSocket.onopen).toBeDefined();
       expect(mockWebSocket.onclose).toBeDefined();
       expect(mockWebSocket.onmessage).toBeDefined();

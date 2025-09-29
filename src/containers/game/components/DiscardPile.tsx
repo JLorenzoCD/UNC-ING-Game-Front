@@ -15,7 +15,10 @@ const DefaultCardImage = () => {
 
 export default function DiscardPile({ topCard }: DiscardPileProps) {
   return (
-    <div data-testid="discard-pile" className="position absolute top-89.5 left-185">
+    <div
+      data-testid="discard-pile"
+      className="position absolute top-89.5 left-185"
+    >
       {topCard ? (
         <Card name={topCard.name} description={topCard.description} />
       ) : (

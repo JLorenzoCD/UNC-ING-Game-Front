@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import { useParams } from "react-router";
 
 import type { Match } from "@/types/match";
@@ -29,13 +37,15 @@ const GameContext = createContext<GameContextType>({
   isLoading: false,
   hasError: false,
   error: null,
-})
+});
 
 export interface GameContextProviderProps {
   children: ReactNode;
 }
 
-export default function GameContextProvider({ children }: GameContextProviderProps) {
+export default function GameContextProvider({
+  children,
+}: GameContextProviderProps) {
   const { httpService } = useHttpService();
 
   const params = useParams();
@@ -70,7 +80,7 @@ export default function GameContextProvider({ children }: GameContextProviderPro
         httpService.getMatchCards(matchId),
         httpService.getMatchSecrets(matchId),
         httpService.getMatchPlayers(matchId),
-      ])
+      ]);
 
       setMatch(match);
       setCards(cards);
@@ -78,7 +88,7 @@ export default function GameContextProvider({ children }: GameContextProviderPro
       setPlayers(players);
     } catch (error) {
       console.error("Error fetching match data:", error);
-    
+
       setError(error as Error);
       setHasError(true);
     } finally {
@@ -88,35 +98,27 @@ export default function GameContextProvider({ children }: GameContextProviderPro
 
   useEffect(() => {
     fetchMatchData();
-  }, [fetchMatchData])
+  }, [fetchMatchData]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
-  const contextValue: GameContextType = useMemo(() => ({
-    match,
-    cards,
-    secrets,
-    players,
+  const contextValue: GameContextType = useMemo(
+    () => ({
+      match,
+      cards,
+      secrets,
+      players,
 
-    isLoading,
-    hasError,
-    error,
-  }), [
-    match,
-    cards,
-    secrets,
-    players,
-
-    isLoading,
-    hasError,
-    error,
-  ])
+      isLoading,
+      hasError,
+      error,
+    }),
+    [match, cards, secrets, players, isLoading, hasError, error],
+  );
 
   return (
-    <GameContext.Provider value={contextValue}>
-      {children}
-    </GameContext.Provider>
-  )
+    <GameContext.Provider value={contextValue}>{children}</GameContext.Provider>
+  );
 }
 
 export function useGame() {

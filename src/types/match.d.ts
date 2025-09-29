@@ -50,3 +50,4 @@ export type MatchCreateInput = Pick<
   Match,
   "name" | "min_players" | "max_players" | "owner_id"
 >;
+export type MatchListItem = Match & { current_player_count: number };
