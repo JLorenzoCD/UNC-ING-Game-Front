@@ -8,11 +8,12 @@ import { PlayerProvider } from "./contexts/PlayerContext";
 import { FRONTEND_PATHS } from "./constants/frontendPaths.ts";
 
 import "./index.css";
+
 import App from "./App";
+
 import MainLayout from "./containers/MainLayout";
 import MatchesContainer from "./containers/matches/MatchesContainer";
 import CreateMatchContainer from "./containers/create-match/CreateMatchContainer";
-import LobbyPage from "./containers/LobbyPage";
 import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer";
 
 import GameLayout from "./containers/game/layout";
@@ -40,10 +41,6 @@ createRoot(document.getElementById("root")!).render(
                   element={<CreateMatchContainer />}
                 />
               </Route>
-              <Route
-                path={FRONTEND_PATHS.MATCH_LOBBY(":matchId")}
-                element={<LobbyPage />}
-              />
               <Route element={<GameLayout />}>
                 <Route
                   path={FRONTEND_PATHS.MATCH_GAME(":matchId")}
