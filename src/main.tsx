@@ -28,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
           <BrowserRouter>
             <Routes>
               <Route path={FRONTEND_PATHS.HOME} element={<App />} />
+
               <Route element={<MainLayout />}>
                 <Route
                   path={FRONTEND_PATHS.PLAYER_CREATE}
