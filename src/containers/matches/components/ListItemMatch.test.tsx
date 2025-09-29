@@ -19,6 +19,14 @@ vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Mock de usePlayer
+vi.mock("@/contexts/PlayerContext", () => ({
+  usePlayer: () => ({ player: { id: "playerId" } }),
+}));
+
+// Mock joinMatch prop
+const joinMatch = vi.fn();
+
 describe("ListItemMatch", () => {
   const mockMatch: MatchListItem = {
     id: crypto.randomUUID() as UUID,
@@ -57,7 +65,7 @@ describe("ListItemMatch", () => {
     // Match valido
     isValidMatch.mockReturnValue(true);
 
-    render(<ListItemMatch match={mockMatch} />);
+    render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
 
     // Esta el nombre de la partida
     expect(screen.getByText(mockMatch.name)).toBeInTheDocument();
@@ -81,7 +89,9 @@ describe("ListItemMatch", () => {
     // Match invalido
     isValidMatch.mockReturnValue(false);
 
-    const { container } = render(<ListItemMatch match={mockInvalidMatch} />);
+    const { container } = render(
+      <ListItemMatch match={mockInvalidMatch} joinMatch={joinMatch} />,
+    );
     expect(container.firstChild).toBeNull();
   });
 
@@ -89,7 +99,7 @@ describe("ListItemMatch", () => {
     // Match valido
     isValidMatch.mockReturnValue(true);
 
-    render(<ListItemMatch match={longNameMatch} />);
+    render(<ListItemMatch match={longNameMatch} joinMatch={joinMatch} />);
 
     // Verificamos que el nombre está truncado
     expect(
@@ -112,7 +122,9 @@ describe("ListItemMatch", () => {
       current_player_order: 0,
     };
 
-    render(<ListItemMatch match={matchWithEnoughPlayers} />);
+    render(
+      <ListItemMatch match={matchWithEnoughPlayers} joinMatch={joinMatch} />,
+    );
     expect(screen.getByText("🟢 3")).toBeInTheDocument();
 
     const matchWithInsufficientPlayers: MatchListItem = {
@@ -126,7 +138,12 @@ describe("ListItemMatch", () => {
       current_player_order: 0,
     };
 
-    render(<ListItemMatch match={matchWithInsufficientPlayers} />);
+    render(
+      <ListItemMatch
+        match={matchWithInsufficientPlayers}
+        joinMatch={joinMatch}
+      />,
+    );
     expect(screen.getByText("🟡 1")).toBeInTheDocument();
   });
 
