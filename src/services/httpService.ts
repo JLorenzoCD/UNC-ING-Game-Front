@@ -83,10 +83,9 @@ export function createHttpService() {
   const joinMatch = async (playerId: UUID, matchId: UUID) => {
     const options = {
       method: "POST",
-      body: JSON.stringify({ player_id: playerId }),
     };
     return await request<{ match_id: UUID }>(
-      BACKEND_ENDPOINTS.JOIN_MATCH(matchId),
+      BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
       options,
     );
   };
