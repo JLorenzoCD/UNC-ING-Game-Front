@@ -8,10 +8,10 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 import { isValidMatch } from "../utils";
 
 import type { UUID } from "@/types/common";
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
 interface Props {
-  match: MatchListItem;
+  match: MatchWithPlayerCount;
   joinMatch: (
     playerId: UUID,
     matchId: UUID,

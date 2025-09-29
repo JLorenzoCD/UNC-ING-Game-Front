@@ -3,18 +3,20 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, afterAll, beforeEach } from "vitest";
 
 import type { UUID } from "@/types/common";
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
 import ListItemMatch from "./ListItemMatch";
 
 // Mock de isValidMatch
 const isValidMatch = vi.fn();
-vi.mock("../utils", () => ({
+
+vi.mock("utils", () => ({
   isValidMatch,
 }));
 
 // Mock de useNavigate para evitar errores de contexto
 const mockNavigate = vi.fn();
+
 vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
@@ -36,7 +38,7 @@ vi.mock("@/contexts/PlayerContext", () => ({
 const joinMatch = vi.fn();
 
 describe("ListItemMatch", () => {
-  const mockMatch: MatchListItem = {
+  const mockMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "Test 1",
     min_players: 2,
@@ -47,7 +49,7 @@ describe("ListItemMatch", () => {
     current_player_order: 0,
   };
 
-  const longNameMatch: MatchListItem = {
+  const longNameMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "This is a match name that is way too long to be fully visible",
     min_players: 4,
@@ -58,7 +60,7 @@ describe("ListItemMatch", () => {
     current_player_order: 0,
   };
 
-  const mockInvalidMatch: MatchListItem = {
+  const mockInvalidMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "Invalid Match",
     min_players: 1,
@@ -119,7 +121,7 @@ describe("ListItemMatch", () => {
     // Matches valido
     isValidMatch.mockReturnValue(true);
 
-    const matchWithEnoughPlayers: MatchListItem = {
+    const matchWithEnoughPlayers: MatchWithPlayerCount = {
       id: crypto.randomUUID() as UUID,
       name: "Full Match",
       min_players: 2,
@@ -135,7 +137,7 @@ describe("ListItemMatch", () => {
     );
     expect(screen.getByText("🟢 3")).toBeInTheDocument();
 
-    const matchWithInsufficientPlayers: MatchListItem = {
+    const matchWithInsufficientPlayers: MatchWithPlayerCount = {
       id: crypto.randomUUID() as UUID,
       name: "Not enough players",
       min_players: 5,
