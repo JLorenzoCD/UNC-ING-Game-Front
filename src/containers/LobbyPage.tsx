@@ -1,9 +1,9 @@
-import { useParams } from 'react-router'
+import { useParams } from "react-router";
 
 function LobbyPage() {
-	const { matchId } = useParams()
+  const { matchId } = useParams();
 
-	return <div>LobbyPage of matchId: {matchId}</div>
+  return <div>LobbyPage of matchId: {matchId}</div>;
 }
 
-export default LobbyPage
+export default LobbyPage;
