@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Players from "./Players";
-import { usePlayer } from "@/contexts/PlayerContext";
 import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 export default function Table() {
   const { players } = useGame();
@@ -25,7 +25,6 @@ export default function Table() {
   }, []);
 
   const getVisiblePlayersWithPositions = () => {
-    // Ordenar jugadores por orden de juego para posicionamiento correcto
     const sortedPlayers = [...players].sort(
       (a, b) => (a.order ?? 0) + (b.order ?? 0),
     );
