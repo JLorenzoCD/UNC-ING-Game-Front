@@ -37,16 +37,9 @@ function fillAndShufflePlayers(
   return playersToView;
 }
 
-interface WSError extends Error {
-  showUser: boolean;
-}
-
 function LobbyContainer() {
   const { player } = usePlayer();
   const { matchId } = useParams();
-  if (player === null || matchId === undefined || !isUUID(matchId)) {
-    throw new Error("No player.");
-  }
 
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
@@ -58,7 +51,8 @@ function LobbyContainer() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (httpService == null || wsService == null) return;
+    if (httpService == null || wsService == null || player == null || !matchId)
+      return;
 
     const handleLobbyJoin = (newPlayer: Player) => {
       setPlayers((prev) => [...prev, newPlayer]);
@@ -78,8 +72,8 @@ function LobbyContainer() {
         // Se obtienen los datos mediante httpService
         setLoading(true);
         const data = await Promise.all([
-          httpService.getMatch(matchId),
-          httpService.getMatchPlayers(matchId),
+          httpService.getMatch(matchId as UUID),
+          httpService.getMatchPlayers(matchId as UUID),
         ]);
         setMatch(data[0]);
         setPlayers(data[1]);
@@ -87,26 +81,11 @@ function LobbyContainer() {
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
-        } else {
-          const err = new Error(
-            "An error occurred while connecting to the server. Matches cannot be updated when adding players or adding new matches.",
-          ) as WSError;
-          err.showUser = true;
-          console.log("error");
-
-          throw err;
         }
       } catch (err) {
         console.error(err);
-        const error = err as Error;
-
         setError(true);
-
-        if ((error as WSError).showUser) {
-          alert(error.message);
-        } else {
-          alert("Could not connect to the server.");
-        }
+        alert("Could not connect to the server.");
       } finally {
         setLoading(false);
       }
@@ -117,7 +96,11 @@ function LobbyContainer() {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
     };
-  }, [httpService, wsService, isConnected, navigate, matchId]);
+  }, [httpService, wsService, isConnected, navigate, matchId, player]);
+
+  if (player === null || matchId === undefined || !isUUID(matchId)) {
+    return null;
+  }
 
   if (loading) {
     return <p>Loading...</p>;
