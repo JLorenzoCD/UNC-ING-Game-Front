@@ -84,6 +84,12 @@ export function createHttpService() {
     return request<Match>(`/matches/${matchId}`);
   };
 
+  const startMatch = async (playerId: UUID, matchId: UUID) => {
+    return request<{ status: string }>(
+      BACKEND_ENDPOINTS.START_MATCH(matchId, playerId),
+    );
+  };
+
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
     return request<GamePlayer[]>(`/matches/${matchId}/players`);
   };
@@ -100,6 +106,7 @@ export function createHttpService() {
     request,
     createPlayer,
     createMatch,
+    startMatch,
     getMatches,
     getMatch,
     getMatchPlayers,
