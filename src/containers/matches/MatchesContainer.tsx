@@ -32,9 +32,12 @@ function MatchesContainer() {
         let newMatchesState: MatchListItem[] | null = null;
         const exists = prev.find((match) => match.id === eventMatch.id);
 
-        if (!exists && eventMatch.status === "WAITING") {
+        if (!exists && eventMatch.status.toLocaleUpperCase() === "WAITING") {
           newMatchesState = [...prev, eventMatch]; // Add
-        } else if (exists && eventMatch.status != "WAITING") {
+        } else if (
+          exists &&
+          eventMatch.status.toLocaleUpperCase() != "WAITING"
+        ) {
           newMatchesState = prev.filter((match) => match.id !== exists.id); // remove
         } else {
           newMatchesState = prev.map((match) =>

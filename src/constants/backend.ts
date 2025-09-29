@@ -1,5 +1,6 @@
 const BACKEND_ENDPOINTS = {
-  GET_MATCHES: "/matches",
+  GET_MATCHES: "/matches/",
+  CREATE_MATCHES: "/matches/",
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {

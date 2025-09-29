@@ -1,6 +1,6 @@
 import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
-import type { Player } from "../types/player";
+import type { Player } from "@/types/player";
 import type { Match, MatchCreateInput, MatchListItem } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
@@ -52,9 +52,11 @@ export function createHttpService() {
       return await response.json();
     } catch (error) {
       console.error("API request failed with error:", error);
+
       throw error;
     }
   };
+
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
     return request<Player>("/players", {
       method: "POST",
@@ -64,7 +66,7 @@ export function createHttpService() {
 
   const createMatch = async (matchToCreate: MatchCreateInput) => {
     const options = { method: "POST", body: JSON.stringify(matchToCreate) };
-    return await request<Match>("/matches", options);
+    return await request<Match>(BACKEND_ENDPOINTS.CREATE_MATCHES, options);
   };
 
   const getMatches = async () => {

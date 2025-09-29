@@ -1,7 +1,6 @@
 const MAX_RECONNECT_ATTEMPTS = 5;
 const MAX_RECONNECT_DELAY = 30000; // 30 segundos
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type EventCallback = (data: any) => void;
 
 export type WSService = ReturnType<typeof createWsService>;
@@ -13,7 +12,17 @@ function isWsUrlDefined(): boolean {
   );
 }
 
-export function createWsService() {
+function formatWsUrl(baseUrl: string, playerId: string | null): string {
+  const url = new URL(baseUrl);
+
+  if (playerId) {
+    url.searchParams.append("player_id", playerId);
+  }
+
+  return url.toString();
+}
+
+export function createWsService(playerId: string | null = null) {
   let websocket: WebSocket | null = null;
   let isConnected = false;
   let reconnectTimeout: number | null = null;
@@ -23,11 +32,13 @@ export function createWsService() {
     ? import.meta.env.VITE_WS_URL
     : "ws://localhost:8000/ws";
 
+  const wsUrl = formatWsUrl(baseUrl, playerId);
+
   const listeners = new Map<string, EventCallback[]>();
 
   const connect = () => {
     try {
-      websocket = new WebSocket(baseUrl);
+      websocket = new WebSocket(wsUrl);
 
       // Cuando se abre el WebSocket, emitimos la apertura de la conexión
       // y reseteamos los intentos de reconexión.
@@ -95,7 +106,6 @@ export function createWsService() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const emit = (event: string, data: any) => {
     if (listeners.has(event)) {
       const listener = listeners.get(event);
@@ -124,7 +134,6 @@ export function createWsService() {
     }
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const send = (event: string, payload?: any) => {
     if (websocket && isConnected) {
       websocket.send(JSON.stringify({ event, payload }));
