@@ -1,9 +1,9 @@
-import CreatePlayerForm from './components/CreatePlayerForm';
-import type { PlayerInput } from './../../types/player';
-import { usePlayer } from '../../contexts/PlayerContext';
-import type { Player } from '../../types/player';
-import { useNavigate } from 'react-router';
-import { useHttpService } from '../../contexts/HttpServiceContext';
+import CreatePlayerForm from "./components/CreatePlayerForm";
+import type { PlayerInput } from "./../../types/player";
+import { usePlayer } from "../../contexts/PlayerContext";
+import type { Player } from "../../types/player";
+import { useNavigate } from "react-router";
+import { useHttpService } from "../../contexts/HttpServiceContext";
 
 export default function CreatePlayerContainer() {
   const { setPlayer } = usePlayer();
@@ -19,15 +19,12 @@ export default function CreatePlayerContainer() {
 
       setPlayer(newPlayer);
 
-      navigate('/matches');
-
+      navigate("/matches");
     } catch (error) {
-      console.error('Error creating player:', error);
+      console.error("Error creating player:", error);
       throw error;
     }
   };
 
-  return (
-    <CreatePlayerForm handleCreatePlayer={handleCreatePlayer} />
-  );
-};
+  return <CreatePlayerForm handleCreatePlayer={handleCreatePlayer} />;
+}

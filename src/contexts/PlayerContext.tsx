@@ -45,7 +45,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       {children}
     </PlayerContext.Provider>
   );
-};
+}
 
 export function usePlayer() {
   const context = useContext(PlayerContext);
@@ -55,4 +55,4 @@ export function usePlayer() {
   }
 
   return context;
-};
+}

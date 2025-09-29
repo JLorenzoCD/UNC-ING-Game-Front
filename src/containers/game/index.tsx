@@ -16,14 +16,14 @@ export default function GameContainer() {
 
   const handleSelectCard = (card: GameCard) => {
     if (!selectedCards[card.id]) {
-      setSelectedCards({...selectedCards, [card.id]: card})
+      setSelectedCards({ ...selectedCards, [card.id]: card });
     } else {
-      const updatedSelectedCards = { ...selectedCards }
-      delete updatedSelectedCards[card.id]
-      setSelectedCards(updatedSelectedCards)
+      const updatedSelectedCards = { ...selectedCards };
+      delete updatedSelectedCards[card.id];
+      setSelectedCards(updatedSelectedCards);
     }
-  }
-  
+  };
+
   return (
     <div data-testid="game-container" className="h-screen p-4 flex flex-col">
       {match && <p>match: {JSON.stringify(match)}</p>}
@@ -33,5 +33,5 @@ export default function GameContainer() {
         {/* Componente de mano del jugador */}
       </div>
     </div>
-  )
+  );
 }

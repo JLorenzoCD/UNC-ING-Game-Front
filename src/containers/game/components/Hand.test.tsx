@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { GameCard } from "@/types/card";
 import Hand from "./Hand";
 
-const match_id = crypto.randomUUID()
-const player_id = crypto.randomUUID()
+const match_id = crypto.randomUUID();
+const player_id = crypto.randomUUID();
 
 const fullHand: GameCard[] = [
   {
@@ -66,11 +66,18 @@ const fullHand: GameCard[] = [
     name: "TOMMY BERESFORD",
     type: "DETECTIVE",
     description: "Un joven detective que trabaja junto a su esposa Tuppence.",
-    is_discarded: false
+    is_discarded: false,
   },
-]
+];
 
-const partialHand = [fullHand[0], null, fullHand[1], null, fullHand[2], fullHand[3]]; // 4 cartas, 2 espacios vacíos en medio
+const partialHand = [
+  fullHand[0],
+  null,
+  fullHand[1],
+  null,
+  fullHand[2],
+  fullHand[3],
+]; // 4 cartas, 2 espacios vacíos en medio
 
 const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
 
@@ -80,63 +87,99 @@ describe("Hand", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-  })
+  });
 
   describe("Rendering", () => {
     it("renders a full hand of cards", () => {
-      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.queryAllByText("Draw a card here");
 
       expect(cardElements.length).toBe(6);
       expect(emptyElements.length).toBe(0);
-    })
+    });
 
     it("renders a partial hand with empty slots", () => {
-      render(<Hand cards={partialHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={partialHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
 
       expect(cardElements.length).toBe(4);
       expect(emptyElements.length).toBe(2);
-    })
+    });
 
     it("renders an empty hand with all slots empty", () => {
-      render(<Hand cards={emptyHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={emptyHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.queryAllByRole("img");
       const emptyElements = screen.getAllByText("Draw a card here");
 
       expect(cardElements.length).toBe(0);
       expect(emptyElements.length).toBe(6);
-    })
-  })
+    });
+  });
 
   describe("Interactions", () => {
     it("calls onSelect when a card is clicked", () => {
-      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements[0].click();
 
-      expect(mockOnSelect).toHaveBeenCalledOnce()
-    })
+      expect(mockOnSelect).toHaveBeenCalledOnce();
+    });
 
     it("calls onSelect with the correct card", () => {
-      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements[1].click();
 
       expect(mockOnSelect).toHaveBeenCalledWith(fullHand[1]);
-    })
+    });
 
     it("applies selected styling when isSelected returns true", () => {
       mockIsSelected.mockReturnValueOnce(true); // La primera carta estará seleccionada
-      
-      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByTestId("hand-card");
       expect(cardElements[0].className).toContain("ring-4 ring-blue-200");
@@ -145,12 +188,18 @@ describe("Hand", () => {
     it("does not apply selected styling when isSelected returns false", () => {
       mockIsSelected.mockReturnValue(false); // Ninguna carta estará seleccionada
 
-      render(<Hand cards={fullHand} onSelect={mockOnSelect} isSelected={mockIsSelected} />);
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+        />,
+      );
 
       const cardElements = screen.getAllByTestId("hand-card");
-      cardElements.forEach(card => {
+      cardElements.forEach((card) => {
         expect(card.className).not.toContain("ring-4 ring-blue-200");
       });
     });
-  })
-})
+  });
+});

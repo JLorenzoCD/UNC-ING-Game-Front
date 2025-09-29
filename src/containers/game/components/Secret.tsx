@@ -2,18 +2,18 @@ import type { GameSecret, Secret, SecretType } from "@/types/secret";
 
 import { usePlayer } from "@/contexts/PlayerContext";
 
-import secretFront from "@/assets/06-secret_front.png"
-import secretAccomplice from "@/assets/04-secret_accomplice.png"
-import secretMurder from "@/assets/03-secret_murderer.png"
+import secretFront from "@/assets/06-secret_front.png";
+import secretAccomplice from "@/assets/04-secret_accomplice.png";
+import secretMurder from "@/assets/03-secret_murderer.png";
 
-const SECRET_IMAGE_PATHS : Record <SecretType ,string> = {
-  "INNOCENT" : secretFront,
-  "ACCOMPLICE" : secretAccomplice,
-  "MURDERER" : secretMurder
-}
+const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
+  INNOCENT: secretFront,
+  ACCOMPLICE: secretAccomplice,
+  MURDERER: secretMurder,
+};
 
 interface SecretProps {
-  secret: GameSecret
+  secret: GameSecret | null
 }
 
 export default function Secret({ secret }: SecretProps) {
@@ -26,7 +26,7 @@ export default function Secret({ secret }: SecretProps) {
   }
 
   if (!Object.keys(SECRET_IMAGE_PATHS).includes(secret.type)) {
-    console.warn('Secret component: invalid secret type');
+    console.warn("Secret component: invalid secret type");
     return null;
   }
 

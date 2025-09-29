@@ -1,8 +1,8 @@
-import { Outlet } from 'react-router'
+import { Outlet } from "react-router";
 
-import Container from '@/components/Container'
+import Container from "@/components/Container";
 
-import logoGame from '@/assets/logo.png'
+import logoGame from "@/assets/logo.png";
 
 export default function MainLayout() {
 	return (

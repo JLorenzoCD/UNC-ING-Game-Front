@@ -1,4 +1,4 @@
-import type { GameCard} from "@/types/card.d.ts";
+import type { GameCard } from "@/types/card.d.ts";
 import Card from "./Card.tsx";
 
 interface DiscardPileProps {
@@ -17,10 +17,10 @@ export default function DiscardPile({ topCard }: DiscardPileProps) {
   return (
     <div data-testid="discard-pile" className="position absolute top-89.5 left-185">
       {topCard ? (
-        <Card name={topCard.name} description={topCard.description}/>
+        <Card name={topCard.name} description={topCard.description} />
       ) : (
-        <DefaultCardImage/>
+        <DefaultCardImage />
       )}
     </div>
-  )
+  );
 }

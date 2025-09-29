@@ -17,35 +17,31 @@ function EmptyHandPosition() {
         Draw a card here
       </div>
     </div>
-  )
+  );
 }
 
-export default function Hand({
-  cards,
-  onSelect,
-  isSelected,
-}: HandProps) {
-  const selectedCardClassName = "ring-4 ring-blue-200"
-  
+export default function Hand({ cards, onSelect, isSelected }: HandProps) {
+  const selectedCardClassName = "ring-4 ring-blue-200";
+
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
-      {cards.map((card, index) => 
-        card === null
-          ? <EmptyHandPosition key={`empty-${index}`} />
-          : (
-            <div
-              key={card.id}
-              data-testid="hand-card"
-              onClick={() => onSelect(card)}
-              className={`
+      {cards.map((card, index) =>
+        card === null ? (
+          <EmptyHandPosition key={`empty-${index}`} />
+        ) : (
+          <div
+            key={card.id}
+            data-testid="hand-card"
+            onClick={() => onSelect(card)}
+            className={`
                 cursor-pointer hover:scale-105 transform transition-transform
                 ${isSelected(card) ? selectedCardClassName : ""}
               `}
-            >
-              <Card name={card.name} description={card.description} />
-            </div>
-          )
+          >
+            <Card name={card.name} description={card.description} />
+          </div>
+        ),
       )}
     </div>
-  )
+  );
 }

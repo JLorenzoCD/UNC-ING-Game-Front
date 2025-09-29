@@ -9,10 +9,10 @@ interface WebSocketServiceContextType {
   isConnected: boolean;
 }
 
-export const WebSocketServiceContext = createContext<WebSocketServiceContextType>({
+const WebSocketServiceContext = createContext<WebSocketServiceContextType>({
   wsService: null,
   isConnected: false,
-})
+});
 
 interface WebSocketServiceProviderProps {
   children: ReactNode;
@@ -39,21 +39,23 @@ export function WebSocketServiceProvider({ children }: WebSocketServiceProviderP
     return () => {
       wsService.off("connection", setIsConnected);
       wsService.disconnect();
-    }
+    };
   }, [wsService]);
 
   return (
     <WebSocketServiceContext.Provider value={{ wsService, isConnected }}>
       {children}
     </WebSocketServiceContext.Provider>
-  )
+  );
 }
 
 export function useWebSocketService() {
   const context = useContext(WebSocketServiceContext);
 
   if (!context || !context.wsService) {
-    throw new Error("useWebSocketService must be used within a WebSocketServiceProvider");
+    throw new Error(
+      "useWebSocketService must be used within a WebSocketServiceProvider",
+    );
   }
 
   return context;

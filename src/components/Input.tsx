@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes } from 'react'
+import type { InputHTMLAttributes } from "react";
 
 export default function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
 	return (

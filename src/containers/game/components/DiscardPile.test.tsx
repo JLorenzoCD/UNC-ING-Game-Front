@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { describe, it, expect } from "vitest"
+import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 
 import type { GameCard } from "@/types/card";
@@ -18,21 +18,22 @@ const testCard: GameCard = {
 
 describe("DiscardPile", () => {
   describe("Rendering", () => {
-
     it("renders the empty discard pile", () => {
-      render(<DiscardPile topCard={null}/>);
+      render(<DiscardPile topCard={null} />);
 
       expect(screen.getByText("Discard pile is empty")).toBeInTheDocument();
-    })
+    });
 
     it("renders the discard pile with cards", () => {
-      render(<DiscardPile topCard={testCard}/>);
+      render(<DiscardPile topCard={testCard} />);
 
       const cardElement = screen.getByRole("img");
 
       expect(cardElement).toBeInTheDocument();
-      expect(cardElement).toHaveAttribute("src", expect.stringContaining("satterthwaite.png"));
-    })
-
-  })
-})
+      expect(cardElement).toHaveAttribute(
+        "src",
+        expect.stringContaining("satterthwaite.png"),
+      );
+    });
+  });
+});

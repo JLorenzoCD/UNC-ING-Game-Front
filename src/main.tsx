@@ -1,14 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter, Route, Routes } from 'react-router'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter, Route, Routes } from "react-router";
 
 import { HttpServiceProvider } from './contexts/HttpServiceContext.tsx'
 import { WebSocketServiceProvider } from './contexts/WebSocketServiceContext.tsx'
 import { PlayerProvider } from './contexts/PlayerContext.tsx'
 import { FRONTEND_PATHS } from './constants/frontendPaths.ts'
 
-import './index.css'
-import App from './App.tsx' 
+import "./index.css";
+import App from "./App.tsx";
 
 import GameLayout from './containers/game/layout.tsx'
 import GameContainer from './containers/game/index.tsx'

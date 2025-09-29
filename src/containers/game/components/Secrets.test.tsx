@@ -12,11 +12,11 @@ vi.mock('@/contexts/PlayerContext', () => ({
 }));
 
 // Mock de las imágenes
-vi.mock('@/assets/06-secret_front.png', () => ({
-  default: 'secret-front.png'
+vi.mock("@/assets/06-secret_front.png", () => ({
+  default: "secret-front.png",
 }));
-vi.mock('@/assets/03-secret_murderer.png', () => ({
-  default: 'secret-murderer.png'
+vi.mock("@/assets/03-secret_murderer.png", () => ({
+  default: "secret-murderer.png",
 }));
 
 const mockUsePlayer = usePlayer as Mock;
@@ -58,32 +58,34 @@ describe('Secrets', () => {
     vi.clearAllMocks();
 
     // Mock console methods para evitar warnings en tests
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
   });
 
-  describe('Rendering secrets correctly', () => {
-    it('should render the secrets for current player', () => {
+  describe("Rendering secrets correctly", () => {
+    it("should render the secrets for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
-      
+
       render(<Secrets secrets={mockSecrets} />);
-      
-      const secretElements = screen.getAllByRole('img');
+
+      const secretElements = screen.getAllByRole("img");
 
       expect(secretElements.length).toBe(3);
-      expect(secretElements[0]).toHaveAttribute('src', 'secret-front.png');
-      expect(secretElements[1]).toHaveAttribute('src', 'secret-front.png');
-      expect(secretElements[2]).toHaveAttribute('src', 'secret-murderer.png');
+      expect(secretElements[0]).toHaveAttribute("src", "secret-front.png");
+      expect(secretElements[1]).toHaveAttribute("src", "secret-front.png");
+      expect(secretElements[2]).toHaveAttribute("src", "secret-murderer.png");
     });
   });
 
-  describe('Security - Not showing other players secrets', () => {
-    it('should not render secrets for different player', () => {
-      mockUsePlayer.mockReturnValue({ player: { ...mockPlayer, id: 'different-player' } });
+  describe("Security - Not showing other players secrets", () => {
+    it("should not render secrets for different player", () => {
+      mockUsePlayer.mockReturnValue({
+        player: { ...mockPlayer, id: "different-player" },
+      });
 
       render(<Secrets secrets={mockSecrets} />);
 
-      const secretElements = screen.queryAllByRole('img');
+      const secretElements = screen.queryAllByRole("img");
 
       expect(secretElements.length).toBe(0);
     });

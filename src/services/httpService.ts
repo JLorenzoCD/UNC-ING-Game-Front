@@ -29,7 +29,10 @@ export function createHttpService() {
    * const data = await httpService.request<MyDataType>("/my-endpoint", { method: "GET" });
    * console.log(data); // `data` es de tipo `MyDataType`
    */
-  const request = async<T = unknown>(route: string, options?: RequestInit): Promise<T> => {
+  const request = async <T = unknown>(
+    route: string,
+    options?: RequestInit,
+  ): Promise<T> => {
     const url = baseUrl.concat(route);
 
     try {
@@ -51,19 +54,19 @@ export function createHttpService() {
 
       throw error;
     }
-  }
+  };
 
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
     return request<Player>("/players", {
       method: "POST",
       body: JSON.stringify(player),
     });
-  }
+  };
 
   const createMatch = async (matchToCreate: MatchCreateInput) => {
-    const options = { method: 'POST', body: JSON.stringify(matchToCreate) }
-    return await request<Match>('/matches', options)
-  }
+    const options = { method: "POST", body: JSON.stringify(matchToCreate) };
+    return await request<Match>("/matches", options);
+  };
 
   const getMatch = async (matchId: UUID): Promise<Match> => {
     return request<Match>(`/matches/${matchId}`)
