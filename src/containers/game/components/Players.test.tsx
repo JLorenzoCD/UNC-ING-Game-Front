@@ -88,7 +88,9 @@ describe("Players Component", () => {
         isYourTurn={true}
       />,
     );
-    const avatarContainer = container.querySelector(".relative.w-20.h-20.rounded-full.border-4");
+    const avatarContainer = container.querySelector(
+      ".relative.w-20.h-20.rounded-full.border-4",
+    );
 
     expect(avatarContainer).toBeInTheDocument();
     expect(avatarContainer).toHaveClass("border-green-400");
@@ -106,7 +108,9 @@ describe("Players Component", () => {
       />,
     );
 
-    const avatarContainer = container.querySelector(".relative.w-20.h-20.rounded-full.border-4");
+    const avatarContainer = container.querySelector(
+      ".relative.w-20.h-20.rounded-full.border-4",
+    );
 
     expect(avatarContainer).toBeInTheDocument();
 
