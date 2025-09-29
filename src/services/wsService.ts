@@ -18,7 +18,6 @@ function formatWsUrl(baseUrl: string, playerId: string | null): string {
   if (playerId) {
     url.searchParams.append("player_id", playerId);
   }
-
   return url.toString();
 }
 

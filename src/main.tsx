@@ -2,18 +2,21 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
 
-import { HttpServiceProvider } from "./contexts/HttpServiceContext.tsx";
-import { WebSocketServiceProvider } from "./contexts/WebSocketServiceContext.tsx";
-import { PlayerProvider } from "./contexts/PlayerContext.tsx";
+import { HttpServiceProvider } from "./contexts/HttpServiceContext";
+import { WebSocketServiceProvider } from "./contexts/WebSocketServiceContext";
+import { PlayerProvider } from "./contexts/PlayerContext";
+import { FRONTEND_PATHS } from "./constants/frontendPaths.ts";
 
 import "./index.css";
-import App from "./App.tsx";
-import { FRONTEND_PATHS } from "./constants/frontendPaths.ts";
-import MainLayout from "./containers/MainLayout.tsx";
-import MatchesContainer from "./containers/matches/MatchesContainer.tsx";
-import CreateMatchContainer from "./containers/create-match/CreateMatchContainer.tsx";
-import LobbyPage from "./containers/LobbyPage.tsx";
-import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer.tsx";
+import App from "./App";
+import MainLayout from "./containers/MainLayout";
+import MatchesContainer from "./containers/matches/MatchesContainer";
+import CreateMatchContainer from "./containers/create-match/CreateMatchContainer";
+import LobbyPage from "./containers/LobbyPage";
+import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer";
+
+import GameLayout from "./containers/game/layout";
+import GameContainer from "./containers/game/index";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -41,6 +44,12 @@ createRoot(document.getElementById("root")!).render(
                 path={FRONTEND_PATHS.MATCH_LOBBY(":matchId")}
                 element={<LobbyPage />}
               />
+              <Route element={<GameLayout />}>
+                <Route
+                  path={FRONTEND_PATHS.MATCH_GAME(":matchId")}
+                  element={<GameContainer />}
+                />
+              </Route>
             </Routes>
           </BrowserRouter>
         </WebSocketServiceProvider>

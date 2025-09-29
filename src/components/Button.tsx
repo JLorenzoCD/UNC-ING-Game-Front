@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from "react";
 
-function Button({
+export default function Button({
   className,
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
@@ -11,5 +11,3 @@ function Button({
     />
   );
 }
-
-export default Button;

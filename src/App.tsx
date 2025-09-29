@@ -4,7 +4,7 @@ import { FRONTEND_PATHS } from "./constants/frontendPaths";
 
 // import { useHttpService } from "./contexts/HttpServiceContext";
 
-function App() {
+export default function App() {
   //   const httpService = useHttpService()
   return (
     <div>
@@ -20,5 +20,3 @@ function App() {
     </div>
   );
 }
-
-export default App;

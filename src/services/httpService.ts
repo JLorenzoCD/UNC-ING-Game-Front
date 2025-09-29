@@ -1,6 +1,9 @@
 import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
-import type { Player } from "@/types/player";
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
+import type { GameSecret } from "@/types/secret";
+import type { GamePlayer, Player } from "@/types/player";
 import type { Match, MatchCreateInput, MatchListItem } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
@@ -77,10 +80,30 @@ export function createHttpService() {
     );
   };
 
+  const getMatch = async (matchId: UUID): Promise<Match> => {
+    return request<Match>(`/matches/${matchId}`);
+  };
+
+  const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
+    return request<GamePlayer[]>(`/matches/${matchId}/players`);
+  };
+
+  const getMatchCards = async (matchId: UUID): Promise<GameCard[]> => {
+    return request<GameCard[]>(`/matches/${matchId}/cards`);
+  };
+
+  const getMatchSecrets = async (matchId: UUID): Promise<GameSecret[]> => {
+    return request<GameSecret[]>(`/matches/${matchId}/secrets`);
+  };
+
   return {
     request,
     createPlayer,
     createMatch,
     getMatches,
+    getMatch,
+    getMatchPlayers,
+    getMatchCards,
+    getMatchSecrets,
   };
 }
