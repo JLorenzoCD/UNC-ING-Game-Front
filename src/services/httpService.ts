@@ -4,7 +4,7 @@ import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer, Player } from "@/types/player";
-import type { Match, MatchCreateInput, MatchListItem } from "@/types/match";
+import type { Match, MatchCreateInput, MatchWithPlayerCount } from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -61,49 +61,44 @@ export function createHttpService() {
   };
 
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
-    return request<Player>("/players", {
-      method: "POST",
-      body: JSON.stringify(player),
-    });
+    const options: RequestInit = { method: "POST", body: JSON.stringify(player) };
+    
+    return request<Player>(BACKEND_ENDPOINTS.CREATE_PLAYER, options);
   };
 
-  const createMatch = async (matchToCreate: MatchCreateInput) => {
-    const options = { method: "POST", body: JSON.stringify(matchToCreate) };
-    return await request<Match>(BACKEND_ENDPOINTS.CREATE_MATCHES, options);
+  const createMatch = async (matchInput: MatchCreateInput): Promise<Match> => {
+    const options = { method: "POST", body: JSON.stringify(matchInput) };
+
+    return request<Match>(BACKEND_ENDPOINTS.CREATE_MATCHES, options);
   };
 
-  const getMatches = async () => {
-    const options = { method: "GET" };
-    return await request<MatchListItem[]>(
-      BACKEND_ENDPOINTS.GET_MATCHES,
-      options,
-    );
+  const getMatches = async (): Promise<MatchWithPlayerCount[]> => {
+    return request<MatchWithPlayerCount[]>(BACKEND_ENDPOINTS.GET_MATCHES);
   };
 
-  const joinMatch = async (playerId: UUID, matchId: UUID) => {
-    const options = {
-      method: "POST",
-    };
-    return await request<{ match_id: UUID }>(
+  const joinMatch = async (playerId: UUID, matchId: UUID): Promise<{ match_id: UUID }> => {
+    const options: RequestInit = { method: "POST" };
+    
+    return request<{ match_id: UUID }>(
       BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
       options,
     );
   };
 
   const getMatch = async (matchId: UUID): Promise<Match> => {
-    return request<Match>(`/matches/${matchId}`);
+    return request<Match>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
   };
 
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
-    return request<GamePlayer[]>(`/matches/${matchId}/players`);
+    return request<GamePlayer[]>(BACKEND_ENDPOINTS.GET_MATCH_PLAYERS(matchId));
   };
 
   const getMatchCards = async (matchId: UUID): Promise<GameCard[]> => {
-    return request<GameCard[]>(`/matches/${matchId}/cards`);
+    return request<GameCard[]>(BACKEND_ENDPOINTS.GET_MATCH_CARDS(matchId));
   };
 
   const getMatchSecrets = async (matchId: UUID): Promise<GameSecret[]> => {
-    return request<GameSecret[]>(`/matches/${matchId}/secrets`);
+    return request<GameSecret[]>(BACKEND_ENDPOINTS.GET_MATCH_SECRETS(matchId));
   };
 
   return {
