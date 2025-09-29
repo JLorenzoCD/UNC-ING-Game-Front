@@ -11,7 +11,7 @@ import { useWebSocketService } from "@/contexts/WebSocketServiceContext";
 import { FRONTEND_PATHS } from "@/constants/frontendPaths";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
 interface WSError extends Error {
   showUser: boolean;
@@ -21,15 +21,15 @@ function MatchesContainer() {
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
 
-  const [matches, setMatches] = useState<MatchListItem[]>([]);
+  const [matches, setMatches] = useState<MatchWithPlayerCount[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (httpService == null || wsService == null) return;
 
-    const handleMatchEvents = (eventMatch: MatchListItem) => {
+    const handleMatchEvents = (eventMatch: MatchWithPlayerCount) => {
       setMatches((prev) => {
-        let newMatchesState: MatchListItem[] | null = null;
+        let newMatchesState: MatchWithPlayerCount[] | null = null;
         const exists = prev.find((match) => match.id === eventMatch.id);
 
         if (!exists && eventMatch.status.toLocaleUpperCase() === "WAITING") {
