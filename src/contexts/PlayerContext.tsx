@@ -11,7 +11,7 @@ import {
 import { useNavigate, useLocation } from "react-router";
 
 import type { Player } from "@/types/player";
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
 interface PlayerContextType {
   player: Player | null;

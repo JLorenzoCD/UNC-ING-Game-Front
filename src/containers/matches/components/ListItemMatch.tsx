@@ -3,9 +3,9 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import Button from "@/components/Button";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
-import { isValidMatch } from "./utils";
+import { isValidMatch } from "../utils";
 
 import type { UUID } from "@/types/common";
 import type { MatchListItem } from "@/types/match";

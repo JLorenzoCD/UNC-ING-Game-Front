@@ -85,7 +85,7 @@ vi.mock("react-router", async (importOriginal) => {
 });
 
 // Mock de las constantes
-vi.mock("@/constants/frontendPaths", () => ({
+vi.mock("@/constants/frontend", () => ({
   FRONTEND_PATHS: {
     MATCH_CREATE: "/match/create",
   },

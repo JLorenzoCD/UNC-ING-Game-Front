@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { ChangeEvent, FormEvent } from "react";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 import { ERROR_MESSAGES, RANGE_PLAYERS } from "./constants";
 
 import useFormCreateMatch from "./useFormCreateMatch";

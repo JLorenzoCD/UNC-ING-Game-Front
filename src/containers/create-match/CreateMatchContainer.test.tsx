@@ -47,7 +47,7 @@ vi.mock("./components/FormCreateMatch", () => ({
   ),
 }));
 
-vi.mock("@/constants/frontendPaths", () => ({
+vi.mock("@/constants/frontend", () => ({
   FRONTEND_PATHS: {
     MATCH_LIST: "/matches",
   },

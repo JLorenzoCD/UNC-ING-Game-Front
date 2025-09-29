@@ -19,7 +19,7 @@ vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-vi.mock("@/constants/frontendPaths", () => ({
+vi.mock("@/constants/frontend", () => ({
   FRONTEND_PATHS: {
     MATCH_LOBBY: (mockJoinedMatchId: UUID) =>
       `/match-lobby/${mockJoinedMatchId}`,

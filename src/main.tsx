@@ -6,7 +6,7 @@ import { HttpServiceProvider } from "./contexts/HttpServiceContext";
 import { WebSocketServiceProvider } from "./contexts/WebSocketServiceContext";
 import { PlayerProvider } from "./contexts/PlayerContext";
 
-import { FRONTEND_PATHS } from "./constants/frontendPaths.ts";
+import { FRONTEND_PATHS } from "./constants/frontend.ts";
 
 import "./index.css";
 

@@ -7,7 +7,7 @@ import AlertErrorList from "../AlertErrorList";
 import useFormCreateMatch from "./useFormCreateMatch";
 
 import { RANGE_PLAYERS } from "./constants";
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import type { Match, MatchCreateInput } from "@/types/match";
 

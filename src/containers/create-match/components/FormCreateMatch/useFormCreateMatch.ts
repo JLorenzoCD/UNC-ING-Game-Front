@@ -2,7 +2,7 @@ import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router";
 import { usePlayer } from "@/contexts/PlayerContext";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 import { RANGE_PLAYERS } from "./constants";
 
 import { validateForm } from "./utils";
