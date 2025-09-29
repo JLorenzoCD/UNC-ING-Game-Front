@@ -5,7 +5,7 @@ import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useWebSocketService } from "@/contexts/WebSocketServiceContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
-import LobbyLayout from "./LobbyLayout";
+import LobbyLayout from "./components/LobbyLayout";
 import PlayerCard, { EmptyPlayerPosition } from "./components/PlayerCard";
 
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
