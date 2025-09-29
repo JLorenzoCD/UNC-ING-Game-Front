@@ -11,7 +11,6 @@ import { useWebSocketService } from "@/contexts/WebSocketServiceContext";
 import { FRONTEND_PATHS } from "@/constants/frontendPaths";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
-import type { UUID } from "@/types/common";
 import type { MatchListItem } from "@/types/match";
 
 interface WSError extends Error {
@@ -28,22 +27,22 @@ function MatchesContainer() {
   useEffect(() => {
     if (httpService == null || wsService == null) return;
 
-    const handleMatchAdd = (newMatch: MatchListItem) => {
+    const handleMatchEvents = (eventMatch: MatchListItem) => {
       setMatches((prev) => {
-        const exists = prev.some((match) => match.id === newMatch.id);
-        return exists ? prev : [...prev, newMatch];
-      });
-    };
+        let newMatchesState: MatchListItem[] | null = null;
+        const exists = prev.find((match) => match.id === eventMatch.id);
 
-    const handleMatchRemove = (deletedMatchId: UUID) => {
-      setMatches((prev) => prev.filter((match) => match.id !== deletedMatchId));
-    };
+        if (!exists && eventMatch.status === "WAITING") {
+          newMatchesState = [...prev, eventMatch]; // Add
+        } else if (exists && eventMatch.status != "WAITING") {
+          newMatchesState = prev.filter((match) => match.id !== exists.id); // remove
+        } else {
+          newMatchesState = prev.map((match) =>
+            match.id === eventMatch.id ? { ...match, ...eventMatch } : match,
+          ); // update
+        }
 
-    const handleMatchUpdate = (updatedMatch: Partial<MatchListItem>) => {
-      setMatches((prev) => {
-        return prev.map((match) =>
-          match.id === updatedMatch.id ? { ...match, ...updatedMatch } : match,
-        );
+        return newMatchesState;
       });
     };
 
@@ -55,15 +54,7 @@ function MatchesContainer() {
         setMatches(matches);
 
         if (isConnected) {
-          wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, handleMatchAdd);
-          wsService.on(
-            BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE,
-            handleMatchRemove,
-          );
-          wsService.on(
-            BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE,
-            handleMatchUpdate,
-          );
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
         } else {
           const err = new Error(
             "An error occurred while connecting to the server. Matches cannot be updated when adding players or adding new matches.",
@@ -89,9 +80,7 @@ function MatchesContainer() {
 
     init();
     return () => {
-      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_ADD, handleMatchAdd);
-      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_REMOVE, handleMatchRemove);
-      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES_UPDATE, handleMatchUpdate);
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
     };
   }, [httpService, wsService, isConnected]);
 
