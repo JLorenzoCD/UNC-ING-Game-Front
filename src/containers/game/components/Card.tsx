@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import type { CardName, Card as CardSchema } from "@/types/card"
-=======
-import type { Card as CardSchema } from "@/types/card";
->>>>>>> develop
 
 // Imports de las imágenes de las cartas.
 // Estos son manejados por Vite y, dependiendo del entorno,
