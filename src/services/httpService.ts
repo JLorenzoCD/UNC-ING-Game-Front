@@ -1,5 +1,6 @@
 import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
+import type { UUID } from "crypto";
 import type { Player } from "../types/player";
 import type { Match, MatchCreateInput, MatchListItem } from "@/types/match";
 
@@ -75,10 +76,15 @@ export function createHttpService() {
     );
   };
 
+  const joinMatch = async (playerId: UUID, matchId: UUID) => {
+    return !!playerId && !!matchId;
+  };
+
   return {
     request,
     createPlayer,
     createMatch,
     getMatches,
+    joinMatch,
   };
 }

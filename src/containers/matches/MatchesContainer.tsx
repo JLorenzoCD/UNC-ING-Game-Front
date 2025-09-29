@@ -106,7 +106,11 @@ function MatchesContainer() {
       {httpService != null && (
         <ListMatches isLoading={loading}>
           {matches.map((m) => (
-            <ListItemMatch key={m.id} match={m} />
+            <ListItemMatch
+              key={m.id}
+              match={m}
+              joinMatch={httpService.joinMatch}
+            />
           ))}
         </ListMatches>
       )}
