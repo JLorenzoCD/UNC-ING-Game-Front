@@ -82,6 +82,18 @@ describe("wsService", () => {
       expect(mockWebSocket.onerror).toBeDefined();
     });
 
+    it("establishes a WebSocket connection with player ID", () => {
+      const playerId = "550e8400-e29b-41d4-a716-446655440000";
+      const wsServiceWithPlayer = createWsService(playerId);
+      wsServiceWithPlayer.connect();
+
+      expect(global.WebSocket).toHaveBeenCalledWith(`ws://localhost:8000/ws?player_id=${playerId}`);
+      expect(mockWebSocket.onopen).toBeDefined();
+      expect(mockWebSocket.onclose).toBeDefined();
+      expect(mockWebSocket.onmessage).toBeDefined();
+      expect(mockWebSocket.onerror).toBeDefined();
+    });
+
     it("handles connection errors", () => {
       const consoleSpy = vi
         .spyOn(console, "error")

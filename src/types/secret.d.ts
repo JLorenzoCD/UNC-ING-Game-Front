@@ -59,4 +59,4 @@ export interface MatchSecret {
  * los campos de `type` y `content`, útiles en
  * distintos componentes.
  */
-export type HandSecret = MatchSecret & Secret;
+export type GameSecret = MatchSecret & Secret

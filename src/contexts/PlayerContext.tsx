@@ -1,12 +1,14 @@
-import type { Player } from "../types/player";
-import type { Dispatch, SetStateAction } from "react";
 import {
   createContext,
+  type Dispatch,
   useContext,
   useEffect,
   useState,
   type ReactNode,
+  type SetStateAction
 } from "react";
+
+import type { Player } from "../types/player";
 
 interface PlayerContextType {
   player: Player | null;
@@ -15,8 +17,8 @@ interface PlayerContextType {
 
 const PlayerContext = createContext<PlayerContextType>({
   player: null,
-  setPlayer: () => {},
-});
+  setPlayer: () => { },
+})
 
 interface PlayerProviderProps {
   children: ReactNode;
@@ -47,8 +49,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
 export function usePlayer() {
   const context = useContext(PlayerContext);
+
   if (!context) {
     throw new Error("usePlayer must be used within a PlayerProvider");
   }
+
   return context;
 }
