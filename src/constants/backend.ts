@@ -1,6 +1,8 @@
 const BACKEND_ENDPOINTS = {
   GET_MATCHES: "/matches/",
   CREATE_MATCHES: "/matches/",
+
+  JOIN_MATCH: (id: string) => `/matches/${id}/join`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {

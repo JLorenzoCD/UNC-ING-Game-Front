@@ -79,7 +79,14 @@ export function createHttpService() {
   };
 
   const joinMatch = async (playerId: UUID, matchId: UUID) => {
-    return !!playerId && !!matchId;
+    const options = {
+      method: "POST",
+      body: JSON.stringify({ player_id: playerId }),
+    };
+    return await request<{ match_id: UUID }>(
+      BACKEND_ENDPOINTS.JOIN_MATCH(matchId),
+      options,
+    );
   };
 
   return {

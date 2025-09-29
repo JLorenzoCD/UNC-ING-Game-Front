@@ -12,7 +12,12 @@ import type { MatchListItem } from "@/types/match";
 
 interface Props {
   match: MatchListItem;
-  joinMatch: (playerId: UUID, matchId: UUID) => Promise<boolean>;
+  joinMatch: (
+    playerId: UUID,
+    matchId: UUID,
+  ) => Promise<{
+    match_id: UUID;
+  }>;
 }
 
 function ListItemMatch({ match, joinMatch }: Props) {
@@ -32,7 +37,7 @@ function ListItemMatch({ match, joinMatch }: Props) {
       const res = await joinMatch(playerId, match.id);
       if (res) {
         alert("You successfully joined the match.");
-        navigate(FRONTEND_PATHS.MATCH_LOBBY(match.id));
+        navigate(FRONTEND_PATHS.MATCH_LOBBY(res.match_id));
       } else {
         alert("Couldn't join the match, try another one.");
       }
