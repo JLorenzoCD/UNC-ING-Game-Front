@@ -4,10 +4,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import type { ChangeEvent, FormEvent } from "react";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 import { ERROR_MESSAGES, RANGE_PLAYERS } from "./constants";
 
-import useFormCreateMatch from "./useFormCreateMatch";
+import useCreateMatchForm from "./useCreateMatchForm";
 
 // Mock de useNavigate para evitar errores de contexto
 const mockNavigate = vi.fn();
@@ -20,13 +20,13 @@ vi.mock("@/contexts/PlayerContext", () => ({
   }),
 }));
 
-describe("useFormCreateMatch", () => {
+describe("useCreateMatchForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("should return the initial state correctly", () => {
-    const { result } = renderHook(() => useFormCreateMatch());
+    const { result } = renderHook(() => useCreateMatchForm());
 
     expect(result.current.formData).toEqual({
       name: "",
@@ -44,7 +44,7 @@ describe("useFormCreateMatch", () => {
 
   describe("handleChange", () => {
     it("should update name field and clear error on valid input", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       // Se pone solo espacios y se revisa que hay error
       act(() => {
@@ -67,7 +67,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should set an error when a name is empty", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       act(() => {
         result.current.handleChange({
@@ -80,7 +80,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should set an error when min_players is out of range", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       act(() => {
         result.current.handleChange({
@@ -98,7 +98,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should set an error when max_players is out of range", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       act(() => {
         result.current.handleChange({
@@ -116,7 +116,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should set an error when min_players is greater than max_players on change", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       const curr_max_players = RANGE_PLAYERS.MAX - 1;
 
@@ -143,7 +143,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should set an error when max_players is less than min_players on change", () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       const curr_min_players = RANGE_PLAYERS.MIN + 1;
 
@@ -172,7 +172,7 @@ describe("useFormCreateMatch", () => {
 
   describe("createHandleSubmit", () => {
     it("should not call handleCreateMatch if there are errors", async () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
       const mockHandleCreateMatch = vi.fn();
       const mockEvent = {
         preventDefault: vi.fn(),
@@ -199,7 +199,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should call handleCreateMatch with correct data on successful submit", async () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       const mockHandleCreateMatch = vi.fn();
       const mockEvent = {
@@ -244,7 +244,7 @@ describe("useFormCreateMatch", () => {
     });
 
     it("should handle errors from handleCreateMatch gracefully", async () => {
-      const { result } = renderHook(() => useFormCreateMatch());
+      const { result } = renderHook(() => useCreateMatchForm());
 
       const mockHandleCreateMatch = vi
         .fn()

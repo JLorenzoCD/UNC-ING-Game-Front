@@ -1,95 +1,111 @@
 import { useEffect, useState } from "react";
-
 import { Link } from "react-router";
-import Button from "@/components/Button";
-import ListMatches from "./components/ListMatches";
-import ListItemMatch from "./components/ListItemMatch";
 
+import type { MatchWithPlayerCount } from "@/types/match";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useWebSocketService } from "@/contexts/WebSocketServiceContext";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import Button from "@/components/Button";
+
+import { FRONTEND_PATHS } from "@/constants/frontend";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
-import type { MatchListItem } from "@/types/match";
+import MatchList from "./components/MatchList";
+import MatchListItem from "./components/MatchListItem";
 
-function MatchesContainer() {
+interface WSError extends Error {
+  showUser: boolean;
+}
+
+export default function MatchesContainer() {
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
 
-  const [matches, setMatches] = useState<MatchListItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [matches, setMatches] = useState<MatchWithPlayerCount[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const handleMatchEvents = (eventMatch: MatchWithPlayerCount) => {
+    setMatches((prev) => {
+      let newMatchesState: MatchWithPlayerCount[] | null = null;
+
+      const exists = prev.find((match) => match.id === eventMatch.id);
+      const matchStatus = eventMatch.status.toLocaleUpperCase();
+
+      if (!exists && matchStatus === "WAITING") {
+        newMatchesState = [...prev, eventMatch]; // Add
+      } else if (exists && matchStatus !== "WAITING") {
+        newMatchesState = prev.filter((match) => match.id !== exists.id); // Remove
+      } else {
+        newMatchesState = prev.map((match) =>
+          match.id === eventMatch.id ? { ...match, ...eventMatch } : match,
+        ); // update
+      }
+
+      return newMatchesState;
+    });
+  };
 
   useEffect(() => {
-    if (httpService == null || wsService == null) return;
-
-    const handleMatchEvents = (eventMatch: MatchListItem) => {
-      setMatches((prev) => {
-        let newMatchesState: MatchListItem[] | null = null;
-        const exists = prev.find((match) => match.id === eventMatch.id);
-
-        if (!exists && eventMatch.status.toLocaleUpperCase() === "WAITING") {
-          newMatchesState = [...prev, eventMatch]; // Add
-        } else if (
-          exists &&
-          eventMatch.status.toLocaleUpperCase() != "WAITING"
-        ) {
-          newMatchesState = prev.filter((match) => match.id !== exists.id); // remove
-        } else {
-          newMatchesState = prev.map((match) =>
-            match.id === eventMatch.id ? { ...match, ...eventMatch } : match,
-          ); // update
-        }
-
-        return newMatchesState;
-      });
-    };
+    if (
+      httpService === null
+      || (wsService === null || !isConnected)
+    ) return;
 
     const init = async () => {
       try {
         // Se obtienen los datos mediante http
-        setLoading(true);
-        const matches = await httpService.getMatches();
-        setMatches(matches);
+        setIsLoading(true);
 
-        if (isConnected) {
-          wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
-        }
+        const matches = await httpService.getMatches();
+        const filteredMatches = matches.filter(
+          (match) => match.status.toLocaleUpperCase() === "WAITING"
+        );
+
+        setMatches(filteredMatches);
+
+        wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
       } catch (err) {
         console.error(err);
-        alert("Could not connect to the server.");
+
+        const error = err as Error;
+
+        if ((error as WSError).showUser) {
+          alert(error.message);
+        } else {
+          alert("Could not connect to the server.");
+        }
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
     init();
+
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
     };
   }, [httpService, wsService, isConnected]);
 
   return (
-    <>
+    <div data-testid="matches-container">
       <Link
         to={FRONTEND_PATHS.MATCH_CREATE}
         className="block mx-auto w-60 my-5"
       >
         <Button className="w-full">Create match</Button>
       </Link>
-      {httpService != null && (
-        <ListMatches isLoading={loading}>
-          {matches.map((m) => (
-            <ListItemMatch
-              key={m.id}
-              match={m}
+
+      {httpService !== null && (
+        <MatchList isLoading={isLoading}>
+          {matches.map((match) => (
+            <MatchListItem
+              key={match.id}
+              match={match}
               joinMatch={httpService.joinMatch}
             />
           ))}
-        </ListMatches>
+        </MatchList>
       )}
-    </>
+    </div>
   );
 }
-
-export default MatchesContainer;

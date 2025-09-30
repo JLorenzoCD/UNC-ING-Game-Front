@@ -7,8 +7,8 @@ import logoGame from "@/assets/logo.png";
 export default function MainLayout() {
   return (
     <>
-      <header className="px-135">
-        <img src={logoGame} alt="AGATHA CHRISTIE'S - DEATH ON THE CARDS" />
+      <header className="w-full pt-4 flex items-center justify-center">
+        <img src={logoGame} alt="AGATHA CHRISTIE'S - DEATH ON THE CARDS" width={384} />
       </header>
       <main>
         <Container className="pt-5">

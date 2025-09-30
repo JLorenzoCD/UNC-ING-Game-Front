@@ -4,18 +4,18 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import AlertErrorList from "../AlertErrorList";
 
-import useFormCreateMatch from "./useFormCreateMatch";
+import useCreateMatchForm from "./useCreateMatchForm";
 
 import { RANGE_PLAYERS } from "./constants";
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import type { Match, MatchCreateInput } from "@/types/match";
 
-interface Props {
+interface CreateMatchFormProps {
   handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>;
 }
 
-function FormCreateMatch({ handleCreateMatch }: Props) {
+export default function CreateMatchForm({ handleCreateMatch }: CreateMatchFormProps) {
   const {
     formData,
     handleChange,
@@ -23,7 +23,7 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
     haveError,
     createHandleSubmit,
     loading,
-  } = useFormCreateMatch();
+  } = useCreateMatchForm();
 
   return (
     <form
@@ -101,5 +101,3 @@ function FormCreateMatch({ handleCreateMatch }: Props) {
     </form>
   );
 }
-
-export default FormCreateMatch;

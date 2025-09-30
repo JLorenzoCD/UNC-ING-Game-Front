@@ -3,15 +3,16 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import Button from "@/components/Button";
 
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
-import { isValidMatch } from "./utils";
+import { isValidMatch } from "../utils";
 
 import type { UUID } from "@/types/common";
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
+import { isUUID } from "@/utils";
 
-interface Props {
-  match: MatchListItem;
+interface MatchListItemProps {
+  match: MatchWithPlayerCount;
   joinMatch: (
     playerId: UUID,
     matchId: UUID,
@@ -20,29 +21,36 @@ interface Props {
   }>;
 }
 
-function ListItemMatch({ match, joinMatch }: Props) {
+export default function MatchListItem({ match, joinMatch }: MatchListItemProps) {
   const navigate = useNavigate();
-
+  
   const { player } = usePlayer();
-  if (player === null) throw new Error("No Player.");
-  const playerId = player.id;
-
+  
   if (!isValidMatch(match)) return null;
-
+  
   const name =
     match.name.length < 35 ? match.name : match.name.substring(0, 32) + "...";
 
-  async function handleClick() {
+  const handleClick = async () => {
+    if (!player) {
+      alert("You must create a player before joining a match.");
+      
+      return;
+    }
+
     try {
-      const res = await joinMatch(playerId, match.id);
-      if (res) {
+      const result = await joinMatch(player.id, match.id);
+
+      if (result && isUUID(result.match_id)) {
         alert("You successfully joined the match.");
-        navigate(FRONTEND_PATHS.MATCH_LOBBY(res.match_id));
+
+        navigate(FRONTEND_PATHS.MATCH_LOBBY(result.match_id));
       } else {
         alert("Couldn't join the match, try another one.");
       }
     } catch (err) {
       console.error(err);
+
       alert(
         `There was a problem joining game "${match.name}", please try again later.`,
       );
@@ -50,8 +58,9 @@ function ListItemMatch({ match, joinMatch }: Props) {
   }
 
   return (
-    <li className="flex justify-between items-center p-3 bg-white mb-2 rounded-xl border">
+    <li data-testid="match-list-item" className="flex justify-between items-center p-3 bg-white mb-2 rounded-xl border">
       <p>{name}</p>
+      
       <span className="flex gap-5 items-center">
         <p>
           {match.min_players}/{match.max_players}
@@ -69,5 +78,3 @@ function ListItemMatch({ match, joinMatch }: Props) {
     </li>
   );
 }
-
-export default ListItemMatch;

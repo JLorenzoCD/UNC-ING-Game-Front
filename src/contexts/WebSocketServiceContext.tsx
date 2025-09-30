@@ -61,7 +61,7 @@ export function WebSocketServiceProvider({
 export function useWebSocketService() {
   const context = useContext(WebSocketServiceContext);
 
-  if (!context || !context.wsService) {
+  if (!context) {
     throw new Error(
       "useWebSocketService must be used within a WebSocketServiceProvider",
     );

@@ -28,7 +28,7 @@ export function HttpServiceProvider({ children }: HttpServiceProviderProps) {
 export function useHttpService() {
   const context = useContext(HttpServiceContext);
 
-  if (!context || !context.httpService) {
+  if (!context) {
     throw new Error("useHttpService must be used within a HttpServiceProvider");
   }
 

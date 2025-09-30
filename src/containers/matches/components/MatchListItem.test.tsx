@@ -3,26 +3,28 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, afterAll, beforeEach } from "vitest";
 
 import type { UUID } from "@/types/common";
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
-import ListItemMatch from "./ListItemMatch";
+import MatchListItem from "./MatchListItem";
 
 // Mock de isValidMatch
 const isValidMatch = vi.fn();
-vi.mock("../utils", () => ({
+
+vi.mock("utils", () => ({
   isValidMatch,
 }));
 
 // Mock de useNavigate para evitar errores de contexto
 const mockNavigate = vi.fn();
+
 vi.mock("react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-vi.mock("@/constants/frontendPaths", () => ({
+vi.mock("@/constants/frontend", () => ({
   FRONTEND_PATHS: {
     MATCH_LOBBY: (mockJoinedMatchId: UUID) =>
-      `/match-lobby/${mockJoinedMatchId}`,
+      `/match/${mockJoinedMatchId}/lobby`,
   },
 }));
 
@@ -35,8 +37,8 @@ vi.mock("@/contexts/PlayerContext", () => ({
 // Mock joinMatch prop
 const joinMatch = vi.fn();
 
-describe("ListItemMatch", () => {
-  const mockMatch: MatchListItem = {
+describe("MatchListItem", () => {
+  const mockMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "Test 1",
     min_players: 2,
@@ -47,7 +49,7 @@ describe("ListItemMatch", () => {
     current_player_order: 0,
   };
 
-  const longNameMatch: MatchListItem = {
+  const longNameMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "This is a match name that is way too long to be fully visible",
     min_players: 4,
@@ -58,7 +60,7 @@ describe("ListItemMatch", () => {
     current_player_order: 0,
   };
 
-  const mockInvalidMatch: MatchListItem = {
+  const mockInvalidMatch: MatchWithPlayerCount = {
     id: crypto.randomUUID() as UUID,
     name: "Invalid Match",
     min_players: 1,
@@ -73,7 +75,7 @@ describe("ListItemMatch", () => {
     // Match valido
     isValidMatch.mockReturnValue(true);
 
-    render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
+    render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
 
     // Esta el nombre de la partida
     expect(screen.getByText(mockMatch.name)).toBeInTheDocument();
@@ -98,7 +100,7 @@ describe("ListItemMatch", () => {
     isValidMatch.mockReturnValue(false);
 
     const { container } = render(
-      <ListItemMatch match={mockInvalidMatch} joinMatch={joinMatch} />,
+      <MatchListItem match={mockInvalidMatch} joinMatch={joinMatch} />,
     );
     expect(container.firstChild).toBeNull();
   });
@@ -107,7 +109,7 @@ describe("ListItemMatch", () => {
     // Match valido
     isValidMatch.mockReturnValue(true);
 
-    render(<ListItemMatch match={longNameMatch} joinMatch={joinMatch} />);
+    render(<MatchListItem match={longNameMatch} joinMatch={joinMatch} />);
 
     // Verificamos que el nombre está truncado
     expect(
@@ -119,7 +121,7 @@ describe("ListItemMatch", () => {
     // Matches valido
     isValidMatch.mockReturnValue(true);
 
-    const matchWithEnoughPlayers: MatchListItem = {
+    const matchWithEnoughPlayers: MatchWithPlayerCount = {
       id: crypto.randomUUID() as UUID,
       name: "Full Match",
       min_players: 2,
@@ -131,11 +133,11 @@ describe("ListItemMatch", () => {
     };
 
     render(
-      <ListItemMatch match={matchWithEnoughPlayers} joinMatch={joinMatch} />,
+      <MatchListItem match={matchWithEnoughPlayers} joinMatch={joinMatch} />,
     );
     expect(screen.getByText("🟢 3")).toBeInTheDocument();
 
-    const matchWithInsufficientPlayers: MatchListItem = {
+    const matchWithInsufficientPlayers: MatchWithPlayerCount = {
       id: crypto.randomUUID() as UUID,
       name: "Not enough players",
       min_players: 5,
@@ -147,7 +149,7 @@ describe("ListItemMatch", () => {
     };
 
     render(
-      <ListItemMatch
+      <MatchListItem
         match={matchWithInsufficientPlayers}
         joinMatch={joinMatch}
       />,
@@ -173,7 +175,7 @@ describe("ListItemMatch", () => {
 
       joinMatch.mockResolvedValue({ match_id: mockMatchId });
 
-      render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
+      render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
 
       const joinButton = screen.getByRole("button", { name: /join/i });
 
@@ -186,11 +188,11 @@ describe("ListItemMatch", () => {
     });
 
     it("should alert success and navigate to lobby on successful join", async () => {
-      const mockJoinedMatchId = "new-match-id-123" as UUID;
+      const mockJoinedMatchId = crypto.randomUUID() as UUID;
 
       joinMatch.mockResolvedValue({ match_id: mockJoinedMatchId });
 
-      render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
+      render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
 
       const joinButton = screen.getByRole("button", { name: /join/i });
 
@@ -204,7 +206,7 @@ describe("ListItemMatch", () => {
         // 2. Verificar la navegación
         expect(mockNavigate).toHaveBeenCalledTimes(1);
         expect(mockNavigate).toHaveBeenCalledWith(
-          `/match-lobby/${mockJoinedMatchId}`,
+          `/match/${mockJoinedMatchId}/lobby`,
         );
       });
     });
@@ -213,7 +215,7 @@ describe("ListItemMatch", () => {
       // Mock para simular que la unión no fue posible o falló, devolviendo un valor falsy.
       joinMatch.mockResolvedValue(null);
 
-      render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
+      render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
 
       const joinButton = screen.getByRole("button", { name: /join/i });
 
@@ -238,7 +240,7 @@ describe("ListItemMatch", () => {
       // Mock para simular un error en la promesa (bloque catch)
       joinMatch.mockRejectedValue(mockError);
 
-      render(<ListItemMatch match={mockMatch} joinMatch={joinMatch} />);
+      render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
 
       const joinButton = screen.getByRole("button", { name: /join/i });
 

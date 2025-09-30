@@ -10,7 +10,7 @@ import type { Match, MatchCreateInput } from "@/types/match";
 
 import CreateMatchContainer from "./CreateMatchContainer";
 
-// Mock de los componentes dependientes FormCreateMatch, Button (se asume que
+// Mock de los componentes dependientes CreateMatchForm, Button (se asume que
 // están bien y con tests)
 vi.mock("@/components/Button", () => ({
   default: vi.fn(
@@ -28,7 +28,7 @@ const mockMatchToCreate = {
   min_players: 2,
   max_players: 6,
 } as MatchCreateInput;
-vi.mock("./components/FormCreateMatch", () => ({
+vi.mock("./components/CreateMatchForm", () => ({
   default: vi.fn(
     (props: {
       handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>;
@@ -47,7 +47,7 @@ vi.mock("./components/FormCreateMatch", () => ({
   ),
 }));
 
-vi.mock("@/constants/frontendPaths", () => ({
+vi.mock("@/constants/frontend", () => ({
   FRONTEND_PATHS: {
     MATCH_LIST: "/matches",
   },
@@ -76,6 +76,14 @@ vi.mock("react-router", async (importOriginal) => {
     )),
   };
 });
+
+// Mock de usePlayer para evitar problemas con PlayerProvider que usa useNavigate
+vi.mock("@/contexts/PlayerContext", () => ({
+  usePlayer: vi.fn(() => ({
+    player: { id: "test-player-id" as UUID },
+    setPlayer: vi.fn(),
+  })),
+}));
 
 describe("CreateMatchContainer", () => {
   beforeEach(() => {
@@ -121,7 +129,7 @@ describe("CreateMatchContainer", () => {
     expect(linkButton).toHaveAttribute("href", "/matches");
   });
 
-  it("should not render FormCreateMatch if httpService is null", () => {
+  it("should not render CreateMatchForm if httpService is null", () => {
     vi.mocked(useHttpService).mockReturnValueOnce({ httpService: null });
     render(<CreateMatchContainer />);
 

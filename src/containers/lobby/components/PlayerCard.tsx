@@ -16,7 +16,7 @@ export function EmptyPlayerPosition() {
   );
 }
 
-function PlayerCard({
+export default function PlayerCard({
   player,
   isOwner = false,
   isMe = false,
@@ -52,5 +52,3 @@ function PlayerCard({
     </article>
   );
 }
-
-export default PlayerCard;

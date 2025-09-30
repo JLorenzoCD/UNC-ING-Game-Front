@@ -1,10 +1,11 @@
 import "@testing-library/jest-dom";
 import { render, screen, act } from "@testing-library/react";
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import Table from "./Table";
+
+import type { GamePlayer } from "@/types/player";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useGame } from "@/contexts/GameContext";
-import type { GamePlayer } from "@/types/player";
+import Table from "./Table";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
 import avatarQuin from "@/assets/avatars/icono1.png";

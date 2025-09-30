@@ -1,4 +1,4 @@
-function Loading() {
+export default function Loading() {
   return (
     <div role="status">
       <svg
@@ -21,5 +21,3 @@ function Loading() {
     </div>
   );
 }
-
-export default Loading;

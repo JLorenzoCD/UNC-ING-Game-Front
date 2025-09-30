@@ -1,6 +1,6 @@
 import { ERROR_MESSAGES, RANGE_PLAYERS } from "./constants";
 
-import type { MatchForm, MatchFormError } from "./type";
+import type { MatchForm, MatchFormError } from "./types";
 
 const validateName = (name: string): string => {
   if (!name.trim()) {

@@ -9,13 +9,13 @@ import LobbyLayout from "./components/LobbyLayout";
 import PlayerCard, { EmptyPlayerPosition } from "./components/PlayerCard";
 
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
-import { FRONTEND_PATHS } from "@/constants/frontendPaths";
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import { isUUID } from "@/utils";
 
 import type { UUID } from "@/types/common";
-import type { Match, MatchListItem } from "@/types/match";
 import type { Player } from "@/types/player";
+import type { Match, MatchWithPlayerCount } from "@/types/match";
 
 function fillAndShufflePlayers(
   players: Player[],
@@ -37,20 +37,21 @@ function fillAndShufflePlayers(
   return playersToView;
 }
 
-function LobbyContainer() {
+export default function LobbyContainer() {
+  const navigate = useNavigate();
+
   const { player } = usePlayer();
   const { matchId } = useParams();
 
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
-  const navigate = useNavigate();
 
-  const [match, setMatch] = useState<MatchListItem | null>(null);
-  const matchRef = useRef<MatchListItem | null>(null);
+  const [match, setMatch] = useState<MatchWithPlayerCount | null>(null);
+  const matchRef = useRef<MatchWithPlayerCount | null>(null);
 
   const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
 
   useEffect(() => {
     matchRef.current = match;
@@ -71,15 +72,15 @@ function LobbyContainer() {
     };
 
     const handleMatchStart = async (
-      updateMatch: (MatchListItem & { id_match: UUID }) | { status: Match },
+      updateMatch: MatchWithPlayerCount | { status: Match },
     ) => {
-      const currMatch = matchRef.current;
-      if (currMatch == null) {
+      const currentMatch = matchRef.current;
+      
+      if (currentMatch == null) {
         return;
       }
 
-      if ("id_match" in updateMatch) {
-        updateMatch.id = updateMatch.id_match;
+      if ("id" in updateMatch) {
         if (
           updateMatch.id === matchId &&
           updateMatch.status.toLocaleUpperCase() === "IN_PROGRESS"
@@ -88,7 +89,7 @@ function LobbyContainer() {
         } else if (
           updateMatch.id === matchId &&
           updateMatch.status.toLocaleUpperCase() === "WAITING" &&
-          (currMatch as MatchListItem).current_player_count <
+          currentMatch.current_player_count <
             updateMatch.current_player_count
         ) {
           try {
@@ -100,26 +101,23 @@ function LobbyContainer() {
             console.error(err);
           }
         }
-      } else {
-        if (
-          updateMatch.status.id &&
+      } else if (
           updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
-        ) {
-          navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
-        }
-      }
+        ) navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
     };
 
     const init = async () => {
+      setLoading(true);
+
       try {
         // Se obtienen los datos mediante httpService
-        setLoading(true);
-        const data = await Promise.all([
+        const [match, players] = await Promise.all([
           httpService.getMatch(matchId as UUID),
           httpService.getMatchPlayers(matchId as UUID),
         ]);
-        setMatch(data[0]);
-        setPlayers(data[1]);
+
+        setMatch(match);
+        setPlayers(players);
 
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
@@ -128,6 +126,7 @@ function LobbyContainer() {
       } catch (err) {
         console.error(err);
         setError(true);
+
         alert("Could not connect to the server.");
       } finally {
         setLoading(false);
@@ -135,6 +134,7 @@ function LobbyContainer() {
     };
 
     init();
+
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
@@ -156,10 +156,12 @@ function LobbyContainer() {
   const playersToView = fillAndShufflePlayers(players, match.max_players);
 
   async function startGame(matchId: UUID) {
+    if (httpService === null) return;
+   
     try {
-      const res = await httpService?.startMatch(matchId);
+      const result = await httpService.startMatch(matchId);
 
-      if (res?.status) {
+      if (result.status) {
         navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
       } else {
         throw new Error("Unexpected response at the start of the game.");
@@ -172,9 +174,9 @@ function LobbyContainer() {
 
   return (
     <LobbyLayout
+      match={match}
       startGame={() => startGame(match.id)}
       isOwner={player.id == match.owner_id}
-      match={match}
     >
       {playersToView.map((p) =>
         p === null ? (
@@ -183,13 +185,11 @@ function LobbyContainer() {
           <PlayerCard
             key={p.id}
             player={p}
-            isOwner={p.id === match.owner_id}
             isMe={p.id === player.id}
+            isOwner={p.id === match.owner_id}
           />
         ),
       )}
     </LobbyLayout>
   );
 }
-
-export default LobbyContainer;

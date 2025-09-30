@@ -108,7 +108,7 @@ vi.doMock("@/constants/backend", () => ({
 }));
 
 const FRONTEND_PATHS = {
-  MATCH_GAME: (id: string) => `/match/game/${id}`,
+  MATCH_GAME: (id: string) => `/match/${id}/game`,
 };
 vi.doMock("@/constants/frontendPaths", () => ({
   FRONTEND_PATHS,
@@ -376,7 +376,7 @@ describe("LobbyContainer", () => {
     });
 
     // Verificamos las llamadas de servicio y navegación
-    expect(mockStartMatch).toHaveBeenCalledWith(MOCK_OWNER_ID, MOCK_MATCH_ID);
+    expect(mockStartMatch).toHaveBeenCalledWith(MOCK_MATCH_ID);
     expect(mockNavigate).toHaveBeenCalledWith(
       FRONTEND_PATHS.MATCH_GAME(MOCK_MATCH_ID),
     );

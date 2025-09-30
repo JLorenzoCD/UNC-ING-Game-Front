@@ -1,19 +1,20 @@
 import type { ReactNode } from "react";
 
+import type { MatchWithPlayerCount } from "@/types/match";
 import Container from "@/components/Container";
 import Button from "@/components/Button";
 
 import logoGame from "@/assets/logo.png";
-import type { MatchListItem } from "@/types/match";
 
 interface Props {
-  children: ReactNode;
-  match: MatchListItem;
+  match: MatchWithPlayerCount;
   isOwner: boolean;
   startGame: () => Promise<void>;
+  
+  children: ReactNode;
 }
 
-function LobbyLayout({ children, startGame, isOwner, match }: Props) {
+export default function LobbyLayout({ children, startGame, isOwner, match }: Props) {
   const handleClick = () => {
     // Errores se manejan en el startGame
     startGame();
@@ -31,6 +32,7 @@ function LobbyLayout({ children, startGame, isOwner, match }: Props) {
           {isOwner && <Button onClick={handleClick}>Start game</Button>}
         </Container>
       </header>
+      
       <main className='relative flex-grow bg-[url("src/assets/fondopartida.jpeg")] bg-cover bg-center flex justify-center items-center -z-20'>
         <div className="absolute inset-0 bg-black opacity-45 -z-10"></div>
 
@@ -53,5 +55,3 @@ function LobbyLayout({ children, startGame, isOwner, match }: Props) {
     </div>
   );
 }
-
-export default LobbyLayout;

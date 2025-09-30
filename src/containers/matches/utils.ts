@@ -1,19 +1,25 @@
-import { RANGE_PLAYERS } from "./constantes";
+import { RANGE_PLAYERS } from "./constants";
 
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
-export function isValidMatch(match: MatchListItem) {
+export function isValidMatch(match: MatchWithPlayerCount): boolean {
   const isValidName = !!match.name.trim();
+
   const isValidPlayerCount = match.min_players <= match.max_players;
+
   const isValidMinPlayersInRange =
     match.min_players >= RANGE_PLAYERS.MIN &&
     match.min_players <= RANGE_PLAYERS.MAX;
+
   const isValidMaxPlayersInRange =
     match.max_players >= RANGE_PLAYERS.MIN &&
     match.max_players <= RANGE_PLAYERS.MAX;
+  
   const isValidCurrentPlayerCount =
     match.current_player_count <= match.max_players;
+  
   const isValidPlayerOrder = match.current_player_order < match.max_players;
+  
   const isWaiting = match.status.toUpperCase() === "WAITING";
 
   return (
