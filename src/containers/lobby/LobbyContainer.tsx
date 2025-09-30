@@ -75,7 +75,7 @@ export default function LobbyContainer() {
       updateMatch: MatchWithPlayerCount | { status: Match },
     ) => {
       const currentMatch = matchRef.current;
-      
+
       if (currentMatch == null) {
         return;
       }
@@ -89,8 +89,7 @@ export default function LobbyContainer() {
         } else if (
           updateMatch.id === matchId &&
           updateMatch.status.toLocaleUpperCase() === "WAITING" &&
-          currentMatch.current_player_count <
-            updateMatch.current_player_count
+          currentMatch.current_player_count < updateMatch.current_player_count
         ) {
           try {
             const updatePlayers = await httpService?.getMatchPlayers(matchId);
@@ -102,8 +101,9 @@ export default function LobbyContainer() {
           }
         }
       } else if (
-          updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
-        ) navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+        updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
+      )
+        navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
     };
 
     const init = async () => {
@@ -157,7 +157,7 @@ export default function LobbyContainer() {
 
   async function startGame(matchId: UUID) {
     if (httpService === null) return;
-   
+
     try {
       const result = await httpService.startMatch(matchId);
 

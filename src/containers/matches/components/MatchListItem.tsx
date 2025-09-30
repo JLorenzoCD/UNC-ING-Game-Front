@@ -21,20 +21,23 @@ interface MatchListItemProps {
   }>;
 }
 
-export default function MatchListItem({ match, joinMatch }: MatchListItemProps) {
+export default function MatchListItem({
+  match,
+  joinMatch,
+}: MatchListItemProps) {
   const navigate = useNavigate();
-  
+
   const { player } = usePlayer();
-  
+
   if (!isValidMatch(match)) return null;
-  
+
   const name =
     match.name.length < 35 ? match.name : match.name.substring(0, 32) + "...";
 
   const handleClick = async () => {
     if (!player) {
       alert("You must create a player before joining a match.");
-      
+
       return;
     }
 
@@ -55,12 +58,15 @@ export default function MatchListItem({ match, joinMatch }: MatchListItemProps) 
         `There was a problem joining game "${match.name}", please try again later.`,
       );
     }
-  }
+  };
 
   return (
-    <li data-testid="match-list-item" className="flex justify-between items-center p-3 bg-white mb-2 rounded-xl border">
+    <li
+      data-testid="match-list-item"
+      className="flex justify-between items-center p-3 bg-white mb-2 rounded-xl border"
+    >
       <p>{name}</p>
-      
+
       <span className="flex gap-5 items-center">
         <p>
           {match.min_players}/{match.max_players}

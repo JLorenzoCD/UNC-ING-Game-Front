@@ -15,7 +15,9 @@ interface CreateMatchFormProps {
   handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>;
 }
 
-export default function CreateMatchForm({ handleCreateMatch }: CreateMatchFormProps) {
+export default function CreateMatchForm({
+  handleCreateMatch,
+}: CreateMatchFormProps) {
   const {
     formData,
     handleChange,

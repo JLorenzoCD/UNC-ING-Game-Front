@@ -46,10 +46,7 @@ export default function MatchesContainer() {
   };
 
   useEffect(() => {
-    if (
-      httpService === null
-      || (wsService === null || !isConnected)
-    ) return;
+    if (httpService === null || wsService === null || !isConnected) return;
 
     const init = async () => {
       try {
@@ -58,7 +55,7 @@ export default function MatchesContainer() {
 
         const matches = await httpService.getMatches();
         const filteredMatches = matches.filter(
-          (match) => match.status.toLocaleUpperCase() === "WAITING"
+          (match) => match.status.toLocaleUpperCase() === "WAITING",
         );
 
         setMatches(filteredMatches);

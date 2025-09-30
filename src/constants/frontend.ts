@@ -1,6 +1,6 @@
 const FRONTEND_PATHS = {
   PLAYER_CREATE: "/player/create",
-  
+
   MATCH_LIST: "/",
   MATCH_CREATE: "/match/create",
 
