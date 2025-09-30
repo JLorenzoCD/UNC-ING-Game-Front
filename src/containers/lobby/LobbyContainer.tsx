@@ -58,6 +58,17 @@ export default function LobbyContainer() {
   }, [match]);
 
   useEffect(() => {
+    setMatch((prev) => {
+      if (prev === null) return null;
+
+      return {
+        ...prev,
+        current_player_count: players.length,
+      };
+    });
+  }, [players]);
+
+  useEffect(() => {
     if (httpService == null || wsService == null || !matchId) return;
 
     const handleLobbyJoin = (newPlayer: Player) => {
