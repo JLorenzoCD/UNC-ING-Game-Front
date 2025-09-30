@@ -18,6 +18,7 @@ import CreatePlayerContainer from "./containers/create-player/CreatePlayerContai
 
 import GameLayout from "./containers/game/layout";
 import GameContainer from "./containers/game/index";
+import LobbyContainer from "./containers/lobby/LobbyContainer";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -27,6 +28,7 @@ createRoot(document.getElementById("root")!).render(
           <BrowserRouter>
             <Routes>
               <Route path={FRONTEND_PATHS.HOME} element={<App />} />
+
               <Route element={<MainLayout />}>
                 <Route
                   path={FRONTEND_PATHS.PLAYER_CREATE}
@@ -47,6 +49,10 @@ createRoot(document.getElementById("root")!).render(
                   element={<GameContainer />}
                 />
               </Route>
+              <Route
+                path={FRONTEND_PATHS.MATCH_LOBBY(":matchId")}
+                element={<LobbyContainer />}
+              />
             </Routes>
           </BrowserRouter>
         </WebSocketServiceProvider>
