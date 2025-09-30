@@ -21,7 +21,6 @@ let LobbyContainer: any;
 const MOCK_MATCH_ID = "match-id" as UUID;
 const MOCK_OWNER_ID = "owner-id" as UUID;
 const MOCK_PLAYER_ID = "simple-player-id" as UUID;
-const MOCK_NEW_PLAYER_ID = "new-player-id" as UUID;
 
 const mockMatch = {
   id: MOCK_MATCH_ID,
@@ -38,11 +37,6 @@ const mockPlayers = [
   { id: MOCK_OWNER_ID, name: "Owner Player" },
   { id: MOCK_PLAYER_ID, name: "Current Player" },
 ] as Player[];
-
-const mockNewPlayer = {
-  id: MOCK_NEW_PLAYER_ID,
-  name: "New Joined Player",
-} as Player;
 
 // Mock de servicios HTTP
 const mockGetMatch = vi.fn().mockResolvedValue(mockMatch);

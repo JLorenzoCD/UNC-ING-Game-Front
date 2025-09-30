@@ -2,8 +2,8 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { MatchListItem } from "@/types/match";
 import type { UUID } from "@/types/common";
+import type { MatchWithPlayerCount } from "@/types/match";
 
 import LobbyLayout from "./LobbyLayout";
 
@@ -38,8 +38,8 @@ vi.mock("src/assets/fondopartida.jpeg", () => ({
 
 // --- Datos de prueba ---
 
-const mockMatch: MatchListItem = {
-  id: "mock-uuid-123" as UUID,
+const mockMatch: MatchWithPlayerCount = {
+  id: "mock-match-id" as UUID,
   name: "The Best Lobby",
   min_players: 4,
   max_players: 8,
