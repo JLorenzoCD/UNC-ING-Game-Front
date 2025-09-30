@@ -85,8 +85,14 @@ export function createHttpService() {
     );
   };
 
-  const getMatch = async (matchId: UUID): Promise<Match> => {
-    return request<Match>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
+  const getMatch = async (matchId: UUID): Promise<MatchWithPlayerCount> => {
+    return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
+  };
+
+  const startMatch = async (playerId: UUID, matchId: UUID): Promise<{ status: string }> => {
+    return request<{ status: string }>(
+      BACKEND_ENDPOINTS.START_MATCH(matchId, playerId),
+    );
   };
 
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
@@ -105,6 +111,7 @@ export function createHttpService() {
     request,
     createPlayer,
     createMatch,
+    startMatch,
     getMatches,
     joinMatch,
     getMatch,
