@@ -2,9 +2,9 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { MatchListItem } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
-import ListMatches from "./ListMatches";
+import MatchList from "./MatchList";
 
 // Mock componente loading
 vi.mock("@/components/Loading", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/components/Loading", () => ({
 }));
 
 // Mock componente ListItemMatch
-const ListItemMatch = ({ match }: { match: MatchListItem }) => {
+const MatchListItem = ({ match }: { match: MatchWithPlayerCount }) => {
   //* Se busca representar validaciones básicas, no todas (para no llamar la fun de validación)
   if (match.status != "WAITING" || match.min_players > match.max_players)
     return null;
@@ -29,11 +29,11 @@ const ListItemMatch = ({ match }: { match: MatchListItem }) => {
   );
 };
 vi.mock("./ListItemMatch", () => ({
-  default: vi.fn(ListItemMatch),
+  default: vi.fn(MatchListItem),
 }));
 
 // Datos de prueba
-const testValidMatches: MatchListItem[] = [
+const testValidMatches: MatchWithPlayerCount[] = [
   {
     id: crypto.randomUUID(),
     name: "Prueba 1",
@@ -56,7 +56,7 @@ const testValidMatches: MatchListItem[] = [
   },
 ];
 
-const testInValidMatches: MatchListItem[] = [
+const testInValidMatches: MatchWithPlayerCount[] = [
   {
     id: crypto.randomUUID(),
     name: "Invalid match item 1",
@@ -87,11 +87,11 @@ describe("ListMatches", () => {
 
   it("should show the loading component when loading is true", () => {
     render(
-      <ListMatches isLoading={true}>
+      <MatchList isLoading={true}>
         {[].map((m) => (
-          <ListItemMatch key={m} match={m} />
+          <MatchListItem key={m} match={m} />
         ))}
-      </ListMatches>,
+      </MatchList>,
     );
 
     expect(screen.getByTestId("mock-loading")).toBeInTheDocument();
@@ -105,11 +105,11 @@ describe("ListMatches", () => {
 
   it('should show the "no games available" message when the matches list is empty and not loading', () => {
     render(
-      <ListMatches isLoading={false}>
+      <MatchList isLoading={false}>
         {[].map((m) => (
-          <ListItemMatch key={m} match={m} />
+          <MatchListItem key={m} match={m} />
         ))}
-      </ListMatches>,
+      </MatchList>,
     );
 
     expect(
@@ -123,11 +123,11 @@ describe("ListMatches", () => {
 
   it("should render the correct ListItemMatch components when a list of matches is provided", () => {
     render(
-      <ListMatches isLoading={false}>
+      <MatchList isLoading={false}>
         {[...testValidMatches, ...testInValidMatches].map((m) => (
-          <ListItemMatch key={m.id} match={m} />
+          <MatchListItem key={m.id} match={m} />
         ))}
-      </ListMatches>,
+      </MatchList>,
     );
 
     // Se espera que se muestren 2 de los 3 mocks, ya que uno es inválido
