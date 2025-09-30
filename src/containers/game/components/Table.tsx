@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import Players from "./Players";
+
 import { useGame } from "@/contexts/GameContext";
+
 import { usePlayer } from "@/contexts/PlayerContext";
+
+import Player from "./Player";
 
 export default function Table() {
   const { players, match } = useGame();
@@ -83,8 +86,10 @@ export default function Table() {
       }
       return { x: centerX, y: marginY };
     };
-    const result = [];
+
     let visibleIndex = 0;
+
+    const result = [];
     const playerTurn = match?.current_player_order;
 
     for (let i = 1; i < totalPlayers; i++) {
@@ -101,14 +106,15 @@ export default function Table() {
   };
 
   const visiblePlayersWithPositions = getVisiblePlayersWithPositions();
+
   return (
-    <div>
+    <div data-testid="table">
       {visiblePlayersWithPositions.map(({ player, position, turn }) => (
-        <Players
-          player={player}
+        <Player
           key={player.id}
+          player={player}
           position={position}
-          isYourTurn={turn}
+          hasCurrentTurn={turn}
         />
       ))}
     </div>
