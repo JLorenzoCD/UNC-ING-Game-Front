@@ -89,10 +89,10 @@ export function createHttpService() {
     return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
   };
 
-  const startMatch = async (playerId: UUID, matchId: UUID): Promise<{ status: string }> => {
-    return request<{ status: string }>(
-      BACKEND_ENDPOINTS.START_MATCH(matchId, playerId),
-    );
+  const startMatch = async (matchId: UUID): Promise<{ status: string }> => {
+    return request<{ status: string }>(BACKEND_ENDPOINTS.START_MATCH(matchId), {
+      method: "POST",
+    });
   };
 
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {

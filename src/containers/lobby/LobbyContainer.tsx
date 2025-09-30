@@ -14,8 +14,8 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 import { isUUID } from "@/utils";
 
 import type { UUID } from "@/types/common";
-import type { MatchWithPlayerCount } from "@/types/match";
 import type { Player } from "@/types/player";
+import type { Match, MatchWithPlayerCount } from "@/types/match";
 
 function fillAndShufflePlayers(
   players: Player[],
@@ -53,60 +53,63 @@ export default function LobbyContainer() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
 
-  const handleLobbyJoin = (newPlayer: Player) => {
-    setPlayers((prev) => {
-      const exist = prev.some((p) => p.id === newPlayer.id);
-
-      if (exist) {
-        return prev;
-      }
-
-      return [...prev, newPlayer];
-    });
-  };
-
-  const handleMatchStart = async (
-    updateMatch: MatchWithPlayerCount,
-  ) => {
-    if (httpService === null || matchId == null || !isUUID(matchId)) return;
-
-    const currentMatch = matchRef.current;
-    
-    if (currentMatch == null) return;
-
-    if (
-      updateMatch.id === matchId &&
-      updateMatch.status.toLocaleUpperCase() === "IN_PROGRESS"
-    ) {
-      navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
-    } else if (
-      updateMatch.id === matchId &&
-      updateMatch.status.toLocaleUpperCase() === "WAITING" &&
-      currentMatch.current_player_count < updateMatch.current_player_count
-    ) {
-      try {
-        const updatePlayers = await httpService.getMatchPlayers(matchId);
-
-        if (updatePlayers == null) throw new Error("Couldn't fetch match data.");
-
-        setPlayers(updatePlayers);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  };
-
   useEffect(() => {
     matchRef.current = match;
   }, [match]);
 
   useEffect(() => {
-    if (
-      httpService == null
-      || wsService == null
-      || player == null
-      || !matchId
-    ) return;
+    if (httpService == null || wsService == null || !matchId) return;
+
+    const handleLobbyJoin = (newPlayer: Player) => {
+      setPlayers((prev) => {
+        const exist = prev.some((p) => p.id === newPlayer.id);
+
+        if (exist) {
+          return prev;
+        }
+        return [...prev, newPlayer];
+      });
+    };
+
+    const handleMatchStart = async (
+      updateMatch: MatchWithPlayerCount | { status: Match },
+    ) => {
+      const currentMatch = matchRef.current;
+      
+      if (currentMatch == null) {
+        return;
+      }
+
+      if ("id" in updateMatch) {
+        if (
+          updateMatch.id === matchId &&
+          updateMatch.status.toLocaleUpperCase() === "IN_PROGRESS"
+        ) {
+          navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+        } else if (
+          updateMatch.id === matchId &&
+          updateMatch.status.toLocaleUpperCase() === "WAITING" &&
+          currentMatch.current_player_count <
+            updateMatch.current_player_count
+        ) {
+          try {
+            const updatePlayers = await httpService?.getMatchPlayers(matchId);
+            if (updatePlayers == null) throw new Error("No could fetch data.");
+
+            setPlayers(updatePlayers);
+          } catch (err) {
+            console.error(err);
+          }
+        }
+      } else {
+        if (
+          updateMatch.status.id &&
+          updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
+        ) {
+          navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+        }
+      }
+    };
 
     const init = async () => {
       setLoading(true);
@@ -141,7 +144,7 @@ export default function LobbyContainer() {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
     };
-  }, [httpService, wsService, isConnected, navigate, matchId, player]);
+  }, [httpService, wsService, isConnected, navigate, matchId]);
 
   if (player === null || matchId === undefined || !isUUID(matchId)) {
     return null;
@@ -157,11 +160,11 @@ export default function LobbyContainer() {
 
   const playersToView = fillAndShufflePlayers(players, match.max_players);
 
-  async function startGame(playerId: UUID, matchId: UUID) {
+  async function startGame(matchId: UUID) {
     if (httpService === null) return;
-
+   
     try {
-      const result = await httpService?.startMatch(playerId, matchId);
+      const result = await httpService.startMatch(matchId);
 
       if (result.status) {
         navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
@@ -177,7 +180,7 @@ export default function LobbyContainer() {
   return (
     <LobbyLayout
       match={match}
-      startGame={() => startGame(player.id, match.id)}
+      startGame={() => startGame(match.id)}
       isOwner={player.id == match.owner_id}
     >
       {playersToView.map((player) =>
