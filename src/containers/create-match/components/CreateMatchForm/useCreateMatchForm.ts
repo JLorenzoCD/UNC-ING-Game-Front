@@ -1,30 +1,32 @@
 import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router";
-import { usePlayer } from "@/contexts/PlayerContext";
 
+import { usePlayer } from "@/contexts/PlayerContext";
 import { FRONTEND_PATHS } from "@/constants/frontend";
 import { RANGE_PLAYERS } from "./constants";
 
 import { validateForm } from "./utils";
 
 import type { Match, MatchCreateInput } from "@/types/match";
-import type { MatchForm, MatchFormError } from "./type";
+import type { MatchForm, MatchFormError } from "./types";
 
-export default function useFormCreateMatch() {
+export default function useCreateMatchForm() {
   const [formData, setFormData] = useState<MatchForm>({
     name: "",
     min_players: RANGE_PLAYERS.MIN.toString(),
     max_players: RANGE_PLAYERS.MAX.toString(),
   });
+
   const [formError, setFormError] = useState<MatchFormError>({
     name: "",
     min_players: "",
     max_players: "",
   });
-  const [loading, setLoading] = useState(false);
+
+  const [loading, setLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
-  const playerData = usePlayer();
+  const { player } = usePlayer();
 
   const createHandleSubmit =
     (handleCreateMatch: (matchToCreate: MatchCreateInput) => Promise<Match>) =>
@@ -47,23 +49,29 @@ export default function useFormCreateMatch() {
       const max_players = parseInt(formData.max_players);
 
       try {
-        if (playerData.player == null) {
+        if (player == null) {
           throw new Error("Player is null.");
         }
 
         const matchToCreate = {
-          owner_id: playerData.player.id,
+          owner_id: player.id,
           name: formData.name.trim(),
           min_players,
           max_players,
         };
 
         setLoading(true);
-        const res = await handleCreateMatch(matchToCreate);
 
-        navigate(FRONTEND_PATHS.MATCH_LOBBY(res.id));
+        const result = await handleCreateMatch(matchToCreate);
+
+        if (!result || !result.id) {
+          throw new Error("Invalid match creation response.");
+        }
+
+        navigate(FRONTEND_PATHS.MATCH_LOBBY(result.id));
       } catch (err) {
         console.error(err);
+
         alert("The match could not be created.");
       } finally {
         setLoading(false);

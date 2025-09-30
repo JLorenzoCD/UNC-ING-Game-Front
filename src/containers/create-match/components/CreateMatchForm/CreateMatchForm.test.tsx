@@ -8,7 +8,7 @@ import type { FormEvent } from "react";
 import type { UUID } from "@/types/common";
 import type { Match, MatchCreateInput } from "@/types/match";
 
-import FormCreateMatch from "./index";
+import CreateMatchForm from "./CreateMatchForm";
 
 // Mock de los componentes dependientes AlertErrorList, Input (se asume que
 // están bien y con tests)
@@ -44,8 +44,8 @@ vi.mock("@/components/Input", () => ({
   )),
 }));
 
-// Mock del hook useFormCreateMatch (se asume que esta bien y con tests)
-const mockUseFormCreateMatch = {
+// Mock del hook useCreateMatchForm (se asume que esta bien y con tests)
+const mockUseCreateMatchForm = {
   formData: {
     name: "Test Match",
     min_players: RANGE_PLAYERS.MIN.toString(),
@@ -57,8 +57,8 @@ const mockUseFormCreateMatch = {
   handleChange: vi.fn(),
   createHandleSubmit: vi.fn(() => vi.fn((e) => e.preventDefault())),
 };
-vi.mock("./useFormCreateMatch", () => ({
-  default: vi.fn(() => mockUseFormCreateMatch),
+vi.mock("./useCreateMatchForm", () => ({
+  default: vi.fn(() => mockUseCreateMatchForm),
 }));
 
 // Mock para evitar problemas de contexto por el Link
@@ -74,7 +74,7 @@ vi.mock("react-router", async (importOriginal) => {
   };
 });
 
-describe("FormCreateMatch", () => {
+describe("CreateMatchForm", () => {
   const handleCreateMatchMock = vi.fn();
 
   beforeEach(() => {
@@ -83,7 +83,7 @@ describe("FormCreateMatch", () => {
   });
 
   it("should render the form with initial values and no errors", () => {
-    render(<FormCreateMatch handleCreateMatch={handleCreateMatchMock} />);
+    render(<CreateMatchForm handleCreateMatch={handleCreateMatchMock} />);
 
     const formTitle = "Create match";
     const h1Title = screen.getByRole("heading", { level: 1 });
@@ -93,14 +93,14 @@ describe("FormCreateMatch", () => {
     // Inputs con sus valores de inicio
     const nameInput = screen.getByTestId("input-name") as HTMLInputElement;
     expect(nameInput).toBeInTheDocument();
-    expect(nameInput.value).toBe(mockUseFormCreateMatch.formData.name);
+    expect(nameInput.value).toBe(mockUseCreateMatchForm.formData.name);
 
     const minPlayersInput = screen.getByTestId(
       "input-min_players",
     ) as HTMLInputElement;
     expect(minPlayersInput).toBeInTheDocument();
     expect(minPlayersInput.value).toBe(
-      mockUseFormCreateMatch.formData.min_players,
+      mockUseCreateMatchForm.formData.min_players,
     );
 
     const maxPlayersInput = screen.getByTestId(
@@ -108,7 +108,7 @@ describe("FormCreateMatch", () => {
     ) as HTMLInputElement;
     expect(maxPlayersInput).toBeInTheDocument();
     expect(maxPlayersInput.value).toBe(
-      mockUseFormCreateMatch.formData.max_players,
+      mockUseCreateMatchForm.formData.max_players,
     );
 
     // Como son valores validos, no debería de estar el componente AlertErrorList
@@ -131,31 +131,31 @@ describe("FormCreateMatch", () => {
 
   it("should call handleCreateMatch on form submission with valid data", async () => {
     // Mockea una respuesta exitosa del hook y la función de prop
-    mockUseFormCreateMatch.createHandleSubmit = vi.fn(
+    mockUseCreateMatchForm.createHandleSubmit = vi.fn(
       (callback: (matchToCreate: MatchCreateInput) => Promise<Match>) =>
         (e: FormEvent<HTMLFormElement>) => {
           e.preventDefault();
           callback({
             owner_id: "mock-uuid-owner-123" as UUID,
-            name: mockUseFormCreateMatch.formData.name,
-            min_players: parseInt(mockUseFormCreateMatch.formData.min_players),
-            max_players: parseInt(mockUseFormCreateMatch.formData.max_players),
+            name: mockUseCreateMatchForm.formData.name,
+            min_players: parseInt(mockUseCreateMatchForm.formData.min_players),
+            max_players: parseInt(mockUseCreateMatchForm.formData.max_players),
           });
         },
     );
 
     const newMatch = {
       id: "mock-uuid-123",
-      name: mockUseFormCreateMatch.formData.name,
-      min_players: parseInt(mockUseFormCreateMatch.formData.min_players),
-      max_players: parseInt(mockUseFormCreateMatch.formData.max_players),
+      name: mockUseCreateMatchForm.formData.name,
+      min_players: parseInt(mockUseCreateMatchForm.formData.min_players),
+      max_players: parseInt(mockUseCreateMatchForm.formData.max_players),
       status: "WAITING",
       owner_id: "mock-uuid-owner-123",
       current_player_order: 0,
     };
     handleCreateMatchMock.mockResolvedValueOnce(newMatch);
 
-    render(<FormCreateMatch handleCreateMatch={handleCreateMatchMock} />);
+    render(<CreateMatchForm handleCreateMatch={handleCreateMatchMock} />);
 
     // Simula el envío del formulario
     const form = screen.getByRole("form");
@@ -173,14 +173,14 @@ describe("FormCreateMatch", () => {
 
   it("should display validation errors for empty name field", async () => {
     // Mock que simula un error por nombre vació
-    mockUseFormCreateMatch.haveError = true;
-    mockUseFormCreateMatch.formError = {
+    mockUseCreateMatchForm.haveError = true;
+    mockUseCreateMatchForm.formError = {
       name: ERROR_MESSAGES.NAME_EMPTY,
       min_players: "",
       max_players: "",
     };
 
-    render(<FormCreateMatch handleCreateMatch={handleCreateMatchMock} />);
+    render(<CreateMatchForm handleCreateMatch={handleCreateMatchMock} />);
 
     // Se verifica que muestre el componente AlertErrorList cuando hay
     // error
@@ -201,9 +201,9 @@ describe("FormCreateMatch", () => {
   });
 
   it("should display a loading state on form submission", async () => {
-    mockUseFormCreateMatch.loading = true;
+    mockUseCreateMatchForm.loading = true;
 
-    render(<FormCreateMatch handleCreateMatch={handleCreateMatchMock} />);
+    render(<CreateMatchForm handleCreateMatch={handleCreateMatchMock} />);
 
     const submitButton = screen.getByRole("button", { name: /loading/i });
     expect(submitButton).toBeInTheDocument();
@@ -212,14 +212,14 @@ describe("FormCreateMatch", () => {
 
   it("should show an error when min_players is greater than max_players on submission", async () => {
     // Mock que simula un error tener el min_players > max_players
-    mockUseFormCreateMatch.haveError = true;
-    mockUseFormCreateMatch.formError = {
+    mockUseCreateMatchForm.haveError = true;
+    mockUseCreateMatchForm.formError = {
       name: "",
       min_players: ERROR_MESSAGES.MIN_PLAYERS_GREATER_MAX_PLAYERS,
       max_players: ERROR_MESSAGES.MAX_PLAYERS_LESS_MIN_PLAYERS,
     };
 
-    render(<FormCreateMatch handleCreateMatch={handleCreateMatchMock} />);
+    render(<CreateMatchForm handleCreateMatch={handleCreateMatchMock} />);
 
     // Se muestra el componente AlertErrorList
     const errorAlert = screen.getByTestId("mock-alert-error-list");
