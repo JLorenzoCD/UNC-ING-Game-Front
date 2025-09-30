@@ -11,12 +11,12 @@ import { FRONTEND_PATHS } from "./constants/frontend.ts";
 import "./index.css";
 
 import MainLayout from "./containers/MainLayout";
-import MatchesContainer from "./containers/matches/MatchesContainer.tsx";
+import MatchesContainer from "./containers/matches/MatchesContainer";
 import CreateMatchContainer from "./containers/create-match/CreateMatchContainer";
-import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer.tsx";
+import CreatePlayerContainer from "./containers/create-player/CreatePlayerContainer";
 
-import GameLayout from "./containers/game/layout";
-import GameContainer from "./containers/game/index";
+import GameLayout from "./containers/game/GameLayout";
+import GameContainer from "./containers/game/GameContainer";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -24,22 +24,22 @@ createRoot(document.getElementById("root")!).render(
       <PlayerProvider>
         <HttpServiceProvider>
           <WebSocketServiceProvider>
-              <Routes>
-                <Route element={<MainLayout />}>
-                  <Route path={FRONTEND_PATHS.MATCH_LIST} index element={<MatchesContainer />} />
-                  
-                  <Route path={FRONTEND_PATHS.PLAYER_CREATE} element={<CreatePlayerContainer />} />
+            <Routes>
+              <Route element={<MainLayout />}>
+                <Route path={FRONTEND_PATHS.MATCH_LIST} index element={<MatchesContainer />} />
+                
+                <Route path={FRONTEND_PATHS.PLAYER_CREATE} element={<CreatePlayerContainer />} />
 
-                  <Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchContainer />} />
+                <Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchContainer />} />
 
-                  <Route element={<GameLayout />}>
-                    <Route
-                      path={FRONTEND_PATHS.MATCH_GAME(":matchId")}
-                      element={<GameContainer />}
-                    />
-                  </Route>
+                <Route element={<GameLayout />}>
+                  <Route
+                    path={FRONTEND_PATHS.MATCH_GAME(":matchId")}
+                    element={<GameContainer />}
+                  />
                 </Route>
-              </Routes>
+              </Route>
+            </Routes>
           </WebSocketServiceProvider>
         </HttpServiceProvider>
       </PlayerProvider>

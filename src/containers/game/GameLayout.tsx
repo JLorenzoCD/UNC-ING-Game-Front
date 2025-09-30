@@ -1,6 +1,7 @@
 import { Outlet } from "react-router";
 
 import GameContextProvider from "@/contexts/GameContext";
+
 import logoGame from "@/assets/logo.png";
 import backgroundGame from "@/assets/background.png";
 
@@ -14,11 +15,13 @@ export default function GameLayout() {
           className="h-15 mx-auto my-2"
         />
       </div>
+
       <img
         src={backgroundGame}
         alt="Background"
         className="absolute inset-0 w-full h-full object-cover z-0"
       />
+
       <Outlet />
     </GameContextProvider>
   );

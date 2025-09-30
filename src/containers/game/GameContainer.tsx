@@ -1,49 +1,63 @@
-import DiscardPile from "./components/DiscardPile";
-import DrawPile from "./components/DrawPile";
-import Hand from "./components/Hand";
-import Secrets from "./components/Secrets";
-import Table from "./components/Table";
-import { useGame } from "@/contexts/GameContext";
-import { usePlayer } from "@/contexts/PlayerContext";
-import type { GameCard } from "@/types/card";
-import type { Player } from "@/types/player";
 import { useState } from "react";
 
-function cardsPlayer(gameCards: GameCard[], player: Player) {
-  return gameCards.filter((card) => card.player_id === player.id);
-}
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
 
-export default function Game() {
-  const [selectedCard, setSelectedCard] = useState<GameCard | null>(null);
-  const { secrets, cards } = useGame();
+import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
+
+import Table from "./components/Table";
+import Hand from "./components/Hand";
+import Secrets from "./components/Secrets";
+import DrawPile from "./components/DrawPile";
+import DiscardPile from "./components/DiscardPile";
+
+export default function GameContainer() {
   const { player } = usePlayer();
-  let handPlayer: GameCard[] = [];
-  if (player) {
-    handPlayer = cardsPlayer(cards, player);
-  }
+  const { secrets, cards } = useGame();
 
-  function handleCardSelect(card: GameCard) {
-    setSelectedCard(card);
-  }
+  const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
+    {},
+  );
+
+  const isCardSelected = (card: GameCard) => {
+    return !!selectedCards[card.id];
+  };
+
+  const handleSelectCard = (card: GameCard) => {
+    if (!selectedCards[card.id]) {
+      setSelectedCards({ ...selectedCards, [card.id]: card });
+    } else {
+      const updatedSelectedCards = { ...selectedCards };
+      delete updatedSelectedCards[card.id];
+      setSelectedCards(updatedSelectedCards);
+    }
+  };
 
   return (
-    <div className="position absolute top-170 left-10">
-      <Table />
-      <Secrets secrets={secrets} />
-      <div className="position absolute left-140 bottom-0">
-        <Hand
-          cards={handPlayer}
-          onSelect={handleCardSelect}
-          isSelected={(card) =>
-            selectedCard ? card.id === selectedCard.id : false
-          }
-        />
-      </div>
-      <div className="absolute bottom-75 left-185">
-        <DiscardPile topCard={null} />
-      </div>
-      <div className="absolute bottom-75 left-235">
-        <DrawPile cardCount={43} />
+    <div data-testid="game-container" className="h-screen p-4 flex flex-col">
+      <div className="position absolute top-170 left-10">
+        <Table />
+
+        <Secrets secrets={secrets} />
+
+        <div className="position absolute left-140 bottom-0">
+          <Hand
+            cards={cards.filter((card) => card.player_id === player?.id)}
+            onSelect={handleSelectCard}
+            isSelected={isCardSelected}
+          />
+        </div>
+        
+        <div className="absolute bottom-75 left-185">
+          <DiscardPile topCard={null} />
+        </div>
+
+        <div className="absolute bottom-75 left-235">
+          <DrawPile
+            cardCount={cards.filter((card) => !card.player_id).length}
+          />
+        </div>
       </div>
     </div>
   );
