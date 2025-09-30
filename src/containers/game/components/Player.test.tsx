@@ -1,8 +1,9 @@
+import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
-import "@testing-library/jest-dom";
-import Players from "./Players";
+
 import type { GamePlayer } from "@/types/player";
+import Player from "./Player";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
 import avatarQuin from "@/assets/avatars/icono1.png";
@@ -34,10 +35,10 @@ describe("Players Component", () => {
 
   it("should render player with avatar", () => {
     render(
-      <Players
+      <Player
         player={mockPlayer}
         position={defaultPosition}
-        isYourTurn={false}
+        hasCurrentTurn={false}
       />,
     );
 
@@ -51,10 +52,10 @@ describe("Players Component", () => {
 
   it("should truncate long player names", () => {
     render(
-      <Players
+      <Player
         player={mockPlayerWithLongName}
         position={defaultPosition}
-        isYourTurn={false}
+        hasCurrentTurn={false}
       />,
     );
 
@@ -70,7 +71,7 @@ describe("Players Component", () => {
   it("should position player correctly", () => {
     const position = { x: 300, y: 400 };
     const { container } = render(
-      <Players player={mockPlayer} position={position} isYourTurn={false} />,
+      <Player player={mockPlayer} position={position} hasCurrentTurn={false} />,
     );
 
     const playerDiv = container.firstChild as HTMLElement;
@@ -82,10 +83,10 @@ describe("Players Component", () => {
 
   it("should show green pulsing border when it is player's turn", () => {
     const { container } = render(
-      <Players
+      <Player
         player={mockPlayer}
         position={defaultPosition}
-        isYourTurn={true}
+        hasCurrentTurn={true}
       />,
     );
     const avatarContainer = container.querySelector(
@@ -101,10 +102,10 @@ describe("Players Component", () => {
 
   it("should not show green border when it is not player's turn", () => {
     const { container } = render(
-      <Players
+      <Player
         player={mockPlayer}
         position={defaultPosition}
-        isYourTurn={false}
+        hasCurrentTurn={false}
       />,
     );
 
