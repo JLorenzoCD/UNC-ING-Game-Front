@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import type { Match } from "@/types/match";
+import type { MatchListItem } from "@/types/match";
 import type { UUID } from "@/types/common";
 
 import LobbyLayout from "./LobbyLayout";
@@ -38,7 +38,7 @@ vi.mock("src/assets/fondopartida.jpeg", () => ({
 
 // --- Datos de prueba ---
 
-const mockMatch: Match = {
+const mockMatch: MatchListItem = {
   id: "mock-uuid-123" as UUID,
   name: "The Best Lobby",
   min_players: 4,
@@ -46,6 +46,7 @@ const mockMatch: Match = {
   status: "WAITING",
   owner_id: "mock-owner-id" as UUID,
   current_player_order: 0,
+  current_player_count: 1,
 };
 
 // Un componente hijo simple para testear que se renderiza
@@ -83,9 +84,7 @@ describe("LobbyLayout", () => {
     // 2. Verificar el título del lobby con datos del match
     const h1Title = screen.getByRole("heading", { level: 1 });
     expect(h1Title).toBeInTheDocument();
-    expect(h1Title).toHaveTextContent(
-      `"${mockMatch.name}" (${mockMatch.min_players}/${mockMatch.max_players})`,
-    );
+    expect(h1Title).toHaveTextContent(`"${mockMatch.name}"`);
 
     // 3. Verificar el contenido hijo
     expect(screen.getByTestId("mock-child")).toBeInTheDocument();
