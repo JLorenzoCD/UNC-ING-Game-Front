@@ -34,17 +34,17 @@ createRoot(document.getElementById("root")!).render(
                 <Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchContainer />} />
               </Route>
 
+              <Route
+                path={FRONTEND_PATHS.MATCH_LOBBY(":matchId")}
+                element={<LobbyContainer />}
+              />
+
               <Route element={<GameLayout />}>
                 <Route
                   path={FRONTEND_PATHS.MATCH_GAME(":matchId")}
                   element={<GameContainer />}
                 />
               </Route>
-
-              <Route
-                path={FRONTEND_PATHS.MATCH_LOBBY(":matchId")}
-                element={<LobbyContainer />}
-              />
             </Routes>
           </WebSocketServiceProvider>
         </HttpServiceProvider>

@@ -101,14 +101,9 @@ export default function LobbyContainer() {
             console.error(err);
           }
         }
-      } else {
-        if (
-          updateMatch.status.id &&
+      } else if (
           updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
-        ) {
-          navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
-        }
-      }
+        ) navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
     };
 
     const init = async () => {
@@ -183,15 +178,15 @@ export default function LobbyContainer() {
       startGame={() => startGame(match.id)}
       isOwner={player.id == match.owner_id}
     >
-      {playersToView.map((player) =>
-        player === null ? (
+      {playersToView.map((p) =>
+        p === null ? (
           <EmptyPlayerPosition key={Math.random()} />
         ) : (
           <PlayerCard
-            key={player.id}
-            player={player}
-            isMe={player.id === player.id}
-            isOwner={player.id === match.owner_id}
+            key={p.id}
+            player={p}
+            isMe={p.id === player.id}
+            isOwner={p.id === match.owner_id}
           />
         ),
       )}
