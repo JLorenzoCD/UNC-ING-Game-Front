@@ -4,11 +4,11 @@ import Container from "@/components/Container";
 import Button from "@/components/Button";
 
 import logoGame from "@/assets/logo.png";
-import type { Match } from "@/types/match";
+import type { MatchListItem } from "@/types/match";
 
 interface Props {
   children: ReactNode;
-  match: Match;
+  match: MatchListItem;
   isOwner: boolean;
   startGame: () => Promise<void>;
 }
@@ -35,9 +35,16 @@ function LobbyLayout({ children, startGame, isOwner, match }: Props) {
         <div className="absolute inset-0 bg-black opacity-45 -z-10"></div>
 
         <section>
-          <h1 className="text-6xl text-white text-center mb-10">
-            &quot;{match.name}&quot; ({match.min_players}/{match.max_players})
-          </h1>
+          <div className="flex justify-center items-center flex-col mb-10 gap-3">
+            <h1 className="text-6xl text-white text-center">
+              &quot;{match.name}&quot;
+            </h1>
+            <span className="text-white text-2xl">
+              ({match.min_players}/{match.max_players}){" "}
+              {match.current_player_count >= match.min_players ? "🟢" : "🟡"}{" "}
+              {match.current_player_count}
+            </span>
+          </div>
           <Container className="flex gap-8 flex-wrap justify-center items-center max-w-[600px]">
             {children}
           </Container>
