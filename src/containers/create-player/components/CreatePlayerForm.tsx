@@ -1,6 +1,6 @@
 import { useState } from "react";
-import type { PlayerInput } from "@/types/player";
 
+import type { PlayerInput } from "@/types/player";
 import quinAvatar from "@/assets/avatars/icono1.png";
 import ladyAvatar from "@/assets/avatars/icono2.png";
 import tuppenceAvatar from "@/assets/avatars/icono3.png";
@@ -19,7 +19,7 @@ const AVATARS_IMAGE_PATHS: { path: string; name: string }[] = [
   { path: marpleAvatar, name: "Marple" },
 ];
 
-type PlayerData = {
+interface PlayerData {
   name: string;
   avatar: string;
   birthday: string;
@@ -29,9 +29,7 @@ interface PlayerFormProps {
   handleCreatePlayer: (playerData: PlayerInput) => Promise<void>;
 }
 
-const CreatePlayerForm: React.FC<PlayerFormProps> = ({
-  handleCreatePlayer,
-}) => {
+export default function CreatePlayerForm({ handleCreatePlayer }: PlayerFormProps) {
   const [formData, setFormData] = useState<PlayerData>({
     name: "",
     avatar: "",
@@ -151,15 +149,19 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
         avatar: formData.avatar,
         birthday: new Date(formData.birthday),
       };
+
       await handleCreatePlayer(newPlayer);
+
       setFormData({
         name: "",
         avatar: "",
         birthday: "",
       });
+
       setErrors({});
     } catch (error) {
       console.error("Error submitting form:", error);
+
       alert("Failed to create player. Please check your input and try again.");
     } finally {
       setIsSubmitting(false);
@@ -183,6 +185,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
         <h2 className="text-xl font-bold text-black-900 dark:text-black mb-4 text-center">
           Create your player
         </h2>
+
         <div className="space-y-4">
           <div>
             <label
@@ -191,6 +194,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
             >
               Nickname <span className="text-red-500">*</span>
             </label>
+
             <input
               type="text"
               id="name"
@@ -201,6 +205,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
               className={getInputClassName("name")}
               placeholder="Enter nickname"
             />
+
             {errors.name && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.name}
@@ -215,6 +220,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
             >
               Birthday <span className="text-red-500">*</span>
             </label>
+
             <input
               type="date"
               id="birthday"
@@ -224,6 +230,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
               required
               className={getInputClassName("birthday")}
             />
+
             {errors.birthday && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.birthday}
@@ -235,6 +242,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
             <label className="block text-sm font-medium text-black-700 dark:text-black-300 mb-1">
               Avatar <span className="text-red-500">*</span>
             </label>
+
             <div className="flex flex-nowrap gap-2">
               {AVATARS_IMAGE_PATHS.map((avatar) => (
                 <img
@@ -251,6 +259,7 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
                 />
               ))}
             </div>
+
             {errors.avatar && (
               <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                 {errors.avatar}
@@ -274,5 +283,3 @@ const CreatePlayerForm: React.FC<PlayerFormProps> = ({
     </div>
   );
 };
-
-export default CreatePlayerForm;

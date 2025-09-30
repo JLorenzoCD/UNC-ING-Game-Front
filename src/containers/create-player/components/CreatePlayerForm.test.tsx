@@ -1,7 +1,8 @@
+import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
-import "@testing-library/jest-dom";
 import userEvent from "@testing-library/user-event";
+
 import CreatePlayerForm from "./CreatePlayerForm";
 
 describe("CreatePlayerForm", () => {
