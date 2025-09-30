@@ -64,11 +64,11 @@ vi.mock("@/components/Button", () => ({
   )),
 }));
 
-vi.mock("./components/ListMatches", () => ({
+vi.mock("./components/MatchList", () => ({
   default: vi.fn(({ children }) => <div>{children}</div>),
 }));
 
-vi.mock("./components/ListItemMatch", () => ({
+vi.mock("./components/MatchListItem", () => ({
   default: vi.fn(({ match }) => <div>{match.name}</div>),
 }));
 

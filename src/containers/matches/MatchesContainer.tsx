@@ -10,14 +10,14 @@ import Button from "@/components/Button";
 import { FRONTEND_PATHS } from "@/constants/frontend";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
-import ListMatches from "./components/ListMatches";
-import ListItemMatch from "./components/ListItemMatch";
+import MatchList from "./components/MatchList";
+import MatchListItem from "./components/MatchListItem";
 
 interface WSError extends Error {
   showUser: boolean;
 }
 
-function MatchesContainer() {
+export default function MatchesContainer() {
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
 
@@ -57,8 +57,11 @@ function MatchesContainer() {
         setIsLoading(true);
 
         const matches = await httpService.getMatches();
+        const filteredMatches = matches.filter(
+          (match) => match.status.toLocaleUpperCase() === "WAITING"
+        );
 
-        setMatches(matches);
+        setMatches(filteredMatches);
 
         wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchEvents);
       } catch (err) {
@@ -93,18 +96,16 @@ function MatchesContainer() {
       </Link>
 
       {httpService !== null && (
-        <ListMatches isLoading={isLoading}>
+        <MatchList isLoading={isLoading}>
           {matches.map((match) => (
-            <ListItemMatch
+            <MatchListItem
               key={match.id}
               match={match}
               joinMatch={httpService.joinMatch}
             />
           ))}
-        </ListMatches>
+        </MatchList>
       )}
     </div>
   );
 }
-
-export default MatchesContainer;
