@@ -90,8 +90,8 @@ export function createHttpService() {
     );
   };
 
-  const getMatch = async (matchId: UUID): Promise<Match> => {
-    return request<Match>(`/matches/${matchId}`);
+  const getMatch = async (matchId: UUID) => {
+    return request<MatchListItem>(`/matches/${matchId}`);
   };
 
   const startMatch = async (playerId: UUID, matchId: UUID) => {

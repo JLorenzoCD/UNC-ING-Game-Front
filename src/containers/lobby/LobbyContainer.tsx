@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useNavigate, useParams } from "react-router";
 import { useHttpService } from "@/contexts/HttpServiceContext";
@@ -14,7 +14,7 @@ import { FRONTEND_PATHS } from "@/constants/frontendPaths";
 import { isUUID } from "@/utils";
 
 import type { UUID } from "@/types/common";
-import type { Match, MatchListItem } from "@/types/match";
+import type { MatchListItem } from "@/types/match";
 import type { Player } from "@/types/player";
 
 function fillAndShufflePlayers(
@@ -45,25 +45,60 @@ function LobbyContainer() {
   const { wsService, isConnected } = useWebSocketService();
   const navigate = useNavigate();
 
-  const [match, setMatch] = useState<Match | null>(null);
+  const [match, setMatch] = useState<MatchListItem | null>(null);
+  const matchRef = useRef<MatchListItem | null>(null);
+
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+
+  useEffect(() => {
+    matchRef.current = match;
+  }, [match]);
 
   useEffect(() => {
     if (httpService == null || wsService == null || player == null || !matchId)
       return;
 
     const handleLobbyJoin = (newPlayer: Player) => {
-      setPlayers((prev) => [...prev, newPlayer]);
+      setPlayers((prev) => {
+        const exist = prev.some((p) => p.id === newPlayer.id);
+
+        if (exist) {
+          return prev;
+        }
+        return [...prev, newPlayer];
+      });
     };
 
-    const handleMatchStart = (updateMatch: MatchListItem) => {
+    const handleMatchStart = async (
+      updateMatch: MatchListItem & { id_match: UUID },
+    ) => {
+      updateMatch.id = updateMatch.id_match;
+      const currMatch = matchRef.current;
+      if (currMatch == null) {
+        return;
+      }
+
       if (
         updateMatch.id === matchId &&
         updateMatch.status.toLocaleUpperCase() === "IN_PROGRESS"
       ) {
         navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+      } else if (
+        updateMatch.id === matchId &&
+        updateMatch.status.toLocaleUpperCase() === "WAITING" &&
+        (currMatch as MatchListItem).current_player_count <
+          updateMatch.current_player_count
+      ) {
+        try {
+          const updatePlayers = await httpService?.getMatchPlayers(matchId);
+          if (updatePlayers == null) throw new Error("No could fetch data.");
+
+          setPlayers(updatePlayers);
+        } catch (err) {
+          console.error(err);
+        }
       }
     };
 
@@ -80,7 +115,7 @@ function LobbyContainer() {
 
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
         }
       } catch (err) {
         console.error(err);
@@ -94,7 +129,7 @@ function LobbyContainer() {
     init();
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleMatchStart);
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
     };
   }, [httpService, wsService, isConnected, navigate, matchId, player]);
 
