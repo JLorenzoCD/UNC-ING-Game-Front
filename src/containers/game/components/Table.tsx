@@ -4,7 +4,7 @@ import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 export default function Table() {
-  const { players } = useGame();
+  const { players, match } = useGame();
   const { player } = usePlayer();
 
   const [dimensions, setDimensions] = useState({
@@ -85,13 +85,15 @@ export default function Table() {
     };
     const result = [];
     let visibleIndex = 0;
+    const playerTurn = match?.current_player_order;
 
     for (let i = 1; i < totalPlayers; i++) {
       const globalIndex = (currentPlayerIndex + i) % totalPlayers;
       const player = sortedPlayers[globalIndex];
+      const turn = playerTurn === player.order ? true : false;
 
       const position = getPositionForPlayer(visibleIndex, totalPlayers);
-      result.push({ player, position });
+      result.push({ player, position, turn });
       visibleIndex++;
     }
 
@@ -101,8 +103,13 @@ export default function Table() {
   const visiblePlayersWithPositions = getVisiblePlayersWithPositions();
   return (
     <div>
-      {visiblePlayersWithPositions.map(({ player, position }) => (
-        <Players player={player} key={player.id} position={position} />
+      {visiblePlayersWithPositions.map(({ player, position, turn }) => (
+        <Players
+          player={player}
+          key={player.id}
+          position={position}
+          isYourTurn={turn}
+        />
       ))}
     </div>
   );
