@@ -94,10 +94,10 @@ export function createHttpService() {
     return request<MatchListItem>(`/matches/${matchId}`);
   };
 
-  const startMatch = async (playerId: UUID, matchId: UUID) => {
-    return request<{ status: string }>(
-      BACKEND_ENDPOINTS.START_MATCH(matchId, playerId),
-    );
+  const startMatch = async (matchId: UUID) => {
+    return request<{ status: string }>(BACKEND_ENDPOINTS.START_MATCH(matchId), {
+      method: "POST",
+    });
   };
 
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {

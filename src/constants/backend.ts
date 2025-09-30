@@ -6,8 +6,7 @@ const BACKEND_ENDPOINTS = {
 
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
-  START_MATCH: (matchId: UUID, playerId: UUID) =>
-    `/matches/${matchId}/start?player_id=${playerId}`,
+  START_MATCH: (matchId: UUID) => `/matches/${matchId}/start`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
