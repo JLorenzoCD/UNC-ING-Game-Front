@@ -106,7 +106,6 @@ describe("LobbyLayout", () => {
         <MockChildComponent />
       </LobbyLayout>,
     );
-    screen.debug();
     expect(screen.getByText(/🟡 2/)).toBeInTheDocument();
 
     const matchWithEnoughPlayers: MatchWithPlayerCount = {
