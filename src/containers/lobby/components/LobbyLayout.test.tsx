@@ -42,7 +42,7 @@ const mockMatch: MatchWithPlayerCount = {
   id: "mock-match-id" as UUID,
   name: "The Best Lobby",
   min_players: 4,
-  max_players: 8,
+  max_players: 6,
   status: "WAITING",
   owner_id: "mock-owner-id" as UUID,
   current_player_order: 0,
@@ -88,6 +88,43 @@ describe("LobbyLayout", () => {
 
     // 3. Verificar el contenido hijo
     expect(screen.getByTestId("mock-child")).toBeInTheDocument();
+  });
+
+  it("should render the correct player status (🟢 or 🟡) and the current players count", () => {
+    const matchWithInsufficientPlayers: MatchWithPlayerCount = {
+      ...mockMatch,
+      min_players: 4,
+      max_players: 6,
+      current_player_count: 2,
+    };
+    render(
+      <LobbyLayout
+        match={matchWithInsufficientPlayers}
+        startGame={startGameMock}
+        isOwner={false}
+      >
+        <MockChildComponent />
+      </LobbyLayout>,
+    );
+    screen.debug();
+    expect(screen.getByText(/🟡 2/)).toBeInTheDocument();
+
+    const matchWithEnoughPlayers: MatchWithPlayerCount = {
+      ...mockMatch,
+      min_players: 2,
+      max_players: 6,
+      current_player_count: 4,
+    };
+    render(
+      <LobbyLayout
+        match={matchWithEnoughPlayers}
+        startGame={startGameMock}
+        isOwner={false}
+      >
+        <MockChildComponent />
+      </LobbyLayout>,
+    );
+    expect(screen.getByText(/🟢 4/)).toBeInTheDocument();
   });
 
   it('should NOT render the "Start game" button when the user is not the owner', () => {
