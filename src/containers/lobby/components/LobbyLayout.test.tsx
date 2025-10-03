@@ -48,6 +48,19 @@ const mockMatch: MatchWithPlayerCount = {
   current_player_order: 0,
   current_player_count: 1,
 };
+const mockMatchNotEnoughPlayers: MatchWithPlayerCount = {
+  ...mockMatch,
+  min_players: 4,
+  max_players: 6,
+  current_player_count: 2,
+};
+
+const mockMatchEnoughPlayers: MatchWithPlayerCount = {
+  ...mockMatch,
+  min_players: 4,
+  max_players: 6,
+  current_player_count: 6,
+};
 
 // Un componente hijo simple para testear que se renderiza
 const MockChildComponent = () => (
@@ -139,6 +152,46 @@ describe("LobbyLayout", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("should be disabled the 'Start game' if there are not enough players.", () => {
+    render(
+      <LobbyLayout
+        match={mockMatchNotEnoughPlayers}
+        startGame={startGameMock}
+        isOwner={true}
+      >
+        <MockChildComponent />
+      </LobbyLayout>,
+    );
+
+    // El botón debe estar en el documento
+    const startButtonDisabled = screen.getByRole("button", {
+      name: /start game/i,
+    });
+    expect(startButtonDisabled).toBeInTheDocument();
+    expect(startButtonDisabled).toBeDisabled();
+    expect(startButtonDisabled).toHaveTextContent("Start game");
+  });
+
+  it("should be not disabled the 'Start game' if there are enough players.", () => {
+    render(
+      <LobbyLayout
+        match={mockMatchEnoughPlayers}
+        startGame={startGameMock}
+        isOwner={true}
+      >
+        <MockChildComponent />
+      </LobbyLayout>,
+    );
+
+    // El botón debe estar en el documento
+    const startButtonNotDisabled = screen.getByRole("button", {
+      name: /start game/i,
+    });
+    expect(startButtonNotDisabled).toBeInTheDocument();
+    expect(startButtonNotDisabled).not.toBeDisabled();
+    expect(startButtonNotDisabled).toHaveTextContent("Start game");
+  });
+
   it('should render the "Start game" button when the user is the owner', () => {
     render(
       <LobbyLayout match={mockMatch} startGame={startGameMock} isOwner={true}>
@@ -156,7 +209,11 @@ describe("LobbyLayout", () => {
     startGameMock.mockResolvedValue(true);
 
     render(
-      <LobbyLayout match={mockMatch} startGame={startGameMock} isOwner={true}>
+      <LobbyLayout
+        match={mockMatchEnoughPlayers}
+        startGame={startGameMock}
+        isOwner={true}
+      >
         <MockChildComponent />
       </LobbyLayout>,
     );
