@@ -21,7 +21,18 @@ export default function LobbyLayout({
   match,
 }: Props) {
   const handleClick = () => {
-    // Errores se manejan en el startGame
+    if (
+      match.current_player_count < match.min_players ||
+      match.status.toUpperCase() !== "WAITING" ||
+      !isOwner
+    ) {
+      alert(
+        "The game cannot be started if the minimum number of players desired is not reached.",
+      );
+
+      return;
+    }
+
     startGame();
   };
 
@@ -34,7 +45,14 @@ export default function LobbyLayout({
             alt="AGATHA CHRISTIE'S - DEATH ON THE CARDS"
             className="w-[210px]"
           />
-          {isOwner && <Button onClick={handleClick}>Start game</Button>}
+          {isOwner && (
+            <Button
+              onClick={handleClick}
+              disabled={match.current_player_count < match.min_players}
+            >
+              Start game
+            </Button>
+          )}
         </Container>
       </header>
 

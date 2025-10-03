@@ -148,7 +148,14 @@ export default function LobbyContainer() {
   const playersToView = fillAndShufflePlayers(players, match.max_players);
 
   async function startGame(matchId: UUID) {
-    if (httpService === null) return;
+    if (
+      httpService === null ||
+      player === null ||
+      match === null ||
+      match.current_player_count < match.min_players ||
+      match.owner_id !== player.id
+    )
+      return;
 
     try {
       const result = await httpService.startMatch(matchId);
