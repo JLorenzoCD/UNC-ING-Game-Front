@@ -12,30 +12,11 @@ import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import { isUUID } from "@/utils";
+import { fillAndShufflePlayers } from "./utils";
 
 import type { UUID } from "@/types/common";
 import type { Player } from "@/types/player";
 import type { Match, MatchWithPlayerCount } from "@/types/match";
-
-function fillAndShufflePlayers(
-  players: Player[],
-  max_players: number,
-): (Player | null)[] {
-  let playersToView: (Player | null)[];
-
-  // Se rellena el arreglo haste tener la maxima cantidad de jugadores deseados
-  if (players.length < max_players) {
-    const emptySlotsCount = max_players - players.length;
-    playersToView = [...players, ...new Array(emptySlotsCount).fill(null)];
-  } else {
-    playersToView = players;
-  }
-
-  // Se mezcla el arreglo para mostrarlo en el lobby de forma random
-  playersToView.sort(() => 0.5 - Math.random());
-
-  return playersToView;
-}
 
 export default function LobbyContainer() {
   const navigate = useNavigate();
@@ -58,6 +39,17 @@ export default function LobbyContainer() {
   }, [match]);
 
   useEffect(() => {
+    setMatch((prev) => {
+      if (prev === null) return null;
+
+      return {
+        ...prev,
+        current_player_count: players.length,
+      };
+    });
+  }, [players]);
+
+  useEffect(() => {
     if (httpService == null || wsService == null || !matchId) return;
 
     const handleLobbyJoin = (newPlayer: Player) => {
@@ -75,7 +67,7 @@ export default function LobbyContainer() {
       updateMatch: MatchWithPlayerCount | { status: Match },
     ) => {
       const currentMatch = matchRef.current;
-      
+
       if (currentMatch == null) {
         return;
       }
@@ -89,8 +81,7 @@ export default function LobbyContainer() {
         } else if (
           updateMatch.id === matchId &&
           updateMatch.status.toLocaleUpperCase() === "WAITING" &&
-          currentMatch.current_player_count <
-            updateMatch.current_player_count
+          currentMatch.current_player_count < updateMatch.current_player_count
         ) {
           try {
             const updatePlayers = await httpService?.getMatchPlayers(matchId);
@@ -102,8 +93,9 @@ export default function LobbyContainer() {
           }
         }
       } else if (
-          updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
-        ) navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+        updateMatch.status.status.toLocaleUpperCase() === "IN_PROGRESS"
+      )
+        navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
     };
 
     const init = async () => {
@@ -157,7 +149,7 @@ export default function LobbyContainer() {
 
   async function startGame(matchId: UUID) {
     if (httpService === null) return;
-   
+
     try {
       const result = await httpService.startMatch(matchId);
 

@@ -23,13 +23,15 @@ interface PlayerData {
   name: string;
   avatar: string;
   birthday: string;
-};
+}
 
 interface PlayerFormProps {
   handleCreatePlayer: (playerData: PlayerInput) => Promise<void>;
 }
 
-export default function CreatePlayerForm({ handleCreatePlayer }: PlayerFormProps) {
+export default function CreatePlayerForm({
+  handleCreatePlayer,
+}: PlayerFormProps) {
   const [formData, setFormData] = useState<PlayerData>({
     name: "",
     avatar: "",
@@ -282,4 +284,4 @@ export default function CreatePlayerForm({ handleCreatePlayer }: PlayerFormProps
       </div>
     </div>
   );
-};
+}

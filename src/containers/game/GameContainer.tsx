@@ -48,7 +48,7 @@ export default function GameContainer() {
             isSelected={isCardSelected}
           />
         </div>
-        
+
         <div className="absolute bottom-75 left-185">
           <DiscardPile topCard={null} />
         </div>

@@ -8,7 +8,7 @@ interface PlayerProps {
   player: GamePlayer;
   position: { x: number; y: number };
   hasCurrentTurn: boolean;
-};
+}
 
 export default function Player({
   player,
@@ -41,7 +41,7 @@ export default function Player({
         )}
 
         <div className="mt-2 flex justify-center">
-          <div 
+          <div
             title={player.name}
             className="px-3 py-1 rounded-full text-white font-semibold bg-black/80 shadow-lg border border-white/30 backdrop-blur-sm cursor-default"
           >

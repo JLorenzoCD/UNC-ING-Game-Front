@@ -27,11 +27,21 @@ createRoot(document.getElementById("root")!).render(
           <WebSocketServiceProvider>
             <Routes>
               <Route element={<MainLayout />}>
-                <Route path={FRONTEND_PATHS.MATCH_LIST} index element={<MatchesContainer />} />
-                
-                <Route path={FRONTEND_PATHS.PLAYER_CREATE} element={<CreatePlayerContainer />} />
+                <Route
+                  path={FRONTEND_PATHS.MATCH_LIST}
+                  index
+                  element={<MatchesContainer />}
+                />
 
-                <Route path={FRONTEND_PATHS.MATCH_CREATE} element={<CreateMatchContainer />} />
+                <Route
+                  path={FRONTEND_PATHS.PLAYER_CREATE}
+                  element={<CreatePlayerContainer />}
+                />
+
+                <Route
+                  path={FRONTEND_PATHS.MATCH_CREATE}
+                  element={<CreateMatchContainer />}
+                />
               </Route>
 
               <Route

@@ -21,6 +21,7 @@ let LobbyContainer: any;
 const MOCK_MATCH_ID = "match-id" as UUID;
 const MOCK_OWNER_ID = "owner-id" as UUID;
 const MOCK_PLAYER_ID = "simple-player-id" as UUID;
+const MOCK_NEW_PLAYER_ID = "new-player-id" as UUID;
 
 const mockMatch = {
   id: MOCK_MATCH_ID,
@@ -150,6 +151,22 @@ const getEventHandler = (eventName: string) => {
   return call[1]; // El handler es el segundo elemento del array [nombre, handler]
 };
 
+const mockFillAndShufflePlayers = vi.fn((players, max_players) => {
+  let playersToView;
+
+  // Solo realiza el relleno con nulls, sin el paso de Math.random()
+  if (players.length < max_players) {
+    const emptySlotsCount = max_players - players.length;
+    playersToView = [...players, ...new Array(emptySlotsCount).fill(null)];
+  } else {
+    playersToView = players;
+  }
+  return playersToView;
+});
+vi.doMock("./utils", () => ({
+  fillAndShufflePlayers: mockFillAndShufflePlayers,
+}));
+
 describe("LobbyContainer", () => {
   const originalAlert = window.alert;
 
@@ -235,36 +252,6 @@ describe("LobbyContainer", () => {
     });
   });
 
-  /*   it('should handle "lobby_join" event and display the new player', async () => {
-    render(<LobbyContainer />);
-
-    await waitFor(() => {
-      expect(mockOn).toHaveBeenCalled();
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.LOBBY_JOIN,
-        expect.any(Function),
-      );
-    });
-
-    const joinHandler = getEventHandler(mockSocketsEvents.LOBBY_JOIN);
-    act(() => {
-      joinHandler(mockNewPlayer);
-    });
-
-    // Verificamos que el nuevo jugador se renderiza y se reduce un slot vacío (3 jugadores, 1 slot)
-    await waitFor(() => {
-      expect(screen.getByText(mockNewPlayer.name)).toBeInTheDocument();
-      expect(screen.getAllByTestId("empty-position").length).toBe(1);
-    });
-
-    // Simulamos un evento de jugador duplicado (debería ser ignorado)
-    act(() => {
-      joinHandler(mockNewPlayer);
-    });
-    // La cuenta de slots vacíos no debe cambiar
-    expect(screen.getAllByTestId("empty-position").length).toBe(1);
-  }); */
-
   it('should handle "matches" event with status "IN_PROGRESS" and navigate to game', async () => {
     render(<LobbyContainer />);
 
@@ -277,7 +264,6 @@ describe("LobbyContainer", () => {
     act(() => {
       startHandler({
         id: MOCK_MATCH_ID,
-        id_match: MOCK_MATCH_ID, // El campo id_match viene en el evento
         name: mockMatch.name,
         status: "IN_PROGRESS",
         min_players: 2,
@@ -296,13 +282,13 @@ describe("LobbyContainer", () => {
     });
   });
 
-  /* it('should handle "matches" event with status "WAITING" and updated player count', async () => {
+  it('should handle "matches" event with status "WAITING" and updated player count', async () => {
     // Nuevo mock de getMatchPlayers para simular un nuevo jugador en la base de datos
     const updatedPlayers = [
       ...mockPlayers,
       { id: MOCK_NEW_PLAYER_ID, name: "Fetched Player" },
     ] as Player[];
-    mockGetMatchPlayers.mockResolvedValueOnce(updatedPlayers);
+    mockGetMatchPlayers.mockResolvedValue(updatedPlayers);
 
     render(<LobbyContainer />);
 
@@ -333,11 +319,11 @@ describe("LobbyContainer", () => {
 
     // Verificamos que se haya llamado a getMatchPlayers para obtener los datos actualizados
     await waitFor(() => {
-      expect(mockGetMatchPlayers).toHaveBeenCalledTimes(4);
+      expect(mockGetMatchPlayers).toHaveBeenCalledTimes(3);
       expect(screen.getByText("Fetched Player")).toBeInTheDocument();
       expect(screen.getAllByTestId("empty-position").length).toBe(1);
     });
-  }); */
+  });
 
   it("should allow the match owner to start the game", async () => {
     // Configuramos usePlayer para que el usuario sea el dueño

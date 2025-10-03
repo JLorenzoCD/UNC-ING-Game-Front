@@ -4,7 +4,11 @@ import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer, Player } from "@/types/player";
-import type { Match, MatchCreateInput, MatchWithPlayerCount } from "@/types/match";
+import type {
+  Match,
+  MatchCreateInput,
+  MatchWithPlayerCount,
+} from "@/types/match";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -61,8 +65,11 @@ export function createHttpService() {
   };
 
   const createPlayer = async (player: Omit<Player, "id">): Promise<Player> => {
-    const options: RequestInit = { method: "POST", body: JSON.stringify(player) };
-    
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify(player),
+    };
+
     return request<Player>(BACKEND_ENDPOINTS.CREATE_PLAYER, options);
   };
 
@@ -76,9 +83,12 @@ export function createHttpService() {
     return request<MatchWithPlayerCount[]>(BACKEND_ENDPOINTS.GET_MATCHES);
   };
 
-  const joinMatch = async (playerId: UUID, matchId: UUID): Promise<{ match_id: UUID }> => {
+  const joinMatch = async (
+    playerId: UUID,
+    matchId: UUID,
+  ): Promise<{ match_id: UUID }> => {
     const options: RequestInit = { method: "POST" };
-    
+
     return request<{ match_id: UUID }>(
       BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
       options,

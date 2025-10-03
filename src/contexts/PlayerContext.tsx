@@ -36,7 +36,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   useEffect(() => {
     const storedPlayer = localStorage.getItem("player");
-    
+
     if (storedPlayer) {
       setPlayer(JSON.parse(storedPlayer));
     }
@@ -56,13 +56,13 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
     // Si el usuario no ha creado su perfil y quiere
     // acceder a una ruta protegida, se le redirige a crear perfil.
     if (
-      (location.pathname === "/" || location.pathname.includes("match"))
-      && !player
+      (location.pathname === "/" || location.pathname.includes("match")) &&
+      !player
     ) {
       navigate(FRONTEND_PATHS.PLAYER_CREATE);
 
-    // Si el usuario ya tiene perfil y quiere acceder a crear perfil,
-    // se le redirige a la lista de partidas.
+      // Si el usuario ya tiene perfil y quiere acceder a crear perfil,
+      // se le redirige a la lista de partidas.
     } else if (location.pathname.includes("player") && player) {
       navigate(FRONTEND_PATHS.MATCH_LIST);
     }
@@ -70,7 +70,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   const contextValue: PlayerContextType = useMemo(
     () => ({ player, setPlayer }),
-    [player, isLoading, setPlayer]
+    [player, isLoading, setPlayer],
   );
 
   return (

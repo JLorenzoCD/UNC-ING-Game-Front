@@ -14,12 +14,12 @@ export function isValidMatch(match: MatchWithPlayerCount): boolean {
   const isValidMaxPlayersInRange =
     match.max_players >= RANGE_PLAYERS.MIN &&
     match.max_players <= RANGE_PLAYERS.MAX;
-  
+
   const isValidCurrentPlayerCount =
     match.current_player_count <= match.max_players;
-  
+
   const isValidPlayerOrder = match.current_player_order < match.max_players;
-  
+
   const isWaiting = match.status.toUpperCase() === "WAITING";
 
   return (
