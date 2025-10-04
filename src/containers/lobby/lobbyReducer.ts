@@ -44,14 +44,25 @@ export function lobbyReducer(
     case "FETCH_ERROR":
       return { ...state, loading: false, error: true };
 
-    case "PLAYER_JOINED":
+    case "PLAYER_JOINED": {
       if (state.players.some((p) => p.id === action.payload.id)) {
         return state;
       }
+      const playersUpdate = [...state.players, action.payload];
+
+      const matchWithNewCount = state.match
+        ? {
+            ...state.match,
+            current_player_count: playersUpdate.length,
+          }
+        : null;
+
       return {
         ...state,
-        players: [...state.players, action.payload],
+        match: matchWithNewCount,
+        players: playersUpdate,
       };
+    }
 
     case "PLAYERS_UPDATED": {
       const matchWithNewCount = state.match

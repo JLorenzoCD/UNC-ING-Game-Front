@@ -32,7 +32,10 @@ export function useLobbyData(matchId: UUID | null) {
   const matchRef = useRef(state.match);
 
   useEffect(() => {
-    console.log("Renderizado");
+    matchRef.current = state.match;
+  }, [state.match]);
+
+  useEffect(() => {
     if (httpService == null || wsService == null || matchId == null) return;
 
     const handleLobbyJoin = (newPlayer: Player) => {
