@@ -1,7 +1,7 @@
 import type { ButtonHTMLAttributes } from "react";
 
 export default function Button({
-  className,
+  className = "",
   ...rest
 }: ButtonHTMLAttributes<HTMLButtonElement>) {
   return (

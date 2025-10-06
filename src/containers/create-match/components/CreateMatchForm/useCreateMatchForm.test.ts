@@ -244,15 +244,16 @@ describe("useCreateMatchForm", () => {
     });
 
     it("should handle errors from handleCreateMatch gracefully", async () => {
+      const mockConsoleError = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
       const { result } = renderHook(() => useCreateMatchForm());
 
       const mockHandleCreateMatch = vi
         .fn()
         .mockRejectedValueOnce(new Error("API error"));
       const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
-      const mockConsoleError = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
       const mockEvent = {
         preventDefault: vi.fn(),
       } as unknown as FormEvent<HTMLFormElement>;

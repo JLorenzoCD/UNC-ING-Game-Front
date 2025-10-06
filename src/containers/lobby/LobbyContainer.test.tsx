@@ -292,6 +292,10 @@ describe("LobbyContainer", () => {
   });
 
   it("should show an alert if startMatch fails", async () => {
+    const mockConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     mockUsePlayer.mockReturnValue({
       player: { id: MOCK_OWNER_ID, name: "Owner Player" },
     });
@@ -307,5 +311,7 @@ describe("LobbyContainer", () => {
     expect(mockStartMatch).toHaveBeenCalled();
     expect(window.alert).toHaveBeenCalledWith("The game could not be started.");
     expect(mockNavigate).not.toHaveBeenCalled();
+
+    mockConsoleError.mockRestore();
   });
 });

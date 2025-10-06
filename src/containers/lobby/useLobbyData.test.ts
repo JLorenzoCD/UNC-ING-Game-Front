@@ -166,6 +166,10 @@ describe("useLobbyData", () => {
   });
 
   it("should handle initial fetch error", async () => {
+    const mockConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     mockGetMatch.mockRejectedValue(new Error("Network Error"));
 
     const { result } = renderHook(() => useLobbyData(MOCK_MATCH_ID));
@@ -178,6 +182,8 @@ describe("useLobbyData", () => {
         "Could not connect to the server.",
       );
     });
+
+    mockConsoleError.mockRestore();
   });
 
   it("should register and cleanup WebSocket handlers", async () => {
@@ -273,14 +279,10 @@ describe("useLobbyData", () => {
       current_player_count: 3, // Mayor que el inicial (2)
     } as MatchWithPlayerCount;
 
-    console.log(result);
-
     await act(() => updateHandler(matchUpdate));
 
     // Verificar que se hizo el refetch de jugadores
     await waitFor(() => {
-      console.log(result);
-
       expect(mockGetMatchPlayers).toHaveBeenCalledTimes(2);
       expect(result.current.players.length).toBe(3);
       expect(result.current.match!.current_player_count).toBe(3);
