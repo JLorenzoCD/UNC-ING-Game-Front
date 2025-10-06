@@ -224,6 +224,10 @@ describe("LobbyContainer", () => {
   });
 
   it("should show 'Fatal error!!' on http fetch failure", async () => {
+    const mockConsoleError = vi
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+
     mockGetMatch.mockRejectedValue(new Error("Fetch failed"));
 
     render(<LobbyContainer />);
@@ -234,6 +238,8 @@ describe("LobbyContainer", () => {
     expect(window.alert).toHaveBeenCalledWith(
       "Could not connect to the server.",
     );
+
+    mockConsoleError.mockRestore();
   });
 
   it("should connect to WebSocket and register handlers on mount", async () => {
