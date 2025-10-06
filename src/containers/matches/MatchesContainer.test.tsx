@@ -1,252 +1,141 @@
 import "@testing-library/jest-dom";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+
+import type { UUID } from "@/types/common";
+import { type MatchWithPlayerCount } from "@/types/match";
 
 import MatchesContainer from "./MatchesContainer";
 
-const mockGetMatches = vi.fn().mockResolvedValue([
-  {
-    id: "1",
-    name: "Prueba 1",
-    status: "WAITING",
-    min_players: 2,
-    max_players: 6,
-    owner_id: crypto.randomUUID(),
-    current_player_count: 5,
-    current_player_order: 0,
-  },
-  {
-    id: "2",
-    name: "Prueba 2",
-    status: "WAITING",
-    min_players: 4,
-    max_players: 6,
-    owner_id: crypto.randomUUID(),
-    current_player_count: 3,
-    current_player_order: 0,
-  },
-]);
+const { mockUseHttpService, mockUseMatchesData } = vi.hoisted(() => {
+  const mockUseHttpService = { useHttpService: vi.fn() };
+  const mockUseMatchesData = {
+    useMatchesData: vi.fn(),
+  };
 
-// Mock de los servicios
-vi.mock("@/contexts/HttpServiceContext", () => ({
-  useHttpService: vi.fn(() => ({
-    httpService: {
-      getMatches: mockGetMatches,
-    },
-  })),
-}));
-
-const mockOn = vi.fn();
-const mockOff = vi.fn();
-
-vi.mock("@/contexts/WebSocketServiceContext", () => ({
-  useWebSocketService: vi.fn(() => ({
-    wsService: {
-      on: mockOn,
-      off: mockOff,
-    },
-    isConnected: true,
-  })),
-}));
-
-// Función auxiliar para obtener el handler por el nombre del evento
-const getEventHandler = (eventName: string) => {
-  const call = mockOn.mock.calls.find((call) => call[0] === eventName);
-  if (!call) throw new Error(`Handler for event ${eventName} not found.`);
-
-  return call[1]; // El handler es el segundo elemento del array [nombre, handler]
-};
-
-// Mock de los componentes
-vi.mock("@/components/Button", () => ({
-  default: vi.fn(({ children }) => (
-    <button data-testid="mock-button">{children}</button>
-  )),
-}));
-
-vi.mock("./components/MatchList", () => ({
-  default: vi.fn(({ children }) => <div>{children}</div>),
-}));
-
-vi.mock("./components/MatchListItem", () => ({
-  default: vi.fn(({ match }) => <div>{match.name}</div>),
-}));
-
-vi.mock("react-router", async (importOriginal) => {
-  const mod = await importOriginal<typeof import("react-router")>();
   return {
-    ...mod,
+    mockUseHttpService,
+    mockUseMatchesData,
+  };
+});
+
+// Mock dependencias
+vi.mock("./useMatchesData", () => mockUseMatchesData);
+vi.mock("@/contexts/HttpServiceContext", () => mockUseHttpService);
+vi.mock("react-router", () => {
+  return {
     Link: vi.fn(({ to, children, ...props }) => (
-      <a href={to} {...props} data-testid="mock-link">
+      <a href={to} {...props}>
         {children}
       </a>
     )),
   };
 });
 
-// Mock de las constantes
-vi.mock("@/constants/frontend", () => ({
-  FRONTEND_PATHS: {
-    MATCH_CREATE: "/match/create",
-  },
+// Mock componentes hijos
+vi.mock("./components/MatchList", () => ({
+  default: vi.fn(({ children, isLoading }) => (
+    <div data-testid="mock-match-list" data-loading={isLoading}>
+      {children}
+    </div>
+  )),
+}));
+vi.mock("./components/MatchListItem", () => ({
+  default: vi.fn(({ match }) => (
+    <div data-testid={`match-item-${match.id}`}>{match.name}</div>
+  )),
+}));
+vi.mock("@/components/Button", () => ({
+  default: vi.fn(({ children, ...props }) => (
+    <button {...props}>{children}</button>
+  )),
 }));
 
-//! OJO - Tiene que ser iguales, da problemas la herramienta de testing
-const mockSocketsEvents = {
-  MATCHES: "match",
-};
-vi.mock("@/constants/backend", () => ({
-  BACKEND_SOCKETS_EVENTS: {
-    MATCHES: "match",
+// Mock datos
+const mockMatches = [
+  {
+    id: "1" as UUID,
+    name: "Match 1",
+    status: "WAITING",
+    current_player_count: 2,
   },
-}));
-//! Termina
+  {
+    id: "2" as UUID,
+    name: "Match 2",
+    status: "WAITING",
+    current_player_count: 4,
+  },
+] as MatchWithPlayerCount[];
+
+const mockHttpService = {
+  joinMatch: vi.fn(),
+  getMatches: vi.fn(),
+};
 
 describe("MatchesContainer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockUseHttpService.useHttpService.mockReturnValue({
+      httpService: mockHttpService,
+    });
   });
 
-  it("should call getMatches on mount", async () => {
+  it('should display "Loading..." when loading is in progress', () => {
+    mockUseMatchesData.useMatchesData.mockReturnValue({
+      matches: [],
+      loading: true,
+      error: false,
+    });
+
     render(<MatchesContainer />);
 
-    await waitFor(() => {
-      expect(mockGetMatches).toHaveBeenCalledTimes(1);
-    });
+    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.queryByTestId("matches-container")).not.toBeInTheDocument();
   });
 
-  it("should render the page correctly", async () => {
+  it("should display the connection error message when httpService is null", () => {
+    mockUseMatchesData.useMatchesData.mockReturnValue({
+      matches: [],
+      loading: false,
+      error: false,
+    });
+    mockUseHttpService.useHttpService.mockReturnValue({ httpService: null });
+
     render(<MatchesContainer />);
 
-    // El botón de creación de partida se renderiza
-    const createButton = screen.getByTestId("mock-button");
-    expect(createButton).toBeInTheDocument();
-    expect(createButton).toHaveTextContent("Create match");
-
-    // Se realiza la petición para obtener las partidas
-    expect(mockGetMatches).toHaveBeenCalledTimes(1);
-
-    // Verificar que los elementos de la lista se renderizan
-    await waitFor(() => {
-      expect(screen.getByText("Prueba 1")).toBeInTheDocument();
-      expect(screen.getByText("Prueba 2")).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText("No connection to the server."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 
-  it("should connect to WebSocket and register all necessary event handlers on mount", async () => {
+  it("should render the match list and the create match button when loading is successful", async () => {
+    mockUseMatchesData.useMatchesData.mockReturnValue({
+      matches: mockMatches,
+      loading: false,
+      error: false,
+    });
+
     render(<MatchesContainer />);
 
-    // Verifica el registro de eventos WebSocket.
-    await waitFor(() => {
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES,
-        expect.any(Function),
-      );
-    });
-  });
+    expect(screen.getByTestId("matches-container")).toBeInTheDocument();
 
-  it('should handle the "match" event and display the new match', async () => {
-    render(<MatchesContainer />);
+    const createMatchLink = screen.getByRole("link", { name: /create match/i });
+    expect(createMatchLink).toBeInTheDocument();
+    expect(createMatchLink).toHaveAttribute("href", "/match/create");
 
-    await waitFor(() => {
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES,
-        expect.any(Function),
-      );
-    });
-
-    // Simulamos el evento 'añadir match'.
-    const addHandler = getEventHandler(mockSocketsEvents.MATCHES);
-    act(() => {
-      addHandler({
-        id: "3",
-        name: "New match",
-        status: "WAITING",
-        min_players: 2,
-        max_players: 4,
-        owner_id: crypto.randomUUID(),
-        current_player_count: 1,
-        current_player_order: 0,
-      });
-    });
-
-    // Verificamos que el nuevo match se renderiza.
-    await waitFor(() => {
-      expect(screen.getByText("New match")).toBeInTheDocument();
-    });
-  });
-
-  it('should handle the "match" event and remove the match', async () => {
-    render(<MatchesContainer />);
-
-    await waitFor(() => {
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES,
-        expect.any(Function),
-      );
-    });
-
-    // Simulamos un evento 'eliminar match' (asumiendo que 'Prueba 1' existe inicialmente).
-    const removeHandler = getEventHandler(mockSocketsEvents.MATCHES);
-    act(() => {
-      removeHandler({
-        id: "1",
-        name: "Prueba 1",
-        status: "IN_PROGRESS",
-        min_players: 2,
-        max_players: 6,
-        owner_id: crypto.randomUUID(),
-        current_player_count: 5,
-        current_player_order: 0,
-      }); // Eliminamos el match 'Prueba 1'.
-    });
-
-    // Verificamos que el match eliminado ya NO está en el documento.
-    await waitFor(() => {
-      expect(screen.queryByText("Prueba 1")).not.toBeInTheDocument();
-    });
-  });
-
-  it('should handle the "match" event and update match', async () => {
-    render(<MatchesContainer />);
-
-    await waitFor(() => {
-      expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES,
-        expect.any(Function),
-      );
-    });
-
-    // Simulamos un evento 'actualizar match' (asumiendo que 'Prueba 2' existe con id '2').
-    const updateHandler = getEventHandler(mockSocketsEvents.MATCHES);
-    act(() => {
-      updateHandler({
-        id: "2",
-        name: "Update match", // Nuevo nombre
-        status: "WAITING",
-        min_players: 4,
-        max_players: 6,
-        owner_id: crypto.randomUUID(),
-        current_player_count: 5,
-        current_player_order: 0,
-      });
-    });
-
-    // Verificamos que el match actualizado con el nuevo nombre se renderiza.
-    await waitFor(() => {
-      expect(screen.getByText("Update match")).toBeInTheDocument();
-    });
-  });
-
-  it("should off events on unmount, the WebSocket", () => {
-    const { unmount } = render(<MatchesContainer />);
-
-    // Verificar que al desmontar deja de escuchar los eventos
-    unmount();
-
-    expect(mockOff).toHaveBeenCalledWith(
-      mockSocketsEvents.MATCHES,
-      expect.any(Function),
+    // Verificar la lista de partidas renderizada
+    expect(screen.getByTestId("mock-match-list")).toBeInTheDocument();
+    expect(screen.getByTestId("mock-match-list")).toHaveAttribute(
+      "data-loading",
+      "false",
     );
+
+    // Verificar que MatchListItem se llama por cada partida
+    expect(screen.getByTestId("match-item-1")).toHaveTextContent("Match 1");
+    expect(screen.getByTestId("match-item-2")).toHaveTextContent("Match 2");
+
+    expect(screen.queryByText("Loading...")).not.toBeInTheDocument();
   });
 });
