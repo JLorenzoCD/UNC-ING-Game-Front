@@ -2,6 +2,7 @@ export default function Loading() {
   return (
     <div role="status">
       <svg
+        data-testid="svg"
         aria-hidden="true"
         className="w-8 h-8 text-gray-200 animate-spin fill-blue-600"
         viewBox="0 0 100 101"
