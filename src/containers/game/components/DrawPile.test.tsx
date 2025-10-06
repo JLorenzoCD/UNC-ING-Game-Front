@@ -17,5 +17,18 @@ describe("DrawPile", () => {
       );
       expect(screen.getByText("REMAINING: 40")).toBeInTheDocument();
     });
+
+    it("renders finish game with 0 cards", () => {
+      render(<DrawPile cardCount={0} />);
+
+      const cardElement = screen.getByRole("img");
+
+      expect(cardElement).toBeInTheDocument();
+      expect(cardElement).toHaveAttribute(
+        "src",
+        expect.stringContaining("murder_escapes.png"),
+      );
+      expect(screen.getByText("REMAINING: 0")).toBeInTheDocument();
+    });
   });
 });
