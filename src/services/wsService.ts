@@ -106,11 +106,9 @@ export function createWsService(playerId: string | null = null) {
   };
 
   const emit = (event: string, data: any) => {
-    if (listeners.has(event)) {
-      const listener = listeners.get(event);
+    const listener = listeners.get(event);
 
-      if (!listener) return;
-
+    if (typeof listener !== "undefined") {
       listener.forEach((callback) => callback(data));
     }
   };

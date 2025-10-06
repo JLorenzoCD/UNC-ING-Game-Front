@@ -19,6 +19,22 @@ describe("httpService", () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockFetch: any;
 
+  // Helper function to mock successful fetch responses
+  const mockSuccessResponse = (data: unknown) => {
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(data),
+    });
+  };
+
+  // Helper function to mock fetch errors
+  const mockErrorResponse = (status: number) => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status,
+    });
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -49,10 +65,7 @@ describe("httpService", () => {
     });
 
     it("uses default base URL when VITE_API_URL is not defined", () => {
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce({ test: "data" }),
-      });
+      mockSuccessResponse({ test: "data" });
 
       httpService.request("/test");
 
@@ -67,10 +80,7 @@ describe("httpService", () => {
       vi.mocked(import.meta.env).VITE_API_URL = "https://api.example.com";
       const customHttpService = createHttpService();
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce({ test: "data" }),
-      });
+      mockSuccessResponse({ test: "data" });
 
       customHttpService.request("/test");
 
@@ -85,10 +95,7 @@ describe("httpService", () => {
   describe("Request method", () => {
     it("makes successful GET request", async () => {
       const mockData = { id: "1", name: "Test" };
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData),
-      });
+      mockSuccessResponse(mockData);
 
       const result = await httpService.request<typeof mockData>("/test");
 
@@ -103,10 +110,7 @@ describe("httpService", () => {
     it("makes successful POST request with body", async () => {
       const mockData = { id: "1", name: "Test" };
       const requestBody = { name: "Test" };
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData),
-      });
+      mockSuccessResponse(mockData);
 
       const result = await httpService.request<typeof mockData>("/test", {
         method: "POST",
@@ -126,10 +130,7 @@ describe("httpService", () => {
 
     it("merges custom headers with default headers", async () => {
       const mockData = { test: "data" };
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockData),
-      });
+      mockSuccessResponse(mockData);
 
       await httpService.request("/test", {
         headers: {
@@ -151,10 +152,7 @@ describe("httpService", () => {
       const consoleSpy = vi
         .spyOn(console, "error")
         .mockImplementation(() => {});
-      mockFetch.mockResolvedValueOnce({
-        ok: false,
-        status: 404,
-      });
+      mockErrorResponse(404);
 
       await expect(httpService.request("/test")).rejects.toThrow(
         "HTTP error! status: 404",
