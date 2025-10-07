@@ -27,7 +27,7 @@ export default function CreatePlayerContainer() {
     } catch (error) {
       console.error("Error creating player:", error);
 
-      alert("Could not create player, try again.");
+      throw error;
     }
   };
 
