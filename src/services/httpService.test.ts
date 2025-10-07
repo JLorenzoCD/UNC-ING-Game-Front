@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { PlayerInput, GamePlayer } from "@/types/player";
-import type { Match, MatchCreateInput, MatchWithPlayerCount } from "@/types/match";
+import type {
+  Match,
+  MatchCreateInput,
+  MatchWithPlayerCount,
+} from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 
@@ -267,7 +271,7 @@ describe("httpService", () => {
       const newPlayer: PlayerInput = {
         name: "Test Player",
         avatar: "avatar.png",
-        birthday: new Date("2000-01-01")
+        birthday: new Date("2000-01-01"),
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -276,22 +280,22 @@ describe("httpService", () => {
           id: crypto.randomUUID(),
           name: newPlayer.name,
           avatar: newPlayer.avatar,
-          birthday: newPlayer.birthday
+          birthday: newPlayer.birthday,
         }),
-      })
+      });
 
       const result = await httpService.createPlayer({
         name: newPlayer.name,
         avatar: newPlayer.avatar,
-        birthday: newPlayer.birthday
-      })
+        birthday: newPlayer.birthday,
+      });
 
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/players", {
         method: "POST",
         body: JSON.stringify({
           name: newPlayer.name,
           avatar: newPlayer.avatar,
-          birthday: newPlayer.birthday
+          birthday: newPlayer.birthday,
         }),
         headers: {
           "Content-Type": "application/json",
@@ -310,7 +314,7 @@ describe("httpService", () => {
         max_players: 4,
         min_players: 2,
         owner_id: crypto.randomUUID(),
-      }
+      };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -323,10 +327,10 @@ describe("httpService", () => {
           owner_id: matchInput.owner_id,
           current_player_order: 0,
         }),
-      })
+      });
 
-      const result = await httpService.createMatch(matchInput)
-      
+      const result = await httpService.createMatch(matchInput);
+
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/matches", {
         method: "POST",
         body: JSON.stringify(matchInput),
@@ -342,7 +346,7 @@ describe("httpService", () => {
       expect(result.min_players).toBe(matchInput.min_players);
       expect(result.owner_id).toBe(matchInput.owner_id);
       expect(result.current_player_order).toBe(0);
-    })
+    });
 
     it("getMatches fetches and returns matches", async () => {
       const mockMatches: Match[] = [
@@ -364,14 +368,14 @@ describe("httpService", () => {
           owner_id: crypto.randomUUID(),
           current_player_order: 1,
         },
-      ]
+      ];
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: vi.fn().mockResolvedValueOnce(mockMatches),
-      })
+      });
 
-      const result = await httpService.getMatches()
+      const result = await httpService.getMatches();
 
       expect(mockFetch).toHaveBeenCalledWith("http://localhost:8000/matches", {
         headers: {
@@ -380,7 +384,7 @@ describe("httpService", () => {
       });
 
       expect(result).toEqual(mockMatches);
-    })
+    });
 
     it("joinMatch sends correct request and returns match_id", async () => {
       const matchId = crypto.randomUUID();
@@ -608,5 +612,5 @@ describe("httpService", () => {
       expect(result).toEqual(mockSecrets);
       expect(result).toHaveLength(3);
     });
-  })
+  });
 });

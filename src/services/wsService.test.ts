@@ -174,7 +174,7 @@ describe("wsService", () => {
 
     it("reconnects automatically on connection close", () => {
       const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
-      
+
       wsService.connect();
 
       closeConnection();
@@ -287,8 +287,12 @@ describe("wsService", () => {
         vi.runAllTimers();
       }
 
-      expect(consoleSpy).toHaveBeenCalledWith("Max reconnection attempts reached");
-      expect(errorCallback).toHaveBeenCalledWith({ type: "max_reconnect_attempts" });
+      expect(consoleSpy).toHaveBeenCalledWith(
+        "Max reconnection attempts reached",
+      );
+      expect(errorCallback).toHaveBeenCalledWith({
+        type: "max_reconnect_attempts",
+      });
       consoleSpy.mockRestore();
       logSpy.mockRestore();
     });
@@ -298,7 +302,7 @@ describe("wsService", () => {
       wsService.connect();
 
       // Primera reconexión: 1000ms (2^0 * 1000)
-      closeConnection()
+      closeConnection();
       expect(consoleSpy).toHaveBeenCalledWith(
         "WebSocket disconnected, reconnecting in 1000ms (attempt 1/5)",
       );
@@ -489,9 +493,7 @@ describe("wsService", () => {
     });
 
     it("does not send messages when not connected", () => {
-      const consoleSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       wsService.send("testEvent", { data: "test" });
 
@@ -503,9 +505,7 @@ describe("wsService", () => {
     });
 
     it("does not send messages when connection is closed", () => {
-      const consoleSpy = vi
-        .spyOn(console, "warn")
-        .mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       wsService.connect();
 
