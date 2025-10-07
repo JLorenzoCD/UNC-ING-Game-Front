@@ -2,7 +2,7 @@ import { Link } from "react-router";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
-import AlertErrorList from "../AlertErrorList";
+import AlertErrorList from "@/components/AlertErrorList";
 
 import useCreateMatchForm from "./useCreateMatchForm";
 
