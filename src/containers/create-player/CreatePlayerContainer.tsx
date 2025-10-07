@@ -14,11 +14,11 @@ export default function CreatePlayerContainer() {
   const { httpService } = useHttpService();
 
   const handleCreatePlayer = async (playerData: PlayerInput) => {
-    if (!httpService) {
-      throw new Error("HTTP Service is not available");
-    }
-
     try {
+      if (!httpService) {
+        throw new Error("HTTP Service is not available.");
+      }
+
       const newPlayer: Player = await httpService.createPlayer(playerData);
 
       setPlayer(newPlayer);
@@ -27,7 +27,7 @@ export default function CreatePlayerContainer() {
     } catch (error) {
       console.error("Error creating player:", error);
 
-      throw error;
+      alert("Could not create player, try again.");
     }
   };
 
