@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-import type { PlayerInput } from "@/types/player";
 import quinAvatar from "@/assets/avatars/icono1.png";
 import ladyAvatar from "@/assets/avatars/icono2.png";
 import tuppenceAvatar from "@/assets/avatars/icono3.png";
@@ -8,6 +7,11 @@ import poirotAvatar from "@/assets/avatars/icono4.png";
 import oliverAvatar from "@/assets/avatars/icono5.png";
 import sattertwhiteAvatar from "@/assets/avatars/icono6.png";
 import marpleAvatar from "@/assets/avatars/icono7.png";
+
+import AlertErrorList from "@/components/AlertErrorList";
+import Input from "@/components/Input";
+
+import type { PlayerInput } from "@/types/player";
 
 const AVATARS_IMAGE_PATHS: { path: string; name: string }[] = [
   { path: quinAvatar, name: "Quin" },
@@ -170,16 +174,15 @@ export default function CreatePlayerForm({
     }
   };
 
-  const getInputClassName = (fieldName: string) => {
-    const baseClasses =
-      "w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-colors";
-
+  const getInputErrorClassName = (fieldName: string) => {
     const errorClasses = errors[fieldName]
       ? "border-red-500 dark:border-red-400 focus:ring-red-500 dark:focus:ring-red-400"
-      : "border-gray-300 dark:border-gray-600 focus:ring-blue-500 dark:focus:ring-blue-400";
+      : "";
 
-    return `${baseClasses} ${errorClasses}`;
+    return errorClasses;
   };
+
+  const haveError = Object.values(errors).some((error) => error !== "");
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -189,6 +192,15 @@ export default function CreatePlayerForm({
         </h2>
 
         <div className="space-y-4">
+          {haveError && (
+            <AlertErrorList
+              title="There are errors in the form, please note the following:"
+              errorList={Object.values(errors).map((err, index) => ({
+                key: index,
+                error: err,
+              }))}
+            />
+          )}
           <div>
             <label
               htmlFor="name"
@@ -197,22 +209,16 @@ export default function CreatePlayerForm({
               Nickname <span className="text-red-500">*</span>
             </label>
 
-            <input
+            <Input
               type="text"
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
               required
-              className={getInputClassName("name")}
               placeholder="Enter nickname"
+              className={getInputErrorClassName("name")}
             />
-
-            {errors.name && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.name}
-              </p>
-            )}
           </div>
 
           <div>
@@ -223,21 +229,15 @@ export default function CreatePlayerForm({
               Birthday <span className="text-red-500">*</span>
             </label>
 
-            <input
+            <Input
               type="date"
               id="birthday"
               name="birthday"
               value={formData.birthday}
               onChange={handleChange}
               required
-              className={getInputClassName("birthday")}
+              className={getInputErrorClassName("date")}
             />
-
-            {errors.birthday && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.birthday}
-              </p>
-            )}
           </div>
 
           <div>
@@ -261,20 +261,12 @@ export default function CreatePlayerForm({
                 />
               ))}
             </div>
-
-            {errors.avatar && (
-              <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                {errors.avatar}
-              </p>
-            )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleSubmit}
-              disabled={
-                isSubmitting || Object.keys(errors).some((key) => errors[key])
-              }
+              disabled={isSubmitting || haveError}
               className="w-full bg-black text-white font-bold py-2 px-4 rounded-md hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isSubmitting ? "Creating..." : "Create Player"}
