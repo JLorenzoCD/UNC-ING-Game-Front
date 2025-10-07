@@ -51,24 +51,8 @@ const CARD_IMAGE_PATHS: Record<CardName, string> = {
 
 type CardProps = Pick<CardSchema, "name" | "description">;
 
-function EmptyCard() {
-  return (
-    <div className="w-40 h-60 flex items-center border-2 border-gray-400 border-dashed">
-      <div className="text-center text-gray-400 italic p-4">
-        No image available
-      </div>
-    </div>
-  );
-}
-
 export default function Card({ name, description }: CardProps) {
-  const imagePath = CARD_IMAGE_PATHS[name] || "";
-
-  if (!imagePath) {
-    console.warn(`No image found for card: ${name}`);
-
-    return <EmptyCard />;
-  }
+  const imagePath = CARD_IMAGE_PATHS[name];
 
   return (
     <div className="w-40 h-60">
