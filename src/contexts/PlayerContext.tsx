@@ -70,7 +70,7 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
 
   const contextValue: PlayerContextType = useMemo(
     () => ({ player, setPlayer }),
-    [player, isLoading, setPlayer],
+    [player, setPlayer],
   );
 
   return (

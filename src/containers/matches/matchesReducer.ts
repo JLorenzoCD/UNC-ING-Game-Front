@@ -42,7 +42,6 @@ export function matchesReducer(
 
       // Por el problema del mensaje que envía el server al evento "MATCH"
       if (!("id" in eventMatch)) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         eventMatch = (eventMatch as any).status as MatchWithPlayerCount;
       }
 

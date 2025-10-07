@@ -11,7 +11,6 @@ import type { GameSecret } from "@/types/secret";
 
 import { createHttpService, type HttpService } from "./httpService";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const global: any;
 
 // Mockeamos fetch globalmente
@@ -20,7 +19,6 @@ global.fetch = vi.fn();
 describe("httpService", () => {
   let httpService: HttpService;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let mockFetch: any;
 
   // Helper function to mock successful fetch responses
@@ -43,10 +41,8 @@ describe("httpService", () => {
     vi.clearAllMocks();
 
     // Reseteamos la variable de entorno antes de cada test
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     delete (import.meta.env as any).VITE_API_URL;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mockFetch = global.fetch as any;
     httpService = createHttpService();
   });

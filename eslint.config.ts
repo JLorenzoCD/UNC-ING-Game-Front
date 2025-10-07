@@ -29,6 +29,7 @@ export default defineConfig([
       "react/prop-types": "off",
       "react/react-in-jsx-scope": "off",
       "react-refresh/only-export-components": "off",
+      "@typescript-eslint/no-explicit-any": "off",
     },
   },
 ]);

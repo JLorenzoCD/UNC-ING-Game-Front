@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Match } from "@/types/match";
 import { createWsService, type WSService } from "./wsService";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const global: any;
 
 global.WebSocket = vi.fn();
