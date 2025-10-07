@@ -14,11 +14,11 @@ export default function CreatePlayerContainer() {
   const { httpService } = useHttpService();
 
   const handleCreatePlayer = async (playerData: PlayerInput) => {
-    if (!httpService) {
-      throw new Error("HTTP Service is not available");
-    }
-
     try {
+      if (!httpService) {
+        throw new Error("HTTP Service is not available.");
+      }
+
       const newPlayer: Player = await httpService.createPlayer(playerData);
 
       setPlayer(newPlayer);
