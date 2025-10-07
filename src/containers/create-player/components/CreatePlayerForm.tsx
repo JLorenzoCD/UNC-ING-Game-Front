@@ -236,7 +236,7 @@ export default function CreatePlayerForm({
               value={formData.birthday}
               onChange={handleChange}
               required
-              className={getInputErrorClassName("date")}
+              className={getInputErrorClassName("birthday")}
             />
           </div>
 
