@@ -4,7 +4,7 @@ import { useHttpService } from "@/contexts/HttpServiceContext";
 import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import Button from "@/components/Button";
-import CreateMatchForm from "./components/CreateMatchForm";
+import CreateMatchForm from "./components/CreateMatchForm/CreateMatchForm";
 
 export default function CreateMatchContainer() {
   const { httpService } = useHttpService();
