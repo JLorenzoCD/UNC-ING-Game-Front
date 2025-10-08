@@ -1,13 +1,40 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { render, renderHook, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { HttpServiceProvider, useHttpService } from "./HttpServiceContext";
 
 import { createHttpService } from "@/services/httpService";
+import { HttpServiceProvider, useHttpService } from "./HttpServiceContext";
+
+const MOCK_HTTP_SERVICE = {
+  request: vi.fn(),
+  createMatch: vi.fn(),
+  createPlayer: vi.fn(),
+  getMatches: vi.fn(),
+  getMatch: vi.fn(),
+  getMatchCards: vi.fn(),
+  getMatchPlayers: vi.fn(),
+  getMatchSecrets: vi.fn(),
+  joinMatch: vi.fn(),
+  startMatch: vi.fn(),
+};
 
 vi.mock("@/services/httpService", () => ({
   createHttpService: vi.fn(),
 }));
+
+const renderWithProvider = (children: ReactNode) => {
+  return render(<HttpServiceProvider>{children}</HttpServiceProvider>);
+};
+
+const TestServiceComponent = () => {
+  const context = useHttpService();
+  return (
+    <div data-testid="mock-service">
+      {context.httpService ? "Service Available" : "No Service"}
+    </div>
+  );
+};
 
 describe("HttpServiceContext", () => {
   beforeEach(() => {
@@ -16,69 +43,48 @@ describe("HttpServiceContext", () => {
 
   describe("HttpServiceProvider", () => {
     it("renders children correctly", () => {
-      render(
-        <HttpServiceProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </HttpServiceProvider>,
-      );
+      renderWithProvider(<div data-testid="mock-child">Test Child</div>);
 
       expect(screen.getByTestId("mock-child")).toBeInTheDocument();
     });
 
     it("provides initial context value", () => {
-      const TestComponent = () => {
-        const context = useHttpService();
-        return (
-          <div data-testid="mock-service">
-            {context.httpService ? "Service Available" : "No Service"}
-          </div>
-        );
-      };
-
-      render(
-        <HttpServiceProvider>
-          <TestComponent />
-        </HttpServiceProvider>,
-      );
+      renderWithProvider(<TestServiceComponent />);
 
       expect(screen.getByTestId("mock-service")).toHaveTextContent(
         "No Service",
       );
     });
 
-    it("provide context value after initialization", () => {
-      vi.mocked(createHttpService).mockReturnValue({
-        request: vi.fn(),
-        createMatch: vi.fn(),
-        createPlayer: vi.fn(),
-        getMatches: vi.fn(),
-        getMatch: vi.fn(),
-        getMatchCards: vi.fn(),
-        getMatchPlayers: vi.fn(),
-        getMatchSecrets: vi.fn(),
-        joinMatch: vi.fn(),
-        startMatch: vi.fn(),
-      });
+    it("provides context value after initialization", () => {
+      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE);
 
-      const TestComponent = () => {
-        const context = useHttpService();
-
-        return (
-          <div data-testid="mock-service">
-            {context.httpService ? "Service Available" : "No Service"}
-          </div>
-        );
-      };
-
-      render(
-        <HttpServiceProvider>
-          <TestComponent />
-        </HttpServiceProvider>,
-      );
+      renderWithProvider(<TestServiceComponent />);
 
       expect(screen.getByTestId("mock-service")).toHaveTextContent(
         "Service Available",
       );
+    });
+  });
+
+  describe("useHttpService", () => {
+    it("can be used outside provider (uses default context)", () => {
+      const { result } = renderHook(() => useHttpService());
+
+      expect(result.current.httpService).toBeNull();
+    });
+
+    it("can be used inside provider", () => {
+      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE);
+
+      const { result } = renderHook(() => useHttpService(), {
+        wrapper: ({ children }) => (
+          <HttpServiceProvider>{children}</HttpServiceProvider>
+        ),
+      });
+
+      expect(result.current.httpService).toBeDefined();
+      expect(result.current.httpService).not.toBeNull();
     });
   });
 });
