@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Player } from "@/types/player";
 import { PlayerProvider, usePlayer } from "./PlayerContext";
@@ -9,6 +9,22 @@ const { mockUseNavigate, mockUseLocation } = vi.hoisted(() => ({
   mockUseNavigate: vi.fn(),
   mockUseLocation: vi.fn(),
 }));
+
+const renderTestChildWithProvider = () => {
+  return render(
+    <PlayerProvider>
+      <div data-testid="mock-child">Test Child</div>
+    </PlayerProvider>,
+  );
+};
+
+const reRenderTestChildWithProvider = (rerender: any) => {
+  return rerender(
+    <PlayerProvider>
+      <div data-testid="mock-child">Test Child</div>
+    </PlayerProvider>,
+  );
+};
 
 vi.mock("react-router", async (importActual) => {
   const mod = await importActual<typeof import("react-router")>();
@@ -24,15 +40,15 @@ describe("PlayerContext", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    localStorage.clear();
+  });
+
   describe("PlayerProvider", () => {
     it("renders children correctly", () => {
       mockUseLocation.mockReturnValue({ pathname: "/" });
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(screen.getByTestId("mock-child")).toBeInTheDocument();
     });
@@ -40,11 +56,7 @@ describe("PlayerContext", () => {
     it("redirects to create a player if no player and accessing protected route", () => {
       mockUseLocation.mockReturnValue({ pathname: "/match/123" });
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(mockUseNavigate).toHaveBeenCalledWith("/player/create");
     });
@@ -52,57 +64,41 @@ describe("PlayerContext", () => {
     it("redirects to create a player if no player and accessing home", () => {
       mockUseLocation.mockReturnValue({ pathname: "/" });
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(mockUseNavigate).toHaveBeenCalledWith("/player/create");
     });
 
     it("redirects to match list if player and accessing create a player", () => {
       mockUseLocation.mockReturnValue({ pathname: "/player/create" });
+      
       localStorage.setItem(
         "player",
         JSON.stringify({ id: "1", name: "Test Player" }),
       );
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(mockUseNavigate).toHaveBeenCalledWith("/");
-      localStorage.removeItem("player");
     });
 
     it("does not redirect if player exists", () => {
       mockUseLocation.mockReturnValue({ pathname: "/match/123" });
+      
       localStorage.setItem(
         "player",
         JSON.stringify({ id: "1", name: "Test Player" }),
       );
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(mockUseNavigate).not.toHaveBeenCalled();
-      localStorage.removeItem("player");
     });
 
     it("does not redirect if accessing unprotected route", () => {
       mockUseLocation.mockReturnValue({ pathname: "/random" });
 
-      render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      renderTestChildWithProvider();
 
       expect(mockUseNavigate).not.toHaveBeenCalled();
     });
@@ -110,11 +106,7 @@ describe("PlayerContext", () => {
     it("saves player to localStorage on setPlayer", () => {
       mockUseLocation.mockReturnValue({ pathname: "/" });
 
-      const { rerender } = render(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      const { rerender } = renderTestChildWithProvider();
 
       expect(localStorage.getItem("player")).toBeNull();
 
@@ -127,11 +119,7 @@ describe("PlayerContext", () => {
 
       localStorage.setItem("player", JSON.stringify(mockPlayer));
 
-      rerender(
-        <PlayerProvider>
-          <div data-testid="mock-child">Test Child</div>
-        </PlayerProvider>,
-      );
+      reRenderTestChildWithProvider(rerender);
 
       expect(JSON.parse(localStorage.getItem("player") || "{}")).toEqual({
         id: mockPlayer.id,
@@ -139,8 +127,6 @@ describe("PlayerContext", () => {
         avatar: mockPlayer.avatar,
         birthday: mockPlayer.birthday.toISOString(),
       });
-
-      localStorage.removeItem("player");
     });
   });
 
