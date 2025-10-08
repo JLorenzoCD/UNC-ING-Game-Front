@@ -122,11 +122,5 @@ export default function GameContextProvider({
 }
 
 export function useGame() {
-  const context = useContext(GameContext);
-
-  if (!context) {
-    throw new Error("useGame must be used within a GameContextProvider");
-  }
-
-  return context;
+  return useContext(GameContext);
 }
