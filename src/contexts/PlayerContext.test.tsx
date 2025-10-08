@@ -71,7 +71,7 @@ describe("PlayerContext", () => {
 
     it("redirects to match list if player and accessing create a player", () => {
       mockUseLocation.mockReturnValue({ pathname: "/player/create" });
-      
+
       localStorage.setItem(
         "player",
         JSON.stringify({ id: "1", name: "Test Player" }),
@@ -84,7 +84,7 @@ describe("PlayerContext", () => {
 
     it("does not redirect if player exists", () => {
       mockUseLocation.mockReturnValue({ pathname: "/match/123" });
-      
+
       localStorage.setItem(
         "player",
         JSON.stringify({ id: "1", name: "Test Player" }),
