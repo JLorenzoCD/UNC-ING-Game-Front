@@ -8,6 +8,7 @@ interface HandProps {
 
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
+  isDiscarded: (card: GameCard) => boolean; // Función para determinar si una carta está marcada para descartar
 }
 
 function EmptyHandPosition() {
@@ -20,8 +21,14 @@ function EmptyHandPosition() {
   );
 }
 
-export default function Hand({ cards, onSelect, isSelected }: HandProps) {
+export default function Hand({
+  cards,
+  onSelect,
+  isSelected,
+  isDiscarded,
+}: HandProps) {
   const selectedCardClassName = "ring-4 ring-blue-200";
+  const discaredCardClassName = "opacity-50";
 
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
@@ -36,6 +43,7 @@ export default function Hand({ cards, onSelect, isSelected }: HandProps) {
             className={`
                 cursor-pointer hover:scale-105 transform transition-transform
                 ${isSelected(card) ? selectedCardClassName : ""}
+                ${isDiscarded(card) ? discaredCardClassName : ""}
               `}
           >
             <Card name={card.name} description={card.description} />

@@ -9,13 +9,16 @@ import {
 } from "react";
 import { useParams } from "react-router";
 
+import { isUUID } from "@/utils";
+
 import type { Match } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 
 import { useHttpService } from "./HttpServiceContext";
-import { isUUID } from "@/utils";
+import { useWebSocketService } from "./WebSocketServiceContext";
+import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
 export interface GameContextType {
   match: Match | null;
@@ -47,6 +50,7 @@ export default function GameContextProvider({
   children,
 }: GameContextProviderProps) {
   const { httpService } = useHttpService();
+  const { wsService, isConnected } = useWebSocketService();
 
   const params = useParams();
   const matchId = params.matchId;
@@ -99,6 +103,33 @@ export default function GameContextProvider({
   useEffect(() => {
     fetchMatchData();
   }, [fetchMatchData]);
+
+  useEffect(() => {
+    if (!wsService || !isConnected || !matchId || !isUUID(matchId)) return;
+
+    const handleUpdateCards = (cards: GameCard[]) => {
+      setCards((current) => {
+        const updatedCards = [...current];
+
+        cards.forEach((newCard) => {
+          const index = updatedCards.findIndex((c) => c.id === newCard.id);
+          if (index !== -1) {
+            updatedCards[index] = newCard;
+          }
+        });
+
+        return updatedCards;
+      });
+    };
+
+    console.log("Subscribing to WebSocket events for cards updates");
+
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
+
+    return () => {
+      wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
+    };
+  }, [matchId, wsService, isConnected]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
