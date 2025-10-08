@@ -137,7 +137,6 @@ describe("Secret Component", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
       // Forzamos un tipo inválido
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const invalidSecret = { ...mockSecrets.innocent, type: undefined as any };
 
       render(<Secret secret={invalidSecret} />);
@@ -155,7 +154,6 @@ describe("Secret Component", () => {
 
       const invalidSecret = {
         ...mockSecrets.innocent,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         player_id: undefined as any,
       };
 
