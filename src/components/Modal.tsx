@@ -49,22 +49,22 @@ export default function Modal({
       >
         <div className="relative bg-white rounded-lg shadow-sm">
           <div
-            className={`flex items-center justify-between p-4 md:p-5 rounded-t ${headerBorderBottom ? "border-b border-gray-200" : ""}`}
+            className={`flex items-center justify-between rounded-t ${headerBorderBottom ? "border-b border-gray-200" : ""}`}
           >
             {header}
             <button
               type="button"
-              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center"
+              className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center mr-5"
               onClick={onClose}
             >
               <RiCloseFill />
               <span className="sr-only">Close modal</span>
             </button>
           </div>
-          <div className="p-4 md:p-5 space-y-4">{children}</div>
+          <div className="space-y-4">{children}</div>
           {footer !== null && (
             <div
-              className={`flex items-center p-4 md:p-5 rounded-b ${footerBorderTop ? "border-t border-gray-200" : ""}`}
+              className={`flex items-center rounded-b ${footerBorderTop ? "border-t border-gray-200" : ""}`}
             >
               {footer}
             </div>
