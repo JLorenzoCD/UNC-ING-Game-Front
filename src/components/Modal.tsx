@@ -1,6 +1,8 @@
 import ReactDOM from "react-dom";
-import type React from "react";
+
 import { RiCloseFill } from "@remixicon/react";
+
+import type React from "react";
 
 interface Props {
   children: React.ReactNode;
@@ -8,7 +10,10 @@ interface Props {
   onClose: () => void;
 
   header?: React.ReactNode;
+  headerBorderBottom?: boolean;
+
   footer?: React.ReactNode;
+  footerBorderTop?: boolean;
 }
 
 export default function Modal({
@@ -17,26 +22,35 @@ export default function Modal({
   onClose,
   header,
   footer,
+  headerBorderBottom = true,
+  footerBorderTop = true,
 }: Props) {
   const modalRoot = document.getElementById("modal-root");
 
-  if (modalRoot === null) throw new Error("No se pudo utilizar el modal");
-
-  if (!isOpen) return null;
+  if (modalRoot === null || !isOpen) return null;
 
   return ReactDOM.createPortal(
     <div
       tabIndex={-1}
-      className={`${isOpen ? "" : "hidden"} overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] min-h-full`}
+      className={`${isOpen ? "" : "hidden"} fixed top-0 right-0 left-0 w-full h-full inset-0 z-30 flex justify-center items-center`}
     >
-      <div className="relative p-4 w-full max-w-2xl max-h-full bg-black bg-opacity-75">
-        <div
-          className="relative bg-white rounded-lg shadow-sm"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t border-gray-200">
+      {/* Fondo negro semi-transparente */}
+      <div
+        className="fixed top-0 left-0 w-full h-full bg-black opacity-75"
+        onClick={onClose}
+      />
+
+      {/* Card blanca */}
+      <div
+        className="relative w-full max-w-2xl max-h-full z-40 overflow-y-auto"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        <div className="relative bg-white rounded-lg shadow-sm">
+          <div
+            className={`flex items-center justify-between p-4 md:p-5 rounded-t ${headerBorderBottom ? "border-b border-gray-200" : ""}`}
+          >
             {header}
             <button
               type="button"
@@ -49,7 +63,9 @@ export default function Modal({
           </div>
           <div className="p-4 md:p-5 space-y-4">{children}</div>
           {footer !== null && (
-            <div className="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b">
+            <div
+              className={`flex items-center p-4 md:p-5 rounded-b ${footerBorderTop ? "border-t border-gray-200" : ""}`}
+            >
               {footer}
             </div>
           )}
