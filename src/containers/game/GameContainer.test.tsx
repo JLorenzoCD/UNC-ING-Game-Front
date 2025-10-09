@@ -23,6 +23,7 @@ const mockCards: GameCard[] = [
     description: "Some description",
     type: "DETECTIVE",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: MOCK_CARD_ID_2,
@@ -33,6 +34,7 @@ const mockCards: GameCard[] = [
     description: "Some description",
     type: "DETECTIVE",
     is_discarded: false,
+    discarded_at: null,
   },
 ];
 

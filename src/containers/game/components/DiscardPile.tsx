@@ -8,7 +8,7 @@ interface DiscardPileProps {
 const DefaultCardImage = () => {
   return (
     <div className="w-40 h-60 border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
-      <p className="p-2">Discard pile is empty</p>
+      <p className="p-2 select-none">Discard pile is empty</p>
     </div>
   );
 };

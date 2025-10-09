@@ -11,6 +11,7 @@ const testCard: GameCard = {
   match_id: crypto.randomUUID(),
   player_id: crypto.randomUUID(),
   is_discarded: true,
+  discarded_at: new Date(),
   name: "MR SATTERTHWAITE",
   type: "DETECTIVE",
   description:
