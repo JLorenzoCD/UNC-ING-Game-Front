@@ -98,7 +98,7 @@ export default function GameContainer() {
           />
         </div>
 
-        <div className="absolute bottom-75 left-185">
+        <div className="absolute bottom-75 left-185 cursor-pointer">
           <DiscardPile
             topCard={discartedCards[0]}
             onClick={handleClickDiscardPile}
