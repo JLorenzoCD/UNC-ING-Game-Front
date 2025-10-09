@@ -14,8 +14,14 @@ const DefaultCardImage = () => {
 };
 
 export default function DiscardPile({ topCard }: DiscardPileProps) {
+  const handleClick = () => {
+    if (topCard === null) return;
+
+    console.log("Entro");
+  };
+
   return (
-    <div data-testid="discard-pile" className="w-40 h-60">
+    <div data-testid="discard-pile" className="w-40 h-60" onClick={handleClick}>
       {topCard ? (
         <Card name={topCard.name} description={topCard.description} />
       ) : (
