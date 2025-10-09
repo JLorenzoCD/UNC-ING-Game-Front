@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 
 import { useGame } from "@/contexts/GameContext";
-
 import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
 
 export default function Table() {
-  const { players, match } = useGame();
+  const { players, match, secrets } = useGame();
   const { player } = usePlayer();
 
   const [dimensions, setDimensions] = useState({
@@ -29,14 +28,14 @@ export default function Table() {
 
   const getVisiblePlayersWithPositions = () => {
     const sortedPlayers = [...players].sort(
-      (a, b) => (a.order ?? 0) + (b.order ?? 0),
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
     );
     const currentPlayerIndex = sortedPlayers.findIndex(
       (p) => p.id === player?.id,
     );
     const totalPlayers = players.length;
 
-    const marginX = +150;
+    const marginX = 150;
     const marginY = -500;
 
     const centerX = dimensions.width / 2 - 45;
@@ -94,11 +93,20 @@ export default function Table() {
 
     for (let i = 1; i < totalPlayers; i++) {
       const globalIndex = (currentPlayerIndex + i) % totalPlayers;
-      const player = sortedPlayers[globalIndex];
-      const turn = playerTurn === player.order ? true : false;
+      const currentPlayer = sortedPlayers[globalIndex];
+      const turn = playerTurn === currentPlayer.order ? true : false;
+
+      const playerSecrets =
+        secrets?.filter((secret) => secret.player_id === currentPlayer.id) ||
+        [];
 
       const position = getPositionForPlayer(visibleIndex, totalPlayers);
-      result.push({ player, position, turn });
+      result.push({
+        player: currentPlayer,
+        position,
+        turn,
+        secrets: playerSecrets,
+      });
       visibleIndex++;
     }
 
@@ -109,14 +117,17 @@ export default function Table() {
 
   return (
     <div data-testid="table">
-      {visiblePlayersWithPositions.map(({ player, position, turn }) => (
-        <Player
-          key={player.id}
-          player={player}
-          position={position}
-          hasCurrentTurn={turn}
-        />
-      ))}
+      {visiblePlayersWithPositions.map(
+        ({ player, position, turn, secrets }) => (
+          <Player
+            key={player.id}
+            player={player}
+            position={position}
+            hasCurrentTurn={turn}
+            secrets={secrets}
+          />
+        ),
+      )}
     </div>
   );
 }

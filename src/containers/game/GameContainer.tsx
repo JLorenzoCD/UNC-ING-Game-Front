@@ -34,12 +34,16 @@ export default function GameContainer() {
     }
   };
 
+  const playerSecrets = secrets.filter(
+    (secret) => secret.player_id === player?.id,
+  );
+
   return (
     <div data-testid="game-container" className="h-screen p-4 flex flex-col">
       <div className="position absolute top-170 left-10">
         <Table />
 
-        <Secrets secrets={secrets} />
+        <Secrets secrets={playerSecrets} />
 
         <div className="position absolute left-140 bottom-0">
           <Hand
