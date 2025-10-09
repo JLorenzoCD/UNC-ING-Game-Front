@@ -3,6 +3,7 @@ import Card from "./Card.tsx";
 
 interface DiscardPileProps {
   topCard: GameCard | null;
+  onClick: () => void;
 }
 
 const DefaultCardImage = () => {
@@ -13,15 +14,9 @@ const DefaultCardImage = () => {
   );
 };
 
-export default function DiscardPile({ topCard }: DiscardPileProps) {
-  const handleClick = () => {
-    if (topCard === null) return;
-
-    console.log("Entro");
-  };
-
+export default function DiscardPile({ topCard, onClick }: DiscardPileProps) {
   return (
-    <div data-testid="discard-pile" className="w-40 h-60" onClick={handleClick}>
+    <div data-testid="discard-pile" className="w-40 h-60" onClick={onClick}>
       {topCard ? (
         <Card name={topCard.name} description={topCard.description} />
       ) : (

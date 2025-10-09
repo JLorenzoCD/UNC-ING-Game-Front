@@ -11,17 +11,14 @@ import Hand from "./components/Hand";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
-import Modal from "@/components/Modal";
-import Button from "@/components/Button";
+import DiscardModal from "./components/DiscardModal";
 
 //! Luego eliminar
-const MOCK_CARD_ID_1 = crypto.randomUUID();
-const MOCK_CARD_ID_2 = crypto.randomUUID();
 const MOCK_MATCH_ID = crypto.randomUUID();
 
 const mockCards: GameCard[] = [
   {
-    id: MOCK_CARD_ID_1,
+    id: crypto.randomUUID(),
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -32,7 +29,7 @@ const mockCards: GameCard[] = [
     discarded_at: new Date(),
   },
   {
-    id: MOCK_CARD_ID_2,
+    id: crypto.randomUUID(),
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -53,7 +50,7 @@ export default function GameContainer() {
     {},
   );
   const [discartedCards] = useState<GameCard[]>(mockCards);
-  const [openModal, setOpenModal] = useState(true);
+  const [openModal, setOpenModal] = useState(false);
 
   const isCardSelected = (card: GameCard) => {
     return !!selectedCards[card.id];
@@ -69,23 +66,25 @@ export default function GameContainer() {
     }
   };
 
+  const handleClickDiscardPile = () => {
+    if (discartedCards.length === 0) return;
+
+    setOpenModal(true);
+  };
+
+  const onCloseDiscardModal = () => {
+    setOpenModal(false);
+  };
+
   return (
     <div data-testid="game-container" className="h-screen p-4 flex flex-col">
-      <Modal
+      <DiscardModal
         isOpen={openModal}
-        onClose={() => setOpenModal(false)}
-        header={<h3>Cartas descartadas</h3>}
-        footer={
-          <>
-            <Button type="button">I accept</Button>
-            <Button type="button" onClick={() => setOpenModal(false)}>
-              Decline
-            </Button>
-          </>
-        }
-      >
-        Modal
-      </Modal>
+        discartedCards={discartedCards}
+        onClose={onCloseDiscardModal}
+        onSelect={handleSelectCard}
+        isSelected={isCardSelected}
+      />
       <div className="position absolute top-170 left-10">
         <Table />
 
@@ -100,7 +99,10 @@ export default function GameContainer() {
         </div>
 
         <div className="absolute bottom-75 left-185">
-          <DiscardPile topCard={discartedCards[0]} />
+          <DiscardPile
+            topCard={discartedCards[0]}
+            onClick={handleClickDiscardPile}
+          />
         </div>
 
         <div className="absolute bottom-75 left-235">
