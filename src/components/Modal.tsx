@@ -1,8 +1,8 @@
+import type React from "react";
+
 import ReactDOM from "react-dom";
 
 import { RiCloseFill } from "@remixicon/react";
-
-import type React from "react";
 
 interface Props {
   children: React.ReactNode;
@@ -32,12 +32,13 @@ export default function Modal({
   return ReactDOM.createPortal(
     <div
       tabIndex={-1}
-      className={`${isOpen ? "" : "hidden"} fixed top-0 right-0 left-0 w-full h-full inset-0 z-30 flex justify-center items-center`}
+      className="fixed top-0 right-0 left-0 w-full h-full inset-0 z-30 flex justify-center items-center"
     >
       {/* Fondo negro semi-transparente */}
       <div
         className="fixed top-0 left-0 w-full h-full bg-black opacity-75"
         onClick={onClose}
+        data-testid="overlay-background"
       />
 
       {/* Card blanca */}
@@ -46,6 +47,7 @@ export default function Modal({
         onClick={(e) => {
           e.stopPropagation();
         }}
+        data-testid="modal-card"
       >
         <div className="relative bg-white rounded-lg shadow-sm">
           <div
@@ -72,6 +74,6 @@ export default function Modal({
         </div>
       </div>
     </div>,
-    modalRoot, // The target DOM node
+    modalRoot,
   );
 }
