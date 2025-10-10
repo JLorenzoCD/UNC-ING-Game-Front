@@ -8,13 +8,16 @@ import type { GameCard } from "@/types/card";
 
 function getLastFiveDiscarded(discartedCards: GameCard[]): GameCard[] {
   const discarded = discartedCards.filter(
-    (card) => card.is_discarded && card.discarded_at !== null,
+    (card) =>
+      card.is_discarded &&
+      card.player_id === null &&
+      card.discarded_at !== null,
   );
 
   // Ordenar las cartas de forma descendente por la fecha de descarte.
   discarded.sort((a, b) => {
-    const dateA = a.discarded_at ? new Date(a.discarded_at).getTime() : 0;
-    const dateB = b.discarded_at ? new Date(b.discarded_at).getTime() : 0;
+    const dateA = new Date(a.discarded_at as Date).getTime();
+    const dateB = new Date(b.discarded_at as Date).getTime();
 
     return dateB - dateA;
   });
