@@ -1,10 +1,12 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import userEvent from "@testing-library/user-event";
 
-import type { GameCard } from "@/types/card";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
+
+import type { GameCard } from "@/types/card";
 
 import GameContainer from "./GameContainer";
 
@@ -93,11 +95,43 @@ vi.mock("./components/DrawPile", () => ({
 
 vi.mock("./components/DiscardPile", () => ({
   __esModule: true,
-  default: vi.fn(({ topCard }) => (
-    <div data-testid="mock-discard-pile">
+  default: vi.fn(({ topCard, onClick }) => (
+    <div data-testid="mock-discard-pile" onClick={onClick}>
       Discard Pile Component - Top Card: {topCard ? topCard.name : "None"}
     </div>
   )),
+}));
+
+vi.mock("./components/DiscardModal", () => ({
+  __esModule: true,
+  default: vi.fn(
+    ({
+      isOpen,
+      onClose,
+      discartedCards,
+      onSelect,
+      isSelected,
+      isEventDiscard,
+      onEndEvent,
+    }) =>
+      isOpen ? (
+        <div data-testid="mock-discard-modal">
+          <button onClick={onClose}>Close</button>
+          <button onClick={onEndEvent}>End event</button>
+          {isEventDiscard && <p data-testid="mock-in-event">In event</p>}
+          {discartedCards.map((card: GameCard) => (
+            <button
+              key={card.id}
+              data-testid={`discard-card-${card.id}`}
+              aria-selected={isSelected(card)}
+              onClick={() => onSelect(card)}
+            >
+              {card.name}
+            </button>
+          ))}
+        </div>
+      ) : null,
+  ),
 }));
 
 describe("GameContainer", () => {
@@ -138,6 +172,7 @@ describe("GameContainer", () => {
     expect(screen.getByTestId("mock-secrets")).toBeInTheDocument();
     expect(screen.getByTestId("mock-draw-pile")).toBeInTheDocument();
     expect(screen.getByTestId("mock-discard-pile")).toBeInTheDocument();
+    expect(screen.queryByTestId("mock-discard-modal")).not.toBeInTheDocument();
   });
 
   it("should handle card selection and deselection", () => {
@@ -172,4 +207,19 @@ describe("GameContainer", () => {
     expect(firstCardButton).toHaveAttribute("aria-selected", "false");
     expect(secondCardButton).toHaveAttribute("aria-selected", "false");
   });
+
+  it("should not show the DiscardModal when clicking on the DiscardPile, since there are no discarded cards", async () => {
+    render(<GameContainer />);
+
+    const discardPile = screen.getByTestId("mock-discard-pile");
+
+    await act(async () => {
+      await userEvent.click(discardPile);
+    });
+
+    expect(screen.queryByTestId("mock-discard-modal")).not.toBeInTheDocument();
+  });
+
+  // TODO: Añadir tests sobre el modal de cartas descartadas. Actualmente no se
+  // pude ya que no hay forma de descartar alguna carta.
 });
