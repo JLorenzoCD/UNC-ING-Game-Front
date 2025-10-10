@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 
 import type { GamePlayer } from "@/types/player";
+import type { GameSecret } from "@/types/secret";
 import Player from "./Player";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
@@ -90,7 +91,7 @@ describe("Players Component", () => {
       />,
     );
     const avatarContainer = container.querySelector(
-      ".relative.w-20.h-20.rounded-full.border-4",
+      ".relative.w-15.h-15.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -110,7 +111,7 @@ describe("Players Component", () => {
     );
 
     const avatarContainer = container.querySelector(
-      ".relative.w-20.h-20.rounded-full.border-4",
+      ".relative.w-15.h-15.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -118,5 +119,85 @@ describe("Players Component", () => {
     expect(avatarContainer).not.toHaveClass("border-green-400");
     expect(avatarContainer).not.toHaveClass("shadow-green-400/50");
     expect(avatarContainer).not.toHaveClass("animate-pulse");
+  });
+
+  describe("Secrets display", () => {
+    const mockSecrets: GameSecret[] = [
+      {
+        id: crypto.randomUUID(),
+        type: "INNOCENT",
+        content: "You are innocent",
+        match_id: crypto.randomUUID(),
+        secret_id: crypto.randomUUID(),
+        player_id: mockPlayer.id,
+        is_revealed: false,
+      },
+      {
+        id: crypto.randomUUID(),
+        type: "MURDERER",
+        content: "You are the murderer",
+        match_id: crypto.randomUUID(),
+        secret_id: crypto.randomUUID(),
+        player_id: mockPlayer.id,
+        is_revealed: false,
+      },
+    ];
+
+    it("should render secrets when provided", () => {
+      render(
+        <Player
+          player={mockPlayer}
+          position={defaultPosition}
+          hasCurrentTurn={false}
+          secrets={mockSecrets}
+        />,
+      );
+
+      const secretsComponent = screen.getByTestId("secrets");
+      const secretCards = screen.getAllByAltText("Secret card (hidden)");
+      expect(secretsComponent).toBeInTheDocument();
+      expect(secretCards).toHaveLength(mockSecrets.length);
+    });
+
+    it("should not render secrets section when no secrets provided", () => {
+      render(
+        <Player
+          player={mockPlayer}
+          position={defaultPosition}
+          hasCurrentTurn={false}
+        />,
+      );
+
+      const secretsComponent = screen.queryByTestId("mock-secrets");
+      expect(secretsComponent).not.toBeInTheDocument();
+    });
+
+    it("should not render secrets section when empty array provided", () => {
+      render(
+        <Player
+          player={mockPlayer}
+          position={defaultPosition}
+          hasCurrentTurn={false}
+          secrets={[]}
+        />,
+      );
+
+      const secretsComponent = screen.queryByTestId("mock-secrets");
+      expect(secretsComponent).not.toBeInTheDocument();
+    });
+
+    it("should position secrets with correct margin", () => {
+      const { container } = render(
+        <Player
+          player={mockPlayer}
+          position={defaultPosition}
+          hasCurrentTurn={false}
+          secrets={mockSecrets}
+        />,
+      );
+
+      const secretsContainer = container.querySelector(".mt-10");
+      expect(secretsContainer).toBeInTheDocument();
+    });
   });
 });

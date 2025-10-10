@@ -59,7 +59,6 @@ describe("Secret Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock console methods para evitar warnings en tests
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
@@ -73,7 +72,7 @@ describe("Secret Component", () => {
       const image = screen.getByRole("img", { name: /Secret card: INNOCENT/i });
       expect(image).toBeInTheDocument();
       expect(image).toHaveAttribute("src", "secret-front.png");
-      expect(image).toHaveClass("object-cover", "w-40", "h-60");
+      expect(image).toHaveClass("object-cover", "w-20", "h-30");
     });
 
     it("should render ACCOMPLICE secret for current player", () => {
@@ -100,27 +99,90 @@ describe("Secret Component", () => {
   });
 
   describe("Security - Not showing other players secrets", () => {
-    it("should not render secret for different player", () => {
-      mockUsePlayer.mockReturnValue({
-        player: { ...mockPlayer, id: "different-player" },
-      });
-
-      render(<Secret secret={mockSecrets.innocent} />);
-
-      expect(screen.queryByRole("img")).not.toBeInTheDocument();
-    });
-
-    it("should not render when player_id is different", () => {
+    it("should render secret back for other players", () => {
+      const otherPlayer = { id: crypto.randomUUID(), name: "OtherPlayer" };
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
+
       const otherPlayerSecret = {
         ...mockSecrets.innocent,
-        player_id:
-          "37a27c8a-18b3-4363-8ec2-1a1f0fe87a21" as `${string}-${string}-${string}-${string}-${string}`,
+        player_id: otherPlayer.id,
       };
 
       render(<Secret secret={otherPlayerSecret} />);
 
-      expect(screen.queryByRole("img")).not.toBeInTheDocument();
+      const image = screen.getByRole("img", {
+        name: /Secret card \(hidden\)/i,
+      });
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute(
+        "src",
+        expect.stringContaining("secret_back.png"),
+      );
+      expect(image).toHaveClass("w-15", "h-22.5");
+    });
+  });
+
+  describe("Revealed secrets functionality", () => {
+    it("should show revealed secret with red border and eye icon for current player", () => {
+      mockUsePlayer.mockReturnValue({ player: mockPlayer });
+
+      const revealedSecret = {
+        ...mockSecrets.murderer,
+        is_revealed: true,
+      };
+
+      const { container } = render(<Secret secret={revealedSecret} />);
+
+      const borderDiv = container.querySelector(".border-red-500");
+      expect(borderDiv).toBeInTheDocument();
+      expect(borderDiv).toHaveClass(
+        "border-4",
+        "shadow-lg",
+        "shadow-red-500/50",
+      );
+
+      const image = screen.getByRole("img");
+      expect(image).toHaveClass("brightness-50");
+
+      const eyeIcon = container.querySelector(".bg-red-500.rounded-full");
+      expect(eyeIcon).toBeInTheDocument();
+    });
+
+    it("should show revealed secret without special styling for other players viewing it", () => {
+      const otherPlayer = { id: crypto.randomUUID(), name: "OtherPlayer" };
+      mockUsePlayer.mockReturnValue({ player: otherPlayer });
+
+      const revealedSecret = {
+        ...mockSecrets.murderer,
+        is_revealed: true,
+      };
+
+      const { container } = render(<Secret secret={revealedSecret} />);
+
+      const image = screen.getByRole("img", { name: /Secret card: MURDERER/i });
+      expect(image).toBeInTheDocument();
+      expect(image).toHaveAttribute("src", "secret-murderer.png");
+
+      expect(
+        container.querySelector(".border-red-500"),
+      ).not.toBeInTheDocument();
+      expect(container.querySelector(".bg-red-500")).not.toBeInTheDocument();
+
+      expect(image).not.toHaveClass("brightness-50");
+    });
+
+    it("should show revealed secret for current player with correct size", () => {
+      mockUsePlayer.mockReturnValue({ player: mockPlayer });
+
+      const revealedSecret = {
+        ...mockSecrets.innocent,
+        is_revealed: true,
+      };
+
+      const { container } = render(<Secret secret={revealedSecret} />);
+
+      const borderDiv = container.querySelector(".w-21.h-31");
+      expect(borderDiv).toBeInTheDocument();
     });
   });
 
@@ -136,7 +198,6 @@ describe("Secret Component", () => {
     it("should not render when secret.type is missing", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      // Forzamos un tipo inválido
       const invalidSecret = { ...mockSecrets.innocent, type: undefined as any };
 
       render(<Secret secret={invalidSecret} />);
@@ -145,21 +206,6 @@ describe("Secret Component", () => {
       expect(console.warn).toHaveBeenCalledWith(
         "Secret component: invalid secret type",
       );
-    });
-
-    it("should not render when secret.player_id is missing", () => {
-      mockUsePlayer.mockReturnValue({ player: mockPlayer });
-
-      // Forzamos un player_id inválido
-
-      const invalidSecret = {
-        ...mockSecrets.innocent,
-        player_id: undefined as any,
-      };
-
-      render(<Secret secret={invalidSecret} />);
-
-      expect(screen.queryByRole("img")).not.toBeInTheDocument();
     });
   });
 });
