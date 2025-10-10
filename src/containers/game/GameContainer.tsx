@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
@@ -50,13 +50,27 @@ export default function GameContainer() {
     {},
   );
   const [discartedCards] = useState<GameCard[]>(mockCards);
-  const [openModal, setOpenModal] = useState(false);
+  const [discardModal, setDiscardModal] = useState({
+    isOpen: false,
+    isEventDiscard: false,
+  });
+
+  useEffect(() => {
+    setSelectedCards({});
+  }, [discardModal.isOpen]);
 
   const isCardSelected = (card: GameCard) => {
     return !!selectedCards[card.id];
   };
 
   const handleSelectCard = (card: GameCard) => {
+    if (!discardModal.isOpen) {
+      // Las cartas seleccionadas son las cartas de mano del jugador.
+      // Si es necesario alguna lógica.
+    } else if (!discardModal.isEventDiscard) {
+      return; // Si no hay evento no se puede seleccionar cartas.
+    }
+
     if (!selectedCards[card.id]) {
       setSelectedCards({ ...selectedCards, [card.id]: card });
     } else {
@@ -69,21 +83,30 @@ export default function GameContainer() {
   const handleClickDiscardPile = () => {
     if (discartedCards.length === 0) return;
 
-    setOpenModal(true);
+    setDiscardModal((prev) => ({ ...prev, isOpen: true }));
   };
 
   const onCloseDiscardModal = () => {
-    setOpenModal(false);
+    if (discardModal.isOpen && discardModal.isEventDiscard) return;
+
+    setDiscardModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleEventDicard = () => {
+    //* Se realiza en otro ticket
+    setDiscardModal({ isOpen: false, isEventDiscard: false });
   };
 
   return (
     <div data-testid="game-container" className="h-screen p-4 flex flex-col">
       <DiscardModal
-        isOpen={openModal}
+        isOpen={discardModal.isOpen}
         discartedCards={discartedCards}
         onClose={onCloseDiscardModal}
         onSelect={handleSelectCard}
         isSelected={isCardSelected}
+        isEventDiscard={discardModal.isEventDiscard}
+        onEndEvent={handleEventDicard}
       />
       <div className="position absolute top-170 left-10">
         <Table />

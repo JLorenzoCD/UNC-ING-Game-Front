@@ -7,7 +7,9 @@ import backgroundGame from "@/assets/background.png";
 import type { GameCard } from "@/types/card";
 
 function getLastFiveDiscarded(discartedCards: GameCard[]): GameCard[] {
-  const discarded = discartedCards.filter((card) => card.discarded_at !== null);
+  const discarded = discartedCards.filter(
+    (card) => card.is_discarded && card.discarded_at !== null,
+  );
 
   // Ordenar las cartas de forma descendente por la fecha de descarte.
   discarded.sort((a, b) => {
@@ -25,11 +27,13 @@ function getLastFiveDiscarded(discartedCards: GameCard[]): GameCard[] {
 
 interface Props {
   isOpen: boolean;
+  isEventDiscard: boolean;
   discartedCards: GameCard[];
 
   onClose: () => void; // Callback que se ejecuta cerrar el modal
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
+  onEndEvent: () => void; // Callback que se ejecuta al
 }
 
 export default function DiscardModal({
@@ -38,6 +42,8 @@ export default function DiscardModal({
   discartedCards,
   onSelect,
   isSelected,
+  isEventDiscard,
+  onEndEvent,
 }: Props) {
   if (discartedCards.length === 0) return null;
 
@@ -55,9 +61,15 @@ export default function DiscardModal({
       }
       footer={
         <div className="p-3 w-full flex justify-end">
-          <Button type="button" onClick={onClose}>
-            Close
-          </Button>
+          {isEventDiscard ? (
+            <Button type="button" onClick={onEndEvent} className="mr-2">
+              End Event
+            </Button>
+          ) : (
+            <Button type="button" onClick={onClose}>
+              Close
+            </Button>
+          )}
         </div>
       }
     >
