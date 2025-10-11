@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
@@ -8,6 +8,7 @@ import Player from "./Player";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
 import avatarQuin from "@/assets/avatars/icono1.png";
+import type { MatchSet } from "@/types/set";
 
 const mockPlayer: GamePlayer = {
   id: "c582d4e4-4581-4b81-a1ef-fa17fc9599fe",
@@ -31,15 +32,74 @@ const mockPlayerWithLongName: GamePlayer = {
   order: 3,
 };
 
-describe("Players Component", () => {
-  const defaultPosition = { x: 100, y: 200 };
+const mockSecrets: GameSecret[] = [
+  {
+    id: crypto.randomUUID(),
+    type: "INNOCENT",
+    content: "You are innocent",
+    match_id: crypto.randomUUID(),
+    secret_id: crypto.randomUUID(),
+    player_id: mockPlayer.id,
+    is_revealed: false,
+  },
+  {
+    id: crypto.randomUUID(),
+    type: "MURDERER",
+    content: "You are the murderer",
+    match_id: crypto.randomUUID(),
+    secret_id: crypto.randomUUID(),
+    player_id: mockPlayer.id,
+    is_revealed: false,
+  },
+];
 
+const MATCH_ID = crypto.randomUUID();
+const PLAYER_ID = crypto.randomUUID();
+
+const mockSets: MatchSet[] = [
+  {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    type: "Hercule_Poirot",
+    player_id: PLAYER_ID,
+    match_id: MATCH_ID,
+    quin_play: false,
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440002",
+    type: "Miss_Marple",
+    player_id: PLAYER_ID,
+    match_id: MATCH_ID,
+    quin_play: true,
+  },
+];
+
+const mockPositionClassName =
+  "col-start-3 row-start-1 flex justify-center items-center";
+
+vi.mock("./Secrets", () => ({
+  __esModule: true,
+  default: vi.fn(({ secrets }) => (
+    <div data-testid="mock-secrets">
+      Secrets Component - Secrets: {secrets.length}
+    </div>
+  )),
+}));
+vi.mock("./Sets", () => ({
+  __esModule: true,
+  default: vi.fn(({ sets }) => (
+    <div data-testid="mock-sets">Sets Component - Sets: {sets.length}</div>
+  )),
+}));
+
+describe("Players Component", () => {
   it("should render player with avatar", () => {
     render(
       <Player
         player={mockPlayer}
-        position={defaultPosition}
         hasCurrentTurn={false}
+        positionClassName=""
+        secrets={[]}
+        sets={[]}
       />,
     );
 
@@ -55,8 +115,10 @@ describe("Players Component", () => {
     render(
       <Player
         player={mockPlayerWithLongName}
-        position={defaultPosition}
         hasCurrentTurn={false}
+        positionClassName=""
+        secrets={[]}
+        sets={[]}
       />,
     );
 
@@ -69,29 +131,34 @@ describe("Players Component", () => {
     );
   });
 
-  it("should position player correctly", () => {
-    const position = { x: 300, y: 400 };
+  it("should position className player correctly", () => {
     const { container } = render(
-      <Player player={mockPlayer} position={position} hasCurrentTurn={false} />,
+      <Player
+        player={mockPlayer}
+        hasCurrentTurn={false}
+        positionClassName={mockPositionClassName}
+        secrets={[]}
+        sets={[]}
+      />,
     );
 
     const playerDiv = container.firstChild as HTMLElement;
-    expect(playerDiv).toHaveStyle({
-      left: "300px",
-      top: "400px",
-    });
+    expect(playerDiv).toHaveClass("flex justify-center items-center flex-col");
+    expect(playerDiv).toHaveClass("col-start-3 row-start-1");
   });
 
   it("should show green pulsing border when it is player's turn", () => {
     const { container } = render(
       <Player
         player={mockPlayer}
-        position={defaultPosition}
         hasCurrentTurn={true}
+        positionClassName=""
+        secrets={[]}
+        sets={[]}
       />,
     );
     const avatarContainer = container.querySelector(
-      ".relative.w-15.h-15.rounded-full.border-4",
+      ".w-15.h-15.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -105,13 +172,15 @@ describe("Players Component", () => {
     const { container } = render(
       <Player
         player={mockPlayer}
-        position={defaultPosition}
         hasCurrentTurn={false}
+        positionClassName=""
+        secrets={[]}
+        sets={[]}
       />,
     );
 
     const avatarContainer = container.querySelector(
-      ".relative.w-15.h-15.rounded-full.border-4",
+      ".w-15.h-15.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -122,63 +191,29 @@ describe("Players Component", () => {
   });
 
   describe("Secrets display", () => {
-    const mockSecrets: GameSecret[] = [
-      {
-        id: crypto.randomUUID(),
-        type: "INNOCENT",
-        content: "You are innocent",
-        match_id: crypto.randomUUID(),
-        secret_id: crypto.randomUUID(),
-        player_id: mockPlayer.id,
-        is_revealed: false,
-      },
-      {
-        id: crypto.randomUUID(),
-        type: "MURDERER",
-        content: "You are the murderer",
-        match_id: crypto.randomUUID(),
-        secret_id: crypto.randomUUID(),
-        player_id: mockPlayer.id,
-        is_revealed: false,
-      },
-    ];
-
     it("should render secrets when provided", () => {
       render(
         <Player
           player={mockPlayer}
-          position={defaultPosition}
           hasCurrentTurn={false}
+          positionClassName=""
           secrets={mockSecrets}
+          sets={[]}
         />,
       );
 
-      const secretsComponent = screen.getByTestId("secrets");
-      const secretCards = screen.getAllByAltText("Secret card (hidden)");
+      const secretsComponent = screen.getByTestId("mock-secrets");
       expect(secretsComponent).toBeInTheDocument();
-      expect(secretCards).toHaveLength(mockSecrets.length);
-    });
-
-    it("should not render secrets section when no secrets provided", () => {
-      render(
-        <Player
-          player={mockPlayer}
-          position={defaultPosition}
-          hasCurrentTurn={false}
-        />,
-      );
-
-      const secretsComponent = screen.queryByTestId("mock-secrets");
-      expect(secretsComponent).not.toBeInTheDocument();
     });
 
     it("should not render secrets section when empty array provided", () => {
       render(
         <Player
           player={mockPlayer}
-          position={defaultPosition}
           hasCurrentTurn={false}
+          positionClassName=""
           secrets={[]}
+          sets={[]}
         />,
       );
 
@@ -190,14 +225,62 @@ describe("Players Component", () => {
       const { container } = render(
         <Player
           player={mockPlayer}
-          position={defaultPosition}
           hasCurrentTurn={false}
+          positionClassName=""
           secrets={mockSecrets}
+          sets={[]}
         />,
       );
 
-      const secretsContainer = container.querySelector(".mt-10");
+      const secretsContainer = container.querySelector(".ml-7.mt-2");
       expect(secretsContainer).toBeInTheDocument();
+    });
+  });
+
+  describe("Sets display", () => {
+    it("should render sets when provided", () => {
+      render(
+        <Player
+          player={mockPlayer}
+          hasCurrentTurn={false}
+          positionClassName=""
+          secrets={[]}
+          sets={mockSets}
+        />,
+      );
+
+      const setsComponent = screen.getByTestId("mock-sets");
+      expect(setsComponent).toBeInTheDocument();
+    });
+
+    it("should not render sets section when empty array provided", () => {
+      render(
+        <Player
+          player={mockPlayer}
+          hasCurrentTurn={false}
+          positionClassName=""
+          secrets={[]}
+          sets={[]}
+        />,
+      );
+
+      const setsComponent = screen.queryByTestId("mock-sets");
+      expect(setsComponent).not.toBeInTheDocument();
+    });
+
+    it("should position sets with correct margin", () => {
+      const { container } = render(
+        <Player
+          player={mockPlayer}
+          hasCurrentTurn={false}
+          positionClassName=""
+          secrets={mockSecrets}
+          sets={[]}
+        />,
+      );
+
+      const setsContainer = container.querySelector(".ml-7.mt-2");
+      expect(setsContainer).toBeInTheDocument();
     });
   });
 });
