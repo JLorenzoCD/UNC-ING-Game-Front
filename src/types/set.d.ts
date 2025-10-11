@@ -1,14 +1,14 @@
 import type { UUID } from "./common";
 
 export type SetType =
-  | "Parker_Pyner"
-  | "Lady_Eileen"
-  | "Tommy_Beresford"
-  | "Tuppence_Beresford"
-  | "Two_Beresford"
-  | "Hercule_Poirot"
-  | "Miss_Marple"
-  | "Mr_Satterthwaite";
+  | "PARKER PYNE"
+  | "LADY EILEEN"
+  | "TOMMY BERESFORD"
+  | "TUPPENCE BERESFORD"
+  | "TWO BERESFORD"
+  | "HERCULE POIROT"
+  | "MISS MARPLE"
+  | "MR SATTERTHWAITE";
 
 export interface MatchSet {
   /**

@@ -59,14 +59,14 @@ const PLAYER_ID = crypto.randomUUID();
 const mockSets: MatchSet[] = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
-    type: "Hercule_Poirot",
+    type: "HERCULE POIROT",
     player_id: PLAYER_ID,
     match_id: MATCH_ID,
     quin_play: false,
   },
   {
     id: "550e8400-e29b-41d4-a716-446655440002",
-    type: "Miss_Marple",
+    type: "MISS MARPLE",
     player_id: PLAYER_ID,
     match_id: MATCH_ID,
     quin_play: true,

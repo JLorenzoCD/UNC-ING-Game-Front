@@ -34,9 +34,9 @@ vi.mock("@remixicon/react", () => ({
 }));
 
 // Mock Data
-const mockSetTypeStandard: SetType = "Hercule_Poirot";
-const mockSetTypeQuinPlay: SetType = "Miss_Marple";
-const mockSetTypeTwoBeresford: SetType = "Two_Beresford";
+const mockSetTypeStandard: SetType = "HERCULE POIROT";
+const mockSetTypeQuinPlay: SetType = "MISS MARPLE";
+const mockSetTypeTwoBeresford: SetType = "TWO BERESFORD";
 
 describe("Set Component", () => {
   it("should render a standard set type with correct image and without the crown icon", () => {
@@ -60,7 +60,7 @@ describe("Set Component", () => {
 
     // No haya una segunda imagen (solo para Two_Beresford)
     expect(
-      screen.queryByRole("img", { name: /Tuppence_Beresford/i }),
+      screen.queryByRole("img", { name: /TUPPENCE BERESFORD/i }),
     ).not.toBeInTheDocument();
   });
 
@@ -80,21 +80,21 @@ describe("Set Component", () => {
     const container = screen.getAllByTestId("set")[0].closest(".relative");
     expect(container).toHaveClass("mr-4");
 
-    // Primera imagen (Tommy_Beresford)
+    // Primera imagen (TOMMY BERESFORD)
     const tommyImage = screen.getByRole("img", {
-      name: "set-type-Tommy_Beresford",
+      name: "set-type-TOMMY BERESFORD",
     });
     expect(tommyImage).toBeInTheDocument();
     expect(tommyImage).toHaveAttribute("src", mockCardTommy);
-    expect(tommyImage).toHaveAttribute("title", "Tommy_Beresford");
+    expect(tommyImage).toHaveAttribute("title", "TOMMY BERESFORD");
 
-    // Segunda imagen (Tuppence_Beresford)
+    // Segunda imagen (TUPPENCE BERESFORD)
     const tuppenceImage = screen.getByRole("img", {
-      name: "set-type-Tuppence_Beresford",
+      name: "set-type-TUPPENCE BERESFORD",
     });
     expect(tuppenceImage).toBeInTheDocument();
     expect(tuppenceImage).toHaveAttribute("src", mockCardTuppence);
-    expect(tuppenceImage).toHaveAttribute("title", "Tuppence_Beresford");
+    expect(tuppenceImage).toHaveAttribute("title", "TUPPENCE BERESFORD");
 
     // El componente de la corona NO esté presente
     expect(screen.queryByTestId("mock-crown")).not.toBeInTheDocument();

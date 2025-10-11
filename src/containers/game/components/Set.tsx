@@ -11,14 +11,14 @@ import cardTuppence from "@/assets/13-detective_tuppenceberesford.png";
 import type { SetType } from "@/types/set";
 
 const SET_IMAGE_PATHS: Record<SetType, string> = {
-  Hercule_Poirot: cardPoirot,
-  Miss_Marple: cardMarple,
-  Lady_Eileen: cardBrent,
-  Mr_Satterthwaite: cardSatterhwaite,
-  Parker_Pyner: cardPyne,
-  Tommy_Beresford: cardTommy,
-  Tuppence_Beresford: cardTuppence,
-  Two_Beresford: cardTommy,
+  "HERCULE POIROT": cardPoirot,
+  "MISS MARPLE": cardMarple,
+  "LADY EILEEN": cardBrent,
+  "MR SATTERTHWAITE": cardSatterhwaite,
+  "PARKER PYNE": cardPyne,
+  "TOMMY BERESFORD": cardTommy,
+  "TUPPENCE BERESFORD": cardTuppence,
+  "TWO BERESFORD": cardTommy,
 };
 
 interface Props {
@@ -29,9 +29,9 @@ interface Props {
 export default function Set({ type, quin_play }: Props) {
   const cardSize = "w-15 h-22.5";
 
-  const isTwoBeresford = type === "Two_Beresford";
+  const isTwoBeresford = type === "TWO BERESFORD";
   const containerSize = isTwoBeresford ? "mr-4" : "";
-  const imgTitle = isTwoBeresford ? "Tommy_Beresford" : type;
+  const imgTitle = isTwoBeresford ? "TOMMY BERESFORD" : type;
 
   return (
     <div className={`relative ${containerSize}`}>
@@ -57,11 +57,11 @@ export default function Set({ type, quin_play }: Props) {
           className={`rounded-lg overflow-hidden ${cardSize} absolute top-0 -right-5 rotate-[5deg]`}
         >
           <img
-            title="Tuppence_Beresford"
+            title="TUPPENCE BERESFORD"
             draggable="false"
             data-testid="set"
             src={cardTuppence}
-            alt="set-type-Tuppence_Beresford"
+            alt="set-type-TUPPENCE BERESFORD"
             className={`object-cover select-none ${cardSize}`}
           />
         </div>
