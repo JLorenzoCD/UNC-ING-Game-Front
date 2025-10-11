@@ -1,133 +1,81 @@
-import { useState, useEffect } from "react";
-
 import { useGame } from "@/contexts/GameContext";
-import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
 
-export default function Table() {
-  const { players, match, secrets } = useGame();
-  const { player } = usePlayer();
+import type { GamePlayer, Player as PlayerSchema } from "@/types/player";
 
-  const [dimensions, setDimensions] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 1024,
-    height: typeof window !== "undefined" ? window.innerHeight : 768,
-  });
+const GRID_OTHER_PLAYERS = {
+  1: ["col-start-3 row-start-1 flex justify-center items-center"],
+  2: [
+    "col-start-2 row-start-1 flex justify-center items-center",
+    "col-start-4 row-start-1 flex justify-center items-center",
+  ],
+  3: [
+    "col-start-1 row-start-1 flex justify-center items-center",
+    "col-start-3 row-start-1 flex justify-center items-center",
+    "col-start-5 row-start-1 flex justify-center items-center",
+  ],
+  4: [
+    "col-start-1 row-start-2 flex justify-center items-center",
+    "col-start-2 row-start-1 flex justify-center items-center",
+    "col-start-4 row-start-1 flex justify-center items-center",
+    "col-start-5 row-start-2 flex justify-center items-center",
+  ],
+  5: [
+    "col-start-1 row-start-2 flex justify-center items-center",
+    "col-start-2 row-start-1 flex justify-center items-center",
+    "col-start-3 row-start-1 flex justify-center items-center",
+    "col-start-4 row-start-1 flex justify-center items-center",
+    "col-start-5 row-start-2 flex justify-center items-center",
+  ],
+} as { [key: number]: string[] };
 
-  useEffect(() => {
-    const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
+function getPlayersInOrder(players: GamePlayer[], currPlayer: PlayerSchema) {
+  const currPlayerOrder = players.find((p) => p.id === currPlayer.id)
+    ?.order as number;
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  // Ordeno los jugadores en base a su orden, de forma ascendente
+  const playersInOrder = players.sort(
+    (p1, p2) => (p1.order as number) - (p2.order as number),
+  );
 
-  const getVisiblePlayersWithPositions = () => {
-    const sortedPlayers = [...players].sort(
-      (a, b) => (a.order ?? 0) - (b.order ?? 0),
-    );
-    const currentPlayerIndex = sortedPlayers.findIndex(
-      (p) => p.id === player?.id,
-    );
-    const totalPlayers = players.length;
+  // Sin contar a el jugador actual
+  const playersInOrderModuleCurrPlayer = [
+    ...playersInOrder.slice(currPlayerOrder),
+    ...playersInOrder.slice(0, currPlayerOrder - 1),
+  ];
 
-    const marginX = 150;
-    const marginY = -500;
+  return playersInOrderModuleCurrPlayer;
+}
 
-    const centerX = dimensions.width / 2 - 45;
-    const centerY = dimensions.height / 2;
+interface Props {
+  player: PlayerSchema;
+}
 
-    const getPositionForPlayer = (orderIndex: number, totalCount: number) => {
-      if (totalCount === 2) {
-        return { x: centerX, y: marginY };
-      }
+export default function Table({ player }: Props) {
+  const { match, players, secrets, sets } = useGame();
 
-      if (totalCount === 3) {
-        const positions = [
-          { x: marginX, y: centerY - 650 },
-          { x: dimensions.width - marginX, y: centerY - 650 },
-        ];
-        return positions[orderIndex] || positions[0];
-      }
-
-      if (totalCount === 4) {
-        const positions = [
-          { x: marginX, y: centerY - 650 },
-          { x: centerX, y: marginY },
-          { x: dimensions.width - marginX, y: centerY - 650 },
-        ];
-        return positions[orderIndex] || positions[0];
-      }
-
-      if (totalCount === 5) {
-        const positions = [
-          { x: marginX, y: centerY - 650 },
-          { x: centerX - 300, y: marginY },
-          { x: centerX + 300, y: marginY },
-          { x: dimensions.width - marginX, y: centerY - 650 },
-        ];
-        return positions[orderIndex] || positions[0];
-      }
-
-      if (totalCount === 6) {
-        const positions = [
-          { x: marginX, y: centerY - 650 },
-          { x: centerX - 400, y: marginY },
-          { x: centerX, y: marginY },
-          { x: centerX + 400, y: marginY },
-          { x: dimensions.width - marginX, y: centerY - 650 },
-        ];
-        return positions[orderIndex] || positions[0];
-      }
-      return { x: centerX, y: marginY };
-    };
-
-    let visibleIndex = 0;
-
-    const result = [];
-    const playerTurn = match?.current_player_order;
-
-    for (let i = 1; i < totalPlayers; i++) {
-      const globalIndex = (currentPlayerIndex + i) % totalPlayers;
-      const currentPlayer = sortedPlayers[globalIndex];
-      const turn = playerTurn === currentPlayer.order ? true : false;
-
-      const playerSecrets =
-        secrets?.filter((secret) => secret.player_id === currentPlayer.id) ||
-        [];
-
-      const position = getPositionForPlayer(visibleIndex, totalPlayers);
-      result.push({
-        player: currentPlayer,
-        position,
-        turn,
-        secrets: playerSecrets,
-      });
-      visibleIndex++;
-    }
-
-    return result;
-  };
-
-  const visiblePlayersWithPositions = getVisiblePlayersWithPositions();
-
+  const playersOrder = getPlayersInOrder(players, player);
   return (
-    <div data-testid="table">
-      {visiblePlayersWithPositions.map(
-        ({ player, position, turn, secrets }) => (
+    <>
+      {playersOrder.map((p, index) => {
+        const playerSecrets = secrets.filter((s) => p.id === s.player_id);
+        const playerSets = sets.filter((s) => p.id === s.player_id);
+
+        const lenOtherPlayers = playersOrder.length;
+        const positionGrid = GRID_OTHER_PLAYERS[lenOtherPlayers][index];
+
+        return (
           <Player
-            key={player.id}
-            player={player}
-            position={position}
-            hasCurrentTurn={turn}
-            secrets={secrets}
+            key={p.id}
+            player={p}
+            secrets={playerSecrets}
+            sets={playerSets}
+            hasCurrentTurn={match?.current_player_order == p.order}
+            positionClassName={positionGrid}
           />
-        ),
-      )}
-    </div>
+        );
+      })}
+    </>
   );
 }

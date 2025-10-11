@@ -1,641 +1,328 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import type { GamePlayer } from "@/types/player";
-import { usePlayer } from "@/contexts/PlayerContext";
 import { useGame } from "@/contexts/GameContext";
-import Table from "./Table";
-import type { Mock } from "vitest";
+
+import type { GamePlayer, Player as PlayerSchema } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 
-import avatarPoirot from "@/assets/avatars/icono4.png";
-import avatarQuin from "@/assets/avatars/icono1.png";
-import avatarMarple from "@/assets/avatars/icono7.png";
-import avatarLady from "@/assets/avatars/icono2.png";
-import avatarTuppence from "@/assets/avatars/icono3.png";
-import avatarOliver from "@/assets/avatars/icono5.png";
+import Table from "./Table";
+import type { MatchSet } from "@/types/set";
+import type { UUID } from "@/types/common";
+import type { Match } from "@/types/match";
 
-// Mocks de los hooks de contexto
-vi.mock("@/contexts/PlayerContext");
+// Mocks de dependencias
 vi.mock("@/contexts/GameContext");
 
-const mockUsePlayer = vi.mocked(usePlayer);
+vi.mock("./Player", () => ({
+  __esModule: true,
+  default: vi.fn(
+    ({ player, secrets, sets, hasCurrentTurn, positionClassName }) => (
+      <div
+        data-testid={`mock-player-${player.id}`}
+        data-player-name={player.name}
+        data-player-order={player.order}
+        data-secrets-count={secrets.length}
+        data-sets-count={sets.length}
+        data-current-turn={hasCurrentTurn ? "true" : "false"}
+        data-position-class={positionClassName}
+      >
+        Player: {player.name}
+      </div>
+    ),
+  ),
+}));
 const mockUseGame = vi.mocked(useGame);
 
-// Mock de window dimensions
-const mockWindowDimensions = (width: number, height: number) => {
-  Object.defineProperty(window, "innerWidth", {
-    writable: true,
-    configurable: true,
-    value: width,
-  });
-  Object.defineProperty(window, "innerHeight", {
-    writable: true,
-    configurable: true,
-    value: height,
-  });
+// Datos Mock
+const MOCK_PLAYER_ID_1 = crypto.randomUUID();
+const MOCK_PLAYER_ID_2 = crypto.randomUUID();
+const MOCK_PLAYER_ID_3 = crypto.randomUUID();
+const MOCK_MATCH_ID = "match-1" as UUID;
+
+const mockMatch = {
+  id: MOCK_MATCH_ID,
+  name: "Match 1",
+  status: "IN_PROGRESS",
+  current_player_order: 1,
+} as Match;
+
+const mockCurrPlayer: PlayerSchema = {
+  id: MOCK_PLAYER_ID_1,
+  name: "Current Player",
+  avatar: "avatar1.png",
+  birthday: new Date("2000-01-01"),
 };
 
-describe("Table Component", () => {
-  const mockCurrentPlayer: GamePlayer = {
-    id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-    name: "CurrentPlayer",
-    avatar: avatarMarple,
-    birthday: new Date("2000-10-03"),
-    player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-    match_id: crypto.randomUUID(),
-    role: "MURDERER",
+const mockGamePlayers = [
+  {
+    ...mockCurrPlayer,
+    player_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
     order: 1,
-  };
+  },
+  {
+    id: MOCK_PLAYER_ID_2,
+    name: "Player 2",
+    avatar: "avatar2.png",
+    birthday: new Date("2000-01-01"),
+    player_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    order: 2,
+  },
+  {
+    id: MOCK_PLAYER_ID_3,
+    name: "Player 3",
+    avatar: "avatar3.png",
+    birthday: new Date("2000-01-01"),
+    player_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    order: 3,
+  },
+] as GamePlayer[];
 
+const mockSecrets: GameSecret[] = [
+  {
+    type: "INNOCENT",
+    content: "You are innocent",
+    id: crypto.randomUUID(),
+    match_id: crypto.randomUUID(),
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID_2,
+    is_revealed: false,
+  },
+  {
+    type: "INNOCENT",
+    id: crypto.randomUUID(),
+    content: "You are the innocent",
+    match_id: crypto.randomUUID(),
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID_2,
+    is_revealed: false,
+  },
+  {
+    type: "MURDERER",
+    id: crypto.randomUUID(),
+    content: "You are the murderer",
+    match_id: crypto.randomUUID(),
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID_3,
+    is_revealed: false,
+  },
+];
+
+const mockSets: MatchSet[] = [
+  {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    type: "Hercule_Poirot",
+    player_id: MOCK_PLAYER_ID_3,
+    match_id: MOCK_MATCH_ID,
+    quin_play: false,
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440002",
+    type: "Miss_Marple",
+    player_id: MOCK_PLAYER_ID_3,
+    match_id: MOCK_MATCH_ID,
+    quin_play: true,
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440003",
+    type: "Tommy_Beresford",
+    player_id: MOCK_PLAYER_ID_2,
+    match_id: MOCK_MATCH_ID,
+    quin_play: false,
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440004",
+    type: "Lady_Eileen",
+    player_id: MOCK_PLAYER_ID_2,
+    match_id: MOCK_MATCH_ID,
+    quin_play: true,
+  },
+  {
+    id: "550e8400-e29b-41d4-a716-446655440005",
+    type: "Two_Beresford",
+    player_id: MOCK_PLAYER_ID_2,
+    match_id: MOCK_MATCH_ID,
+    quin_play: false,
+  },
+];
+
+describe("Table Component", () => {
   beforeEach(() => {
-    mockWindowDimensions(1024, 768);
+    vi.clearAllMocks();
 
-    mockUsePlayer.mockReturnValue({
-      player: mockCurrentPlayer,
-      setPlayer: vi.fn(),
-    } as ReturnType<typeof usePlayer>);
-
-    // Mock real de addEventListener
-    window.addEventListener = vi.fn();
-    window.removeEventListener = vi.fn();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it("should register resize event listener on mount", () => {
     mockUseGame.mockReturnValue({
-      players: [mockCurrentPlayer],
-      match: null,
+      secrets: mockSecrets,
       cards: [],
-      secrets: [],
+      match: mockMatch,
+      players: mockGamePlayers,
+      sets: mockSets,
       isLoading: false,
       hasError: false,
       error: null,
-    } as ReturnType<typeof useGame>);
+    });
+  });
 
-    render(<Table />);
+  it("should render without crashing", () => {
+    render(<Table player={mockCurrPlayer} />);
 
-    expect(window.addEventListener).toHaveBeenCalledWith(
-      "resize",
-      expect.any(Function),
+    expect(
+      screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`),
+    ).toBeInTheDocument();
+
+    // No debería renderizar al jugador actual
+    expect(
+      screen.queryByTestId(`mock-player-${MOCK_PLAYER_ID_1}`),
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render other players in order, starting from the next one", () => {
+    // Como el jugador actual tiene el order = 1. Entonces el orden esperado es:
+    // Jugador con order 2, luego Jugador con order 3.
+    render(<Table player={mockCurrPlayer} />);
+
+    const renderedPlayers = screen.getAllByTestId(/mock-player-/);
+    expect(renderedPlayers).toHaveLength(2);
+
+    // El primer jugador renderizado debería ser Player 2 (orden 2)
+    expect(renderedPlayers[0]).toHaveAttribute("data-player-name", "Player 2");
+    // El segundo jugador renderizado debería ser Player 3 (orden 3)
+    expect(renderedPlayers[1]).toHaveAttribute("data-player-name", "Player 3");
+  });
+
+  it("should correctly handle player order when the current player is not Order 1", () => {
+    // Simulamos que el jugador actual es el Player 2 (order 2)
+    const currPlayerP2: PlayerSchema = {
+      ...mockCurrPlayer,
+      id: MOCK_PLAYER_ID_2,
+      name: "Current Player P2",
+    };
+
+    // El orden de los jugadores de la partida sigue siendo 1, 2, 3
+    // El jugador a excluir es el de order 2.
+    // Orden esperado: Jugador con order 3, luego Jugador con order 1.
+
+    render(<Table player={currPlayerP2} />);
+
+    const renderedPlayers = screen.getAllByTestId(/mock-player-/);
+    expect(renderedPlayers).toHaveLength(2);
+
+    // El primer jugador renderizado debería ser Player 3 (orden 3)
+    expect(renderedPlayers[0]).toHaveAttribute("data-player-name", "Player 3");
+
+    // El segundo jugador renderizado debería ser Player 1 (orden 1)
+    expect(renderedPlayers[1]).toHaveAttribute(
+      "data-player-name",
+      "Current Player",
     );
   });
 
-  it("should position players correctly for 2 players", () => {
-    const twoPlayersList = [
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player-1",
-        avatar: avatarPoirot,
-        birthday: new Date("1980-09-07"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 1,
-      },
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "PlayerSession",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: crypto.randomUUID(),
-        role: "MURDERER",
-        order: 2,
-      },
-    ];
+  it("should pass correct secrets and sets counts to each Player component", () => {
+    render(<Table player={mockCurrPlayer} />);
 
-    mockUseGame.mockReturnValue({
-      players: twoPlayersList,
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
+    //* En el juego siempre se pasan 3 secretos, pero a la hora de hacer el test
+    //* es lo prácticamente lo mismo, ya que se basa en un arreglo.
 
-    render(<Table />);
+    // Player 2 (MOCK_PLAYER_ID_2): 2 secretos, 3 sets
+    const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`);
+    expect(player2).toHaveAttribute("data-secrets-count", "2");
+    expect(player2).toHaveAttribute("data-sets-count", "3");
 
-    const player1Name = screen.getByText("Player-1");
-    const player1Container = player1Name.closest(".absolute");
-
-    expect(player1Container).toHaveStyle({ left: "467px", top: "-500px" });
+    // Player 3 (MOCK_PLAYER_ID_3): 1 secreto, 2 sets
+    const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`);
+    expect(player3).toHaveAttribute("data-secrets-count", "1");
+    expect(player3).toHaveAttribute("data-sets-count", "2");
   });
 
-  it("should position players correctly for 3 players", () => {
-    const threePlayers: GamePlayer[] = [
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "CurrentPlayer",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: crypto.randomUUID(),
-        role: "MURDERER",
-        order: 1,
-      },
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player2",
-        avatar: avatarPoirot,
-        birthday: new Date("1995-05-15"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 2,
-      },
-      {
-        id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        name: "Player3",
-        avatar: avatarQuin,
-        birthday: new Date("1998-08-20"),
-        player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 3,
-      },
-    ];
-
-    mockUseGame.mockReturnValue({
-      players: threePlayers,
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    render(<Table />);
-
-    expect(screen.getByText("Player2")).toBeInTheDocument();
-    expect(screen.getByText("Player3")).toBeInTheDocument();
-    expect(screen.queryByText("CurrentPlayer")).not.toBeInTheDocument();
-  });
-
-  it("should position players correctly for 4 players", () => {
-    const fourPlayers: GamePlayer[] = [
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "CurrentPlayer",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: crypto.randomUUID(),
-        role: "MURDERER",
-        order: 1,
-      },
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player2",
-        avatar: avatarPoirot,
-        birthday: new Date("1995-05-15"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 2,
-      },
-      {
-        id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        name: "Player3",
-        avatar: avatarQuin,
-        birthday: new Date("1998-08-20"),
-        player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 3,
-      },
-      {
-        id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        name: "Player4",
-        avatar: avatarLady,
-        birthday: new Date("1992-03-10"),
-        player_id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 4,
-      },
-    ];
-
-    mockUseGame.mockReturnValue({
-      players: fourPlayers,
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    render(<Table />);
-
-    expect(screen.getByText("Player2")).toBeInTheDocument();
-    expect(screen.getByText("Player3")).toBeInTheDocument();
-    expect(screen.getByText("Player4")).toBeInTheDocument();
-    expect(screen.queryByText("CurrentPlayer")).not.toBeInTheDocument();
-  });
-
-  it("should position players correctly for 5 players", () => {
-    const fivePlayers: GamePlayer[] = [
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "CurrentPlayer",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: crypto.randomUUID(),
-        role: "MURDERER",
-        order: 1,
-      },
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player2",
-        avatar: avatarPoirot,
-        birthday: new Date("1995-05-15"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 2,
-      },
-      {
-        id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        name: "Player3",
-        avatar: avatarQuin,
-        birthday: new Date("1998-08-20"),
-        player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 3,
-      },
-      {
-        id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        name: "Player4",
-        avatar: avatarLady,
-        birthday: new Date("1992-03-10"),
-        player_id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 4,
-      },
-      {
-        id: "f1e2d3c4-b5a6-4798-8a9b-c0d1e2f3a4b5",
-        name: "Player5",
-        avatar: avatarTuppence,
-        birthday: new Date("1990-07-25"),
-        player_id: "f1e2d3c4-b5a6-4798-8a9b-c0d1e2f3a4b5",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 5,
-      },
-    ];
-
-    mockUseGame.mockReturnValue({
-      players: fivePlayers,
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    render(<Table />);
-
-    expect(screen.getByText("Player2")).toBeInTheDocument();
-    expect(screen.getByText("Player3")).toBeInTheDocument();
-    expect(screen.getByText("Player4")).toBeInTheDocument();
-    expect(screen.getByText("Player5")).toBeInTheDocument();
-  });
-
-  it("should position players correctly for 6 players", () => {
-    const sixPlayers: GamePlayer[] = [
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "CurrentPlayer",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: crypto.randomUUID(),
-        role: "MURDERER",
-        order: 1,
-      },
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player2",
-        avatar: avatarPoirot,
-        birthday: new Date("1995-05-15"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 2,
-      },
-      {
-        id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        name: "Player3",
-        avatar: avatarQuin,
-        birthday: new Date("1998-08-20"),
-        player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 3,
-      },
-      {
-        id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        name: "Player4",
-        avatar: avatarLady,
-        birthday: new Date("1992-03-10"),
-        player_id: "a1b2c3d4-e5f6-47a8-b9c0-d1e2f3a4b5c6",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 4,
-      },
-      {
-        id: "f1e2d3c4-b5a6-4798-8a9b-c0d1e2f3a4b5",
-        name: "Player5",
-        avatar: avatarTuppence,
-        birthday: new Date("1990-07-25"),
-        player_id: "f1e2d3c4-b5a6-4798-8a9b-c0d1e2f3a4b5",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 5,
-      },
-      {
-        id: "b2c3d4e5-f6a7-4b89-9c0d-1e2f3a4b5c6d",
-        name: "Player6",
-        avatar: avatarOliver,
-        birthday: new Date("1988-11-30"),
-        player_id: "b2c3d4e5-f6a7-4b89-9c0d-1e2f3a4b5c6d",
-        match_id: crypto.randomUUID(),
-        role: "INNOCENT",
-        order: 6,
-      },
-    ];
-
-    mockUseGame.mockReturnValue({
-      players: sixPlayers,
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    render(<Table />);
-
-    expect(screen.getByText("Player2")).toBeInTheDocument();
-    expect(screen.getByText("Player3")).toBeInTheDocument();
-    expect(screen.getByText("Player4")).toBeInTheDocument();
-    expect(screen.getByText("Player5")).toBeInTheDocument();
-    expect(screen.getByText("Player6")).toBeInTheDocument();
-  });
-
-  it("should update dimensions on window resize", () => {
-    mockUseGame.mockReturnValue({
-      players: [mockCurrentPlayer],
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    const { rerender } = render(<Table />);
-
-    // Verificar que el addEventListener fue llamado
-    expect(window.addEventListener).toHaveBeenCalledWith(
-      "resize",
-      expect.any(Function),
-    );
-
-    // Obtener la función de callback
-    const resizeCallback = (window.addEventListener as Mock).mock.calls[0][1];
-
-    // Simular cambio de dimensiones
-    mockWindowDimensions(1920, 1080);
-
-    // Llamar al callback manualmente
-    resizeCallback();
-
-    rerender(<Table />);
-
-    // Verificar que el componente sigue renderizando
-    expect(screen.getByTestId("table")).toBeInTheDocument();
-  });
-
-  it("should highlight player with current turn", () => {
-    const matchId = crypto.randomUUID();
-    const threePlayers: GamePlayer[] = [
-      {
-        id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        name: "CurrentPlayer",
-        avatar: avatarMarple,
-        birthday: new Date("2000-10-03"),
-        player_id: "dafcedef-fbdd-4248-9ed7-eeb45aa6f78d",
-        match_id: matchId,
-        role: "MURDERER",
-        order: 1,
-      },
-      {
-        id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        name: "Player2",
-        avatar: avatarPoirot,
-        birthday: new Date("1995-05-15"),
-        player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-        match_id: matchId,
-        role: "INNOCENT",
-        order: 2,
-      },
-      {
-        id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        name: "Player3",
-        avatar: avatarQuin,
-        birthday: new Date("1998-08-20"),
-        player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-        match_id: matchId,
-        role: "INNOCENT",
-        order: 3,
-      },
-    ];
-
-    mockUseGame.mockReturnValue({
-      players: threePlayers,
-      match: {
-        id: matchId,
-        name: "Test Match",
-        current_player_order: 2,
-        status: "IN_PROGRESS",
-        min_players: 2,
-        max_players: 5,
-        owner_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-      },
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    render(<Table />);
-
-    // Verificar que Player2 está destacado (tiene el turno)
-    expect(screen.getByText("Player2")).toBeInTheDocument();
-  });
-
-  it("should handle SSR scenario with default dimensions", () => {
-    mockUseGame.mockReturnValue({
-      players: [mockCurrentPlayer],
-      match: null,
-      cards: [],
-      secrets: [],
-      isLoading: false,
-      hasError: false,
-      error: null,
-    } as ReturnType<typeof useGame>);
-
-    // Simular entorno SSR donde window no está definido
-    const originalWindow = global.window;
-
-    // Temporalmente eliminar window
-    // @ts-expect-error: Testing SSR scenario
-    delete global.window;
-
-    // El componente debería usar valores por defecto (1024x768)
-    // Restaurar window antes de renderizar
-    global.window = originalWindow;
-
-    mockWindowDimensions(1024, 768);
-
-    const { container } = render(<Table />);
-
-    expect(container).toBeInTheDocument();
-  });
-
-  describe("Secrets integration", () => {
-    it("should pass secrets to players and render them", () => {
-      const mockSecrets: GameSecret[] = [
-        {
-          id: crypto.randomUUID(),
-          type: "INNOCENT",
-          content: "You are innocent",
-          match_id: crypto.randomUUID(),
-          secret_id: crypto.randomUUID(),
-          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          is_revealed: false,
-        },
-        {
-          id: crypto.randomUUID(),
-          type: "MURDERER",
-          content: "You are the murderer",
-          match_id: crypto.randomUUID(),
-          secret_id: crypto.randomUUID(),
-          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          is_revealed: false,
-        },
-      ];
-
-      const twoPlayers: GamePlayer[] = [
-        mockCurrentPlayer,
-        {
-          id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          name: "Player2",
-          avatar: avatarPoirot,
-          birthday: new Date("1995-05-15"),
-          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          match_id: crypto.randomUUID(),
-          role: "INNOCENT",
-          order: 2,
-        },
-      ];
-
+  describe("Current Turn Indicator", () => {
+    it("should mark the correct player as 'hasCurrentTurn' when match.current_player_order changes", () => {
+      // Caso 1: Turno del Player 2 (Order 2)
       mockUseGame.mockReturnValue({
-        players: twoPlayers,
-        match: null,
-        cards: [],
-        secrets: mockSecrets,
-        isLoading: false,
-        hasError: false,
-        error: null,
-      } as ReturnType<typeof useGame>);
+        ...mockUseGame(),
+        match: { ...mockUseGame().match!, current_player_order: 2 },
+      });
+      render(<Table player={mockCurrPlayer} />);
 
-      render(<Table />);
-
-      const secretsContainer = screen.getByTestId("secrets");
-      expect(secretsContainer).toBeInTheDocument();
-
-      const secretCards = screen.getAllByTestId("secret");
-      expect(secretCards).toHaveLength(2);
+      // Player 2 tiene el turno
+      expect(
+        screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`),
+      ).toHaveAttribute("data-current-turn", "true");
+      // Player 3 no tiene el turno
+      expect(
+        screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`),
+      ).toHaveAttribute("data-current-turn", "false");
     });
 
-    it("should filter secrets by player_id", () => {
-      const mockSecrets: GameSecret[] = [
-        {
-          id: crypto.randomUUID(),
-          type: "INNOCENT",
-          content: "You are innocent",
-          match_id: crypto.randomUUID(),
-          secret_id: crypto.randomUUID(),
-          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          is_revealed: false,
-        },
-        {
-          id: crypto.randomUUID(),
-          type: "MURDERER",
-          content: "You are the murderer",
-          match_id: crypto.randomUUID(),
-          secret_id: crypto.randomUUID(),
-          player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-          is_revealed: false,
-        },
-      ];
+    it("should mark the correct player as 'hasCurrentTurn' when match.current_player_order matches player 3 (Order 3)", () => {
+      // Caso 2: Turno del Player 3 (Order 3)
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        match: { ...mockUseGame().match!, current_player_order: 3 },
+      });
+      render(<Table player={mockCurrPlayer} />);
 
-      const threePlayers: GamePlayer[] = [
-        mockCurrentPlayer,
-        {
-          id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          name: "Player2",
-          avatar: avatarPoirot,
-          birthday: new Date("1995-05-15"),
-          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
-          match_id: crypto.randomUUID(),
-          role: "INNOCENT",
-          order: 2,
-        },
-        {
-          id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-          name: "Player3",
-          avatar: avatarQuin,
-          birthday: new Date("1998-08-20"),
-          player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
-          match_id: crypto.randomUUID(),
-          role: "INNOCENT",
-          order: 3,
-        },
+      // Player 2 no tiene el turno
+      expect(
+        screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`),
+      ).toHaveAttribute("data-current-turn", "false");
+      // Player 3 tiene el turno
+      expect(
+        screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`),
+      ).toHaveAttribute("data-current-turn", "true");
+    });
+  });
+
+  describe("Position Class Name", () => {
+    it("should apply correct positionClassName for 2 other players", () => {
+      // Tenemos 3 jugadores en total, se renderizan 2 'other players'
+      render(<Table player={mockCurrPlayer} />);
+
+      const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`); // Orden de renderizado: 0
+      const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`); // Orden de renderizado: 1
+
+      // GRID_OTHER_PLAYERS[2][0]
+      expect(player2).toHaveAttribute(
+        "data-position-class",
+        "col-start-2 row-start-1 flex justify-center items-center",
+      );
+      // GRID_OTHER_PLAYERS[2][1]
+      expect(player3).toHaveAttribute(
+        "data-position-class",
+        "col-start-4 row-start-1 flex justify-center items-center",
+      );
+    });
+
+    it("should apply correct positionClassName for 1 other player", () => {
+      const mockGamePlayers2: GamePlayer[] = [
+        mockGamePlayers[0], // Current Player (Order 1)
+        mockGamePlayers[1], // Player 2 (Order 2)
       ];
 
       mockUseGame.mockReturnValue({
-        players: threePlayers,
-        match: null,
-        cards: [],
-        secrets: mockSecrets,
-        isLoading: false,
-        hasError: false,
-        error: null,
-      } as ReturnType<typeof useGame>);
+        ...mockUseGame(),
+        players: mockGamePlayers2, // 1 solo "otro" jugador
+        secrets: mockSecrets.filter((s) => s.player_id === MOCK_PLAYER_ID_2),
+        sets: mockSets.filter((s) => s.player_id === MOCK_PLAYER_ID_2),
+      });
 
-      render(<Table />);
+      render(<Table player={mockCurrPlayer} />);
 
-      const secretsContainers = screen.getAllByTestId("secrets");
-      expect(secretsContainers).toHaveLength(2);
+      const renderedPlayers = screen.getAllByTestId(/mock-player-/);
+      expect(renderedPlayers).toHaveLength(1);
 
-      const secretCards = screen.getAllByTestId("secret");
-      expect(secretCards).toHaveLength(2);
+      const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`); // Orden de renderizado: 0
+
+      // GRID_OTHER_PLAYERS[1][0]
+      expect(player2).toHaveAttribute(
+        "data-position-class",
+        "col-start-3 row-start-1 flex justify-center items-center",
+      );
     });
   });
 });
