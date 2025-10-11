@@ -114,15 +114,17 @@ export default function GameContextProvider({
         cards.forEach((newCard) => {
           const index = updatedCards.findIndex((c) => c.id === newCard.id);
           if (index !== -1) {
-            updatedCards[index] = newCard;
+            updatedCards[index] = {
+              ...updatedCards[index],
+              player_id: newCard.player_id,
+              is_discarded: newCard.is_discarded,
+            };
           }
         });
 
         return updatedCards;
       });
     };
-
-    console.log("Subscribing to WebSocket events for cards updates");
 
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
 
