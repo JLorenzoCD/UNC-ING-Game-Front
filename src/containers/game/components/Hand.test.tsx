@@ -18,6 +18,7 @@ const fullHand: GameCard[] = [
     description:
       "Un detective belga famoso por su intelecto y sus métodos poco convencionales.",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: crypto.randomUUID(),
@@ -29,6 +30,7 @@ const fullHand: GameCard[] = [
     description:
       "Una astuta anciana que resuelve misterios en su pequeño pueblo.",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: crypto.randomUUID(),
@@ -40,6 +42,7 @@ const fullHand: GameCard[] = [
     description:
       "Un hombre modesto con una habilidad sorprendente para resolver crímenes.",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: crypto.randomUUID(),
@@ -51,6 +54,7 @@ const fullHand: GameCard[] = [
     description:
       "Un detective privado con un enfoque pragmático para resolver casos.",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: crypto.randomUUID(),
@@ -62,6 +66,7 @@ const fullHand: GameCard[] = [
     description:
       "Un detective aficionado con un talento natural para la observación.",
     is_discarded: false,
+    discarded_at: null,
   },
   {
     id: crypto.randomUUID(),
@@ -72,6 +77,7 @@ const fullHand: GameCard[] = [
     type: "DETECTIVE",
     description: "Un joven detective que trabaja junto a su esposa Tuppence.",
     is_discarded: false,
+    discarded_at: null,
   },
 ];
 

@@ -82,6 +82,13 @@ export interface MatchCard {
    * @example false
    */
   is_discarded: boolean;
+
+  /**
+   * Da la fecha de cuando fue descartada, en formato ISO 8601.
+   * Es null si la carta no a sido descartada.
+   * @see https://es.wikipedia.org/wiki/ISO_8601
+   */
+  discarded_at: Date | null;
 }
 
 /**
