@@ -5,6 +5,7 @@ import Container from "@/components/Container";
 import Button from "@/components/Button";
 
 import logoGame from "@/assets/logo.png";
+import backgroundGame from "@/assets/background.png";
 
 interface Props {
   match: MatchWithPlayerCount;
@@ -56,7 +57,10 @@ export default function LobbyLayout({
         </Container>
       </header>
 
-      <main className='relative flex-grow bg-[url("src/assets/fondopartida.jpeg")] bg-cover bg-center flex justify-center items-center -z-20'>
+      <main
+        className="relative flex-grow bg-cover bg-center flex justify-center items-center -z-20"
+        style={{ backgroundImage: `url(${backgroundGame})` }}
+      >
         <div className="absolute inset-0 bg-black opacity-45 -z-10"></div>
 
         <section>
