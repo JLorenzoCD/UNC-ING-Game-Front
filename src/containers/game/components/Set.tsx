@@ -24,11 +24,10 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
 interface Props {
   type: SetType;
   quin_play: boolean;
-  isSessionPlayer: boolean;
 }
 
-export default function Set({ type, quin_play, isSessionPlayer }: Props) {
-  const cardSize = !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30";
+export default function Set({ type, quin_play }: Props) {
+  const cardSize = "w-15 h-22.5";
 
   const isTwoBeresford = type === "Two_Beresford";
   const containerSize = isTwoBeresford ? "mr-4" : "";

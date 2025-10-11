@@ -1,7 +1,7 @@
 import Set from "./Set";
 
 import type { MatchSet } from "@/types/set";
-
+/* 
 const MATCH_ID = "a1b2c3d4-e5f6-7890-1234-567890abcdef";
 const PLAYER_ID = "00000001-0001-0001-0001-000000000001";
 
@@ -48,24 +48,17 @@ const playerSets: MatchSet[] = [
     match_id: MATCH_ID,
     quin_play: false,
   },
-];
+]; */
 
-export default function Sets() {
-  const isSessionPlayer = true;
+interface Props {
+  sets: MatchSet[];
+}
 
-  const sizeSetsClassName = isSessionPlayer ? "max-w-100" : "max-w-80";
-
+export default function Sets({ sets }: Props) {
   return (
-    <article
-      className={`flex gap-5 flex-wrap p-5 justify-center items-center ${sizeSetsClassName}`}
-    >
-      {playerSets.map((set) => (
-        <Set
-          key={set.id}
-          type={set.type}
-          quin_play={set.quin_play}
-          isSessionPlayer={isSessionPlayer}
-        />
+    <article className="flex gap-5 flex-wrap p-5 justify-center items-center max-w-80">
+      {sets.map((set) => (
+        <Set key={set.id} type={set.type} quin_play={set.quin_play} />
       ))}
     </article>
   );
