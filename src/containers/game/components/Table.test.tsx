@@ -7,6 +7,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useGame } from "@/contexts/GameContext";
 import Table from "./Table";
 import type { Mock } from "vitest";
+import type { GameSecret } from "@/types/secret";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
 import avatarQuin from "@/assets/avatars/icono1.png";
@@ -514,5 +515,127 @@ describe("Table Component", () => {
     const { container } = render(<Table />);
 
     expect(container).toBeInTheDocument();
+  });
+
+  describe("Secrets integration", () => {
+    it("should pass secrets to players and render them", () => {
+      const mockSecrets: GameSecret[] = [
+        {
+          id: crypto.randomUUID(),
+          type: "INNOCENT",
+          content: "You are innocent",
+          match_id: crypto.randomUUID(),
+          secret_id: crypto.randomUUID(),
+          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          is_revealed: false,
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "MURDERER",
+          content: "You are the murderer",
+          match_id: crypto.randomUUID(),
+          secret_id: crypto.randomUUID(),
+          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          is_revealed: false,
+        },
+      ];
+
+      const twoPlayers: GamePlayer[] = [
+        mockCurrentPlayer,
+        {
+          id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          name: "Player2",
+          avatar: avatarPoirot,
+          birthday: new Date("1995-05-15"),
+          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          match_id: crypto.randomUUID(),
+          role: "INNOCENT",
+          order: 2,
+        },
+      ];
+
+      mockUseGame.mockReturnValue({
+        players: twoPlayers,
+        match: null,
+        cards: [],
+        secrets: mockSecrets,
+        isLoading: false,
+        hasError: false,
+        error: null,
+      } as ReturnType<typeof useGame>);
+
+      render(<Table />);
+
+      const secretsContainer = screen.getByTestId("secrets");
+      expect(secretsContainer).toBeInTheDocument();
+
+      const secretCards = screen.getAllByTestId("secret");
+      expect(secretCards).toHaveLength(2);
+    });
+
+    it("should filter secrets by player_id", () => {
+      const mockSecrets: GameSecret[] = [
+        {
+          id: crypto.randomUUID(),
+          type: "INNOCENT",
+          content: "You are innocent",
+          match_id: crypto.randomUUID(),
+          secret_id: crypto.randomUUID(),
+          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          is_revealed: false,
+        },
+        {
+          id: crypto.randomUUID(),
+          type: "MURDERER",
+          content: "You are the murderer",
+          match_id: crypto.randomUUID(),
+          secret_id: crypto.randomUUID(),
+          player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
+          is_revealed: false,
+        },
+      ];
+
+      const threePlayers: GamePlayer[] = [
+        mockCurrentPlayer,
+        {
+          id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          name: "Player2",
+          avatar: avatarPoirot,
+          birthday: new Date("1995-05-15"),
+          player_id: "7fd66e40-249c-4e51-8028-25454c046ed4",
+          match_id: crypto.randomUUID(),
+          role: "INNOCENT",
+          order: 2,
+        },
+        {
+          id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
+          name: "Player3",
+          avatar: avatarQuin,
+          birthday: new Date("1998-08-20"),
+          player_id: "63fcbb6f-f455-46dc-b231-61968bc391e1",
+          match_id: crypto.randomUUID(),
+          role: "INNOCENT",
+          order: 3,
+        },
+      ];
+
+      mockUseGame.mockReturnValue({
+        players: threePlayers,
+        match: null,
+        cards: [],
+        secrets: mockSecrets,
+        isLoading: false,
+        hasError: false,
+        error: null,
+      } as ReturnType<typeof useGame>);
+
+      render(<Table />);
+
+      const secretsContainers = screen.getAllByTestId("secrets");
+      expect(secretsContainers).toHaveLength(2);
+
+      const secretCards = screen.getAllByTestId("secret");
+      expect(secretCards).toHaveLength(2);
+    });
   });
 });

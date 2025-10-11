@@ -1,150 +1,133 @@
-import { useGame } from "@/contexts/GameContext";
+import { useState, useEffect } from "react";
 
+import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
-import type { GamePlayer } from "@/types/player";
 
 export default function Table() {
-  const { match /* players */ } = useGame();
+  const { players, match, secrets } = useGame();
   const { player } = usePlayer();
 
-  const players: GamePlayer[] = [
-    // {
-    //   id: crypto.randomUUID(),
-    //   player_id: crypto.randomUUID(),
-    //   name: "Alice",
-    //   avatar: "src/assets/icono5.png",
-    //   order: 1,
-    //   role: "MURDERER",
-    //   birthday: new Date("1970-01-01"),
-    //   match_id: match?.id || crypto.randomUUID(),
-    // },
-    // {
-    //   id: crypto.randomUUID(),
-    //   player_id: crypto.randomUUID(),
-    //   name: "Alisa",
-    //   avatar: "src/assets/icono4.png",
-    //   order: 2,
-    //   role: "INNOCENT",
-    //   birthday: new Date("1970-01-01"),
-    //   match_id: match?.id || crypto.randomUUID(),
-    // },
-    {
-      id: crypto.randomUUID(),
-      player_id: crypto.randomUUID(),
-      name: "Aliso",
-      avatar: "src/assets/icono3.png",
-      order: 3,
-      role: "INNOCENT",
-      birthday: new Date("1970-01-01"),
-      match_id: match?.id || crypto.randomUUID(),
-    },
-    {
-      id: crypto.randomUUID(),
-      player_id: crypto.randomUUID(),
-      name: "Alise",
-      avatar: "src/assets/icono1.png",
-      order: 4,
-      role: "INNOCENT",
-      birthday: new Date("1970-01-01"),
-      match_id: match?.id || crypto.randomUUID(),
-    },
-    {
-      id: crypto.randomUUID(),
-      player_id: crypto.randomUUID(),
-      name: "owiwiw",
-      avatar: "src/assets/icono2.png",
-      order: 5,
-      role: "INNOCENT",
-      birthday: new Date("1970-01-01"),
-      match_id: match?.id || crypto.randomUUID(),
-    },
-  ];
+  const [dimensions, setDimensions] = useState({
+    width: typeof window !== "undefined" ? window.innerWidth : 1024,
+    height: typeof window !== "undefined" ? window.innerHeight : 768,
+  });
 
-  const getVisiblePlayersWithGridPositions = () => {
-    const visiblePlayers = players.filter((p) => p.id !== player?.id);
-
-    const sortedPlayers = [...visiblePlayers].sort(
-      (a, b) => (a.order ?? 0) - (b.order ?? 0),
-    );
-
-    const totalPlayers = players.length;
-    const playerTurn = match?.current_player_order;
-
-    // Grid positions mapping for different player counts
-    // Grid is 3x3: [top-left, top-center, top-right, mid-left, mid-center, mid-right, bottom-left, bottom-center, bottom-right]
-    const getGridPositionsForPlayerCount = (count: number): string[] => {
-      switch (count) {
-        case 2:
-          // 1 other player: top-center
-          return ["col-start-2 row-start-1"];
-        case 3:
-          // 2 other players: top-center, mid-right
-          return ["col-start-2 row-start-1", "col-start-3 row-start-2"];
-        case 4:
-          // 3 other players: mid-left, top-center, mid-right
-          return [
-            "col-start-1 row-start-2",
-            "col-start-2 row-start-1",
-            "col-start-3 row-start-2",
-          ];
-        case 5:
-          // 4 other players: top-left, top-center, top-right, mid-right
-          return [
-            "col-start-1 row-start-1",
-            "col-start-2 row-start-1",
-            "col-start-3 row-start-1",
-            "col-start-3 row-start-2",
-          ];
-        case 6:
-          // 5 other players: top-left, top-center, top-right, mid-left, mid-right
-          return [
-            "col-start-1 row-start-1",
-            "col-start-2 row-start-1",
-            "col-start-3 row-start-1",
-            "col-start-1 row-start-2",
-            "col-start-3 row-start-2",
-          ];
-        default:
-          return [];
-      }
+  useEffect(() => {
+    const handleResize = () => {
+      setDimensions({
+        width: window.innerWidth,
+        height: window.innerHeight,
+      });
     };
 
-    const gridPositions = getGridPositionsForPlayerCount(totalPlayers);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const getVisiblePlayersWithPositions = () => {
+    const sortedPlayers = [...players].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
+    const currentPlayerIndex = sortedPlayers.findIndex(
+      (p) => p.id === player?.id,
+    );
+    const totalPlayers = players.length;
+
+    const marginX = 150;
+    const marginY = -500;
+
+    const centerX = dimensions.width / 2 - 45;
+    const centerY = dimensions.height / 2;
+
+    const getPositionForPlayer = (orderIndex: number, totalCount: number) => {
+      if (totalCount === 2) {
+        return { x: centerX, y: marginY };
+      }
+
+      if (totalCount === 3) {
+        const positions = [
+          { x: marginX, y: centerY - 650 },
+          { x: dimensions.width - marginX, y: centerY - 650 },
+        ];
+        return positions[orderIndex] || positions[0];
+      }
+
+      if (totalCount === 4) {
+        const positions = [
+          { x: marginX, y: centerY - 650 },
+          { x: centerX, y: marginY },
+          { x: dimensions.width - marginX, y: centerY - 650 },
+        ];
+        return positions[orderIndex] || positions[0];
+      }
+
+      if (totalCount === 5) {
+        const positions = [
+          { x: marginX, y: centerY - 650 },
+          { x: centerX - 300, y: marginY },
+          { x: centerX + 300, y: marginY },
+          { x: dimensions.width - marginX, y: centerY - 650 },
+        ];
+        return positions[orderIndex] || positions[0];
+      }
+
+      if (totalCount === 6) {
+        const positions = [
+          { x: marginX, y: centerY - 650 },
+          { x: centerX - 400, y: marginY },
+          { x: centerX, y: marginY },
+          { x: centerX + 400, y: marginY },
+          { x: dimensions.width - marginX, y: centerY - 650 },
+        ];
+        return positions[orderIndex] || positions[0];
+      }
+      return { x: centerX, y: marginY };
+    };
+
+    let visibleIndex = 0;
+
     const result = [];
+    const playerTurn = match?.current_player_order;
 
-    for (let i = 0; i < totalPlayers; i++) {
-      const playerData = sortedPlayers[i];
-      const turn = playerTurn === playerData.order;
-      const gridPosition = gridPositions[i] || "";
+    for (let i = 1; i < totalPlayers; i++) {
+      const globalIndex = (currentPlayerIndex + i) % totalPlayers;
+      const currentPlayer = sortedPlayers[globalIndex];
+      const turn = playerTurn === currentPlayer.order ? true : false;
 
-      result.push({ player: playerData, turn, gridPosition });
+      const playerSecrets =
+        secrets?.filter((secret) => secret.player_id === currentPlayer.id) ||
+        [];
+
+      const position = getPositionForPlayer(visibleIndex, totalPlayers);
+      result.push({
+        player: currentPlayer,
+        position,
+        turn,
+        secrets: playerSecrets,
+      });
+      visibleIndex++;
     }
 
     return result;
   };
 
-  const visiblePlayers = getVisiblePlayersWithGridPositions();
+  const visiblePlayersWithPositions = getVisiblePlayersWithPositions();
 
   return (
-    <div
-      data-testid="table"
-      className="absolute top-0 left-0 w-full h-2/3 grid grid-cols-3 grid-rows-3 gap-4 p-8"
-    >
-      {visiblePlayers.map(({ player: playerData, turn, gridPosition }) => (
-        <div
-          key={playerData.id}
-          className={`${gridPosition} flex items-center justify-center`}
-        >
-          <Player player={playerData} hasCurrentTurn={turn} />
-        </div>
-      ))}
-
-      {/* Center position for draw/discard pile - always in the middle */}
-      <div className="col-start-2 row-start-2 flex items-center justify-center">
-        {/* Draw/Discard pile will go here */}
-      </div>
+    <div data-testid="table">
+      {visiblePlayersWithPositions.map(
+        ({ player, position, turn, secrets }) => (
+          <Player
+            key={player.id}
+            player={player}
+            position={position}
+            hasCurrentTurn={turn}
+            secrets={secrets}
+          />
+        ),
+      )}
     </div>
   );
 }

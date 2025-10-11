@@ -87,7 +87,13 @@ describe("Secrets", () => {
 
       const secretElements = screen.queryAllByRole("img");
 
-      expect(secretElements.length).toBe(0);
+      secretElements.forEach((element) => {
+        expect(element).toHaveAttribute(
+          "src",
+          expect.stringContaining("secret_back.png"),
+        );
+      });
+      expect(secretElements).toHaveLength(3);
     });
   });
 });

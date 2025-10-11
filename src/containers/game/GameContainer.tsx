@@ -45,6 +45,12 @@ export default function GameContainer() {
 
   // -- Valores memoizados --
 
+  const playerSecrets = useMemo(() => {
+    if (!player) return [];
+
+    return secrets.filter((secret) => secret.player_id === player.id);
+  }, [secrets, player]);
+
   const lastDiscardedCard = useMemo(() => {
     // TODO: ordenar por momento de descarte.
     const lastDiscardedCard = cards.find((card) => card.is_discarded);
@@ -274,7 +280,7 @@ export default function GameContainer() {
       </div>
 
       <div className="flex flex-row items-center justify-between">
-        <Secrets secrets={secrets} />
+        <Secrets secrets={playerSecrets} />
 
         <Hand
           cards={handCards}
