@@ -7,7 +7,7 @@ type SecretsProps = {
 
 export default function Secrets({ secrets }: SecretsProps) {
   return (
-    <div data-testid="secrets" className="flex space-x-4">
+    <div data-testid="secrets" className="flex space-x-4 justify-center">
       {secrets.map((secret) => (
         <Secret key={secret.id} secret={secret} />
       ))}

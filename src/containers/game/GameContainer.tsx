@@ -1,21 +1,25 @@
 import { useEffect, useState } from "react";
 
-import type { UUID } from "@/types/common";
-import type { GameCard } from "@/types/card";
-
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
-import Table from "./components/Table";
-import Hand from "./components/Hand";
-import Secrets from "./components/Secrets";
-import DrawPile from "./components/DrawPile";
-import DiscardPile from "./components/DiscardPile";
 import DiscardModal from "./components/DiscardModal";
+import Table from "./components/Table";
+import DiscardPile from "./components/DiscardPile";
+import DrawPile from "./components/DrawPile";
+import Sets from "./components/Sets";
+import Secrets from "./components/Secrets";
+import Hand from "./components/Hand";
+
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
+import type { Player } from "@/types/player";
 
 export default function GameContainer() {
   const { player } = usePlayer();
-  const { secrets, cards } = useGame();
+  const { secrets, cards, sets } = useGame();
+
+  const playerSets = sets.filter((set) => set.player_id === player?.id);
 
   const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
     {},
@@ -77,7 +81,10 @@ export default function GameContainer() {
 
   const topCardDiscardPile = discartedCards.length ? discartedCards[0] : null;
   return (
-    <div data-testid="game-container" className="h-screen p-4 flex flex-col">
+    <div
+      data-testid="game-container"
+      className="w-full h-full grid grid-cols-5 grid-rows-3 px-10"
+    >
       <DiscardModal
         isOpen={discardModal.isOpen}
         discartedCards={discartedCards}
@@ -88,31 +95,27 @@ export default function GameContainer() {
         onEndEvent={handleEventDicard}
       />
 
-      <div className="position absolute top-170 left-10">
-        <Table />
+      <Table player={player as Player} />
 
+      <div className="col-start-3 row-start-2 flex justify-center items-center gap-5">
+        <DiscardPile
+          topCard={topCardDiscardPile}
+          onClick={handleClickDiscardPile}
+        />
+        <DrawPile cardCount={cards.filter((card) => !card.player_id).length} />
+      </div>
+
+      <div className="col-start-1 row-start-3 flex flex-col justify-center items-center">
+        <Sets sets={playerSets} />
         <Secrets secrets={playerSecrets} />
+      </div>
 
-        <div className="position absolute left-140 bottom-0">
-          <Hand
-            cards={cards.filter((card) => card.player_id === player?.id)}
-            onSelect={handleSelectCard}
-            isSelected={isCardSelected}
-          />
-        </div>
-
-        <div className="absolute bottom-75 left-185 cursor-pointer">
-          <DiscardPile
-            topCard={topCardDiscardPile}
-            onClick={handleClickDiscardPile}
-          />
-        </div>
-
-        <div className="absolute bottom-75 left-235">
-          <DrawPile
-            cardCount={cards.filter((card) => !card.player_id).length}
-          />
-        </div>
+      <div className="col-start-2 row-start-3 col-span-3 flex justify-center items-center">
+        <Hand
+          cards={cards.filter((card) => card.player_id === player?.id)}
+          onSelect={handleSelectCard}
+          isSelected={isCardSelected}
+        />
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import type { Match } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
+import type { MatchSet } from "@/types/set";
 
 import { useHttpService } from "./HttpServiceContext";
 import { isUUID } from "@/utils";
@@ -22,6 +23,7 @@ export interface GameContextType {
   cards: GameCard[];
   secrets: GameSecret[];
   players: GamePlayer[];
+  sets: MatchSet[];
 
   isLoading: boolean;
   hasError: boolean;
@@ -33,6 +35,7 @@ const GameContext = createContext<GameContextType>({
   cards: [],
   secrets: [],
   players: [],
+  sets: [],
 
   isLoading: false,
   hasError: false,
@@ -59,6 +62,7 @@ export default function GameContextProvider({
   const [cards, setCards] = useState<GameCard[]>([]);
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
+  const [sets] = useState<MatchSet[]>([]);
 
   const fetchMatchData = useCallback(async () => {
     // Si no tenemos el id de la partida o el servicio HTTP, no hacemos nada.
@@ -108,12 +112,13 @@ export default function GameContextProvider({
       cards,
       secrets,
       players,
+      sets,
 
       isLoading,
       hasError,
       error,
     }),
-    [match, cards, secrets, players, isLoading, hasError, error],
+    [match, cards, secrets, players, sets, isLoading, hasError, error],
   );
 
   return (

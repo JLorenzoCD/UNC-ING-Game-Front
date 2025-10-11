@@ -356,6 +356,7 @@ describe("GameContext", () => {
         cards: [],
         secrets: [],
         players: [],
+        sets: [],
         isLoading: true,
         hasError: false,
         error: null,

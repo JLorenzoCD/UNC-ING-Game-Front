@@ -154,6 +154,7 @@ describe("GameContainer", () => {
       cards: mockCards,
       match: null,
       players: [],
+      sets: [],
       isLoading: false,
       hasError: false,
       error: null,
