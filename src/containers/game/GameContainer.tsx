@@ -12,10 +12,13 @@ import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import DiscardModal from "./components/DiscardModal";
+import Sets from "./components/Sets";
 
 export default function GameContainer() {
   const { player } = usePlayer();
-  const { secrets, cards } = useGame();
+  const { secrets, cards, sets } = useGame();
+
+  const playerSets = sets.filter((set) => set.player_id === player?.id);
 
   const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
     {},
@@ -88,9 +91,10 @@ export default function GameContainer() {
         onEndEvent={handleEventDicard}
       />
 
-      <div className="position absolute top-170 left-10">
+      <div className="position absolute bottom-0 left-10">
         <Table />
 
+        <Sets sets={playerSets} />
         <Secrets secrets={playerSecrets} />
 
         <div className="position absolute left-140 bottom-0">
