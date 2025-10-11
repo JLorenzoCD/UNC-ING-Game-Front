@@ -3,7 +3,8 @@ import type { UUID } from "./common";
 export type SetType =
   | "Parker_Pyner"
   | "Lady_Eileen"
-  | "One_Beresford"
+  | "Tommy_Beresford"
+  | "Tuppence_Beresford"
   | "Two_Beresford"
   | "Hercule_Poirot"
   | "Miss_Marple"
