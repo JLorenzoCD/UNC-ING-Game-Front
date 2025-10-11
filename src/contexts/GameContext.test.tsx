@@ -71,6 +71,7 @@ describe("GameContext", () => {
       type: "DETECTIVE",
       description: "Description of Hercule Poirot",
       is_discarded: false,
+      discarded_at: null,
     },
     {
       id: crypto.randomUUID(),
@@ -81,6 +82,7 @@ describe("GameContext", () => {
       type: "DETECTIVE",
       description: "Description of Miss Marple",
       is_discarded: false,
+      discarded_at: null,
     },
   ];
 

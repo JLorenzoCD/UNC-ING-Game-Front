@@ -13,6 +13,7 @@ import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
+import DiscardModal from "./components/DiscardModal";
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -26,6 +27,17 @@ export default function GameContainer() {
   const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
     {},
   );
+  const [discartedCards] = useState<GameCard[]>([]);
+  const [discardModal, setDiscardModal] = useState({
+    isOpen: false,
+    isEventDiscard: false,
+  });
+
+  useEffect(() => {
+    // Para reutilizar el 'selectedCards', se vacía el mismo si se abre el modal
+    // para ver las ultimas 5 cartas descartadas y se vacía al cerrar el modal.
+    setSelectedCards({});
+  }, [discardModal.isOpen]);
 
   const [discardedCards, setDiscardedCards] = useState<Record<UUID, GameCard>>(
     {},
@@ -69,6 +81,15 @@ export default function GameContainer() {
     // ya están marcadas para descartar
     if (isCardDiscarded(card)) return;
 
+    if (discardModal.isOpen && !discardModal.isEventDiscard) {
+      // Si no hay evento no se puede seleccionar cartas en el modal que
+      // muestra las ultimas 5 cartas descartadas.
+      return;
+    }
+
+    // También se puede añadir lógica para ver cuantas cartas se pueden
+    // seleccionar en el modal de cartas descartadas.
+
     if (!selectedCards[card.id]) {
       setSelectedCards({ ...selectedCards, [card.id]: card });
     } else {
@@ -87,6 +108,38 @@ export default function GameContainer() {
     setDiscardedCards(selectedCards);
     setSelectedCards({});
   };
+
+  /**
+   * Abre el modal para ver las últimas cartas descartadas.
+   * Si no hay cartas descartadas, no hace nada.
+   */
+  const handleClickDiscardPile = () => {
+    if (discartedCards.length === 0) return;
+
+    setDiscardModal((prev) => ({ ...prev, isOpen: true }));
+  };
+
+  /**
+   * Cierra el modal de cartas descartadas.
+   * Si el modal se abrió por un evento, no se puede cerrar
+   * hasta que se termine el evento.
+   */
+  const onCloseDiscardModal = () => {
+    if (discardModal.isOpen && discardModal.isEventDiscard) return;
+
+    setDiscardModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  /**
+   * Maneja el descarte de cartas cuando se está en un evento.
+   * Por ahora, solo cierra el modal.
+   */
+  const handleEventDiscard = () => {
+    //* Se realiza en otro ticket
+    setDiscardModal({ isOpen: false, isEventDiscard: false });
+  };
+
+  const topCardDiscardPile = discartedCards.length ? discartedCards[0] : null;
 
   /**
    * Descarta las cartas que localmente se marcaron como descartadas,
@@ -198,6 +251,16 @@ export default function GameContainer() {
       data-testid="game-container"
       className="min-h-screen h-full p-4 relative flex flex-col justify-evenly bg-[url('/src/assets/background.png')] bg-cover bg-center"
     >
+      <DiscardModal
+        isOpen={discardModal.isOpen}
+        discartedCards={discartedCards}
+        onClose={onCloseDiscardModal}
+        onSelect={handleSelectCard}
+        isSelected={isCardSelected}
+        isEventDiscard={discardModal.isEventDiscard}
+        onEndEvent={handleEventDiscard}
+      />
+
       {/* <div className="position absolute top-170 left-10"> */}
       <Table />
 
@@ -205,7 +268,7 @@ export default function GameContainer() {
       {/* <div className="absolute bottom-75 left-235"> */}
 
       <div className="flex flex-row gap-x-4 items-center justify-center">
-        <DiscardPile topCard={lastDiscardedCard} />
+        <DiscardPile onClick={handleClickDiscardPile} topCard={lastDiscardedCard} />
 
         <DrawPile cardCount={drawableCards.length} />
       </div>
@@ -224,6 +287,18 @@ export default function GameContainer() {
           onDiscard={handleDiscardSelectedCards}
           onFinish={handleFinishTurn}
         />
+        <div className="absolute bottom-75 left-185 cursor-pointer">
+          <DiscardPile
+            topCard={topCardDiscardPile}
+            onClick={handleClickDiscardPile}
+          />
+        </div>
+
+        <div className="absolute bottom-75 left-235">
+          <DrawPile
+            cardCount={cards.filter((card) => !card.player_id).length}
+          />
+        </div>
       </div>
     </div>
   );

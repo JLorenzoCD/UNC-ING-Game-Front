@@ -55,6 +55,7 @@ export function createWsService(playerId: string | null = null) {
       websocket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("[DEBUG] WebSocket message received:", data);
           emit(data.event, data.payload);
         } catch (error) {
           console.error("Failed to parse WebSocket message:", error);
