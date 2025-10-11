@@ -7,11 +7,14 @@ interface DrawPileProps {
 
 export default function DrawPile({ cardCount }: DrawPileProps) {
   return (
-    <div data-testid="draw-pile" className="w-40 h-60">
+    <div data-testid="draw-pile" className="w-30 h-[180px]">
       {cardCount == 0 ? (
-        <img src={cardMurdererEscapes} className="w-40 h-60 object-cover" />
+        <img
+          src={cardMurdererEscapes}
+          className="w-30 h-[180px] object-cover"
+        />
       ) : (
-        <img src={cardBackImage} className="w-40 h-60 object-cover" />
+        <img src={cardBackImage} className="w-30 h-[180px] object-cover" />
       )}
       <div className="text-white">REMAINING: {cardCount}</div>
     </div>
