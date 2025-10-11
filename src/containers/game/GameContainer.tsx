@@ -54,6 +54,10 @@ export default function GameContainer() {
     }
   };
 
+  const playerSecrets = secrets.filter(
+    (secret) => secret.player_id === player?.id,
+  );
+
   const handleClickDiscardPile = () => {
     if (discartedCards.length === 0) return;
 
@@ -87,7 +91,7 @@ export default function GameContainer() {
       <div className="position absolute top-170 left-10">
         <Table />
 
-        <Secrets secrets={secrets} />
+        <Secrets secrets={playerSecrets} />
 
         <div className="position absolute left-140 bottom-0">
           <Hand
