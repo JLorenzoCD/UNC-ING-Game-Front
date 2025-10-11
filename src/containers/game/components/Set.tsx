@@ -1,4 +1,4 @@
-import { RiFlashlightFill, RiVipCrown2Fill } from "@remixicon/react";
+import { RiVipCrown2Fill } from "@remixicon/react";
 
 import cardPoirot from "@/assets/07-detective_poirot.png";
 import cardMarple from "@/assets/08-detective_marple.png";
@@ -18,7 +18,7 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
   Parker_Pyner: cardPyne,
   Tommy_Beresford: cardTommy,
   Tuppence_Beresford: cardTuppence,
-  Two_Beresford: cardTuppence,
+  Two_Beresford: cardTommy,
 };
 
 interface Props {
@@ -28,36 +28,45 @@ interface Props {
 }
 
 export default function Set({ type, quin_play, isSessionPlayer }: Props) {
-  const imagePath = SET_IMAGE_PATHS[type];
   const cardSize = !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30";
+
   const isTwoBeresford = type === "Two_Beresford";
+  const containerSize = isTwoBeresford ? "mr-4" : "";
+  const imgTitle = isTwoBeresford ? "Tommy_Beresford" : type;
 
   return (
-    <div className="relative">
+    <div className={`relative ${containerSize}`}>
       {quin_play && (
         <RiVipCrown2Fill
           color="yellow"
           size={30}
-          className="absolute -top-3 -left-3 -rotate-[20deg]"
-        />
-      )}
-      {isTwoBeresford && (
-        <RiFlashlightFill
-          color="blue"
-          size={40}
-          className="absolute -top-4 -right-4 rotate-[20deg]"
+          className="absolute -top-3 -left-3 -rotate-[20deg] z-2"
         />
       )}
       <div className={`rounded-lg overflow-hidden ${cardSize}`}>
         <img
-          title={type}
+          title={imgTitle}
           draggable="false"
           data-testid="set"
-          src={imagePath}
-          alt={`set-type-${type}`}
-          className={`object-cover select-none ${cardSize}`}
+          src={SET_IMAGE_PATHS[type]}
+          alt={`set-type-${imgTitle}`}
+          className={`object-cover select-none ${cardSize} absolute hover:z-1`}
         />
       </div>
+      {isTwoBeresford && (
+        <div
+          className={`rounded-lg overflow-hidden ${cardSize} absolute top-0 -right-5 rotate-[5deg]`}
+        >
+          <img
+            title="Tuppence_Beresford"
+            draggable="false"
+            data-testid="set"
+            src={cardTuppence}
+            alt="set-type-Tuppence_Beresford"
+            className={`object-cover select-none ${cardSize}`}
+          />
+        </div>
+      )}
     </div>
   );
 }

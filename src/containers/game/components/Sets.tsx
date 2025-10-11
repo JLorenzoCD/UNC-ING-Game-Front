@@ -53,7 +53,7 @@ const playerSets: MatchSet[] = [
 export default function Sets() {
   const isSessionPlayer = true;
 
-  const sizeSetsClassName = isSessionPlayer ? "max-w-96" : "max-w-72";
+  const sizeSetsClassName = isSessionPlayer ? "max-w-100" : "max-w-80";
 
   return (
     <article
