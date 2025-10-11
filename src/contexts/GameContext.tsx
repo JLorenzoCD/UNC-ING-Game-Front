@@ -118,6 +118,7 @@ export default function GameContextProvider({
               ...updatedCards[index],
               player_id: newCard.player_id,
               is_discarded: newCard.is_discarded,
+              discarded_at: newCard.discarded_at,
             };
           }
         });

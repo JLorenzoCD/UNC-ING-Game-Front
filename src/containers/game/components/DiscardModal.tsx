@@ -31,7 +31,7 @@ function getLastFiveDiscarded(discartedCards: GameCard[]): GameCard[] {
 interface Props {
   isOpen: boolean;
   isEventDiscard: boolean;
-  discartedCards: GameCard[];
+  discardedCards: GameCard[];
 
   onClose: () => void; // Callback que se ejecuta cerrar el modal
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
@@ -42,16 +42,16 @@ interface Props {
 export default function DiscardModal({
   isOpen,
   onClose,
-  discartedCards,
+  discardedCards,
   onSelect,
   isSelected,
   isEventDiscard,
   onEndEvent,
 }: Props) {
-  if (discartedCards.length === 0) return null;
+  if (discardedCards.length === 0) return null;
 
   const selectedCardClassName = "ring-4 ring-blue-200";
-  const lastFiveCardDiscarted = getLastFiveDiscarded(discartedCards);
+  const lastFiveCardDiscarted = getLastFiveDiscarded(discardedCards);
 
   return (
     <Modal

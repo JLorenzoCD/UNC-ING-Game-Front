@@ -148,7 +148,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={[]}
+        discardedCards={[]}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -164,7 +164,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={false}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards}
+        discardedCards={mockDiscardCards}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -180,7 +180,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards}
+        discardedCards={mockDiscardCards}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -210,7 +210,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards.slice(0, 3)}
+        discardedCards={mockDiscardCards.slice(0, 3)}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -237,7 +237,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards.slice(0, 1)} // Solo HERCULE POIROT
+        discardedCards={mockDiscardCards.slice(0, 1)} // Solo HERCULE POIROT
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -260,7 +260,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards.slice(0, 1)}
+        discardedCards={mockDiscardCards.slice(0, 1)}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={false}
@@ -283,7 +283,7 @@ describe("DiscardModal", () => {
       <DiscardModal
         isOpen={true}
         onClose={mockOnClose}
-        discartedCards={mockDiscardCards.slice(0, 1)}
+        discardedCards={mockDiscardCards.slice(0, 1)}
         onSelect={mockOnSelect}
         isSelected={mockIsSelected}
         isEventDiscard={true}

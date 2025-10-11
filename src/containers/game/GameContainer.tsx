@@ -20,6 +20,9 @@ export default function GameContainer() {
   const { httpService } = useHttpService();
   const { match, secrets, cards } = useGame();
 
+  // Determina si es la primera vez que se carga el componente.
+  // Se usa para cargar la mano del jugador solo una vez.
+  // Luego, las actualizaciones de cartas se harán por WebSocket.
   const initialLoadRef = useRef<boolean>(true);
 
   const [handCards, setHandCards] = useState<Array<GameCard | null>>([]);
@@ -27,17 +30,11 @@ export default function GameContainer() {
   const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
     {},
   );
-  const [discartedCards] = useState<GameCard[]>([]);
+  
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
   });
-
-  useEffect(() => {
-    // Para reutilizar el 'selectedCards', se vacía el mismo si se abre el modal
-    // para ver las ultimas 5 cartas descartadas y se vacía al cerrar el modal.
-    setSelectedCards({});
-  }, [discardModal.isOpen]);
 
   const [discardedCards, setDiscardedCards] = useState<Record<UUID, GameCard>>(
     {},
@@ -51,11 +48,17 @@ export default function GameContainer() {
     return secrets.filter((secret) => secret.player_id === player.id);
   }, [secrets, player]);
 
-  const lastDiscardedCard = useMemo(() => {
-    // TODO: ordenar por momento de descarte.
-    const lastDiscardedCard = cards.find((card) => card.is_discarded);
-
-    return lastDiscardedCard ?? null;
+  const cardsInDiscardPile = useMemo(() => {
+    return cards
+      .filter((card) => card.is_discarded)
+      .sort((a, b) => {
+        if (a.discarded_at && b.discarded_at) {
+          return b.discarded_at < a.discarded_at
+            ? -1 : 1;
+        } else if (a.discarded_at) {
+          return -1;
+        } else return 1;
+      });
   }, [cards]);
 
   const drawableCards = useMemo(() => {
@@ -106,46 +109,29 @@ export default function GameContainer() {
     }
   };
 
-  /**
-   * Marcamos las cartas seleccionadas como "descartadas" localmente,
-   * para posteriormente realizar la operación real.
-   */
   const handleDiscardSelectedCards = () => {
     setDiscardedCards(selectedCards);
     setSelectedCards({});
   };
 
-  /**
-   * Abre el modal para ver las últimas cartas descartadas.
-   * Si no hay cartas descartadas, no hace nada.
-   */
   const handleClickDiscardPile = () => {
-    if (discartedCards.length === 0) return;
+    if (cardsInDiscardPile.length === 0) return;
 
     setDiscardModal((prev) => ({ ...prev, isOpen: true }));
   };
 
-  /**
-   * Cierra el modal de cartas descartadas.
-   * Si el modal se abrió por un evento, no se puede cerrar
-   * hasta que se termine el evento.
-   */
   const onCloseDiscardModal = () => {
     if (discardModal.isOpen && discardModal.isEventDiscard) return;
 
     setDiscardModal((prev) => ({ ...prev, isOpen: false }));
   };
 
-  /**
-   * Maneja el descarte de cartas cuando se está en un evento.
-   * Por ahora, solo cierra el modal.
-   */
   const handleEventDiscard = () => {
-    //* Se realiza en otro ticket
+    // Se realiza en otro ticket
     setDiscardModal({ isOpen: false, isEventDiscard: false });
   };
 
-  const topCardDiscardPile = discartedCards.length ? discartedCards[0] : null;
+  // -- Llamadas a la API --
 
   /**
    * Descarta las cartas que localmente se marcaron como descartadas,
@@ -252,60 +238,59 @@ export default function GameContainer() {
     }
   }, [cards, player]);
 
+  // Para reutilizar el 'selectedCards', se vacía el mismo si se abre el modal
+  // para ver las ultimas 5 cartas descartadas y se vacía al cerrar el modal.
+  useEffect(() => {
+    setSelectedCards({});
+  }, [discardModal.isOpen]);
+
   return (
-    <div
-      data-testid="game-container"
-      className="min-h-screen h-full p-4 relative flex flex-col justify-evenly bg-[url('/src/assets/background.png')] bg-cover bg-center"
-    >
+    <>
+      <div
+        data-testid="game-container"
+        className="p-4 h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
+      >
+        {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
+        <div className="h-full w-full grid grid-cols-3 grid-rows-3">
+          {/* Las primeras 6 casillas ubican a los jugadores, sus elementos y las pilas del juego. */}
+          <Table
+            drawPile={<DrawPile cardCount={drawableCards.length} />}
+            discardPile={
+              <DiscardPile
+                topCard={cardsInDiscardPile[0]}
+                onClick={handleClickDiscardPile}
+              />
+            }
+          />
+
+          {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
+          <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
+            <Secrets secrets={playerSecrets} />
+
+            <Hand
+              cards={handCards}
+              onSelect={handleSelectCard}
+              isSelected={isCardSelected}
+              isDiscarded={isCardDiscarded}
+            />
+
+            <HandActions
+              onDiscard={handleDiscardSelectedCards}
+              onFinish={handleFinishTurn}
+            />
+          </div>
+        </div>
+      </div>
+
       <DiscardModal
         isOpen={discardModal.isOpen}
-        discartedCards={discartedCards}
         onClose={onCloseDiscardModal}
         onSelect={handleSelectCard}
         isSelected={isCardSelected}
-        isEventDiscard={discardModal.isEventDiscard}
         onEndEvent={handleEventDiscard}
+        isEventDiscard={discardModal.isEventDiscard}
+        discardedCards={cardsInDiscardPile}
       />
-
-      {/* <div className="position absolute top-170 left-10"> */}
-      <Table />
-
-      {/* <div className="absolute bottom-75 left-185"> */}
-      {/* <div className="absolute bottom-75 left-235"> */}
-
-      <div className="flex flex-row gap-x-4 items-center justify-center">
-        <DiscardPile onClick={handleClickDiscardPile} topCard={lastDiscardedCard} />
-
-        <DrawPile cardCount={drawableCards.length} />
-      </div>
-
-      <div className="flex flex-row items-center justify-between">
-        <Secrets secrets={playerSecrets} />
-
-        <Hand
-          cards={handCards}
-          onSelect={handleSelectCard}
-          isSelected={isCardSelected}
-          isDiscarded={isCardDiscarded}
-        />
-
-        <HandActions
-          onDiscard={handleDiscardSelectedCards}
-          onFinish={handleFinishTurn}
-        />
-        <div className="absolute bottom-75 left-185 cursor-pointer">
-          <DiscardPile
-            topCard={topCardDiscardPile}
-            onClick={handleClickDiscardPile}
-          />
-        </div>
-
-        <div className="absolute bottom-75 left-235">
-          <DrawPile
-            cardCount={cards.filter((card) => !card.player_id).length}
-          />
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
