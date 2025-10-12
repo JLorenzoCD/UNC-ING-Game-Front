@@ -16,30 +16,27 @@ import DiscardModal from "./components/DiscardModal";
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 
+type GameCardMap = Record<UUID, GameCard>;
+type HandCardList = Array<GameCard | null>;
+
 export default function GameContainer() {
   const { player } = usePlayer();
   const { httpService } = useHttpService();
   const { match, secrets, cards, sets } = useGame();
 
-  // Determina si es la primera vez que se carga el componente.
-  // Se usa para cargar la mano del jugador solo una vez.
-  // Luego, las actualizaciones de cartas se harán por WebSocket.
-  const initialLoadRef = useRef<boolean>(true);
-
-  const [handCards, setHandCards] = useState<Array<GameCard | null>>([]);
-
-  const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
-    {},
-  );
+  const [handCards, setHandCards] = useState<HandCardList>([]);
+  const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
+  const [discardedCards, setDiscardedCards] = useState<GameCardMap>({});
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
   });
 
-  const [discardedCards, setDiscardedCards] = useState<Record<UUID, GameCard>>(
-    {},
-  );
+  // Determina si es la primera vez que se carga el componente.
+  // Se usa para cargar la mano del jugador solo una vez.
+  // Luego, las actualizaciones de cartas se harán por WebSocket.
+  const initialLoadRef = useRef<boolean>(true);
 
   // -- Valores memoizados --
 
@@ -74,6 +71,10 @@ export default function GameContainer() {
       return card.player_id === null && !card.is_discarded;
     });
   }, [cards]);
+
+  const isSelectingCards = Object.keys(selectedCards).length > 0;
+
+  const isDiscardingCards = Object.keys(discardedCards).length > 0;
 
   // -- Utilidades --
 
@@ -116,7 +117,13 @@ export default function GameContainer() {
   };
 
   const handleDiscardSelectedCards = () => {
-    setDiscardedCards(selectedCards);
+    if (isDiscardingCards) {
+      // Si ya hay cartas marcadas para descartar, se desmarca todo.
+      setDiscardedCards({});
+    } else {
+      setDiscardedCards(selectedCards);
+    }
+
     setSelectedCards({});
   };
 
@@ -280,12 +287,14 @@ export default function GameContainer() {
               cards={handCards}
               onSelect={handleSelectCard}
               isSelected={isCardSelected}
+              isSelecting={isSelectingCards}
               isDiscarded={isCardDiscarded}
             />
 
             <HandActions
-              onDiscard={handleDiscardSelectedCards}
               onFinish={handleFinishTurn}
+              onDiscard={handleDiscardSelectedCards}
+              isDiscarding={isDiscardingCards}
             />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import type { GameCard } from "@/types/card.d.ts";
-import Card from "./Card.tsx";
+
+import Card, { CARD_SIZES } from "./Card.tsx";
 
 interface DiscardPileProps {
   topCard: GameCard | null;
@@ -8,7 +9,9 @@ interface DiscardPileProps {
 
 const DefaultCardImage = () => {
   return (
-    <div className="w-30 h-[180px] border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
+    <div
+      className={`${CARD_SIZES.small} border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white`}
+    >
       <p className="p-2 select-none">Discard pile is empty</p>
     </div>
   );
@@ -16,13 +19,13 @@ const DefaultCardImage = () => {
 
 export default function DiscardPile({ topCard, onClick }: DiscardPileProps) {
   return (
-    <div
-      data-testid="discard-pile"
-      className="w-30 h-[180px]"
-      onClick={onClick}
-    >
+    <div data-testid="discard-pile" onClick={onClick}>
       {topCard ? (
-        <Card name={topCard.name} description={topCard.description} />
+        <Card
+          size="small"
+          name={topCard.name}
+          description={topCard.description}
+        />
       ) : (
         <DefaultCardImage />
       )}

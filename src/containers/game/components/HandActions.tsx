@@ -1,18 +1,23 @@
+import Button from "@/components/Button";
+
 interface HandActionsProps {
-  onDiscard: () => void; // Callback que se ejecuta al descartar cartas
   onFinish: () => void; // Callback que se ejecuta al terminar el turno
+  onDiscard: () => void; // Callback que se ejecuta al descartar cartas
+  isDiscarding: boolean; // Indica si el jugador ha seleccionado cartas para descartar
 }
 
-export default function HandActions({ onDiscard, onFinish }: HandActionsProps) {
+export default function HandActions({
+  onFinish,
+  onDiscard,
+  isDiscarding,
+}: HandActionsProps) {
   return (
-    <div data-testid="hand-actions space-y-2">
-      <button onClick={onDiscard} className="bg-white">
-        Discard cards
-      </button>
+    <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
+      <Button onClick={onDiscard}>
+        {isDiscarding ? "Cancel discard" : "Discard cards"}
+      </Button>
 
-      <button onClick={onFinish} className="bg-white">
-        Finish turn
-      </button>
+      <Button onClick={onFinish}>Finish turn</Button>
     </div>
   );
 }

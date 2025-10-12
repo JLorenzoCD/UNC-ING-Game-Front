@@ -49,19 +49,31 @@ const CARD_IMAGE_PATHS: Record<CardName, string> = {
   "SOCIAL FAUX PAS": cardFauxPas,
 };
 
-type CardProps = Pick<CardSchema, "name" | "description">;
+type CardSize = "icon" | "small" | "default";
 
-export default function Card({ name, description }: CardProps) {
+export const CARD_SIZES: Record<CardSize, string> = {
+  icon: "w-20 h-40",
+  small: "w-32 h-48",
+  default: "w-40 h-60",
+} as const;
+
+type CardProps = Pick<CardSchema, "name" | "description"> & {
+  size?: CardSize;
+};
+
+export default function Card({
+  name,
+  description,
+  size = "default",
+}: CardProps) {
   const imagePath = CARD_IMAGE_PATHS[name];
 
   return (
-    <div className="w-40 h-60">
-      <img
-        data-testid="card"
-        src={imagePath}
-        alt={description}
-        className="w-40 h-60 object-cover"
-      />
-    </div>
+    <img
+      data-testid="card"
+      src={imagePath}
+      alt={description}
+      className={`${CARD_SIZES[size]} rounded-lg object-cover`}
+    />
   );
 }
