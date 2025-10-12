@@ -610,5 +610,39 @@ describe("httpService", () => {
       expect(result).toEqual(mockSecrets);
       expect(result).toHaveLength(3);
     });
+
+    it("putMatchCards sends correct request to update cards", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+      const takenCardIds = [crypto.randomUUID(), crypto.randomUUID()];
+      const discardedCardIds = [crypto.randomUUID(), crypto.randomUUID()];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.putMatchCards(
+        matchId,
+        playerId,
+        takenCardIds,
+        discardedCardIds,
+      );
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/cards`,
+        {
+          method: "PUT",
+          body: JSON.stringify({
+            player_id: playerId,
+            taken_card_ids: takenCardIds,
+            discarded_card_ids: discardedCardIds,
+          }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    });
   });
 });

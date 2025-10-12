@@ -95,6 +95,7 @@ const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios 
 describe("Hand", () => {
   const mockOnSelect = vi.fn();
   const mockIsSelected = vi.fn().mockReturnValue(false);
+  const mockIsDiscarded = vi.fn().mockReturnValue(false);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -107,6 +108,8 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
@@ -123,6 +126,8 @@ describe("Hand", () => {
           cards={partialHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
@@ -139,6 +144,8 @@ describe("Hand", () => {
           cards={emptyHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
@@ -157,6 +164,8 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
@@ -172,6 +181,8 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
@@ -189,11 +200,13 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
       const cardElements = screen.getAllByTestId("hand-card");
-      expect(cardElements[0].className).toContain("ring-4 ring-blue-200");
+      expect(cardElements[0].className).toContain("ring-4 ring-red-500");
     });
 
     it("does not apply selected styling when isSelected returns false", () => {
@@ -204,12 +217,14 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
         />,
       );
 
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements.forEach((card) => {
-        expect(card.className).not.toContain("ring-4 ring-blue-200");
+        expect(card.className).not.toContain("ring-4 ring-red-500");
       });
     });
   });

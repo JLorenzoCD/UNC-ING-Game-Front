@@ -226,10 +226,10 @@ describe("DiscardModal", () => {
       .closest('[data-testid="discard-card"]');
 
     // La carta 1 (HERCULE POIROT) debe tener la clase de selección
-    expect(selectedCard).toHaveClass("ring-4 ring-blue-200");
+    expect(selectedCard).toHaveClass("ring-4 ring-red-500");
 
     // La carta 2 (CARDS OFF THE TABLE) no debe tener la clase de selección
-    expect(unselectedCard).not.toHaveClass("ring-4 ring-blue-200");
+    expect(unselectedCard).not.toHaveClass("ring-4 ring-red-500");
   });
 
   it("should call onSelect with the correct card when a card is clicked", async () => {

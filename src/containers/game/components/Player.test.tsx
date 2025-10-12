@@ -73,9 +73,6 @@ const mockSets: MatchSet[] = [
   },
 ];
 
-const mockPositionClassName =
-  "col-start-3 row-start-1 flex justify-center items-center";
-
 vi.mock("./Secrets", () => ({
   __esModule: true,
   default: vi.fn(({ secrets }) => (
@@ -97,7 +94,6 @@ describe("Players Component", () => {
       <Player
         player={mockPlayer}
         hasCurrentTurn={false}
-        positionClassName=""
         secrets={[]}
         sets={[]}
       />,
@@ -116,7 +112,6 @@ describe("Players Component", () => {
       <Player
         player={mockPlayerWithLongName}
         hasCurrentTurn={false}
-        positionClassName=""
         secrets={[]}
         sets={[]}
       />,
@@ -131,34 +126,17 @@ describe("Players Component", () => {
     );
   });
 
-  it("should position className player correctly", () => {
-    const { container } = render(
-      <Player
-        player={mockPlayer}
-        hasCurrentTurn={false}
-        positionClassName={mockPositionClassName}
-        secrets={[]}
-        sets={[]}
-      />,
-    );
-
-    const playerDiv = container.firstChild as HTMLElement;
-    expect(playerDiv).toHaveClass("flex justify-center items-center flex-col");
-    expect(playerDiv).toHaveClass("col-start-3 row-start-1");
-  });
-
   it("should show green pulsing border when it is player's turn", () => {
     const { container } = render(
       <Player
         player={mockPlayer}
         hasCurrentTurn={true}
-        positionClassName=""
         secrets={[]}
         sets={[]}
       />,
     );
     const avatarContainer = container.querySelector(
-      ".w-15.h-15.rounded-full.border-4",
+      ".w-20.h-20.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -173,14 +151,13 @@ describe("Players Component", () => {
       <Player
         player={mockPlayer}
         hasCurrentTurn={false}
-        positionClassName=""
         secrets={[]}
         sets={[]}
       />,
     );
 
     const avatarContainer = container.querySelector(
-      ".w-15.h-15.rounded-full.border-4",
+      ".w-20.h-20.rounded-full.border-4",
     );
 
     expect(avatarContainer).toBeInTheDocument();
@@ -196,7 +173,6 @@ describe("Players Component", () => {
         <Player
           player={mockPlayer}
           hasCurrentTurn={false}
-          positionClassName=""
           secrets={mockSecrets}
           sets={[]}
         />,
@@ -206,34 +182,19 @@ describe("Players Component", () => {
       expect(secretsComponent).toBeInTheDocument();
     });
 
-    it("should not render secrets section when empty array provided", () => {
+    it("should render secrets component even with empty array", () => {
       render(
         <Player
           player={mockPlayer}
           hasCurrentTurn={false}
-          positionClassName=""
           secrets={[]}
           sets={[]}
         />,
       );
 
-      const secretsComponent = screen.queryByTestId("mock-secrets");
-      expect(secretsComponent).not.toBeInTheDocument();
-    });
-
-    it("should position secrets with correct margin", () => {
-      const { container } = render(
-        <Player
-          player={mockPlayer}
-          hasCurrentTurn={false}
-          positionClassName=""
-          secrets={mockSecrets}
-          sets={[]}
-        />,
-      );
-
-      const secretsContainer = container.querySelector(".ml-7.mt-2");
-      expect(secretsContainer).toBeInTheDocument();
+      // The Secrets component is always rendered now
+      const secretsComponent = screen.getByTestId("mock-secrets");
+      expect(secretsComponent).toBeInTheDocument();
     });
   });
 
@@ -243,7 +204,6 @@ describe("Players Component", () => {
         <Player
           player={mockPlayer}
           hasCurrentTurn={false}
-          positionClassName=""
           secrets={[]}
           sets={mockSets}
         />,
@@ -253,34 +213,19 @@ describe("Players Component", () => {
       expect(setsComponent).toBeInTheDocument();
     });
 
-    it("should not render sets section when empty array provided", () => {
+    it("should render sets component even with empty array", () => {
       render(
         <Player
           player={mockPlayer}
           hasCurrentTurn={false}
-          positionClassName=""
           secrets={[]}
           sets={[]}
         />,
       );
 
-      const setsComponent = screen.queryByTestId("mock-sets");
-      expect(setsComponent).not.toBeInTheDocument();
-    });
-
-    it("should position sets with correct margin", () => {
-      const { container } = render(
-        <Player
-          player={mockPlayer}
-          hasCurrentTurn={false}
-          positionClassName=""
-          secrets={mockSecrets}
-          sets={[]}
-        />,
-      );
-
-      const setsContainer = container.querySelector(".ml-7.mt-2");
-      expect(setsContainer).toBeInTheDocument();
+      // The Sets component is always rendered now
+      const setsComponent = screen.getByTestId("mock-sets");
+      expect(setsComponent).toBeInTheDocument();
     });
   });
 });

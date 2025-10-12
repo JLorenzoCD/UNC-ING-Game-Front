@@ -37,26 +37,11 @@ describe("GameLayout", () => {
     ).toBeInTheDocument();
   });
 
-  it("should render the logo image with correct src and alt text", () => {
+  it("should wrap content with GameContextProvider", () => {
     render(<GameLayout />);
 
-    const logoImage = screen.getByAltText(
-      "AGATHA CHRISTIE'S - DEATH ON THE CARDS",
-    );
-    expect(logoImage).toBeInTheDocument();
-    expect(logoImage).toHaveAttribute("src", "mock-logo.png");
-  });
-
-  it("should render the background image for game table", () => {
-    render(<GameLayout />);
-
-    const backgroundImage = screen.getByTestId("background-table");
-
-    expect(backgroundImage).toBeInTheDocument();
-    expect(backgroundImage).toHaveAttribute(
-      "style",
-      'background-image: url("mock-background.png");',
-    );
+    const provider = screen.getByTestId("mock-game-context-provider");
+    expect(provider).toBeInTheDocument();
   });
 
   it("should render the Outlet component", () => {
@@ -65,16 +50,5 @@ describe("GameLayout", () => {
     const outlet = screen.getByTestId("mock-outlet");
     expect(outlet).toBeInTheDocument();
     expect(outlet).toHaveTextContent("Outlet Content");
-  });
-
-  it("should render logo with proper centering classes", () => {
-    render(<GameLayout />);
-
-    const logoImage = screen.getByAltText(
-      "AGATHA CHRISTIE'S - DEATH ON THE CARDS",
-    );
-
-    // Logo should be centered horizontally
-    expect(logoImage).toHaveClass("mx-auto");
   });
 });

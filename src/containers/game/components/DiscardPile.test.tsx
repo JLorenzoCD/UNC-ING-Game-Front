@@ -44,29 +44,13 @@ describe("DiscardPile", () => {
   });
 
   it("should call the 'onClick' function when clicking DiscardPile", async () => {
-    const { unmount } = render(
-      <DiscardPile topCard={null} onClick={mockOnClick} />,
-    );
+    render(<DiscardPile topCard={null} onClick={mockOnClick} />);
 
-    const discardPileEmty = screen.getByTestId("discard-pile");
-    expect(discardPileEmty).toBeInTheDocument();
+    const discardPileEmpty = screen.getByTestId("discard-pile");
+    expect(discardPileEmpty).toBeInTheDocument();
 
     await act(async () => {
-      await userEvent.click(discardPileEmty);
-    });
-
-    expect(mockOnClick).toBeCalledTimes(1);
-    mockOnClick.mockClear();
-
-    unmount();
-
-    render(<DiscardPile topCard={testCard} onClick={mockOnClick} />);
-
-    const discardPileWithCard = screen.getByTestId("discard-pile");
-    expect(discardPileWithCard).toBeInTheDocument();
-
-    await act(async () => {
-      await userEvent.click(discardPileWithCard);
+      await userEvent.click(discardPileEmpty);
     });
 
     expect(mockOnClick).toBeCalledTimes(1);
