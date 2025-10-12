@@ -47,12 +47,16 @@ describe("GameLayout", () => {
     expect(logoImage).toHaveAttribute("src", "mock-logo.png");
   });
 
-  it("should render the background image with correct src and alt text", () => {
+  it("should render the background image for game table", () => {
     render(<GameLayout />);
 
-    const backgroundImage = screen.getByAltText("Background");
+    const backgroundImage = screen.getByTestId("background-table");
+
     expect(backgroundImage).toBeInTheDocument();
-    expect(backgroundImage).toHaveAttribute("src", "mock-background.png");
+    expect(backgroundImage).toHaveAttribute(
+      "style",
+      'background-image: url("mock-background.png");',
+    );
   });
 
   it("should render the Outlet component", () => {
@@ -61,22 +65,6 @@ describe("GameLayout", () => {
     const outlet = screen.getByTestId("mock-outlet");
     expect(outlet).toBeInTheDocument();
     expect(outlet).toHaveTextContent("Outlet Content");
-  });
-
-  it("should have proper layering with z-index classes", () => {
-    render(<GameLayout />);
-
-    const logoImage = screen.getByAltText(
-      "AGATHA CHRISTIE'S - DEATH ON THE CARDS",
-    );
-    const headerContainer = logoImage.closest("div");
-    const backgroundImage = screen.getByAltText("Background");
-
-    // Header should have z-30 (higher layer)
-    expect(headerContainer).toHaveClass("z-30");
-
-    // Background should have z-0 (lower layer)
-    expect(backgroundImage).toHaveClass("z-0");
   });
 
   it("should render logo with proper centering classes", () => {

@@ -1,24 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import type { UUID } from "@/types/common";
-import type { GameCard } from "@/types/card";
-
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import Hand from "./components/Hand";
 import Table from "./components/Table";
+import Sets from "./components/Sets";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
+
 export default function GameContainer() {
   const { player } = usePlayer();
   const { httpService } = useHttpService();
-  const { match, secrets, cards } = useGame();
+  const { match, secrets, cards, sets } = useGame();
 
   // Determina si es la primera vez que se carga el componente.
   // Se usa para cargar la mano del jugador solo una vez.
@@ -30,7 +31,7 @@ export default function GameContainer() {
   const [selectedCards, setSelectedCards] = useState<Record<UUID, GameCard>>(
     {},
   );
-  
+
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
@@ -48,13 +49,18 @@ export default function GameContainer() {
     return secrets.filter((secret) => secret.player_id === player.id);
   }, [secrets, player]);
 
+  const playerSets = useMemo(() => {
+    if (!player) return [];
+
+    return sets.filter((set) => set.player_id === player.id);
+  }, [sets, player]);
+
   const cardsInDiscardPile = useMemo(() => {
     return cards
       .filter((card) => card.is_discarded)
       .sort((a, b) => {
         if (a.discarded_at && b.discarded_at) {
-          return b.discarded_at < a.discarded_at
-            ? -1 : 1;
+          return b.discarded_at < a.discarded_at ? -1 : 1;
         } else if (a.discarded_at) {
           return -1;
         } else return 1;
@@ -265,7 +271,10 @@ export default function GameContainer() {
 
           {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
-            <Secrets secrets={playerSecrets} />
+            <div className="flex flex-col gap-y-3">
+              <Secrets secrets={playerSecrets} />
+              <Sets sets={playerSets} />
+            </div>
 
             <Hand
               cards={handCards}

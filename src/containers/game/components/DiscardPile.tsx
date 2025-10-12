@@ -8,7 +8,7 @@ interface DiscardPileProps {
 
 const DefaultCardImage = () => {
   return (
-    <div className="w-40 h-60 border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
+    <div className="w-30 h-[180px] border-2 border-dashed border-white rounded-md flex items-center justify-center text-center text-white">
       <p className="p-2 select-none">Discard pile is empty</p>
     </div>
   );
@@ -16,7 +16,11 @@ const DefaultCardImage = () => {
 
 export default function DiscardPile({ topCard, onClick }: DiscardPileProps) {
   return (
-    <div data-testid="discard-pile" className="w-40 h-60" onClick={onClick}>
+    <div
+      data-testid="discard-pile"
+      className="w-30 h-[180px]"
+      onClick={onClick}
+    >
       {topCard ? (
         <Card name={topCard.name} description={topCard.description} />
       ) : (

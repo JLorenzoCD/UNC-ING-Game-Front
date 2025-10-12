@@ -11,8 +11,8 @@ interface TableProps {
 }
 
 export default function Table({ drawPile, discardPile }: TableProps) {
-  const { players, match, secrets } = useGame();
   const { player } = usePlayer();
+  const { players, match, secrets, sets } = useGame();
 
   const getVisiblePlayersWithGridPositions = () => {
     const visiblePlayers = players.filter((p) => p.id !== player?.id);
@@ -78,16 +78,20 @@ export default function Table({ drawPile, discardPile }: TableProps) {
     for (let i = 0; i < sortedPlayers.length; i++) {
       const playerData = sortedPlayers[i];
       const turn = playerTurn === playerData.order;
-      const gridPosition = gridPositions[i] || "";
+      const position = gridPositions[i] || "";
 
       const playerSecrets =
         secrets?.filter((secret) => secret.player_id === playerData.id) || [];
 
+      const playerSets =
+        sets?.filter((set) => set.player_id === playerData.id) || [];
+
       result.push({
-        player: playerData,
         turn,
-        gridPosition,
-        secrets: playerSecrets,
+        position,
+        playerData,
+        playerSets,
+        playerSecrets,
       });
     }
 
@@ -98,21 +102,24 @@ export default function Table({ drawPile, discardPile }: TableProps) {
 
   return (
     <>
-      {/* Opponents in positions 1-4 and 6 */}
-      {visiblePlayers.map(({ player: playerData, turn, gridPosition, secrets: playerSecrets }) => (
-        <div
-          key={playerData.id}
-          className={`${gridPosition} flex items-center justify-center`}
-        >
-          <Player
-            player={playerData}
-            hasCurrentTurn={turn}
-            secrets={playerSecrets}
-          />
-        </div>
-      ))}
+      {/* Los demás jugadores (de 1 a 5 jugadores además del actual) */}
+      {visiblePlayers.map(
+        ({ turn, position, playerData, playerSets, playerSecrets }) => (
+          <div
+            key={playerData.id}
+            className={`${position} flex items-center justify-center`}
+          >
+            <Player
+              sets={playerSets}
+              player={playerData}
+              hasCurrentTurn={turn}
+              secrets={playerSecrets}
+            />
+          </div>
+        ),
+      )}
 
-      {/* Position 5: Game Piles (center) */}
+      {/* Las pilas están fijas en el centro de la pantalla. */}
       <div className="col-start-2 row-start-2 flex justify-center items-center gap-x-3">
         {discardPile}
         {drawPile}
