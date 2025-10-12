@@ -7,6 +7,13 @@ import type { MatchWithPlayerCount } from "@/types/match";
 
 import MatchListItem from "./MatchListItem";
 
+const { mockUsePlayer } = vi.hoisted(() => {
+  const mockUsePlayer = vi.fn();
+
+  return {
+    mockUsePlayer,
+  };
+});
 // Mock de isValidMatch
 const isValidMatch = vi.fn();
 
@@ -31,7 +38,7 @@ vi.mock("@/constants/frontend", () => ({
 // Mock de usePlayer
 const mockPlayerId = "playerId" as UUID;
 vi.mock("@/contexts/PlayerContext", () => ({
-  usePlayer: () => ({ player: { id: mockPlayerId } }),
+  usePlayer: mockUsePlayer,
 }));
 
 // Mock joinMatch prop
@@ -70,6 +77,20 @@ describe("MatchListItem", () => {
     owner_id: crypto.randomUUID() as UUID,
     current_player_order: 0,
   };
+
+  // Configuración para simular la alerta y evitar que aparezca en el test.
+  const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+  beforeEach(() => {
+    isValidMatch.mockReturnValue(true);
+    mockUsePlayer.mockReturnValue({ player: { id: mockPlayerId } });
+
+    vi.clearAllMocks();
+  });
+
+  afterAll(() => {
+    mockAlert.mockRestore();
+  });
 
   it("should render the match correctly", () => {
     // Match valido
@@ -158,18 +179,6 @@ describe("MatchListItem", () => {
   });
 
   describe("joining a match", () => {
-    // Configuración para simular la alerta y evitar que aparezca en el test.
-    const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
-
-    beforeEach(() => {
-      isValidMatch.mockReturnValue(true);
-      vi.clearAllMocks();
-    });
-
-    afterAll(() => {
-      mockAlert.mockRestore();
-    });
-
     it("should call joinMatch with correct arguments when 'Join' button is clicked", async () => {
       const mockMatchId = mockMatch.id;
 
@@ -260,6 +269,31 @@ describe("MatchListItem", () => {
       });
 
       consoleErrorSpy.mockRestore(); // Restaurar el mock de console.error
+    });
+
+    it("should alert and not join when there is no player", async () => {
+      // Mock de usePlayer devolviendo player nulo
+      mockUsePlayer.mockReturnValue({ player: null });
+
+      const mockAlert = vi.spyOn(window, "alert").mockImplementation(() => {});
+
+      isValidMatch.mockReturnValue(true);
+
+      render(<MatchListItem match={mockMatch} joinMatch={joinMatch} />);
+
+      const joinButton = screen.getByRole("button", { name: /join/i });
+
+      fireEvent.click(joinButton);
+
+      await waitFor(() => {
+        expect(mockAlert).toHaveBeenCalledWith(
+          "You must create a player before joining a match.",
+        );
+        expect(joinMatch).not.toHaveBeenCalled();
+        expect(mockNavigate).not.toHaveBeenCalled();
+      });
+
+      mockAlert.mockRestore();
     });
   });
 });
