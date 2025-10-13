@@ -1,5 +1,6 @@
 import type { GameCard } from "@/types/card";
 import Card, { CARD_SIZES } from "./Card";
+import { twMerge } from "tailwind-merge";
 
 interface HandProps {
   cards: Array<GameCard | null>; // Un valor `null` representa una posición vacía en la mano;
@@ -33,7 +34,13 @@ export default function Hand({
   const selectedCardClassName = "rounded-lg ring-4 ring-red-500 -translate-y-4";
 
   // Una carta descartada se muestra con opacidad reducida y en escala de grises
-  const discaredCardClassName = "opacity-50 grayscale";
+  const discardedCardClassName = "opacity-50 grayscale";
+
+  const shouldDecreaseOpacity = (card: GameCard) => {
+    if (isSelected(card) || isDiscarded(card)) return false;
+
+    return isSelecting;
+  };
 
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
@@ -45,18 +52,12 @@ export default function Hand({
             key={card.id}
             data-testid="hand-card"
             onClick={() => onSelect(card)}
-            className={`
-                cursor-pointer hover:scale-105 transform transition-all duration-150
-                ${isSelected(card) ? selectedCardClassName : ""}
-                ${isDiscarded(card) ? discaredCardClassName : ""}
-                ${
-                  // Si está en modo selección, y la carta no está seleccionada ni descartada,
-                  // se aplica un leve oscurecimiento para indicar que no está activa.
-                  isSelecting && !isSelected(card) && !isDiscarded(card)
-                    ? "opacity-80"
-                    : ""
-                }
-              `}
+            className={twMerge(
+              "cursor-pointer hover:scale-105 transform transition-all duration-150",
+              isSelected(card) ? selectedCardClassName : "",
+              isDiscarded(card) ? discardedCardClassName : "",
+              shouldDecreaseOpacity(card) ? "opacity-80" : "",
+            )}
           >
             <Card name={card.name} description={card.description} />
           </div>

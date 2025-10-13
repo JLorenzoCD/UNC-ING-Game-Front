@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { GameCard } from "@/types/card";
@@ -92,13 +92,20 @@ const partialHand = [
 
 const emptyHand = [null, null, null, null, null, null]; // 0 cartas, 6 espacios vacíos
 
-describe("Hand", () => {
+const { mockOnSelect, mockIsSelected, mockIsDiscarded } = vi.hoisted(() => {
   const mockOnSelect = vi.fn();
-  const mockIsSelected = vi.fn().mockReturnValue(false);
-  const mockIsDiscarded = vi.fn().mockReturnValue(false);
+  const mockIsSelected = vi.fn();
+  const mockIsDiscarded = vi.fn();
 
+  return { mockOnSelect, mockIsSelected, mockIsDiscarded };
+});
+
+describe("Hand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockIsSelected.mockReturnValue(false);
+    mockIsDiscarded.mockReturnValue(false);
   });
 
   describe("Rendering", () => {
@@ -170,26 +177,10 @@ describe("Hand", () => {
       );
 
       const cardElements = screen.getAllByTestId("hand-card");
-      cardElements[0].click();
+      fireEvent.click(cardElements[0]);
 
       expect(mockOnSelect).toHaveBeenCalledOnce();
-    });
-
-    it("calls onSelect with the correct card", () => {
-      render(
-        <Hand
-          cards={fullHand}
-          onSelect={mockOnSelect}
-          isSelected={mockIsSelected}
-          isSelecting={false}
-          isDiscarded={mockIsDiscarded}
-        />,
-      );
-
-      const cardElements = screen.getAllByTestId("hand-card");
-      cardElements[1].click();
-
-      expect(mockOnSelect).toHaveBeenCalledWith(fullHand[1]);
+      expect(mockOnSelect).toHaveBeenCalledWith(fullHand[0]);
     });
 
     it("applies selected styling when isSelected returns true", () => {
@@ -225,6 +216,55 @@ describe("Hand", () => {
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements.forEach((card) => {
         expect(card.className).not.toContain("ring-4 ring-red-500");
+      });
+    });
+
+    it("decreases opacity and sets grayscale when card is discarded", () => {
+      mockIsDiscarded.mockReturnValueOnce(true); // La primera carta estará descartada
+
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+          isSelecting={false}
+          isDiscarded={mockIsDiscarded}
+        />,
+      );
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      expect(cardElements[0].className).toContain("opacity-50");
+      expect(cardElements[0].className).toContain("grayscale");
+    });
+
+    it("decreases opacity when user is selecting other cards", () => {
+      // Por defecto, devolvemos false.
+      // Para la primer y segunda llamada devolvemos true
+      // (chequeo de `isSelected` and `shouldDecreaseOpacity`)
+      mockIsSelected
+        .mockReturnValue(false)
+        .mockReturnValueOnce(true)
+        .mockReturnValueOnce(true);
+
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+          isSelecting={true} // El usuario está en modo selección
+          isDiscarded={mockIsDiscarded}
+        />,
+      );
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      cardElements.forEach((card, index) => {
+        if (index === 0) {
+          // La primera carta está seleccionada, no debería tener opacidad reducida
+          expect(card.className).not.toContain("opacity-80");
+        } else {
+          // Las demás cartas deberían tener opacidad reducida
+          expect(card.className).toContain("opacity-80");
+        }
       });
     });
   });
