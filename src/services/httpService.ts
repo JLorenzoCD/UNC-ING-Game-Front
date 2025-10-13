@@ -117,6 +117,24 @@ export function createHttpService() {
     return request<GameSecret[]>(BACKEND_ENDPOINTS.GET_MATCH_SECRETS(matchId));
   };
 
+  const putMatchCards = async (
+    matchId: UUID,
+    playerId: UUID,
+    takenCardIds: string[],
+    discardedCardIds: string[],
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify({
+        player_id: playerId,
+        taken_card_ids: takenCardIds,
+        discarded_card_ids: discardedCardIds,
+      }),
+    };
+
+    await request(BACKEND_ENDPOINTS.UPDATE_CARDS(matchId), options);
+  };
+
   return {
     request,
     createPlayer,
@@ -128,5 +146,6 @@ export function createHttpService() {
     getMatchPlayers,
     getMatchCards,
     getMatchSecrets,
+    putMatchCards,
   };
 }

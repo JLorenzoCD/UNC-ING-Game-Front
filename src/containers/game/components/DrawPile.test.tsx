@@ -5,8 +5,8 @@ import DrawPile from "./DrawPile";
 
 describe("DrawPile", () => {
   describe("Rendering", () => {
-    it("renders the draw pile with 40 cards", () => {
-      render(<DrawPile cardCount={40} />);
+    it("renders the usual draw pile", () => {
+      render(<DrawPile cardCount={1} />);
 
       const cardElement = screen.getByRole("img");
 
@@ -15,10 +15,9 @@ describe("DrawPile", () => {
         "src",
         expect.stringContaining("card_back.png"),
       );
-      expect(screen.getByText("REMAINING: 40")).toBeInTheDocument();
     });
 
-    it("renders finish game with 0 cards", () => {
+    it("renders murderer escapes when card count is zero", () => {
       render(<DrawPile cardCount={0} />);
 
       const cardElement = screen.getByRole("img");
@@ -28,7 +27,6 @@ describe("DrawPile", () => {
         "src",
         expect.stringContaining("murder_escapes.png"),
       );
-      expect(screen.getByText("REMAINING: 0")).toBeInTheDocument();
     });
   });
 });

@@ -46,8 +46,6 @@ export function createWsService(playerId: string | null = null) {
         reconnectAttempts = 0;
 
         emit("connection", true);
-
-        console.log("WebSocket connected");
       };
 
       // Cuando se recibe un mensaje, intentamos parsearlo como JSON

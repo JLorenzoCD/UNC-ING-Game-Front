@@ -1,81 +1,129 @@
+import type { ReactNode } from "react";
+
 import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
 
-import type { GamePlayer, Player as PlayerSchema } from "@/types/player";
-
-const GRID_OTHER_PLAYERS = {
-  1: ["col-start-3 row-start-1 flex justify-center items-center"],
-  2: [
-    "col-start-2 row-start-1 flex justify-center items-center",
-    "col-start-4 row-start-1 flex justify-center items-center",
-  ],
-  3: [
-    "col-start-1 row-start-1 flex justify-center items-center",
-    "col-start-3 row-start-1 flex justify-center items-center",
-    "col-start-5 row-start-1 flex justify-center items-center",
-  ],
-  4: [
-    "col-start-1 row-start-2 flex justify-center items-center",
-    "col-start-2 row-start-1 flex justify-center items-center",
-    "col-start-4 row-start-1 flex justify-center items-center",
-    "col-start-5 row-start-2 flex justify-center items-center",
-  ],
-  5: [
-    "col-start-1 row-start-2 flex justify-center items-center",
-    "col-start-2 row-start-1 flex justify-center items-center",
-    "col-start-3 row-start-1 flex justify-center items-center",
-    "col-start-4 row-start-1 flex justify-center items-center",
-    "col-start-5 row-start-2 flex justify-center items-center",
-  ],
-} as { [key: number]: string[] };
-
-function getPlayersInOrder(players: GamePlayer[], currPlayer: PlayerSchema) {
-  const currPlayerOrder = players.find((p) => p.id === currPlayer.id)
-    ?.order as number;
-
-  // Ordeno los jugadores en base a su orden, de forma ascendente
-  const playersInOrder = players.sort(
-    (p1, p2) => (p1.order as number) - (p2.order as number),
-  );
-
-  // Sin contar a el jugador actual
-  const playersInOrderModuleCurrPlayer = [
-    ...playersInOrder.slice(currPlayerOrder),
-    ...playersInOrder.slice(0, currPlayerOrder - 1),
-  ];
-
-  return playersInOrderModuleCurrPlayer;
+interface TableProps {
+  drawPile: ReactNode;
+  discardPile: ReactNode;
 }
 
-interface Props {
-  player: PlayerSchema;
-}
+export default function Table({ drawPile, discardPile }: TableProps) {
+  const { player } = usePlayer();
+  const { players, match, secrets, sets } = useGame();
 
-export default function Table({ player }: Props) {
-  const { match, players, secrets, sets } = useGame();
+  const getVisiblePlayersWithGridPositions = () => {
+    const visiblePlayers = players.filter((p) => p.id !== player?.id);
 
-  const playersOrder = getPlayersInOrder(players, player);
+    const sortedPlayers = [...visiblePlayers].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
+
+    const totalPlayers = players.length;
+    const playerTurn = match?.current_player_order;
+
+    // Las posiciones de la grilla para diferentes cantidades de jugadores (posiciones 1-9)
+    // La posición del medio (5) está reservada para las pilas del juego
+    // Las posiciones 7-9 (fila inferior) están reservadas para el jugador actual
+    // Distribución:
+    //   1 (arriba-izquierda)    2 (arriba-centro)    3 (arriba-derecha)
+    //   4 (medio-izquierda)     5 (PILAS)            6 (medio-derecha)
+    //   7 (JUGADOR ACTUAL)      8 (JUGADOR ACTUAL)   9 (JUGADOR ACTUAL)
+    const getGridPositionsForPlayerCount = (count: number): string[] => {
+      switch (count) {
+        case 2:
+          // 1 jugador: posición 2 (arriba-centro)
+          return ["col-start-2 row-start-1"];
+        case 3:
+          // 2 jugadores: posiciones 2, 6
+          // (arriba-centro, medio-derecha)
+          return ["col-start-2 row-start-1", "col-start-3 row-start-2"];
+        case 4:
+          // 3 jugadores: posiciones 1, 2, 6
+          // (arriba-izquierda, arriba-centro, medio-derecha)
+          return [
+            "col-start-2 row-start-1",
+            "col-start-1 row-start-2",
+            "col-start-3 row-start-2",
+          ];
+        case 5:
+          // 4 jugadores: posiciones 1, 2, 3, 6
+          // (arriba-izquierda, arriba-centro, arriba-derecha, medio-derecha)
+          return [
+            "col-start-2 row-start-1",
+            "col-start-3 row-start-1",
+            "col-start-1 row-start-2",
+            "col-start-3 row-start-2",
+          ];
+        case 6:
+          // 5 jugadores: posiciones 1, 2, 3, 4, 6
+          // (arriba-izquierda, arriba-centro, arriba-derecha, medio-izquierda, medio-derecha)
+          return [
+            "col-start-1 row-start-1",
+            "col-start-2 row-start-1",
+            "col-start-3 row-start-1",
+            "col-start-1 row-start-2",
+            "col-start-3 row-start-2",
+          ];
+        default:
+          return [];
+      }
+    };
+
+    const gridPositions = getGridPositionsForPlayerCount(totalPlayers);
+    const result = [];
+
+    for (let i = 0; i < sortedPlayers.length; i++) {
+      const playerData = sortedPlayers[i];
+      const turn = playerTurn === playerData.order;
+      const position = gridPositions[i] || "";
+
+      const playerSecrets =
+        secrets?.filter((secret) => secret.player_id === playerData.id) || [];
+
+      const playerSets =
+        sets?.filter((set) => set.player_id === playerData.id) || [];
+
+      result.push({
+        turn,
+        position,
+        playerData,
+        playerSets,
+        playerSecrets,
+      });
+    }
+
+    return result;
+  };
+
+  const visiblePlayers = getVisiblePlayersWithGridPositions();
+
   return (
     <>
-      {playersOrder.map((p, index) => {
-        const playerSecrets = secrets.filter((s) => p.id === s.player_id);
-        const playerSets = sets.filter((s) => p.id === s.player_id);
+      {/* Los demás jugadores (de 1 a 5 jugadores además del actual) */}
+      {visiblePlayers.map(
+        ({ turn, position, playerData, playerSets, playerSecrets }) => (
+          <div
+            key={playerData.id}
+            className={`${position} flex items-center justify-center`}
+          >
+            <Player
+              sets={playerSets}
+              player={playerData}
+              hasCurrentTurn={turn}
+              secrets={playerSecrets}
+            />
+          </div>
+        ),
+      )}
 
-        const lenOtherPlayers = playersOrder.length;
-        const positionGrid = GRID_OTHER_PLAYERS[lenOtherPlayers][index];
-
-        return (
-          <Player
-            key={p.id}
-            player={p}
-            secrets={playerSecrets}
-            sets={playerSets}
-            hasCurrentTurn={match?.current_player_order == p.order}
-            positionClassName={positionGrid}
-          />
-        );
-      })}
+      {/* Las pilas están fijas en el centro de la pantalla. */}
+      <div className="col-start-2 row-start-2 flex justify-center items-center gap-x-3">
+        {discardPile}
+        {drawPile}
+      </div>
     </>
   );
 }

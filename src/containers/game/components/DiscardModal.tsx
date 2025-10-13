@@ -31,27 +31,29 @@ function getLastFiveDiscarded(discartedCards: GameCard[]): GameCard[] {
 interface Props {
   isOpen: boolean;
   isEventDiscard: boolean;
-  discartedCards: GameCard[];
+  discardedCards: GameCard[];
 
   onClose: () => void; // Callback que se ejecuta cerrar el modal
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
-  onEndEvent: () => void; // Callback que se ejecuta al
+  onEndEvent: () => void; // Callback que se ejecuta al finalizar el evento de descarte
 }
 
 export default function DiscardModal({
   isOpen,
   onClose,
-  discartedCards,
+  discardedCards,
   onSelect,
   isSelected,
   isEventDiscard,
   onEndEvent,
 }: Props) {
-  if (discartedCards.length === 0) return null;
+  if (discardedCards.length === 0) return null;
 
-  const selectedCardClassName = "ring-4 ring-blue-200";
-  const lastFiveCardDiscarted = getLastFiveDiscarded(discartedCards);
+  // Una carta seleccionada se resalta con un borde y se eleva ligeramente
+  const selectedCardClassName = "rounded-lg ring-4 ring-red-500 -translate-y-4";
+
+  const lastFiveCardDiscarted = getLastFiveDiscarded(discardedCards);
 
   return (
     <Modal
@@ -86,9 +88,9 @@ export default function DiscardModal({
             data-testid="discard-card"
             onClick={() => onSelect(card)}
             className={`
-                cursor-pointer hover:scale-105 transform transition-transform
-                ${isSelected(card) ? selectedCardClassName : ""}
-                `}
+              cursor-pointer hover:scale-105 transform transition-transform
+              ${isSelected(card) ? selectedCardClassName : ""}
+            `}
           >
             <Card name={card.name} description={card.description} />
           </div>
