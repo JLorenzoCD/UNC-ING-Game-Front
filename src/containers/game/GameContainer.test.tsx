@@ -512,7 +512,7 @@ describe("GameContainer", () => {
         fireEvent.click(finishButton);
       });
 
-      // Esto vale para ambos casos, tanto el desdcarte obligatorio
+      // Esto vale para ambos casos, tanto el descarte obligatorio
       // como el manual.
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         expect.any(String),

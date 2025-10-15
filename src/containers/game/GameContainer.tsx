@@ -135,7 +135,7 @@ export default function GameContainer() {
       // se desmarca todo.
       setDiscardedCards({});
       setHasDiscardedCards(false);
-    } else {
+    } else if (isSelectingCards) {
       setDiscardedCards(selectedCards);
       setHasDiscardedCards(true);
     }
@@ -260,9 +260,13 @@ export default function GameContainer() {
       throw new Error("No cards available to take from the draw pile.");
     }
 
-    const randomDiscardableCard = [...handCards]
-      .sort(() => Math.random() - 0.5) // Mezclamos las cartas para que el descarte sea aleatorio
-      .find((card) => card !== null);
+    const nonNullHandCards = handCards.filter(
+      (card) => card !== null,
+    ) as GameCard[];
+
+    const randomIndex = Math.floor(Math.random() * nonNullHandCards.length);
+
+    const randomDiscardableCard = nonNullHandCards[randomIndex];
 
     if (!randomDiscardableCard) {
       throw new Error("No cards available to discard from the hand.");
@@ -302,7 +306,6 @@ export default function GameContainer() {
     if (!httpService || !player || !match) return;
 
     try {
-      console.log({ hasDiscardedCards, discardedCards, handCards });
       // Si el jugador no ha descartado cartas, se fuerza
       // el descarte obligatorio de una carta.
       if (!hasDiscardedCards) {

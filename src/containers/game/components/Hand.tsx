@@ -63,6 +63,8 @@ export default function Hand({
           <div
             key={card.id}
             data-testid="hand-card"
+            aria-disabled={isDisabled}
+            aria-selected={isSelected(card)}
             onClick={() => handleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",

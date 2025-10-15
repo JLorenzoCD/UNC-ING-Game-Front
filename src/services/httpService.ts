@@ -132,7 +132,7 @@ export function createHttpService() {
       }),
     };
 
-    await request(BACKEND_ENDPOINTS.UPDATE_CARDS(matchId), options);
+    return request(BACKEND_ENDPOINTS.UPDATE_CARDS(matchId), options);
   };
 
   const putPassTurn = async (matchId: UUID): Promise<void> => {
