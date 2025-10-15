@@ -644,5 +644,26 @@ describe("httpService", () => {
         },
       );
     });
+
+    it("putPassTurn sends correct request to pass turn", async () => {
+      const matchId = crypto.randomUUID();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.putPassTurn(matchId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/pass_turn`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    });
   });
 });

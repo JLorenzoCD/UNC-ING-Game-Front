@@ -131,10 +131,23 @@ export default function GameContextProvider({
       });
     };
 
+    const handleUpdateMatchTurn = (match: Match) => {
+      setMatch((current) => {
+        if (!current) return match;
+
+        return {
+          ...current,
+          current_player_order: match.current_player_order,
+        };
+      });
+    };
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
+    wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
+      wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
     };
   }, [matchId, wsService, isConnected]);
 

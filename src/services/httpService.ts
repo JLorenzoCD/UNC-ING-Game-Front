@@ -135,6 +135,10 @@ export function createHttpService() {
     await request(BACKEND_ENDPOINTS.UPDATE_CARDS(matchId), options);
   };
 
+  const putPassTurn = async (matchId: UUID): Promise<void> => {
+    return request(BACKEND_ENDPOINTS.PASS_TURN(matchId), { method: "PUT" });
+  };
+
   return {
     request,
     createPlayer,
@@ -147,5 +151,6 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     putMatchCards,
+    putPassTurn,
   };
 }
