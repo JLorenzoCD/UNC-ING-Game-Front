@@ -115,8 +115,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -133,8 +134,9 @@ describe("Hand", () => {
           cards={partialHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -151,8 +153,9 @@ describe("Hand", () => {
           cards={emptyHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -161,6 +164,25 @@ describe("Hand", () => {
 
       expect(cardElements.length).toBe(0);
       expect(emptyElements.length).toBe(6);
+    });
+
+    it("applies disabled styles when isDisabled is true", () => {
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+          isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={true} // Mano deshabilitada
+        />,
+      );
+
+      const handCardElement = screen.getAllByTestId("hand-card")[0];
+      expect(handCardElement.className).toContain("pointer-events-none");
+      expect(handCardElement.className).toContain("cursor-not-allowed");
+      expect(handCardElement.className).toContain("opacity-75");
+      expect(handCardElement.className).toContain("grayscale-50");
     });
   });
 
@@ -171,8 +193,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -183,6 +206,24 @@ describe("Hand", () => {
       expect(mockOnSelect).toHaveBeenCalledWith(fullHand[0]);
     });
 
+    it("does not call onSelect when a card is clicked and isDisabled is true", () => {
+      render(
+        <Hand
+          cards={fullHand}
+          onSelect={mockOnSelect}
+          isSelected={mockIsSelected}
+          isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={true} // Mano deshabilitada
+        />,
+      );
+
+      const cardElements = screen.getAllByTestId("hand-card");
+      fireEvent.click(cardElements[0]);
+
+      expect(mockOnSelect).not.toHaveBeenCalled();
+    });
+
     it("applies selected styling when isSelected returns true", () => {
       mockIsSelected.mockReturnValueOnce(true); // La primera carta estará seleccionada
 
@@ -191,8 +232,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -208,8 +250,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -227,8 +270,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={false}
           isDiscarded={mockIsDiscarded}
+          isSelecting={false}
+          isDisabled={false}
         />,
       );
 
@@ -251,8 +295,9 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isSelecting={true} // El usuario está en modo selección
           isDiscarded={mockIsDiscarded}
+          isSelecting={true} // El usuario está en modo selección
+          isDisabled={false}
         />,
       );
 
