@@ -21,12 +21,15 @@ type HandCardList = Array<GameCard | null>;
 
 export default function GameContainer() {
   const { player } = usePlayer();
+
   const { httpService } = useHttpService();
-  const { match, secrets, cards, sets } = useGame();
+
+  const { match, secrets, players, cards, sets } = useGame();
 
   const [handCards, setHandCards] = useState<HandCardList>([]);
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
   const [discardedCards, setDiscardedCards] = useState<GameCardMap>({});
+  const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
@@ -39,6 +42,16 @@ export default function GameContainer() {
   const initialLoadRef = useRef<boolean>(true);
 
   // -- Valores memoizados --
+
+  const isPlayerTurn = useMemo(() => {
+    if (!match || !player) return false;
+
+    const matchPlayer = players.find((p) => p.id === player.id);
+
+    if (!matchPlayer) return false;
+
+    return match.current_player_order === matchPlayer.order;
+  }, [match, player, players]);
 
   const playerSecrets = useMemo(() => {
     if (!player) return [];
@@ -118,10 +131,13 @@ export default function GameContainer() {
 
   const handleDiscardSelectedCards = () => {
     if (isDiscardingCards) {
-      // Si ya hay cartas marcadas para descartar, se desmarca todo.
+      // Si ya hay cartas marcadas para descartar,
+      // se desmarca todo.
       setDiscardedCards({});
-    } else {
+      setHasDiscardedCards(false);
+    } else if (isSelectingCards) {
       setDiscardedCards(selectedCards);
+      setHasDiscardedCards(true);
     }
 
     setSelectedCards({});
@@ -153,7 +169,7 @@ export default function GameContainer() {
    *
    * TODO: permitir tomar cartas del draft.
    */
-  const handlePutCards = async () => {
+  const handleDiscardCards = async () => {
     if (!httpService || !player || !match) return;
 
     const discardedCardsAmount = Object.keys(discardedCards).length;
@@ -219,18 +235,94 @@ export default function GameContainer() {
         // en los lugares de las que fueron descartadas.
         return newHandCards;
       });
-
-      setDiscardedCards({});
     } catch (error) {
       console.error("Failed to put cards:", error);
+
+      // Lanzamos el error de nuevo para que no pueda pasar el turno
+      // si el descarte falló.
+      throw error;
+    }
+  };
+
+  /**
+   * Ejecuta el descarte obligatorio (y reposición) de una carta.
+   * Esto sucede cuando el jugador quiere finalizar su turno sin haber
+   * descartado cartas de forma manual.
+   */
+  const handleMandatoryDiscard = async () => {
+    if (!httpService || !player || !match) return;
+
+    const firstTakeableCard = cards.find((card) => {
+      return card.player_id === null && !card.is_discarded;
+    });
+
+    if (!firstTakeableCard) {
+      throw new Error("No cards available to take from the draw pile.");
+    }
+
+    const nonNullHandCards = handCards.filter(
+      (card) => card !== null,
+    ) as GameCard[];
+
+    const randomIndex = Math.floor(Math.random() * nonNullHandCards.length);
+
+    const randomDiscardableCard = nonNullHandCards[randomIndex];
+
+    if (!randomDiscardableCard) {
+      throw new Error("No cards available to discard from the hand.");
+    }
+
+    try {
+      await httpService.putMatchCards(
+        match.id,
+        player.id,
+        [firstTakeableCard.id],
+        [randomDiscardableCard.id],
+      );
+
+      setHandCards((prevHandCards) => {
+        const newHandCards = [...prevHandCards];
+
+        const indexToDiscard = newHandCards.findIndex(
+          (card) => card?.id === randomDiscardableCard.id,
+        );
+
+        if (indexToDiscard !== -1) {
+          newHandCards[indexToDiscard] = firstTakeableCard;
+        }
+
+        return newHandCards;
+      });
+    } catch (error) {
+      console.error("Failed to perform mandatory discard:", error);
+
+      // Lanzamos el error de nuevo para que no pueda pasar el turno
+      // si el descarte falló.
+      throw error;
     }
   };
 
   const handleFinishTurn = async () => {
     if (!httpService || !player || !match) return;
 
-    // TODO: completar esto con la lógica de finalizar el turno
-    await handlePutCards();
+    try {
+      // Si el jugador no ha descartado cartas, se fuerza
+      // el descarte obligatorio de una carta.
+      if (!hasDiscardedCards) {
+        await handleMandatoryDiscard();
+      } else {
+        await handleDiscardCards();
+      }
+
+      // Reseteamos los estados relacionados con el descarte
+      setSelectedCards({});
+      setDiscardedCards({});
+      setHasDiscardedCards(false);
+
+      await httpService.putPassTurn(match.id);
+    } catch (error) {
+      console.error("Failed to finish turn:", error);
+    }
   };
 
   // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
@@ -289,12 +381,14 @@ export default function GameContainer() {
               isSelected={isCardSelected}
               isSelecting={isSelectingCards}
               isDiscarded={isCardDiscarded}
+              isDisabled={!isPlayerTurn}
             />
 
             <HandActions
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
               isDiscarding={isDiscardingCards}
+              isDisabled={!isPlayerTurn}
             />
           </div>
         </div>

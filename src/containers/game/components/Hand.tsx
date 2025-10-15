@@ -9,6 +9,7 @@ interface HandProps {
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
   isSelecting: boolean; // Indica si el jugador está en modo de selección
   isDiscarded: (card: GameCard) => boolean; // Función para determinar si una carta está marcada para descartar
+  isDisabled: boolean; // Indica si la mano está deshabilitada (no se pueden ejecutar acciones)
 }
 
 function EmptyHandPosition() {
@@ -29,7 +30,12 @@ export default function Hand({
   isSelected,
   isSelecting,
   isDiscarded,
+  isDisabled,
 }: HandProps) {
+  // Si la mano está deshabilitada, aplicamos estilos para indicar que no se puede interactuar
+  const disabledClassName =
+    "pointer-events-none cursor-not-allowed opacity-75 grayscale-50";
+
   // Una carta seleccionada se resalta con un borde y se eleva ligeramente
   const selectedCardClassName = "rounded-lg ring-4 ring-red-500 -translate-y-4";
 
@@ -42,6 +48,12 @@ export default function Hand({
     return isSelecting;
   };
 
+  const handleClick = (card: GameCard) => {
+    if (isDisabled) return;
+
+    onSelect(card);
+  };
+
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
       {cards.map((card, index) =>
@@ -51,9 +63,12 @@ export default function Hand({
           <div
             key={card.id}
             data-testid="hand-card"
-            onClick={() => onSelect(card)}
+            aria-disabled={isDisabled}
+            aria-selected={isSelected(card)}
+            onClick={() => handleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
+              isDisabled ? disabledClassName : "",
               isSelected(card) ? selectedCardClassName : "",
               isDiscarded(card) ? discardedCardClassName : "",
               shouldDecreaseOpacity(card) ? "opacity-80" : "",

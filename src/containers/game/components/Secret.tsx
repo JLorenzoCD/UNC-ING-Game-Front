@@ -40,8 +40,6 @@ export default function Secret({ secret }: SecretProps) {
     ? SECRET_IMAGE_PATHS[secret.type]
     : secretBack;
 
-  if (!imagePath) return null;
-
   const cardSize = !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30";
 
   const borderStyle =
