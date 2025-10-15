@@ -85,6 +85,21 @@ export default function GameContainer() {
     });
   }, [cards]);
 
+  const isPlayable = useMemo(() => {
+    const selectedCardsArray = Object.values(selectedCards);
+    if (selectedCardsArray.length !== 1) return false;
+    const nameCard = selectedCardsArray[0].name;
+    const permittedCards = [
+      "CARDS OFF THE TABLE",
+      "ANOTHER VICTIM",
+      "LOOK INTO THE ASHES",
+      "AND THEN THERE WAS ONE MORE",
+      "DELAY THE MURDERER ESCAPE",
+      "EARLY TRAIN TO PADDINGTON",
+    ];
+    return permittedCards.includes(nameCard);
+  }, [selectedCards]);
+
   const isSelectingCards = Object.keys(selectedCards).length > 0;
 
   const isDiscardingCards = Object.keys(discardedCards).length > 0;
@@ -325,6 +340,30 @@ export default function GameContainer() {
     }
   };
 
+  const handlePlayEvent = async () => {
+    // OBTENER LA CARTA SELECCIONADA
+    const cartasSeleccionadasArray = Object.values(selectedCards);
+
+    if (cartasSeleccionadasArray.length !== 1) {
+      console.warn("handlePlayEvent llamado sin una única carta válida.");
+      return;
+    }
+
+    const cartaEvento = cartasSeleccionadasArray[0];
+
+    // 1. Lógica Local: Chequeamos el tipo de evento, para mostrarle al jugador que hacer y construrir la llamada a la api
+    console.log(`Se jugaría la carta: ${cartaEvento.name}`);
+
+    // 2. Llamada a la API: Aqui llamaremos a la api con todos los campos completos segun el tipo de evento
+    console.log("Aquí iría la llamada a la API...");
+
+    // 3. Limpieza de Estado: Pasaria el turno y descarta la carta
+    // Simplemente borra la selección actual.
+    handleFinishTurn();
+
+    console.log("Proceso completado.");
+  };
+
   // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
   // y no se hayan descartado. Luego, se actualizarán por WebSocket.
   useEffect(() => {
@@ -387,8 +426,10 @@ export default function GameContainer() {
             <HandActions
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
+              onPlayEvent={handlePlayEvent}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
+              isDisabledEvent={!isPlayable}
             />
           </div>
         </div>
