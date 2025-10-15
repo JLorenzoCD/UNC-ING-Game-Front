@@ -63,7 +63,7 @@ const {
   // Mock de constantes
   const mockSocketsEvents = {
     LOBBY_JOIN: "lobby_join",
-    MATCHES: "match",
+    MATCH: "match",
   };
   const FRONTEND_PATHS = {
     MATCH_GAME: (id: string) => `/match/${id}/game`,
@@ -196,7 +196,7 @@ describe("useLobbyData", () => {
         expect.any(Function),
       );
       expect(mockOn).toHaveBeenCalledWith(
-        mockSocketsEvents.MATCHES,
+        mockSocketsEvents.MATCH,
         expect.any(Function),
       );
     });
@@ -208,7 +208,7 @@ describe("useLobbyData", () => {
       expect.any(Function),
     );
     expect(mockOff).toHaveBeenCalledWith(
-      mockSocketsEvents.MATCHES,
+      mockSocketsEvents.MATCH,
       expect.any(Function),
     );
   });
@@ -240,7 +240,7 @@ describe("useLobbyData", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     // Obtener el handler
-    const startHandler = getEventHandler(mockSocketsEvents.MATCHES);
+    const startHandler = getEventHandler(mockSocketsEvents.MATCH);
 
     // Simular el evento de inicio de partida
     const matchInProgress = {
@@ -270,7 +270,7 @@ describe("useLobbyData", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     // Obtener el handler
-    const updateHandler = getEventHandler(mockSocketsEvents.MATCHES);
+    const updateHandler = getEventHandler(mockSocketsEvents.MATCH);
 
     // Simular el evento 'matches' con un conteo mayor
     const matchUpdate = {
@@ -296,7 +296,7 @@ describe("useLobbyData", () => {
     // Conteo inicial: 2
     expect(mockGetMatchPlayers).toHaveBeenCalledTimes(1);
 
-    const updateHandler = getEventHandler(mockSocketsEvents.MATCHES);
+    const updateHandler = getEventHandler(mockSocketsEvents.MATCH);
 
     // Simular el evento con el mismo conteo
     const matchSameCount = {

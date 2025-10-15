@@ -93,7 +93,7 @@ export function useLobbyData(matchId: UUID | null) {
 
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-          wsService.on(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
         }
       } catch (err) {
         console.error(err);
@@ -108,7 +108,7 @@ export function useLobbyData(matchId: UUID | null) {
     // Cleanup de WebSockets
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-      wsService.off(BACKEND_SOCKETS_EVENTS.MATCHES, handleMatchStart);
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
     };
     // ! DUDAS: state.match
   }, [httpService, wsService, isConnected, navigate, matchId]);

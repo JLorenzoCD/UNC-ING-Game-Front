@@ -105,7 +105,7 @@ describe("useMatchesData", () => {
 
     // Verificar la suscripción del WebSocket
     expect(mockWsService.on).toHaveBeenCalledWith(
-      BACKEND_SOCKETS_EVENTS.MATCHES,
+      BACKEND_SOCKETS_EVENTS.MATCH,
       expect.any(Function),
     );
   });
@@ -158,7 +158,7 @@ describe("useMatchesData", () => {
 
     // Verifique que wsService.off se haya llamado con el mismo controlador
     expect(mockWsService.off).toHaveBeenCalledWith(
-      BACKEND_SOCKETS_EVENTS.MATCHES,
+      BACKEND_SOCKETS_EVENTS.MATCH,
       mockWsService.on.mock.calls[0][1],
     );
   });
