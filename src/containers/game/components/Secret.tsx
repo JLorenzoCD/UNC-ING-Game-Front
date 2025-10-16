@@ -19,6 +19,7 @@ const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
 
 interface SecretProps {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;
+  isSelectableSecret: (secret: GameSecret) => boolean;
 
   secret: GameSecret | null;
 
@@ -28,6 +29,7 @@ interface SecretProps {
 
 export default function Secret({
   onSelectTargetEvent,
+  isSelectableSecret,
 
   secret,
 
@@ -66,6 +68,7 @@ export default function Secret({
 
   const isCurrPlayerSecretReveled = isRevealed && isSessionPlayer;
   const isCurrPlayerSelectingSecret = !isSessionPlayer && isTargetSecret;
+  const isSelectable = isSelectableSecret(secret);
 
   return (
     <div className="relative">
@@ -74,19 +77,20 @@ export default function Secret({
         className={twMerge(
           "rounded-lg overflow-hidden",
           !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30",
-          isCurrPlayerSecretReveled &&
+          isSelectable &&
+            isCurrPlayerSecretReveled &&
             isSelectingTarget &&
             "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31",
-          isCurrPlayerSelectingSecret &&
+          isSelectable &&
+            isCurrPlayerSelectingSecret &&
             isSelectingTarget &&
             "border-red-400 border-2 shadow-lg shadow-red-400/50 animate-pulse",
-          isCurrPlayerSelectingSecret &&
+          isSelectable &&
+            isCurrPlayerSelectingSecret &&
             isTarget &&
             "border-blue-400 border-2 shadow-lg shadow-blue-400/50 animate-none",
-          !isSessionPlayer &&
-            isTargetSecret &&
-            !isTarget &&
-            !isSelectingTarget &&
+          ((!isSelectable && isTargetSecret) ||
+            (!isSessionPlayer && !isTarget && !isSelectingTarget)) &&
             "border-2 border-transparent shadow-none animate-none brightness-50",
         )}
       >

@@ -12,6 +12,8 @@ const truncateName = (name: string, maxLength = 15) => {
 
 interface PlayerProps {
   onSelectTargetEvent: (target: GamePlayer | GameSecret) => void;
+  isSelectablePlayer: (player: GamePlayer) => boolean;
+  isSelectableSecret: (secret: GameSecret) => boolean;
 
   player: GamePlayer;
   secrets: GameSecret[];
@@ -25,6 +27,8 @@ interface PlayerProps {
 
 export default function Player({
   onSelectTargetEvent,
+  isSelectablePlayer,
+  isSelectableSecret,
 
   player,
   secrets,
@@ -37,6 +41,7 @@ export default function Player({
 }: PlayerProps) {
   const selelectingTarget = target === null;
   const isTarget = player.id === target?.id;
+  const isSelectable = isSelectablePlayer(player);
 
   return (
     <div className="flex items-center gap-2">
@@ -48,16 +53,18 @@ export default function Player({
             hasCurrentTurn
               ? "border-green-400 shadow-lg shadow-green-400/50 animate-pulse"
               : "border-transparent",
-            isPlayerEvent &&
+
+            isSelectable &&
+              isPlayerEvent &&
               selelectingTarget &&
               "border-red-400 border-10 shadow-lg shadow-red-400/50 animate-pulse",
-            isPlayerEvent &&
+            isSelectable &&
+              isPlayerEvent &&
               selelectingTarget &&
               isTarget &&
               "border-blue-400 border-10 shadow-lg shadow-blue-400/50 animate-none",
-            isPlayerEvent &&
-              !selelectingTarget &&
-              !isTarget &&
+            ((!isSelectable && isPlayerEvent) ||
+              (!selelectingTarget && !isTarget)) &&
               "border-4 border-transparent shadow-none animate-none brightness-50",
           )}
         >
@@ -84,6 +91,7 @@ export default function Player({
         <Secrets
           secrets={secrets}
           onSelectTargetEvent={onSelectTargetEvent}
+          isSelectableSecret={isSelectableSecret}
           isTargetSecret={isTargetSecret}
           target={target}
         />

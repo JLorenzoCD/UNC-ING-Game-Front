@@ -13,7 +13,11 @@ import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
-import { isCardsValidSet, isSecretTargetSet } from "./components/utils";
+import {
+  isCardsValidSet,
+  isSetActionRevealSecret,
+  isSetTargetOneSecret,
+} from "./components/utils";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
@@ -61,7 +65,9 @@ export default function GameContainer() {
   const handleClickSetEvent = () => {
     if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
     else if (setEvent.isValidSet && !setEvent.isSetEvent) {
-      const isTargetPlayer = !isSecretTargetSet(Object.values(selectedCards));
+      const isTargetPlayer = !isSetTargetOneSecret(
+        Object.values(selectedCards),
+      );
 
       setSetEvent((prev) => ({
         ...prev,
@@ -118,13 +124,63 @@ export default function GameContainer() {
     );
   };
 
+  const isSelectablePlayer = (player: GamePlayer) => {
+    // Se deben de poner todos los posibles eventos validos
+    if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
+
+    const secretsPlayer = secrets.filter((s) => s.player_id === player.id);
+    const isAllSecretsReveled = secretsPlayer.every((s) => s.is_revealed);
+
+    //* Validacion por eventos
+
+    // Eventos de seleccionar jugador por set para revelar secreto
+    if (setEvent.isSetEvent && setEvent.isTargetPlayer && !isAllSecretsReveled)
+      return true;
+
+    return false;
+  };
+
+  const isSelectableSecret = (secret: GameSecret) => {
+    // Se deben de poner todos los posibles eventos validos
+    if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
+
+    if (secret.player_id === player?.id) return false;
+
+    try {
+      const isActionRevealSecret = isSetActionRevealSecret(
+        Object.values(selectedCards),
+      );
+
+      //* Validacion por eventos
+
+      // Eventos de seleccionar secreto a revelarlo por jugar set
+      if (
+        setEvent.isSetEvent &&
+        !setEvent.isTargetPlayer &&
+        isActionRevealSecret &&
+        !secret.is_revealed
+      )
+        return true;
+
+      // Eventos de seleccionar secreto a des-revelar por jugar set (Pyne)
+      if (
+        setEvent.isSetEvent &&
+        !setEvent.isTargetPlayer &&
+        !isActionRevealSecret &&
+        secret.is_revealed
+      )
+        return true;
+    } catch (error) {
+      console.error(error);
+    }
+
+    return false;
+  };
+
   // Determina si es la primera vez que se carga el componente.
   // Se usa para cargar la mano del jugador solo una vez.
   // Luego, las actualizaciones de cartas se harán por WebSocket.
   const initialLoadRef = useRef<boolean>(true);
-
-  const isSetEventRef = useRef<boolean>(false);
-  isSetEventRef.current = setEvent.isSetEvent;
 
   // -- Valores memoizados --
 
@@ -441,14 +497,24 @@ export default function GameContainer() {
     if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
     const isValidSet = isCardsValidSet(Object.values(selectedCards));
-    if (!isValidSet && !isSetEventRef) return;
-    else if (!isValidSet && isSetEventRef) {
-      setSetEvent(defaultStateSetEvent);
-      return;
+    if (isValidSet) {
+      const otherSecrets = secrets.filter(
+        (secret) => secret.player_id !== player?.id,
+      );
+
+      const allSecretReveled = otherSecrets.every(
+        (secret) => secret.is_revealed,
+      );
+      const isActionRevealSecret = isSetActionRevealSecret(
+        Object.values(selectedCards),
+      );
+
+      if (isActionRevealSecret && allSecretReveled) return;
+      if (!isActionRevealSecret && !allSecretReveled) return;
     }
 
-    setSetEvent((prev) => ({ ...prev, isValidSet: true }));
-  }, [discardModal, selectedCards]);
+    setSetEvent((prev) => ({ ...prev, isValidSet }));
+  }, [discardModal, selectedCards, secrets, player]);
 
   return (
     <>
@@ -468,6 +534,8 @@ export default function GameContainer() {
               />
             }
             onSelectTargetEvent={handleSelectTargetEvent}
+            isSelectablePlayer={isSelectablePlayer}
+            isSelectableSecret={isSelectableSecret}
             isEvent={setEvent.isSetEvent}
             isTargetPlayer={setEvent.isTargetPlayer}
             isTargetSecret={!setEvent.isTargetPlayer}
@@ -477,7 +545,10 @@ export default function GameContainer() {
           {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
             <div className="flex flex-col gap-y-3">
-              <Secrets secrets={playerSecrets} />
+              <Secrets
+                secrets={playerSecrets}
+                isSelectableSecret={isSelectableSecret}
+              />
               <Sets sets={playerSets} />
             </div>
 

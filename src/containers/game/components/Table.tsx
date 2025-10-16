@@ -10,6 +10,8 @@ import type { GameSecret } from "@/types/secret";
 
 interface TableProps {
   onSelectTargetEvent: (target: GamePlayer | GameSecret) => void;
+  isSelectablePlayer: (player: GamePlayer) => boolean;
+  isSelectableSecret: (secret: GameSecret) => boolean;
 
   drawPile: ReactNode;
   discardPile: ReactNode;
@@ -21,6 +23,9 @@ interface TableProps {
 
 export default function Table({
   onSelectTargetEvent,
+  isSelectablePlayer,
+  isSelectableSecret,
+
   drawPile,
   discardPile,
   isEvent,
@@ -127,7 +132,9 @@ export default function Table({
             className={`${position} flex items-center justify-center`}
           >
             <Player
+              isSelectablePlayer={isSelectablePlayer}
               onSelectTargetEvent={onSelectTargetEvent}
+              isSelectableSecret={isSelectableSecret}
               sets={playerSets}
               player={playerData}
               hasCurrentTurn={turn}

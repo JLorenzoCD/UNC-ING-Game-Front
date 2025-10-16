@@ -5,6 +5,7 @@ import type { GamePlayer } from "@/types/player";
 
 type SecretsProps = {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;
+  isSelectableSecret: (secret: GameSecret) => boolean;
 
   secrets: GameSecret[];
 
@@ -14,6 +15,7 @@ type SecretsProps = {
 
 export default function Secrets({
   onSelectTargetEvent,
+  isSelectableSecret,
 
   secrets,
 
@@ -26,6 +28,7 @@ export default function Secrets({
         <Secret
           key={secret.id}
           onSelectTargetEvent={onSelectTargetEvent}
+          isSelectableSecret={isSelectableSecret}
           secret={secret}
           isTargetSecret={isTargetSecret}
           target={target}
