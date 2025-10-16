@@ -42,8 +42,11 @@ export default function Hand({
   // Una carta descartada se muestra con opacidad reducida y en escala de grises
   const discardedCardClassName = "opacity-50 grayscale";
 
-  const shouldDecreaseOpacity = (card: GameCard) => {
-    if (isSelected(card) || isDiscarded(card)) return false;
+  const shouldDecreaseCardOpacity = (
+    isSelected: boolean,
+    isDiscarded: boolean,
+  ) => {
+    if (isSelected || isDiscarded || isDisabled) return false;
 
     return isSelecting;
   };
@@ -56,28 +59,37 @@ export default function Hand({
 
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
-      {cards.map((card, index) =>
-        card === null ? (
-          <EmptyHandPosition key={`empty-${index}`} />
-        ) : (
+      {cards.map((card, index) => {
+        if (card === null) {
+          return <EmptyHandPosition key={`empty-${index}`} />;
+        }
+
+        const isCardSelected = isSelected(card);
+        const isCardDiscarded = isDiscarded(card);
+        const isCardOpacityDecreased = shouldDecreaseCardOpacity(
+          isCardSelected,
+          isCardDiscarded,
+        );
+
+        return (
           <div
             key={card.id}
             data-testid="hand-card"
             aria-disabled={isDisabled}
-            aria-selected={isSelected(card)}
+            aria-selected={isCardSelected}
             onClick={() => handleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
               isDisabled ? disabledClassName : "",
-              isSelected(card) ? selectedCardClassName : "",
-              isDiscarded(card) ? discardedCardClassName : "",
-              shouldDecreaseOpacity(card) ? "opacity-80" : "",
+              isCardSelected ? selectedCardClassName : "",
+              isCardDiscarded ? discardedCardClassName : "",
+              isCardOpacityDecreased ? "opacity-80" : "",
             )}
           >
             <Card name={card.name} description={card.description} />
           </div>
-        ),
-      )}
+        );
+      })}
     </div>
   );
 }

@@ -285,10 +285,7 @@ describe("Hand", () => {
       // Por defecto, devolvemos false.
       // Para la primer y segunda llamada devolvemos true
       // (chequeo de `isSelected` and `shouldDecreaseOpacity`)
-      mockIsSelected
-        .mockReturnValue(false)
-        .mockReturnValueOnce(true)
-        .mockReturnValueOnce(true);
+      mockIsSelected.mockReturnValueOnce(true);
 
       render(
         <Hand
