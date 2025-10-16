@@ -24,10 +24,9 @@ type HandCardList = Array<GameCard | null>;
 const defaultStateSetEvent = {
   isSetEvent: false,
   isValidSet: false,
-  targetType: "player",
+  isTargetPlayer: true, // caso contrario el target es un secreto
+  isSelectedTargetSet: false,
   target: "",
-  isSelectedTargetSet: true,
-  bottonMsg: "Play set",
 };
 
 export default function GameContainer() {
@@ -52,18 +51,19 @@ export default function GameContainer() {
   const handleClickSetEvent = () => {
     if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
     else if (!setEvent.isSetEvent) {
-      const targetSetEvent = "Select one player"; // Esto se debe de obtener de una funcion
+      // TODO: Se debe verificar si el target del set es un jugador o un secreto
+      const isTargetPlayer = true;
 
       setSetEvent((prev) => ({
         ...prev,
         isSetEvent: true,
-        bottonMsg: targetSetEvent,
+        isSelectedTargetSet: false,
+        target: "",
+        isTargetPlayer,
       }));
       return;
     }
   };
-
-  const isDisabledSetEventButton = setEvent.isValidSet;
 
   // Determina si es la primera vez que se carga el componente.
   // Se usa para cargar la mano del jugador solo una vez.
@@ -426,11 +426,18 @@ export default function GameContainer() {
             <HandActions
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
-              onClickSetButton={handleClickSetEvent}
+              onPlaySet={handleClickSetEvent}
+              onSelectPlayer={handleClickSetEvent}
+              onSelectSecret={handleClickSetEvent}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
-              isDisabledSetEventButton={isDisabledSetEventButton}
-              bottonMsgForSetMatch={setEvent.bottonMsg}
+              isValidSet={setEvent.isValidSet}
+              isSelectionPlayerEvent={
+                setEvent.isSetEvent && setEvent.isTargetPlayer
+              }
+              isSelectionSecretEvent={
+                setEvent.isSetEvent && !setEvent.isTargetPlayer
+              }
             />
           </div>
         </div>
