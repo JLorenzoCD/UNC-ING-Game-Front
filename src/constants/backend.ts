@@ -18,6 +18,8 @@ const BACKEND_ENDPOINTS = {
   UPDATE_CARDS: (matchId: UUID) => `/matches/${matchId}/cards`,
 
   PASS_TURN: (matchId: UUID) => `/matches/${matchId}/pass_turn`,
+
+  PLAY_EVENT: (matchId: UUID) => `/matches/${matchId}/events`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
