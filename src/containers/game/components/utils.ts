@@ -1,5 +1,5 @@
 import type { UUID } from "@/types/common";
-import type { GameCard } from "@/types/card";
+import type { CardName, GameCard } from "@/types/card";
 import type { SetCreationData, SetType } from "@/types/set";
 
 const MIN_CARD_COUT_FOR_SET: Record<SetType, number> = {
@@ -16,10 +16,24 @@ const MAX_CARD_COUNT = Math.max(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MIN_CARD_COUNT = Math.min(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MAX_QUIN_COUNT = 2 as const;
 
-export function CardNameToSetTypeDetective(card: GameCard): SetType {
-  let setType: SetType = "HERCULE POIROT";
+// La función no valida si un arreglo de cartas es un set valido
+export function cardsToSetTypeDetective(cards: GameCard[]) {
+  let setType: SetType | null = null;
 
-  switch (card.name) {
+  if (isValidTwoBeresfordSetType(cards)) {
+    setType = "TWO BERESFORD";
+    return setType;
+  }
+
+  const cardsGroupByDetective = Object.groupBy(cards, (card) => card.name);
+  if (cardsGroupByDetective["HARLEY QUIN WILDCARD"])
+    delete cardsGroupByDetective["HARLEY QUIN WILDCARD"];
+  if (cardsGroupByDetective["ARIADNE OLIVER"])
+    delete cardsGroupByDetective["ARIADNE OLIVER"];
+
+  const detectiveName = Object.keys(cardsGroupByDetective)[0];
+
+  switch (detectiveName) {
     case "HERCULE POIROT":
     case "MISS MARPLE":
     case "MR SATTERTHWAITE":
@@ -27,11 +41,11 @@ export function CardNameToSetTypeDetective(card: GameCard): SetType {
     case "LADY EILEEN":
     case "TOMMY BERESFORD":
     case "TUPPENCE BERESFORD":
-      setType = card.name;
+      setType = detectiveName;
       break;
 
     default:
-      throw new Error("The given card is not a valid detective.");
+      setType = null;
   }
 
   return setType;
@@ -39,16 +53,17 @@ export function CardNameToSetTypeDetective(card: GameCard): SetType {
 
 export function isValidTwoBeresfordSetType(cards: GameCard[]) {
   const cardsGroupByDetective = Object.groupBy(cards, (card) => card.name);
+  if (Object.keys(cardsGroupByDetective).length !== 2) return false;
 
   const tommyBeresfordCards = cardsGroupByDetective["TOMMY BERESFORD"];
   const typplanceBeresfordCards = cardsGroupByDetective["TUPPENCE BERESFORD"];
 
   const isTommyBeresford =
     !!tommyBeresfordCards && tommyBeresfordCards.length === 1;
-  const istypplanceford =
+  const isTypplanceford =
     !!typplanceBeresfordCards && typplanceBeresfordCards.length === 1;
 
-  return isTommyBeresford && istypplanceford;
+  return isTommyBeresford && isTypplanceford;
 }
 
 export function isCardsValidSet(cards: GameCard[]) {
@@ -68,14 +83,37 @@ export function isCardsValidSet(cards: GameCard[]) {
   );
   if (!isAllDetectiveCardsValid) return false;
 
-  const cardsGroupByDetective = Object.groupBy(cards, (card) => card.name);
+  const cardsGroupByDetective: Partial<Record<CardName | SetType, GameCard[]>> =
+    Object.groupBy(cards, (card) => card.name);
 
+  // Solo puede haber sets con 2 detectives diferentes como máximo
   if (Object.keys(cardsGroupByDetective).length > 2) return false;
 
-  const quinDetective = cardsGroupByDetective["HARLEY QUIN WILDCARD"];
-  if (quinDetective && quinDetective.length > MAX_QUIN_COUNT) return false;
+  //* De momento los sets con Oliver no son permitidos
+  const oliverDetective = cardsGroupByDetective["ARIADNE OLIVER"];
+  if (oliverDetective && oliverDetective.length) return false;
 
-  if (!quinDetective && !isValidTwoBeresfordSetType(cards)) return false;
+  const quinDetective = cardsGroupByDetective["HARLEY QUIN WILDCARD"] ?? [];
+  if (quinDetective.length > MAX_QUIN_COUNT) return false;
+
+  const isTwoBeresford = isValidTwoBeresfordSetType(cards);
+  if (quinDetective.length !== 0 && isTwoBeresford) return false;
+
+  if (isTwoBeresford) {
+    cardsGroupByDetective["TWO BERESFORD"] = [
+      ...(cardsGroupByDetective["TOMMY BERESFORD"] as GameCard[]),
+      ...(cardsGroupByDetective["TUPPENCE BERESFORD"] as GameCard[]),
+    ];
+  }
+
+  const setType = cardsToSetTypeDetective(cards);
+  if (setType === null || !cardsGroupByDetective[setType]) return false;
+
+  if (
+    cardsGroupByDetective[setType].length + quinDetective.length !==
+    MIN_CARD_COUT_FOR_SET[setType]
+  )
+    return false;
 
   return true;
 }
@@ -88,7 +126,7 @@ export function cardsToSet(
   if (!isCardsValidSet(cards))
     throw new Error("The cards given are not a valid Set.");
 
-  // Si o si debe haber 1, isCardsValidSet lo valida
+  // Si o si debe haber 1 por validación de isCardsValidSet
   const cardDetective = cards.find(
     (card) => card.name !== "HARLEY QUIN WILDCARD",
   ) as GameCard;
@@ -98,12 +136,8 @@ export function cardsToSet(
   const target_player_id = targetPlayerId;
   const target_secret_id = targetSecretId;
 
-  let type: SetType = "HERCULE POIROT";
-  if (isValidTwoBeresfordSetType(cards)) {
-    type = "TWO BERESFORD";
-  } else {
-    type = CardNameToSetTypeDetective(cardDetective);
-  }
+  // Si o si por isCardsValidSet
+  const type = cardsToSetTypeDetective(cards) as SetType;
 
   const setData: SetCreationData = {
     type,
@@ -114,4 +148,25 @@ export function cardsToSet(
   };
 
   return setData;
+}
+
+export function isSecretTargetSet(cards: GameCard[]) {
+  if (!isCardsValidSet(cards))
+    throw new Error("The cards given are not a valid Set.");
+
+  // Valido por isCardsValidSet
+  const setType = cardsToSetTypeDetective(cards) as SetType;
+
+  switch (setType) {
+    case "HERCULE POIROT":
+    case "MISS MARPLE":
+    case "PARKER PYNE":
+      return true;
+    case "MR SATTERTHWAITE":
+    case "LADY EILEEN":
+    case "TOMMY BERESFORD":
+    case "TUPPENCE BERESFORD":
+    case "TWO BERESFORD":
+      return false;
+  }
 }
