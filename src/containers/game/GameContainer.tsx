@@ -82,7 +82,12 @@ export default function GameContainer() {
   };
 
   const handleSelectTargetEvent = (target: GamePlayer | GameSecret) => {
-    if (setEvent.isSetEvent) {
+    const isSetEventPlayerTarget =
+      setEvent.isSetEvent && setEvent.isTargetPlayer && "avatar" in target;
+    const isSetEventSecretTarget =
+      setEvent.isSetEvent && !setEvent.isTargetPlayer && "secret_id" in target;
+
+    if (isSetEventPlayerTarget || isSetEventSecretTarget) {
       setSetEvent((prev) => ({
         ...prev,
         target: target,
@@ -105,6 +110,8 @@ export default function GameContainer() {
         setEvent.target.name +
         " fue seleccionado para revelar su secreto",
     );
+
+    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
   };
 
   const handleSelectedSecret = () => {
@@ -122,6 +129,8 @@ export default function GameContainer() {
         ", fue seleccionado para revelar su secreto. Este es " +
         setEvent.target.type,
     );
+
+    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
   };
 
   const isSelectablePlayer = (player: GamePlayer) => {
@@ -142,7 +151,7 @@ export default function GameContainer() {
 
   const isSelectableSecret = (secret: GameSecret) => {
     // Se deben de poner todos los posibles eventos validos
-    if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
+    if (!setEvent.isSetEvent || setEvent.isTargetPlayer) return false;
 
     if (secret.player_id === player?.id) return false;
 

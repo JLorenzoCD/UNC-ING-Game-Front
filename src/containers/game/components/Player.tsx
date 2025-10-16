@@ -54,17 +54,17 @@ export default function Player({
               ? "border-green-400 shadow-lg shadow-green-400/50 animate-pulse"
               : "border-transparent",
 
-            isSelectable &&
+            isSelectable && [
               isPlayerEvent &&
-              selelectingTarget &&
-              "border-red-400 border-10 shadow-lg shadow-red-400/50 animate-pulse",
-            isSelectable &&
+                selelectingTarget &&
+                "border-red-400 border-10 shadow-lg shadow-red-400/50 animate-pulse",
               isPlayerEvent &&
-              selelectingTarget &&
-              isTarget &&
-              "border-blue-400 border-10 shadow-lg shadow-blue-400/50 animate-none",
+                selelectingTarget &&
+                isTarget &&
+                "border-blue-400 border-10 shadow-lg shadow-blue-400/50 animate-none",
+            ],
             ((!isSelectable && isPlayerEvent) ||
-              (!selelectingTarget && !isTarget)) &&
+              (!selelectingTarget && isPlayerEvent && !isTarget)) &&
               "border-4 border-transparent shadow-none animate-none brightness-50",
           )}
         >

@@ -77,20 +77,22 @@ export default function Secret({
         className={twMerge(
           "rounded-lg overflow-hidden",
           !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30",
-          isSelectable &&
+          isSelectable && [
             isCurrPlayerSecretReveled &&
-            isSelectingTarget &&
-            "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31",
-          isSelectable &&
+              isSelectingTarget &&
+              "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31",
             isCurrPlayerSelectingSecret &&
-            isSelectingTarget &&
-            "border-red-400 border-2 shadow-lg shadow-red-400/50 animate-pulse",
-          isSelectable &&
+              isSelectingTarget &&
+              "border-red-400 border-2 shadow-lg shadow-red-400/50 animate-pulse",
             isCurrPlayerSelectingSecret &&
-            isTarget &&
-            "border-blue-400 border-2 shadow-lg shadow-blue-400/50 animate-none",
+              isTarget &&
+              "border-blue-400 border-2 shadow-lg shadow-blue-400/50 animate-none",
+          ],
           ((!isSelectable && isTargetSecret) ||
-            (!isSessionPlayer && !isTarget && !isSelectingTarget)) &&
+            (!isSessionPlayer &&
+              isTargetSecret &&
+              !isTarget &&
+              !isSelectingTarget)) &&
             "border-2 border-transparent shadow-none animate-none brightness-50",
         )}
       >
