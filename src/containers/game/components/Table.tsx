@@ -6,11 +6,12 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import Player from "./Player";
 
 interface TableProps {
+  draft: ReactNode;
   drawPile: ReactNode;
   discardPile: ReactNode;
 }
 
-export default function Table({ drawPile, discardPile }: TableProps) {
+export default function Table({ draft, drawPile, discardPile }: TableProps) {
   const { player } = usePlayer();
   const { players, match, secrets, sets } = useGame();
 
@@ -120,9 +121,13 @@ export default function Table({ drawPile, discardPile }: TableProps) {
       )}
 
       {/* Las pilas están fijas en el centro de la pantalla. */}
-      <div className="col-start-2 row-start-2 flex justify-center items-center gap-x-3">
-        {discardPile}
-        {drawPile}
+      <div className="col-start-2 row-start-2 flex flex-col justify-center items-center gap-y-4">
+        <div className="flex justify-center items-center gap-x-3">
+          {drawPile}
+          {discardPile}
+        </div>
+
+        {draft}
       </div>
     </>
   );

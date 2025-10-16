@@ -15,9 +15,13 @@ import DiscardModal from "./components/DiscardModal";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
+import Draft from "./components/Draft";
 
 type GameCardMap = Record<UUID, GameCard>;
 type HandCardList = Array<GameCard | null>;
+
+const DRAFT_SIZE = 3;
+const HAND_SIZE = 6;
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -28,7 +32,6 @@ export default function GameContainer() {
 
   const [handCards, setHandCards] = useState<HandCardList>([]);
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
-  const [discardedCards, setDiscardedCards] = useState<GameCardMap>({});
   const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
   const [discardModal, setDiscardModal] = useState({
@@ -52,6 +55,15 @@ export default function GameContainer() {
 
     return match.current_player_order === matchPlayer.order;
   }, [match, player, players]);
+
+  // El jugador puede tomar cartas si es su turno
+  // y tiene menos de 6 cartas en mano (posiciones no nulas).
+  const canTakeCards = useMemo(() => {
+    return (
+      isPlayerTurn &&
+      handCards.filter((card) => card !== null).length < HAND_SIZE
+    );
+  }, [handCards, isPlayerTurn]);
 
   const playerSecrets = useMemo(() => {
     if (!player) return [];
@@ -77,6 +89,12 @@ export default function GameContainer() {
       });
   }, [cards]);
 
+  const cardsInDraft = useMemo(() => {
+    return cards
+      .filter((card) => card.player_id === null && !card.is_discarded)
+      .slice(0, DRAFT_SIZE);
+  }, [cards]);
+
   const drawableCards = useMemo(() => {
     return cards.filter((card) => {
       // Una carta es tomable si no pertenece a ningún jugador
@@ -87,16 +105,20 @@ export default function GameContainer() {
 
   const isSelectingCards = Object.keys(selectedCards).length > 0;
 
-  const isDiscardingCards = Object.keys(discardedCards).length > 0;
-
   // -- Utilidades --
 
   const isCardSelected = (card: GameCard) => {
     return !!selectedCards[card.id];
   };
 
-  const isCardDiscarded = (card: GameCard) => {
-    return !!discardedCards[card.id];
+  const fillHandWithNulls = (cards: GameCard[]): HandCardList => {
+    const filledHand: HandCardList = [...cards];
+
+    while (filledHand.length < HAND_SIZE) {
+      filledHand.push(null);
+    }
+
+    return filledHand;
   };
 
   // -- Manejadores --
@@ -106,10 +128,6 @@ export default function GameContainer() {
    * entonces la seleccionamos.
    */
   const handleSelectCard = (card: GameCard) => {
-    // No se pueden seleccionar cartas que
-    // ya están marcadas para descartar
-    if (isCardDiscarded(card)) return;
-
     if (discardModal.isOpen && !discardModal.isEventDiscard) {
       // Si no hay evento no se puede seleccionar cartas en el modal que
       // muestra las ultimas 5 cartas descartadas.
@@ -127,20 +145,6 @@ export default function GameContainer() {
 
       setSelectedCards(updatedSelectedCards);
     }
-  };
-
-  const handleDiscardSelectedCards = () => {
-    if (isDiscardingCards) {
-      // Si ya hay cartas marcadas para descartar,
-      // se desmarca todo.
-      setDiscardedCards({});
-      setHasDiscardedCards(false);
-    } else if (isSelectingCards) {
-      setDiscardedCards(selectedCards);
-      setHasDiscardedCards(true);
-    }
-
-    setSelectedCards({});
   };
 
   const handleClickDiscardPile = () => {
@@ -162,85 +166,23 @@ export default function GameContainer() {
 
   // -- Llamadas a la API --
 
-  /**
-   * Descarta las cartas que localmente se marcaron como descartadas,
-   * tomando igual cantidad de cartas del mazo regular y reordenándolas
-   * en la mano del jugador.
-   *
-   * TODO: permitir tomar cartas del draft.
-   */
-  const handleDiscardCards = async () => {
+  const handleTakeCardFromDraft = async (card: GameCard) => {
     if (!httpService || !player || !match) return;
 
-    const discardedCardsAmount = Object.keys(discardedCards).length;
-
-    // Si no se han marcado cartas como descartadas,
-    // cancelamos la operación.
-    if (discardedCardsAmount === 0) return;
-
-    // TODO: corregir esto con la lógica de tomar cartas
-    const takenCardIds = cards
-      .filter((card) => {
-        return card.player_id === null && !card.is_discarded;
-      })
-      // Tenemos que tomar la misma cantidad que descartamos.
-      .slice(0, discardedCardsAmount)
-      .map((card) => card.id);
-
-    const discardedCardIds = Object.keys(discardedCards);
-
     try {
-      await httpService.putMatchCards(
-        match.id,
-        player.id,
-        takenCardIds,
-        discardedCardIds,
-      );
+      await httpService.putTakeCards(match.id, player.id, [card.id]);
 
-      setHandCards((prevHandCards) => {
-        // Calculamos que índices de la mano pertenecen
-        // a cartas que serán descartadas.
-        const discardedHandCardsIndexes = prevHandCards
-          .map((card, index) => {
-            if (card === null) return -1;
+      const firstEmptyIndex = handCards.findIndex((c) => c === null);
 
-            return discardedCardIds.includes(card.id) ? index : -1;
-          })
-          .filter((index) => index !== -1);
-
-        const newHandCards = [...prevHandCards];
-
-        for (const index of discardedHandCardsIndexes) {
-          // Dejamos vacío el espacio en la mano que pertenecía
-          // a una carta que fue descartada.
-          newHandCards[index] = null;
-        }
-
-        const takenCards = cards.filter((card) =>
-          takenCardIds.includes(card.id),
-        );
-
-        let takenCardsIndex = 0;
-
-        // Agregamos a los espacios vacíos de la mano, de izquierda a derecha,
-        // las cartas que han sido tomadas.
-        for (let i = 0; i < newHandCards.length; i++) {
-          if (newHandCards[i] === null && takenCardsIndex < takenCards.length) {
-            newHandCards[i] = takenCards[takenCardsIndex];
-            takenCardsIndex++;
-          }
-        }
-
-        // La mano ahora tiene las cartas originales y las nuevas
-        // en los lugares de las que fueron descartadas.
-        return newHandCards;
-      });
+      if (firstEmptyIndex !== -1) {
+        setHandCards((prevHandCards) => {
+          const newHandCards = [...prevHandCards];
+          newHandCards[firstEmptyIndex] = card;
+          return newHandCards;
+        });
+      }
     } catch (error) {
-      console.error("Failed to put cards:", error);
-
-      // Lanzamos el error de nuevo para que no pueda pasar el turno
-      // si el descarte falló.
-      throw error;
+      console.error("Failed to take card from draft:", error);
     }
   };
 
@@ -273,12 +215,13 @@ export default function GameContainer() {
     }
 
     try {
-      await httpService.putMatchCards(
-        match.id,
-        player.id,
-        [firstTakeableCard.id],
-        [randomDiscardableCard.id],
-      );
+      await httpService.putDiscardCards(match.id, player.id, [
+        randomDiscardableCard.id,
+      ]);
+
+      await httpService.putTakeCards(match.id, player.id, [
+        firstTakeableCard.id,
+      ]);
 
       setHandCards((prevHandCards) => {
         const newHandCards = [...prevHandCards];
@@ -302,6 +245,42 @@ export default function GameContainer() {
     }
   };
 
+  const handleDiscardSelectedCards = async () => {
+    if (!httpService || !player || !match) return;
+
+    const selectedCardIds = Object.keys(selectedCards);
+
+    if (selectedCardIds.length === 0) return;
+
+    try {
+      await httpService.putDiscardCards(
+        match.id,
+        player.id,
+        selectedCardIds as UUID[],
+      );
+
+      setHandCards((current) => {
+        const newHandCards = [...current];
+
+        selectedCardIds.forEach((cardId) => {
+          const index = newHandCards.findIndex((card) => card?.id === cardId);
+          if (index !== -1) {
+            newHandCards[index] = null;
+          }
+        });
+
+        return newHandCards;
+      });
+
+      setSelectedCards({});
+      setHasDiscardedCards(true);
+    } catch (error) {
+      console.error("Failed to discard selected cards:", error);
+
+      return;
+    }
+  };
+
   const handleFinishTurn = async () => {
     if (!httpService || !player || !match) return;
 
@@ -310,13 +289,10 @@ export default function GameContainer() {
       // el descarte obligatorio de una carta.
       if (!hasDiscardedCards) {
         await handleMandatoryDiscard();
-      } else {
-        await handleDiscardCards();
       }
 
       // Reseteamos los estados relacionados con el descarte
       setSelectedCards({});
-      setDiscardedCards({});
       setHasDiscardedCards(false);
 
       await httpService.putPassTurn(match.id);
@@ -332,15 +308,17 @@ export default function GameContainer() {
     // o si ya tiene cartas en su mano
     if (cards.length === 0 || player === null) return;
 
-    if (initialLoadRef.current) {
-      setHandCards(
-        cards.filter(
-          (card) => card.player_id === player?.id && !card.is_discarded,
-        ),
-      );
+    if (!initialLoadRef.current) return;
 
-      initialLoadRef.current = false;
-    }
+    initialLoadRef.current = false;
+
+    setHandCards(
+      fillHandWithNulls(
+        cards.filter(
+          (card) => card.player_id === player.id && !card.is_discarded,
+        ),
+      ),
+    );
   }, [cards, player]);
 
   // Para reutilizar el 'selectedCards', se vacía el mismo si se abre el modal
@@ -353,12 +331,19 @@ export default function GameContainer() {
     <>
       <div
         data-testid="game-container"
-        className="p-4 h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
+        className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">
           {/* Las primeras 6 casillas ubican a los jugadores, sus elementos y las pilas del juego. */}
           <Table
+            draft={
+              <Draft
+                cards={cardsInDraft}
+                onTake={handleTakeCardFromDraft}
+                canTake={canTakeCards}
+              />
+            }
             drawPile={<DrawPile cardCount={drawableCards.length} />}
             discardPile={
               <DiscardPile
@@ -380,14 +365,12 @@ export default function GameContainer() {
               onSelect={handleSelectCard}
               isSelected={isCardSelected}
               isSelecting={isSelectingCards}
-              isDiscarded={isCardDiscarded}
               isDisabled={!isPlayerTurn}
             />
 
             <HandActions
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
-              isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
             />
           </div>

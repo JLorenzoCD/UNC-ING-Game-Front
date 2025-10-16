@@ -7,9 +7,8 @@ interface HandProps {
 
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
-  isSelecting: boolean; // Indica si el jugador está en modo de selección
-  isDiscarded: (card: GameCard) => boolean; // Función para determinar si una carta está marcada para descartar
   isDisabled: boolean; // Indica si la mano está deshabilitada (no se pueden ejecutar acciones)
+  isSelecting: boolean; // Indica si el jugador está en modo de selección
 }
 
 function EmptyHandPosition() {
@@ -29,7 +28,6 @@ export default function Hand({
   onSelect,
   isSelected,
   isSelecting,
-  isDiscarded,
   isDisabled,
 }: HandProps) {
   // Si la mano está deshabilitada, aplicamos estilos para indicar que no se puede interactuar
@@ -39,14 +37,8 @@ export default function Hand({
   // Una carta seleccionada se resalta con un borde y se eleva ligeramente
   const selectedCardClassName = "rounded-lg ring-4 ring-red-500 -translate-y-4";
 
-  // Una carta descartada se muestra con opacidad reducida y en escala de grises
-  const discardedCardClassName = "opacity-50 grayscale";
-
-  const shouldDecreaseCardOpacity = (
-    isSelected: boolean,
-    isDiscarded: boolean,
-  ) => {
-    if (isSelected || isDiscarded || isDisabled) return false;
+  const shouldDecreaseCardOpacity = (isSelected: boolean) => {
+    if (isSelected || isDisabled) return false;
 
     return isSelecting;
   };
@@ -65,11 +57,8 @@ export default function Hand({
         }
 
         const isCardSelected = isSelected(card);
-        const isCardDiscarded = isDiscarded(card);
-        const isCardOpacityDecreased = shouldDecreaseCardOpacity(
-          isCardSelected,
-          isCardDiscarded,
-        );
+        const isCardOpacityDecreased =
+          shouldDecreaseCardOpacity(isCardSelected);
 
         return (
           <div
@@ -82,7 +71,6 @@ export default function Hand({
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
               isDisabled ? disabledClassName : "",
               isCardSelected ? selectedCardClassName : "",
-              isCardDiscarded ? discardedCardClassName : "",
               isCardOpacityDecreased ? "opacity-80" : "",
             )}
           >
