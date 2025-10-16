@@ -13,7 +13,7 @@ import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
-import { isCardsValidSet } from "./components/utils";
+import { isCardsValidSet, isSecretTargetSet } from "./components/utils";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
@@ -50,12 +50,13 @@ export default function GameContainer() {
 
   const handleClickSetEvent = () => {
     if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
-    else if (!setEvent.isSetEvent) {
-      // TODO: Se debe verificar si el target del set es un jugador o un secreto
-      const isTargetPlayer = true;
+    else if (setEvent.isValidSet && !setEvent.isSetEvent) {
+      const isTargetPlayer = !isSecretTargetSet(Object.values(selectedCards));
 
+      //! REVISAR, no se podia abrir el docker en el lab de la facu.
       setSetEvent((prev) => ({
         ...prev,
+        isValidSet: false, // Para deshabilitar el botón de jugar set
         isSetEvent: true,
         isSelectedTargetSet: false,
         target: "",
@@ -69,6 +70,9 @@ export default function GameContainer() {
   // Se usa para cargar la mano del jugador solo una vez.
   // Luego, las actualizaciones de cartas se harán por WebSocket.
   const initialLoadRef = useRef<boolean>(true);
+
+  const isSetValidRef = useRef<boolean>(false);
+  isSetValidRef.current = setEvent.isSetEvent;
 
   // -- Valores memoizados --
 
@@ -383,7 +387,12 @@ export default function GameContainer() {
   // Al seleccionar cartas de mano, se revisa si son un set de detectives validos
   useEffect(() => {
     if (discardModal.isOpen) return;
-    if (!isCardsValidSet(Object.values(selectedCards))) return;
+
+    const isValidSet = isCardsValidSet(Object.values(selectedCards));
+    if (!isValidSet && !isSetValidRef) return;
+    else if (!isValidSet && isSetValidRef) {
+      setSetEvent(defaultStateSetEvent);
+    }
 
     setSetEvent((prev) => ({ ...prev, isValidSet: true }));
   }, [discardModal, selectedCards]);
@@ -431,7 +440,9 @@ export default function GameContainer() {
               onSelectSecret={handleClickSetEvent}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
-              isValidSet={setEvent.isValidSet}
+              isSetButtonDisabled={
+                !(setEvent.isValidSet && !setEvent.isSetEvent)
+              }
               isSelectionPlayerEvent={
                 setEvent.isSetEvent && setEvent.isTargetPlayer
               }

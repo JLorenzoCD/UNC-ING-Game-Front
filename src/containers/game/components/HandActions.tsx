@@ -8,7 +8,7 @@ interface HandActionsProps {
   onSelectSecret: () => void; // Callback que se ejecuta al clickear el botón seleccionar un secreto
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isDiscarding: boolean; // Indica si el jugador ha seleccionado cartas para descartar
-  isValidSet: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
+  isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
 }
@@ -21,7 +21,7 @@ export default function HandActions({
   onSelectSecret,
   isDisabled,
   isDiscarding,
-  isValidSet,
+  isSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
 }: HandActionsProps) {
@@ -31,7 +31,7 @@ export default function HandActions({
         {isDiscarding ? "Cancel discard" : "Discard cards"}
       </Button>
 
-      <Button onClick={onPlaySet} disabled={isDisabled && isValidSet}>
+      <Button onClick={onPlaySet} disabled={isDisabled && isSetButtonDisabled}>
         Play set
       </Button>
 
