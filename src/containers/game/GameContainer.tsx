@@ -13,11 +13,22 @@ import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
+import { isCardsValidSet } from "./components/utils";
+
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 
 type GameCardMap = Record<UUID, GameCard>;
 type HandCardList = Array<GameCard | null>;
+
+const defaultStateSetEvent = {
+  isSetEvent: false,
+  isValidSet: false,
+  targetType: "player",
+  target: "",
+  isSelectedTargetSet: true,
+  bottonMsg: "Play set",
+};
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -35,6 +46,24 @@ export default function GameContainer() {
     isOpen: false,
     isEventDiscard: false,
   });
+
+  const [setEvent, setSetEvent] = useState(defaultStateSetEvent);
+
+  const handleClickSetEvent = () => {
+    if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
+    else if (!setEvent.isSetEvent) {
+      const targetSetEvent = "Select one player"; // Esto se debe de obtener de una funcion
+
+      setSetEvent((prev) => ({
+        ...prev,
+        isSetEvent: true,
+        bottonMsg: targetSetEvent,
+      }));
+      return;
+    }
+  };
+
+  const isDisabledSetEventButton = setEvent.isValidSet;
 
   // Determina si es la primera vez que se carga el componente.
   // Se usa para cargar la mano del jugador solo una vez.
@@ -323,6 +352,8 @@ export default function GameContainer() {
     } catch (error) {
       console.error("Failed to finish turn:", error);
     }
+
+    setSetEvent(defaultStateSetEvent);
   };
 
   // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
@@ -348,6 +379,14 @@ export default function GameContainer() {
   useEffect(() => {
     setSelectedCards({});
   }, [discardModal.isOpen]);
+
+  // Al seleccionar cartas de mano, se revisa si son un set de detectives validos
+  useEffect(() => {
+    if (discardModal.isOpen) return;
+    if (!isCardsValidSet(Object.values(selectedCards))) return;
+
+    setSetEvent((prev) => ({ ...prev, isValidSet: true }));
+  }, [discardModal, selectedCards]);
 
   return (
     <>
@@ -387,8 +426,11 @@ export default function GameContainer() {
             <HandActions
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
+              onClickSetButton={handleClickSetEvent}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
+              isDisabledSetEventButton={isDisabledSetEventButton}
+              bottonMsgForSetMatch={setEvent.bottonMsg}
             />
           </div>
         </div>
