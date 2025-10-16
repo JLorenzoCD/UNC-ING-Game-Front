@@ -71,8 +71,8 @@ export default function GameContainer() {
   // Luego, las actualizaciones de cartas se harán por WebSocket.
   const initialLoadRef = useRef<boolean>(true);
 
-  const isSetValidRef = useRef<boolean>(false);
-  isSetValidRef.current = setEvent.isSetEvent;
+  const isSetEventRef = useRef<boolean>(false);
+  isSetEventRef.current = setEvent.isSetEvent;
 
   // -- Valores memoizados --
 
@@ -386,12 +386,13 @@ export default function GameContainer() {
 
   // Al seleccionar cartas de mano, se revisa si son un set de detectives validos
   useEffect(() => {
-    if (discardModal.isOpen) return;
+    if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
     const isValidSet = isCardsValidSet(Object.values(selectedCards));
-    if (!isValidSet && !isSetValidRef) return;
-    else if (!isValidSet && isSetValidRef) {
+    if (!isValidSet && !isSetEventRef) return;
+    else if (!isValidSet && isSetEventRef) {
       setSetEvent(defaultStateSetEvent);
+      return;
     }
 
     setSetEvent((prev) => ({ ...prev, isValidSet: true }));
@@ -444,10 +445,10 @@ export default function GameContainer() {
                 !(setEvent.isValidSet && !setEvent.isSetEvent)
               }
               isSelectionPlayerEvent={
-                setEvent.isSetEvent && setEvent.isTargetPlayer
+                !(setEvent.isSetEvent && setEvent.isTargetPlayer)
               }
               isSelectionSecretEvent={
-                setEvent.isSetEvent && !setEvent.isTargetPlayer
+                !(setEvent.isSetEvent && !setEvent.isTargetPlayer)
               }
             />
           </div>
