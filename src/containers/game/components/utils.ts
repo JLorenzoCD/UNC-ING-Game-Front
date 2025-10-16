@@ -1,14 +1,6 @@
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
-import type { SetType } from "@/types/set";
-
-interface SetCreationData {
-  type: SetType;
-  card_ids: UUID[];
-  player_id: UUID;
-  target_player_id: UUID;
-  target_secret_id?: UUID;
-}
+import type { SetCreationData, SetType } from "@/types/set";
 
 const MIN_CARD_COUT_FOR_SET: Record<SetType, number> = {
   "HERCULE POIROT": 3,
