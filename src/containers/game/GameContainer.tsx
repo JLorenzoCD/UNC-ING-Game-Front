@@ -53,10 +53,9 @@ export default function GameContainer() {
     else if (setEvent.isValidSet && !setEvent.isSetEvent) {
       const isTargetPlayer = !isSecretTargetSet(Object.values(selectedCards));
 
-      //! REVISAR, no se podia abrir el docker en el lab de la facu.
       setSetEvent((prev) => ({
         ...prev,
-        isValidSet: false, // Para deshabilitar el botón de jugar set
+        isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
         isSetEvent: true,
         isSelectedTargetSet: false,
         target: "",
