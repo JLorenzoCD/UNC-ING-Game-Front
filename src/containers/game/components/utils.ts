@@ -111,7 +111,9 @@ export function isCardsValidSet(cards: GameCard[]) {
 
   if (
     cardsGroupByDetective[setType].length + quinDetective.length !==
-    MIN_CARD_COUT_FOR_SET[setType]
+      MIN_CARD_COUT_FOR_SET[setType] ||
+    cardsGroupByDetective[setType].length + quinDetective.length !==
+      cards.length
   )
     return false;
 
@@ -150,7 +152,7 @@ export function cardsToSet(
   return setData;
 }
 
-export function isSecretTargetSet(cards: GameCard[]) {
+export function isSetTargetOneSecret(cards: GameCard[]) {
   if (!isCardsValidSet(cards))
     throw new Error("The cards given are not a valid Set.");
 
@@ -169,4 +171,13 @@ export function isSecretTargetSet(cards: GameCard[]) {
     case "TWO BERESFORD":
       return false;
   }
+}
+
+export function isSetActionRevealSecret(cards: GameCard[]) {
+  if (!isCardsValidSet(cards))
+    throw new Error("The cards given are not a valid Set.");
+
+  const setType = cardsToSetTypeDetective(cards) as SetType;
+
+  return setType !== "PARKER PYNE";
 }
