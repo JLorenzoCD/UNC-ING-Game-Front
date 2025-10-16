@@ -17,16 +17,26 @@ import { isCardsValidSet, isSecretTargetSet } from "./components/utils";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
+import type { GamePlayer } from "@/types/player";
+import type { GameSecret } from "@/types/secret";
 
 type GameCardMap = Record<UUID, GameCard>;
 type HandCardList = Array<GameCard | null>;
 
-const defaultStateSetEvent = {
+interface SetEvent {
+  isSetEvent: boolean;
+  isValidSet: boolean;
+  isTargetPlayer: boolean;
+  isSelectedTargetSet: boolean;
+  target: GamePlayer | GameSecret | null;
+}
+
+const defaultStateSetEvent: SetEvent = {
   isSetEvent: false,
   isValidSet: false,
   isTargetPlayer: true, // caso contrario el target es un secreto
   isSelectedTargetSet: false,
-  target: "",
+  target: null,
 };
 
 export default function GameContainer() {
@@ -46,7 +56,7 @@ export default function GameContainer() {
     isEventDiscard: false,
   });
 
-  const [setEvent, setSetEvent] = useState(defaultStateSetEvent);
+  const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
   const handleClickSetEvent = () => {
     if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
@@ -58,11 +68,54 @@ export default function GameContainer() {
         isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
         isSetEvent: true,
         isSelectedTargetSet: false,
-        target: "",
+        target: null,
         isTargetPlayer,
       }));
       return;
     }
+  };
+
+  const handleSelectTargetEvent = (target: GamePlayer | GameSecret) => {
+    if (setEvent.isSetEvent) {
+      setSetEvent((prev) => ({
+        ...prev,
+        target: target,
+        isSelectedTargetSet: true,
+      }));
+    }
+  };
+
+  const handleSelectedPlayer = () => {
+    if (
+      !setEvent.isSetEvent ||
+      !setEvent.isTargetPlayer ||
+      setEvent.target === null ||
+      !("avatar" in setEvent.target)
+    )
+      return;
+
+    alert(
+      "El jugador " +
+        setEvent.target.name +
+        " fue seleccionado para revelar su secreto",
+    );
+  };
+
+  const handleSelectedSecret = () => {
+    if (
+      !setEvent.isSetEvent ||
+      setEvent.isTargetPlayer ||
+      setEvent.target === null ||
+      !("secret_id" in setEvent.target)
+    )
+      return;
+
+    alert(
+      "Se selecciono el secreto con id: " +
+        setEvent.target.id +
+        ", fue seleccionado para revelar su secreto. Este es " +
+        setEvent.target.type,
+    );
   };
 
   // Determina si es la primera vez que se carga el componente.
@@ -414,6 +467,11 @@ export default function GameContainer() {
                 onClick={handleClickDiscardPile}
               />
             }
+            onSelectTargetEvent={handleSelectTargetEvent}
+            isEvent={setEvent.isSetEvent}
+            isTargetPlayer={setEvent.isTargetPlayer}
+            isTargetSecret={!setEvent.isTargetPlayer}
+            target={setEvent.target}
           />
 
           {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
@@ -436,8 +494,8 @@ export default function GameContainer() {
               onFinish={handleFinishTurn}
               onDiscard={handleDiscardSelectedCards}
               onPlaySet={handleClickSetEvent}
-              onSelectPlayer={handleClickSetEvent}
-              onSelectSecret={handleClickSetEvent}
+              onSelectPlayer={handleSelectedPlayer}
+              onSelectSecret={handleSelectedSecret}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
               isSetButtonDisabled={

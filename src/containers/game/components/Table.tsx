@@ -5,12 +5,29 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
 
+import type { GamePlayer } from "@/types/player";
+import type { GameSecret } from "@/types/secret";
+
 interface TableProps {
+  onSelectTargetEvent: (target: GamePlayer | GameSecret) => void;
+
   drawPile: ReactNode;
   discardPile: ReactNode;
+  isEvent: boolean;
+  isTargetPlayer: boolean;
+  isTargetSecret: boolean;
+  target: GamePlayer | GameSecret | null;
 }
 
-export default function Table({ drawPile, discardPile }: TableProps) {
+export default function Table({
+  onSelectTargetEvent,
+  drawPile,
+  discardPile,
+  isEvent,
+  isTargetPlayer,
+  isTargetSecret,
+  target,
+}: TableProps) {
   const { player } = usePlayer();
   const { players, match, secrets, sets } = useGame();
 
@@ -110,10 +127,14 @@ export default function Table({ drawPile, discardPile }: TableProps) {
             className={`${position} flex items-center justify-center`}
           >
             <Player
+              onSelectTargetEvent={onSelectTargetEvent}
               sets={playerSets}
               player={playerData}
               hasCurrentTurn={turn}
               secrets={playerSecrets}
+              isPlayerEvent={isEvent && isTargetPlayer}
+              isTargetSecret={isEvent && isTargetSecret}
+              target={target}
             />
           </div>
         ),
