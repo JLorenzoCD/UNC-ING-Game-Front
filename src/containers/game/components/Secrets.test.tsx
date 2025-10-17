@@ -20,6 +20,7 @@ vi.mock("@/assets/03-secret_murderer.png", () => ({
 }));
 
 const mockUsePlayer = usePlayer as Mock;
+const mockIsSelectableSecret = vi.fn();
 
 describe("Secrets", () => {
   const mockPlayer = { id: crypto.randomUUID(), name: "TestPlayer" };
@@ -66,7 +67,12 @@ describe("Secrets", () => {
     it("should render the secrets for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(<Secrets secrets={mockSecrets} />);
+      render(
+        <Secrets
+          secrets={mockSecrets}
+          isSelectableSecret={mockIsSelectableSecret}
+        />,
+      );
 
       const secretElements = screen.getAllByRole("img");
 
@@ -83,7 +89,12 @@ describe("Secrets", () => {
         player: { ...mockPlayer, id: "different-player" },
       });
 
-      render(<Secrets secrets={mockSecrets} />);
+      render(
+        <Secrets
+          secrets={mockSecrets}
+          isSelectableSecret={mockIsSelectableSecret}
+        />,
+      );
 
       const secretElements = screen.queryAllByRole("img");
 

@@ -68,10 +68,10 @@ export default function Hand({
             onClick={() => handleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
-              isDisabled ? disabledClassName : "",
-              isSelected(card) ? selectedCardClassName : "",
-              isDiscarded(card) ? discardedCardClassName : "",
-              shouldDecreaseOpacity(card) ? "opacity-80" : "",
+              isDisabled && disabledClassName,
+              isSelected(card) && selectedCardClassName,
+              isDiscarded(card) && discardedCardClassName,
+              shouldDecreaseOpacity(card) && "opacity-80",
             )}
           >
             <Card name={card.name} description={card.description} />

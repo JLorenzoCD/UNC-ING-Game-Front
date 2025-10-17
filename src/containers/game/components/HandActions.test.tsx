@@ -5,11 +5,26 @@ import type { ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import HandActions from "./HandActions";
 
-const { mockOnFinish, mockOnDiscard } = vi.hoisted(() => {
+const {
+  mockOnFinish,
+  mockOnDiscard,
+  mockOnPlaySet,
+  mockOnSelectPlayer,
+  mockOnSelectSecret,
+} = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
+  const mockOnPlaySet = vi.fn();
+  const mockOnSelectPlayer = vi.fn();
+  const mockOnSelectSecret = vi.fn();
 
-  return { mockOnFinish, mockOnDiscard };
+  return {
+    mockOnFinish,
+    mockOnDiscard,
+    mockOnPlaySet,
+    mockOnSelectPlayer,
+    mockOnSelectSecret,
+  };
 });
 
 vi.mock("@/components/Button", () => ({
@@ -39,6 +54,12 @@ describe("HandActions", () => {
         <HandActions
           onFinish={mockOnFinish}
           onDiscard={mockOnDiscard}
+          onPlaySet={mockOnPlaySet}
+          onSelectSecret={mockOnSelectSecret}
+          onSelectPlayer={mockOnSelectPlayer}
+          isSelectionPlayerEvent={false}
+          isSelectionSecretEvent={false}
+          isSetButtonDisabled={false}
           isDisabled={false}
           isDiscarding={false}
         />,
@@ -48,9 +69,12 @@ describe("HandActions", () => {
       expect(handActions).toBeInTheDocument();
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(2);
+      expect(buttons.length).toBe(5);
       expect(buttons[0]).toHaveTextContent("Discard cards");
-      expect(buttons[1]).toHaveTextContent("Finish turn");
+      expect(buttons[1]).toHaveTextContent("Play set");
+      expect(buttons[2]).toHaveTextContent("Select player");
+      expect(buttons[3]).toHaveTextContent("Select secret");
+      expect(buttons[4]).toHaveTextContent("Finish turn");
     });
 
     it("shows 'Cancel discard' when the user is discarding", () => {
@@ -58,6 +82,12 @@ describe("HandActions", () => {
         <HandActions
           onFinish={mockOnFinish}
           onDiscard={mockOnDiscard}
+          onPlaySet={mockOnPlaySet}
+          onSelectSecret={mockOnSelectSecret}
+          onSelectPlayer={mockOnSelectPlayer}
+          isSelectionPlayerEvent={false}
+          isSelectionSecretEvent={false}
+          isSetButtonDisabled={false}
           isDisabled={false}
           isDiscarding={true}
         />,
@@ -71,11 +101,17 @@ describe("HandActions", () => {
   });
 
   describe("Interactions", () => {
-    it("calls onDiscard when 'Discard cards' button is clicked", () => {
+    it("calls onDiscard when 'Discard cards' button is clicked", async () => {
       render(
         <HandActions
           onFinish={mockOnFinish}
           onDiscard={mockOnDiscard}
+          onPlaySet={mockOnPlaySet}
+          onSelectSecret={mockOnSelectSecret}
+          onSelectPlayer={mockOnSelectPlayer}
+          isSelectionPlayerEvent={false}
+          isSelectionSecretEvent={false}
+          isSetButtonDisabled={false}
           isDisabled={false}
           isDiscarding={false}
         />,
@@ -84,7 +120,7 @@ describe("HandActions", () => {
       const discardCardsButton = screen.getAllByTestId("mock-button")[0];
       expect(discardCardsButton).toBeInTheDocument();
 
-      fireEvent.click(discardCardsButton);
+      await fireEvent.click(discardCardsButton);
       expect(mockOnDiscard).toHaveBeenCalled();
     });
 
@@ -93,12 +129,18 @@ describe("HandActions", () => {
         <HandActions
           onFinish={mockOnFinish}
           onDiscard={mockOnDiscard}
+          onPlaySet={mockOnPlaySet}
+          onSelectSecret={mockOnSelectSecret}
+          onSelectPlayer={mockOnSelectPlayer}
+          isSelectionPlayerEvent={false}
+          isSelectionSecretEvent={false}
+          isSetButtonDisabled={false}
           isDisabled={false}
           isDiscarding={false}
         />,
       );
 
-      const finishTurnButton = screen.getAllByTestId("mock-button")[1];
+      const finishTurnButton = screen.getAllByTestId("mock-button")[4];
       expect(finishTurnButton).toBeInTheDocument();
 
       fireEvent.click(finishTurnButton);
@@ -110,16 +152,22 @@ describe("HandActions", () => {
         <HandActions
           onFinish={mockOnFinish}
           onDiscard={mockOnDiscard}
+          onPlaySet={mockOnPlaySet}
+          onSelectSecret={mockOnSelectSecret}
+          onSelectPlayer={mockOnSelectPlayer}
+          isSelectionPlayerEvent={false}
+          isSelectionSecretEvent={false}
+          isSetButtonDisabled={false}
           isDisabled={true}
           isDiscarding={false}
         />,
       );
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(2);
+      expect(buttons.length).toBe(5);
 
       fireEvent.click(buttons[0]);
-      fireEvent.click(buttons[1]);
+      fireEvent.click(buttons[4]);
 
       expect(mockOnDiscard).not.toHaveBeenCalled();
       expect(mockOnFinish).not.toHaveBeenCalled();
