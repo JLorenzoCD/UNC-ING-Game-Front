@@ -88,6 +88,10 @@ vi.mock("./Sets", () => ({
   )),
 }));
 
+const mockOnSelectTargetEvent = vi.fn();
+const mockIsSelectablePlayer = vi.fn();
+const mockIsSelectableSecret = vi.fn();
+
 describe("Players Component", () => {
   it("should render player with avatar", () => {
     render(
@@ -96,6 +100,12 @@ describe("Players Component", () => {
         hasCurrentTurn={false}
         secrets={[]}
         sets={[]}
+        onSelectTargetEvent={mockOnSelectTargetEvent}
+        isSelectablePlayer={mockIsSelectablePlayer}
+        isSelectableSecret={mockIsSelectableSecret}
+        isPlayerEvent={false}
+        isTargetSecret={false}
+        target={null}
       />,
     );
 
@@ -114,6 +124,12 @@ describe("Players Component", () => {
         hasCurrentTurn={false}
         secrets={[]}
         sets={[]}
+        onSelectTargetEvent={mockOnSelectTargetEvent}
+        isSelectablePlayer={mockIsSelectablePlayer}
+        isSelectableSecret={mockIsSelectableSecret}
+        isPlayerEvent={false}
+        isTargetSecret={false}
+        target={null}
       />,
     );
 
@@ -133,6 +149,12 @@ describe("Players Component", () => {
         hasCurrentTurn={true}
         secrets={[]}
         sets={[]}
+        onSelectTargetEvent={mockOnSelectTargetEvent}
+        isSelectablePlayer={mockIsSelectablePlayer}
+        isSelectableSecret={mockIsSelectableSecret}
+        isPlayerEvent={false}
+        isTargetSecret={false}
+        target={null}
       />,
     );
     const avatarContainer = container.querySelector(
@@ -153,6 +175,12 @@ describe("Players Component", () => {
         hasCurrentTurn={false}
         secrets={[]}
         sets={[]}
+        onSelectTargetEvent={mockOnSelectTargetEvent}
+        isSelectablePlayer={mockIsSelectablePlayer}
+        isSelectableSecret={mockIsSelectableSecret}
+        isPlayerEvent={false}
+        isTargetSecret={false}
+        target={null}
       />,
     );
 
@@ -175,6 +203,12 @@ describe("Players Component", () => {
           hasCurrentTurn={false}
           secrets={mockSecrets}
           sets={[]}
+          onSelectTargetEvent={mockOnSelectTargetEvent}
+          isSelectablePlayer={mockIsSelectablePlayer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isPlayerEvent={false}
+          isTargetSecret={false}
+          target={null}
         />,
       );
 
@@ -189,6 +223,12 @@ describe("Players Component", () => {
           hasCurrentTurn={false}
           secrets={[]}
           sets={[]}
+          onSelectTargetEvent={mockOnSelectTargetEvent}
+          isSelectablePlayer={mockIsSelectablePlayer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isPlayerEvent={false}
+          isTargetSecret={false}
+          target={null}
         />,
       );
 
@@ -206,6 +246,12 @@ describe("Players Component", () => {
           hasCurrentTurn={false}
           secrets={[]}
           sets={mockSets}
+          onSelectTargetEvent={mockOnSelectTargetEvent}
+          isSelectablePlayer={mockIsSelectablePlayer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isPlayerEvent={false}
+          isTargetSecret={false}
+          target={null}
         />,
       );
 
@@ -220,6 +266,12 @@ describe("Players Component", () => {
           hasCurrentTurn={false}
           secrets={[]}
           sets={[]}
+          onSelectTargetEvent={mockOnSelectTargetEvent}
+          isSelectablePlayer={mockIsSelectablePlayer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isPlayerEvent={false}
+          isTargetSecret={false}
+          target={null}
         />,
       );
 
