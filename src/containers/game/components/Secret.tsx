@@ -1,4 +1,4 @@
-import { twMerge } from "tailwind-merge";
+import { twJoin } from "tailwind-merge";
 
 import { usePlayer } from "@/contexts/PlayerContext";
 import { RiEyeLine } from "@remixicon/react";
@@ -16,6 +16,39 @@ const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
   ACCOMPLICE: secretAccomplice,
   MURDERER: secretMurder,
 };
+
+function getBoderClass(
+  isSelfRevealed: boolean,
+  isSelectionMode: boolean,
+  isSelectable: boolean,
+  isTarget: boolean,
+  isSelectingTarget: boolean,
+) {
+  let borderClass = "";
+  if (isSelfRevealed) {
+    borderClass =
+      "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31";
+  } else if (isSelectionMode) {
+    if (isSelectable) {
+      if (isTarget) {
+        // Secreto seleccionado
+        borderClass =
+          "border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-none";
+      } else if (isSelectingTarget) {
+        // Aún no se ha seleccionado y es una opción válida
+        borderClass =
+          "border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
+      } else {
+        borderClass = "border-2 border-transparent shadow-none brightness-50";
+      }
+    } else {
+      // NO Seleccionable (Atenuado)
+      borderClass = "border-2 border-transparent shadow-none brightness-50";
+    }
+  }
+
+  return borderClass;
+}
 
 interface SecretProps {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;
@@ -65,36 +98,29 @@ export default function Secret({
 
   const isTarget = target?.id === secret.id;
   const isSelectingTarget = target === null;
-
-  const isCurrPlayerSecretReveled = isRevealed && isSessionPlayer;
-  const isCurrPlayerSelectingSecret = !isSessionPlayer && isTargetSecret;
   const isSelectable = isSelectableSecret(secret);
+
+  const isSelfRevealed = isRevealed && isSessionPlayer;
+
+  // Cartas que NO son la propia y NO están reveladas
+  const isSelectionMode = !isSelfRevealed && isTargetSecret;
+
+  // ClassNames
+  const sizeClasses = isSessionPlayer ? "w-20 h-30" : "w-15 h-22.5";
+  const baseClasses = "rounded-lg overflow-hidden transition-all duration-200";
+  const boderClass = getBoderClass(
+    isSelfRevealed,
+    isSelectionMode,
+    isSelectable,
+    isTarget,
+    isSelectingTarget,
+  );
 
   return (
     <div className="relative">
       <div
         onClick={handleClickSecret}
-        className={twMerge(
-          "rounded-lg overflow-hidden",
-          !isSessionPlayer ? "w-15 h-22.5" : "w-20 h-30",
-          isSelectable && [
-            isCurrPlayerSecretReveled &&
-              isSelectingTarget &&
-              "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31",
-            isCurrPlayerSelectingSecret &&
-              isSelectingTarget &&
-              "border-red-400 border-2 shadow-lg shadow-red-400/50 animate-pulse",
-            isCurrPlayerSelectingSecret &&
-              isTarget &&
-              "border-blue-400 border-2 shadow-lg shadow-blue-400/50 animate-none",
-          ],
-          ((!isSelectable && isTargetSecret) ||
-            (!isSessionPlayer &&
-              isTargetSecret &&
-              !isTarget &&
-              !isSelectingTarget)) &&
-            "border-2 border-transparent shadow-none animate-none brightness-50",
-        )}
+        className={twJoin(baseClasses, sizeClasses, boderClass)}
       >
         <img
           data-testid="secret"
@@ -104,13 +130,13 @@ export default function Secret({
               ? `Secret card: ${secret.type}`
               : "Secret card (hidden)"
           }
-          className={twMerge(
+          className={twJoin(
             "object-cover w-full h-full",
-            isCurrPlayerSecretReveled && "brightness-50",
+            isSelfRevealed && "brightness-50",
           )}
         />
       </div>
-      {isCurrPlayerSecretReveled && (
+      {isSelfRevealed && (
         <div className="absolute -top-[3px] -right-[3px] bg-red-500 rounded-full p-1.5 shadow-lg">
           <RiEyeLine size={14} color="white" />
         </div>
