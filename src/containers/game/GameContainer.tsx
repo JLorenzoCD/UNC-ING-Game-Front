@@ -582,10 +582,10 @@ export default function GameContainer() {
                 !(setEvent.isValidSet && !setEvent.isSetEvent)
               }
               isSelectionPlayerEvent={
-                !(setEvent.isSetEvent && setEvent.isTargetPlayer)
+                setEvent.isSetEvent && setEvent.isTargetPlayer
               }
               isSelectionSecretEvent={
-                !(setEvent.isSetEvent && !setEvent.isTargetPlayer)
+                setEvent.isSetEvent && !setEvent.isTargetPlayer
               }
             />
           </div>
