@@ -20,3 +20,10 @@ export interface RegularAndDiscardEventPayload {
 export interface CardsOffTheTableEventPayload {
   target_player_id: UUID;
 }
+
+export type EventPayload =
+  | AndThenThereWasOneMoreEventPayload
+  | AnotherVictimEventPayload
+  | LookIntoTheAshesEventPayload
+  | CardsOffTheTableEventPayload
+  | RegularAndDiscardEventPayload;

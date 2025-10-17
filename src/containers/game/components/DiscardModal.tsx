@@ -55,6 +55,9 @@ export default function DiscardModal({
 
   const lastFiveCardDiscarted = getLastFiveDiscarded(discardedCards);
 
+  const selectedCount = lastFiveCardDiscarted.filter(isSelected).length;
+  const hasSelection = selectedCount == 1;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -67,7 +70,12 @@ export default function DiscardModal({
       footer={
         <div className="p-3 w-full flex justify-end">
           {isEventDiscard ? (
-            <Button type="button" onClick={onEndEvent} className="mr-2">
+            <Button
+              type="button"
+              onClick={onEndEvent}
+              disabled={!hasSelection}
+              className="mr-2"
+            >
               End Event
             </Button>
           ) : (

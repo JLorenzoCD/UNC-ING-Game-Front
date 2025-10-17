@@ -15,6 +15,14 @@ import DiscardModal from "./components/DiscardModal";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
+import type {
+  AnotherVictimEventPayload,
+  RegularAndDiscardEventPayload,
+  LookIntoTheAshesEventPayload,
+  AndThenThereWasOneMoreEventPayload,
+  CardsOffTheTableEventPayload,
+} from "@/types/event";
+import type { EventPayload } from "@/types/event";
 
 type GameCardMap = Record<UUID, GameCard>;
 type HandCardList = Array<GameCard | null>;
@@ -30,6 +38,9 @@ export default function GameContainer() {
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
   const [discardedCards, setDiscardedCards] = useState<GameCardMap>({});
   const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
+  const [currentEventCard, setCurrentEventCard] = useState<GameCard | null>(
+    null,
+  );
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
@@ -172,7 +183,10 @@ export default function GameContainer() {
 
   const handleEventDiscard = () => {
     // Se realiza en otro ticket
-    setDiscardModal({ isOpen: false, isEventDiscard: false });
+    setDiscardModal({
+      isOpen: true,
+      isEventDiscard: true,
+    });
   };
 
   // -- Llamadas a la API --
@@ -342,26 +356,97 @@ export default function GameContainer() {
 
   const handlePlayEvent = async () => {
     // OBTENER LA CARTA SELECCIONADA
-    const cartasSeleccionadasArray = Object.values(selectedCards);
+    const selectedCardsArray = Object.values(selectedCards);
 
-    if (cartasSeleccionadasArray.length !== 1) {
+    if (selectedCardsArray.length !== 1) {
       console.warn("handlePlayEvent llamado sin una única carta válida.");
       return;
     }
 
-    const cartaEvento = cartasSeleccionadasArray[0];
+    const cardEvent = selectedCardsArray[0];
 
     // 1. Lógica Local: Chequeamos el tipo de evento, para mostrarle al jugador que hacer y construrir la llamada a la api
-    console.log(`Se jugaría la carta: ${cartaEvento.name}`);
+    const nameEvent = cardEvent.name;
+    console.log(`Se jugaría la carta: ${nameEvent}`);
 
-    // 2. Llamada a la API: Aqui llamaremos a la api con todos los campos completos segun el tipo de evento
-    console.log("Aquí iría la llamada a la API...");
+    switch (nameEvent) {
+      case "DELAY THE MURDERER ESCAPE": {
+        handleEndEvent();
+        break;
+      }
 
-    // 3. Limpieza de Estado: Pasaria el turno y descarta la carta
-    // Simplemente borra la selección actual.
-    handleFinishTurn();
+      case "LOOK INTO THE ASHES": {
+        setCurrentEventCard(cardEvent);
+        handleEventDiscard();
+        break;
+      }
+    }
+  };
 
-    console.log("Proceso completado.");
+  const handleEndEvent = async () => {
+    if (!httpService || !player || !match || !currentEventCard) {
+      console.error("Faltan datos necesarios para completar el evento");
+      return;
+    }
+
+    const nameEvent = currentEventCard.name;
+    let eventPayload: EventPayload | undefined;
+
+    switch (nameEvent) {
+      case "LOOK INTO THE ASHES": {
+        // Validamos que haya una carta seleccionada del descarte
+        const selectedDiscardedCardsArray = Object.values(selectedCards);
+
+        if (selectedDiscardedCardsArray.length !== 1) {
+          console.warn("Debe seleccionar exactamente una carta del descarte");
+          return;
+        }
+
+        const selectedDiscardedCard = selectedDiscardedCardsArray[0];
+
+        // Construimos el payload para el evento
+        eventPayload = {
+          target_card_id: selectedDiscardedCard.id,
+        } as LookIntoTheAshesEventPayload;
+
+        // Cerramos el modal
+        setDiscardModal({
+          isOpen: false,
+          isEventDiscard: false,
+        });
+
+        // Limpiamos los estados
+        setSelectedCards({});
+        setCurrentEventCard(null);
+        break;
+      }
+
+      case "DELAY THE MURDERER ESCAPE": {
+        const idsInDiscardPile = cardsInDiscardPile.map((card) => card.id);
+
+        eventPayload = {
+          cards_ids: idsInDiscardPile,
+        } as RegularAndDiscardEventPayload;
+        break;
+      }
+
+      default:
+        console.warn(`Evento no manejado: ${nameEvent}`);
+    }
+    // Llamada a la API
+    try {
+      // Llamada a la API para jugar el evento
+      await httpService.postEvent(
+        match.id,
+        player.id,
+        currentEventCard.id,
+        eventPayload,
+      );
+
+      console.log("Evento completado exitosamente");
+    } catch (error) {
+      console.error("Error al ejecutar el evento Look Into The Ashes:", error);
+    }
   };
 
   // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
@@ -440,7 +525,7 @@ export default function GameContainer() {
         onClose={onCloseDiscardModal}
         onSelect={handleSelectCard}
         isSelected={isCardSelected}
-        onEndEvent={handleEventDiscard}
+        onEndEvent={handleEndEvent}
         isEventDiscard={discardModal.isEventDiscard}
         discardedCards={cardsInDiscardPile}
       />
