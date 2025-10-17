@@ -1,27 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+
+import type { UUID } from "@/types/common";
+import type { GameCard } from "@/types/card";
 
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import Hand from "./components/Hand";
-import Table from "./components/Table";
 import Sets from "./components/Sets";
+import Table from "./components/Table";
+import Draft from "./components/Draft";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
-import type { UUID } from "@/types/common";
-import type { GameCard } from "@/types/card";
-import Draft from "./components/Draft";
-
-type GameCardMap = Record<UUID, GameCard>;
-type HandCardList = Array<GameCard | null>;
+import { useHand } from "./hooks/useHand";
 
 const DRAFT_SIZE = 3;
-const HAND_SIZE = 6;
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -30,19 +28,26 @@ export default function GameContainer() {
 
   const { match, secrets, players, cards, sets } = useGame();
 
-  const [handCards, setHandCards] = useState<HandCardList>([]);
-  const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
+  const {
+    addCard,
+    clearSelectedCards,
+    getRandomCard,
+    handCards,
+    isCardSelected,
+    isHandFull,
+    isSelectingCards,
+    removeCard,
+    replaceCard,
+    selectCard,
+    selectedCards,
+  } = useHand();
+
   const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
   });
-
-  // Determina si es la primera vez que se carga el componente.
-  // Se usa para cargar la mano del jugador solo una vez.
-  // Luego, las actualizaciones de cartas se harán por WebSocket.
-  const initialLoadRef = useRef<boolean>(true);
 
   // -- Valores memoizados --
 
@@ -56,14 +61,9 @@ export default function GameContainer() {
     return match.current_player_order === matchPlayer.order;
   }, [match, player, players]);
 
-  // El jugador puede tomar cartas si es su turno
-  // y tiene menos de 6 cartas en mano (posiciones no nulas).
   const canTakeCards = useMemo(() => {
-    return (
-      isPlayerTurn &&
-      handCards.filter((card) => card !== null).length < HAND_SIZE
-    );
-  }, [handCards, isPlayerTurn]);
+    return isPlayerTurn && !isHandFull;
+  }, [isHandFull, isPlayerTurn]);
 
   const playerSecrets = useMemo(() => {
     if (!player) return [];
@@ -103,49 +103,7 @@ export default function GameContainer() {
     });
   }, [cards]);
 
-  const isSelectingCards = Object.keys(selectedCards).length > 0;
-
-  // -- Utilidades --
-
-  const isCardSelected = (card: GameCard) => {
-    return !!selectedCards[card.id];
-  };
-
-  const fillHandWithNulls = (cards: GameCard[]): HandCardList => {
-    const filledHand: HandCardList = [...cards];
-
-    while (filledHand.length < HAND_SIZE) {
-      filledHand.push(null);
-    }
-
-    return filledHand;
-  };
-
   // -- Manejadores --
-
-  /**
-   * Si una carta no ha sido marcada como "descartada",
-   * entonces la seleccionamos.
-   */
-  const handleSelectCard = (card: GameCard) => {
-    if (discardModal.isOpen && !discardModal.isEventDiscard) {
-      // Si no hay evento no se puede seleccionar cartas en el modal que
-      // muestra las ultimas 5 cartas descartadas.
-      return;
-    }
-
-    // También se puede añadir lógica para ver cuantas cartas se pueden
-    // seleccionar en el modal de cartas descartadas.
-
-    if (!selectedCards[card.id]) {
-      setSelectedCards({ ...selectedCards, [card.id]: card });
-    } else {
-      const updatedSelectedCards = { ...selectedCards };
-      delete updatedSelectedCards[card.id];
-
-      setSelectedCards(updatedSelectedCards);
-    }
-  };
 
   const handleClickDiscardPile = () => {
     if (cardsInDiscardPile.length === 0) return;
@@ -172,15 +130,7 @@ export default function GameContainer() {
     try {
       await httpService.putTakeCards(match.id, player.id, [card.id]);
 
-      const firstEmptyIndex = handCards.findIndex((c) => c === null);
-
-      if (firstEmptyIndex !== -1) {
-        setHandCards((prevHandCards) => {
-          const newHandCards = [...prevHandCards];
-          newHandCards[firstEmptyIndex] = card;
-          return newHandCards;
-        });
-      }
+      addCard(card);
     } catch (error) {
       console.error("Failed to take card from draft:", error);
     }
@@ -202,13 +152,7 @@ export default function GameContainer() {
       throw new Error("No cards available to take from the draw pile.");
     }
 
-    const nonNullHandCards = handCards.filter(
-      (card) => card !== null,
-    ) as GameCard[];
-
-    const randomIndex = Math.floor(Math.random() * nonNullHandCards.length);
-
-    const randomDiscardableCard = nonNullHandCards[randomIndex];
+    const randomDiscardableCard = getRandomCard();
 
     if (!randomDiscardableCard) {
       throw new Error("No cards available to discard from the hand.");
@@ -223,19 +167,7 @@ export default function GameContainer() {
         firstTakeableCard.id,
       ]);
 
-      setHandCards((prevHandCards) => {
-        const newHandCards = [...prevHandCards];
-
-        const indexToDiscard = newHandCards.findIndex(
-          (card) => card?.id === randomDiscardableCard.id,
-        );
-
-        if (indexToDiscard !== -1) {
-          newHandCards[indexToDiscard] = firstTakeableCard;
-        }
-
-        return newHandCards;
-      });
+      replaceCard(randomDiscardableCard, firstTakeableCard);
     } catch (error) {
       console.error("Failed to perform mandatory discard:", error);
 
@@ -259,20 +191,15 @@ export default function GameContainer() {
         selectedCardIds as UUID[],
       );
 
-      setHandCards((current) => {
-        const newHandCards = [...current];
+      for (const cardId of selectedCardIds) {
+        const card = selectedCards[cardId];
 
-        selectedCardIds.forEach((cardId) => {
-          const index = newHandCards.findIndex((card) => card?.id === cardId);
-          if (index !== -1) {
-            newHandCards[index] = null;
-          }
-        });
+        if (!card) continue;
 
-        return newHandCards;
-      });
+        removeCard(card);
+      }
 
-      setSelectedCards({});
+      clearSelectedCards();
       setHasDiscardedCards(true);
     } catch (error) {
       console.error("Failed to discard selected cards:", error);
@@ -292,7 +219,7 @@ export default function GameContainer() {
       }
 
       // Reseteamos los estados relacionados con el descarte
-      setSelectedCards({});
+      clearSelectedCards();
       setHasDiscardedCards(false);
 
       await httpService.putPassTurn(match.id);
@@ -300,32 +227,6 @@ export default function GameContainer() {
       console.error("Failed to finish turn:", error);
     }
   };
-
-  // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
-  // y no se hayan descartado. Luego, se actualizarán por WebSocket.
-  useEffect(() => {
-    // Evitamos generar la mano del jugador si todavía hay datos cargando
-    // o si ya tiene cartas en su mano
-    if (cards.length === 0 || player === null) return;
-
-    if (!initialLoadRef.current) return;
-
-    initialLoadRef.current = false;
-
-    setHandCards(
-      fillHandWithNulls(
-        cards.filter(
-          (card) => card.player_id === player.id && !card.is_discarded,
-        ),
-      ),
-    );
-  }, [cards, player]);
-
-  // Para reutilizar el 'selectedCards', se vacía el mismo si se abre el modal
-  // para ver las ultimas 5 cartas descartadas y se vacía al cerrar el modal.
-  useEffect(() => {
-    setSelectedCards({});
-  }, [discardModal.isOpen]);
 
   return (
     <>
@@ -362,7 +263,7 @@ export default function GameContainer() {
 
             <Hand
               cards={handCards}
-              onSelect={handleSelectCard}
+              onSelect={selectCard}
               isSelected={isCardSelected}
               isSelecting={isSelectingCards}
               isDisabled={!isPlayerTurn}
@@ -380,7 +281,7 @@ export default function GameContainer() {
       <DiscardModal
         isOpen={discardModal.isOpen}
         onClose={onCloseDiscardModal}
-        onSelect={handleSelectCard}
+        onSelect={selectCard}
         isSelected={isCardSelected}
         onEndEvent={handleEventDiscard}
         isEventDiscard={discardModal.isEventDiscard}
