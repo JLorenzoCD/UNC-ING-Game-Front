@@ -260,6 +260,8 @@ export default function GameContainer() {
     // ya están marcadas para descartar
     if (isCardDiscarded(card)) return;
 
+    if (setEvent.isSetEvent) return;
+
     if (discardModal.isOpen && !discardModal.isEventDiscard) {
       // Si no hay evento no se puede seleccionar cartas en el modal que
       // muestra las ultimas 5 cartas descartadas.
@@ -294,6 +296,8 @@ export default function GameContainer() {
   };
 
   const handleClickDiscardPile = () => {
+    if (setEvent.isSetEvent) return;
+
     if (cardsInDiscardPile.length === 0) return;
 
     setDiscardModal((prev) => ({ ...prev, isOpen: true }));
