@@ -150,6 +150,20 @@ const mockSets: MatchSet[] = [
   },
 ];
 
+// Default props for Table component (will be changed later)
+const defaultTableProps = {
+  draft: <div>Draft Area</div>,
+  drawPile: <div>Draw Pile</div>,
+  discardPile: <div>Discard Pile</div>,
+  isEvent: false,
+  isTargetPlayer: false,
+  isTargetSecret: false,
+  target: null,
+  onSelectTargetEvent: () => {},
+  isSelectablePlayer: () => false,
+  isSelectableSecret: () => false,
+};
+
 describe("Table Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -172,13 +186,7 @@ describe("Table Component", () => {
   });
 
   it("should render without crashing", () => {
-    render(
-      <Table
-        draft={<div>Draft Area</div>}
-        drawPile={<div>Draw Pile</div>}
-        discardPile={<div>Discard Pile</div>}
-      />,
-    );
+    render(<Table {...defaultTableProps} />);
 
     expect(
       screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`),
@@ -196,13 +204,7 @@ describe("Table Component", () => {
   it("should render other players in order, starting from the next one", () => {
     // Como el jugador actual tiene el order = 1. Entonces el orden esperado es:
     // Jugador con order 2, luego Jugador con order 3.
-    render(
-      <Table
-        draft={<div>Draft Area</div>}
-        drawPile={<div>Draw Pile</div>}
-        discardPile={<div>Discard Pile</div>}
-      />,
-    );
+    render(<Table {...defaultTableProps} />);
 
     const renderedPlayers = screen.getAllByTestId(/mock-player-/);
     expect(renderedPlayers).toHaveLength(2);
@@ -231,13 +233,7 @@ describe("Table Component", () => {
       setPlayer: vi.fn(),
     });
 
-    render(
-      <Table
-        draft={<div>Draft Area</div>}
-        drawPile={<div>Draw Pile</div>}
-        discardPile={<div>Discard Pile</div>}
-      />,
-    );
+    render(<Table {...defaultTableProps} />);
 
     const renderedPlayers = screen.getAllByTestId(/mock-player-/);
     expect(renderedPlayers).toHaveLength(2);
@@ -254,13 +250,7 @@ describe("Table Component", () => {
   });
 
   it("should pass correct secrets and sets counts to each Player component", () => {
-    render(
-      <Table
-        draft={<div>Draft Area</div>}
-        drawPile={<div>Draw Pile</div>}
-        discardPile={<div>Discard Pile</div>}
-      />,
-    );
+    render(<Table {...defaultTableProps} />);
 
     //* En el juego siempre se pasan 3 secretos, pero a la hora de hacer el test
     //* es lo prácticamente lo mismo, ya que se basa en un arreglo.
@@ -283,13 +273,7 @@ describe("Table Component", () => {
         ...mockUseGame(),
         match: { ...mockUseGame().match!, current_player_order: 2 },
       });
-      render(
-        <Table
-          draft={<div>Draft Area</div>}
-          drawPile={<div>Draw Pile</div>}
-          discardPile={<div>Discard Pile</div>}
-        />,
-      );
+      render(<Table {...defaultTableProps} />);
 
       // Player 2 tiene el turno
       expect(
@@ -307,13 +291,7 @@ describe("Table Component", () => {
         ...mockUseGame(),
         match: { ...mockUseGame().match!, current_player_order: 3 },
       });
-      render(
-        <Table
-          draft={<div>Draft Area</div>}
-          drawPile={<div>Draw Pile</div>}
-          discardPile={<div>Discard Pile</div>}
-        />,
-      );
+      render(<Table {...defaultTableProps} />);
 
       // Player 2 no tiene el turno
       expect(
@@ -329,13 +307,7 @@ describe("Table Component", () => {
   describe("Position Class Name", () => {
     it("should apply correct positionClassName for 2 other players", () => {
       // Tenemos 3 jugadores en total, se renderizan 2 'other players'
-      render(
-        <Table
-          draft={<div>Draft Area</div>}
-          drawPile={<div>Draw Pile</div>}
-          discardPile={<div>Discard Pile</div>}
-        />,
-      );
+      render(<Table {...defaultTableProps} />);
 
       const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`); // Orden de renderizado: 0
       const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`); // Orden de renderizado: 1
@@ -359,13 +331,7 @@ describe("Table Component", () => {
         sets: mockSets.filter((s) => s.player_id === MOCK_PLAYER_ID_2),
       });
 
-      render(
-        <Table
-          draft={<div>Draft Area</div>}
-          drawPile={<div>Draw Pile</div>}
-          discardPile={<div>Discard Pile</div>}
-        />,
-      );
+      render(<Table {...defaultTableProps} />);
 
       const renderedPlayers = screen.getAllByTestId(/mock-player-/);
       expect(renderedPlayers).toHaveLength(1);

@@ -1,12 +1,14 @@
 import "@testing-library/jest-dom";
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import DrawPile from "./DrawPile";
+
+const mockOnClick = vi.fn();
 
 describe("DrawPile", () => {
   describe("Rendering", () => {
     it("renders the usual draw pile", () => {
-      render(<DrawPile cardCount={1} />);
+      render(<DrawPile cardCount={1} onClick={mockOnClick} />);
 
       const cardElement = screen.getByRole("img");
 
@@ -18,7 +20,7 @@ describe("DrawPile", () => {
     });
 
     it("renders murderer escapes when card count is zero", () => {
-      render(<DrawPile cardCount={0} />);
+      render(<DrawPile cardCount={0} onClick={mockOnClick} />);
 
       const cardElement = screen.getByRole("img");
 
