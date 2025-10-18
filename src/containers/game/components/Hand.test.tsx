@@ -100,6 +100,10 @@ const { mockOnSelect, mockIsSelected, mockIsDiscarded } = vi.hoisted(() => {
   return { mockOnSelect, mockIsSelected, mockIsDiscarded };
 });
 
+vi.mock("", () => ({
+  twMerge: vi.fn((...classes) => classes.filter(Boolean).join(" ")),
+}));
+
 describe("Hand", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -219,7 +223,7 @@ describe("Hand", () => {
     });
 
     it("applies selected styling when isSelected returns true", () => {
-      mockIsSelected.mockReturnValueOnce(true); // La primera carta estará seleccionada
+      mockIsSelected.mockReturnValueOnce(true).mockReturnValueOnce(true); // La primera carta estará seleccionada (esta se llama 2 veces, en el aria-selected y en la className)
 
       render(
         <Hand
@@ -256,7 +260,7 @@ describe("Hand", () => {
 
     it("decreases opacity when user is selecting other cards", () => {
       // Por defecto, devolvemos false.
-      // Para la primer y segunda llamada devolvemos true
+      // Para la primer, segunda y tercera llamada devolvemos true
       // (chequeo de `isSelected` and `shouldDecreaseOpacity`)
       mockIsSelected.mockReturnValueOnce(true);
 
@@ -269,6 +273,8 @@ describe("Hand", () => {
           isDisabled={false}
         />,
       );
+
+      screen.debug();
 
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements.forEach((card, index) => {

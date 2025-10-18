@@ -24,6 +24,8 @@ vi.mock("@/assets/03-secret_murderer.png", () => ({
 
 const mockUsePlayer = usePlayer as Mock;
 
+const mockIsSelectableSecret = vi.fn();
+
 describe("Secret Component", () => {
   const mockPlayer = { id: crypto.randomUUID(), name: "TestPlayer" };
 
@@ -67,18 +69,32 @@ describe("Secret Component", () => {
     it("should render INNOCENT secret for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(<Secret secret={mockSecrets.innocent} />);
+      render(
+        <Secret
+          secret={mockSecrets.innocent}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const image = screen.getByRole("img", { name: /Secret card: INNOCENT/i });
       expect(image).toBeInTheDocument();
       expect(image).toHaveAttribute("src", "secret-front.png");
-      expect(image).toHaveClass("object-cover", "w-20", "h-30");
+      expect(image).toHaveClass("object-cover", "w-full", "h-full");
     });
 
     it("should render ACCOMPLICE secret for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(<Secret secret={mockSecrets.accomplice} />);
+      render(
+        <Secret
+          secret={mockSecrets.accomplice}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const image = screen.getByRole("img", {
         name: /Secret card: ACCOMPLICE/i,
@@ -90,7 +106,14 @@ describe("Secret Component", () => {
     it("should render MURDERER secret for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(<Secret secret={mockSecrets.murderer} />);
+      render(
+        <Secret
+          secret={mockSecrets.murderer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const image = screen.getByRole("img", { name: /Secret card: MURDERER/i });
       expect(image).toBeInTheDocument();
@@ -108,7 +131,14 @@ describe("Secret Component", () => {
         player_id: otherPlayer.id,
       };
 
-      render(<Secret secret={otherPlayerSecret} />);
+      render(
+        <Secret
+          secret={otherPlayerSecret}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const image = screen.getByRole("img", {
         name: /Secret card \(hidden\)/i,
@@ -118,7 +148,7 @@ describe("Secret Component", () => {
         "src",
         expect.stringContaining("secret_back.png"),
       );
-      expect(image).toHaveClass("w-15", "h-22.5");
+      expect(image).toHaveClass("w-full", "h-full");
     });
   });
 
@@ -131,8 +161,15 @@ describe("Secret Component", () => {
         is_revealed: true,
       };
 
-      const { container } = render(<Secret secret={revealedSecret} />);
-
+      const { container } = render(
+        <Secret
+          secret={revealedSecret}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
+      screen.debug();
       const borderDiv = container.querySelector(".border-red-500");
       expect(borderDiv).toBeInTheDocument();
       expect(borderDiv).toHaveClass(
@@ -157,7 +194,14 @@ describe("Secret Component", () => {
         is_revealed: true,
       };
 
-      const { container } = render(<Secret secret={revealedSecret} />);
+      const { container } = render(
+        <Secret
+          secret={revealedSecret}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const image = screen.getByRole("img", { name: /Secret card: MURDERER/i });
       expect(image).toBeInTheDocument();
@@ -179,7 +223,14 @@ describe("Secret Component", () => {
         is_revealed: true,
       };
 
-      const { container } = render(<Secret secret={revealedSecret} />);
+      const { container } = render(
+        <Secret
+          secret={revealedSecret}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       const borderDiv = container.querySelector(".w-21.h-31");
       expect(borderDiv).toBeInTheDocument();
@@ -190,7 +241,14 @@ describe("Secret Component", () => {
     it("should not render when secret prop is null", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(<Secret secret={null} />);
+      render(
+        <Secret
+          secret={null}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
     });
@@ -200,7 +258,14 @@ describe("Secret Component", () => {
 
       const invalidSecret = { ...mockSecrets.innocent, type: undefined as any };
 
-      render(<Secret secret={invalidSecret} />);
+      render(
+        <Secret
+          secret={invalidSecret}
+          isSelectableSecret={mockIsSelectableSecret}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
 
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
       expect(console.warn).toHaveBeenCalledWith(
