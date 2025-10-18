@@ -41,3 +41,11 @@ export interface MatchSet {
    */
   quin_play: boolean;
 }
+
+export interface SetCreationData {
+  type: SetType;
+  card_ids: UUID[];
+  player_id: UUID;
+  target_player_id: UUID;
+  target_secret_id?: UUID;
+}
