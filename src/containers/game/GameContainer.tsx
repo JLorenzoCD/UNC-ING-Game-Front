@@ -97,40 +97,42 @@ export default function GameContainer() {
   };
 
   const handleSelectedPlayer = () => {
+    // Evento de set
     if (
-      !setEvent.isSetEvent ||
-      !setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("avatar" in setEvent.target)
-    )
+      setEvent.isSetEvent &&
+      setEvent.isTargetPlayer &&
+      !(setEvent.target === null) &&
+      "avatar" in setEvent.target
+    ) {
+      console.log(
+        "El jugador " +
+          setEvent.target.name +
+          " fue seleccionado para revelar su secreto",
+      );
+
+      setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
       return;
-
-    alert(
-      "El jugador " +
-        setEvent.target.name +
-        " fue seleccionado para revelar su secreto",
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+    }
   };
 
   const handleSelectedSecret = () => {
+    // Evento de set
     if (
-      !setEvent.isSetEvent ||
-      setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("secret_id" in setEvent.target)
-    )
+      setEvent.isSetEvent &&
+      !setEvent.isTargetPlayer &&
+      !(setEvent.target === null) &&
+      "secret_id" in setEvent.target
+    ) {
+      console.log(
+        "Se selecciono el secreto con id: " +
+          setEvent.target.id +
+          ", fue seleccionado para revelar su secreto. Este es " +
+          setEvent.target.type,
+      );
+
+      setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
       return;
-
-    alert(
-      "Se selecciono el secreto con id: " +
-        setEvent.target.id +
-        ", fue seleccionado para revelar su secreto. Este es " +
-        setEvent.target.type,
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+    }
   };
 
   const isSelectablePlayer = (player: GamePlayer) => {
