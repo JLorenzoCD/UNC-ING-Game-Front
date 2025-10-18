@@ -9,7 +9,6 @@ interface HandActionsProps {
   onPlayEvent: () => void; // Callback que se ejecuta al clickear el boton de jugar evento
   onEndEvent: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
-  isDiscarding: boolean; // Indica si el jugador ha seleccionado cartas para descartar
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
@@ -26,21 +25,21 @@ export default function HandActions({
   onPlayEvent,
   onEndEvent,
   isDisabled,
-  isDiscarding,
   isSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
   isDisabledEvent,
   isDisabledEndEvent,
 }: HandActionsProps) {
-  // Mientras se esta jugando un evento, no se puede ni descartar o terminar turno.
-  const isDissabledOrEventInCourse =
+  // Mientras se esta jugando un evento,
+  // no se puede ni descartar o terminar turno.
+  const shouldDisableOption =
     isDisabled || isSelectionPlayerEvent || isSelectionSecretEvent;
 
   return (
     <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
-      <Button onClick={onDiscard} disabled={isDissabledOrEventInCourse}>
-        {isDiscarding ? "Cancel discard" : "Discard cards"}
+      <Button onClick={onDiscard} disabled={shouldDisableOption}>
+        Discard cards
       </Button>
 
       <Button onClick={onPlaySet} disabled={isDisabled || isSetButtonDisabled}>
@@ -61,7 +60,7 @@ export default function HandActions({
         Select secret
       </Button>
 
-      <Button onClick={onFinish} disabled={isDissabledOrEventInCourse}>
+      <Button onClick={onFinish} disabled={shouldDisableOption}>
         Finish turn
       </Button>
 

@@ -17,6 +17,9 @@ const MOCK_HTTP_SERVICE = {
   getMatchSecrets: vi.fn(),
   joinMatch: vi.fn(),
   startMatch: vi.fn(),
+  putTakeCards: vi.fn(),
+  putDiscardCards: vi.fn(),
+  putPassTurn: vi.fn(),
 };
 
 vi.mock("@/services/httpService", () => ({

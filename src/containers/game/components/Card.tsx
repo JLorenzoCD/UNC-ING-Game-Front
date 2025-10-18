@@ -49,10 +49,11 @@ const CARD_IMAGE_PATHS: Record<CardName, string> = {
   "SOCIAL FAUX PAS": cardFauxPas,
 };
 
-type CardSize = "icon" | "small" | "default";
+type CardSize = "icon" | "xsmall" | "small" | "default";
 
 export const CARD_SIZES: Record<CardSize, string> = {
-  icon: "w-20 h-40",
+  icon: "w-16 h-24",
+  xsmall: "w-20 h-28",
   small: "w-32 h-48",
   default: "w-40 h-60",
 } as const;

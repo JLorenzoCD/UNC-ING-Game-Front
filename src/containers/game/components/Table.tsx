@@ -13,6 +13,7 @@ interface TableProps {
   isSelectablePlayer: (player: GamePlayer) => boolean;
   isSelectableSecret: (secret: GameSecret) => boolean;
 
+  draft: ReactNode;
   drawPile: ReactNode;
   discardPile: ReactNode;
   isEvent: boolean;
@@ -26,6 +27,7 @@ export default function Table({
   isSelectablePlayer,
   isSelectableSecret,
 
+  draft,
   drawPile,
   discardPile,
   isEvent,
@@ -148,9 +150,13 @@ export default function Table({
       )}
 
       {/* Las pilas están fijas en el centro de la pantalla. */}
-      <div className="col-start-2 row-start-2 flex justify-center items-center gap-x-3">
-        {discardPile}
-        {drawPile}
+      <div className="col-start-2 row-start-2 flex flex-col justify-center items-center gap-y-4">
+        <div className="flex justify-center items-center gap-x-3">
+          {drawPile}
+          {discardPile}
+        </div>
+
+        {draft}
       </div>
     </>
   );
