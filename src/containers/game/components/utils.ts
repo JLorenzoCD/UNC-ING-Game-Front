@@ -146,8 +146,9 @@ export function cardsToSet(
     player_id,
     card_ids,
     target_player_id,
-    target_secret_id,
   };
+
+  if (target_secret_id) setData.target_secret_id = target_secret_id;
 
   return setData;
 }
