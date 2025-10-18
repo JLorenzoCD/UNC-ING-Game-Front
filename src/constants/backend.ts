@@ -28,6 +28,9 @@ const BACKEND_SOCKETS_EVENTS = {
   CARDS: "cards",
   MATCH: "match",
   LOBBY_JOIN: "player_join",
+  SET: "set",
+  PLAYER_SECRET_REVEAL: "player_secret_reveal",
+  SECRET: "secret",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };

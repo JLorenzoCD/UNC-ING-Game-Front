@@ -13,7 +13,7 @@ import { isUUID } from "@/utils";
 
 import type { Match } from "@/types/match";
 import type { GameCard } from "@/types/card";
-import type { GameSecret } from "@/types/secret";
+import type { GameSecret, MatchSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 import type { MatchSet } from "@/types/set";
 
@@ -66,7 +66,7 @@ export default function GameContextProvider({
   const [cards, setCards] = useState<GameCard[]>([]);
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
-  const [sets] = useState<MatchSet[]>([]);
+  const [sets, setSets] = useState<MatchSet[]>([]);
 
   const fetchMatchData = useCallback(async () => {
     // Si no tenemos el id de la partida o el servicio HTTP, no hacemos nada.
@@ -83,17 +83,19 @@ export default function GameContextProvider({
     setIsLoading(true);
 
     try {
-      const [match, cards, secrets, players] = await Promise.all([
+      const [match, cards, secrets, players, sets] = await Promise.all([
         httpService.getMatch(matchId),
         httpService.getMatchCards(matchId),
         httpService.getMatchSecrets(matchId),
         httpService.getMatchPlayers(matchId),
+        httpService.getMatchSets(matchId),
       ]);
 
       setMatch(match);
       setCards(cards);
       setSecrets(secrets);
       setPlayers(players);
+      setSets(sets);
     } catch (error) {
       console.error("Error fetching match data:", error);
 
@@ -142,12 +144,68 @@ export default function GameContextProvider({
       });
     };
 
+    const handleUpdateSets = (set: MatchSet) => {
+      setSets((prevSets) => {
+        const exists = prevSets.find((prevSet) => prevSet.id === set.id);
+
+        //* Solo manejo la creación de un set.
+        if (!exists) return [...prevSets, set];
+
+        // TODO: Se debe manejar los otros eventos.
+
+        return prevSets;
+      });
+    };
+
+    const handleUpdateSecrets = (secret: MatchSecret) => {
+      setSecrets((prevSecrets) => {
+        const updatedCards = [...prevSecrets];
+        const indexSecret = updatedCards.findIndex(
+          (prevSet) => prevSet.id === secret.id,
+        );
+
+        if (indexSecret === -1) return prevSecrets;
+
+        const currSecret = updatedCards[indexSecret];
+
+        const isSecretReveled = !currSecret.is_revealed && secret.is_revealed;
+        const isDetectivesWin =
+          currSecret.type === "MURDERER" && isSecretReveled;
+        const isSecretHidden = currSecret.is_revealed && !secret.is_revealed;
+        const isSecretStolen =
+          currSecret.player_id !== secret.player_id && isSecretHidden;
+
+        // TODO: Añadir las notificaciones
+        if (isDetectivesWin) {
+          // Los detectives ganaron.
+        } else if (isSecretStolen) {
+          // Notificar que se robo y oculto un secreto
+        } else if (isSecretReveled) {
+          // Notificar que se revelo un secreto
+        } else if (isSecretHidden) {
+          // Notificar que se oculto un secreto
+        }
+
+        updatedCards[indexSecret] = {
+          ...updatedCards[indexSecret],
+          is_revealed: secret.is_revealed,
+          player_id: secret.player_id,
+        };
+
+        return updatedCards;
+      });
+    };
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+    wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+    wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+      wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+      wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
     };
   }, [matchId, wsService, isConnected]);
 
