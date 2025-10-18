@@ -612,40 +612,6 @@ describe("httpService", () => {
       expect(result).toHaveLength(3);
     });
 
-    it("putMatchCards sends correct request to update cards", async () => {
-      const matchId = crypto.randomUUID();
-      const playerId = crypto.randomUUID();
-      const takenCardIds = [crypto.randomUUID(), crypto.randomUUID()];
-      const discardedCardIds = [crypto.randomUUID(), crypto.randomUUID()];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(undefined),
-      });
-
-      await httpService.putMatchCards(
-        matchId,
-        playerId,
-        takenCardIds,
-        discardedCardIds,
-      );
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/cards`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            player_id: playerId,
-            taken_card_ids: takenCardIds,
-            discarded_card_ids: discardedCardIds,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    });
-
     it("putPassTurn sends correct request to pass turn", async () => {
       const matchId = crypto.randomUUID();
 
@@ -667,95 +633,143 @@ describe("httpService", () => {
       );
     });
 
-    it("getMatchSets fetches and returns match sets", async () => {
+    it("putTakeCards sends correct request to take cards", async () => {
       const matchId = crypto.randomUUID();
       const playerId = crypto.randomUUID();
-      const mockSets: MatchSet[] = [
-        {
-          id: crypto.randomUUID(),
-          match_id: matchId,
-          player_id: playerId,
-          quin_play: false,
-          quin_count: 0,
-          type: "HERCULE POIROT",
-        },
-        {
-          id: crypto.randomUUID(),
-          match_id: matchId,
-          player_id: playerId,
-          quin_play: true,
-          quin_count: 1,
-          type: "PARKER PYNE",
-        },
-      ];
+      const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockSets),
+        json: vi.fn().mockResolvedValueOnce(undefined),
       });
 
-      const result = await httpService.getMatchSets(matchId);
+      await httpService.putTakeCards(matchId, playerId, cardIds);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/sets`,
+        `http://localhost:8000/matches/${matchId}/cards/take`,
         {
+          method: "PUT",
+          body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
           headers: {
             "Content-Type": "application/json",
           },
         },
       );
-
-      expect(result).toEqual(mockSets);
-      expect(result).toHaveLength(2);
     });
 
-    it("createAndPlaySet sends correct request to play one set", async () => {
+    it("putDiscardCards sends correct request to discard cards", async () => {
       const matchId = crypto.randomUUID();
       const playerId = crypto.randomUUID();
+      const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
 
-      const CARD_HERCULE_1 = crypto.randomUUID();
-      const CARD_HERCULE_2 = crypto.randomUUID();
-      const CARD_HERCULE_3 = crypto.randomUUID();
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
 
-      const TARGET_PLAYER_ID = crypto.randomUUID();
-      const TARGET_SECRET_ID = crypto.randomUUID();
+      await httpService.putDiscardCards(matchId, playerId, cardIds);
 
-      const mockDataBody: SetCreationData = {
-        player_id: playerId,
-        type: "HERCULE POIROT",
-        card_ids: [CARD_HERCULE_1, CARD_HERCULE_2, CARD_HERCULE_3],
-        target_player_id: TARGET_PLAYER_ID,
-        target_secret_id: TARGET_SECRET_ID,
-      };
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/cards/discard`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    });
+  });
 
-      const mockSet: MatchSet = {
+  it("getMatchSets fetches and returns match sets", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const mockSets: MatchSet[] = [
+      {
         id: crypto.randomUUID(),
         match_id: matchId,
         player_id: playerId,
         quin_play: false,
         quin_count: 0,
         type: "HERCULE POIROT",
-      };
+      },
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        player_id: playerId,
+        quin_play: true,
+        quin_count: 1,
+        type: "PARKER PYNE",
+      },
+    ];
 
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(mockSet),
-      });
-
-      const result = await httpService.createAndPlaySet(matchId, mockDataBody);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/sets`,
-        {
-          method: "POST",
-          body: JSON.stringify(mockDataBody),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      expect(result).toEqual(mockSet);
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockSets),
     });
+
+    const result = await httpService.getMatchSets(matchId);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/sets`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockSets);
+    expect(result).toHaveLength(2);
+  });
+
+  it("createAndPlaySet sends correct request to play one set", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+
+    const CARD_HERCULE_1 = crypto.randomUUID();
+    const CARD_HERCULE_2 = crypto.randomUUID();
+    const CARD_HERCULE_3 = crypto.randomUUID();
+
+    const TARGET_PLAYER_ID = crypto.randomUUID();
+    const TARGET_SECRET_ID = crypto.randomUUID();
+
+    const mockDataBody: SetCreationData = {
+      player_id: playerId,
+      type: "HERCULE POIROT",
+      card_ids: [CARD_HERCULE_1, CARD_HERCULE_2, CARD_HERCULE_3],
+      target_player_id: TARGET_PLAYER_ID,
+      target_secret_id: TARGET_SECRET_ID,
+    };
+
+    const mockSet: MatchSet = {
+      id: crypto.randomUUID(),
+      match_id: matchId,
+      player_id: playerId,
+      quin_play: false,
+      quin_count: 0,
+      type: "HERCULE POIROT",
+    };
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockSet),
+    });
+
+    const result = await httpService.createAndPlaySet(matchId, mockDataBody);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/sets`,
+      {
+        method: "POST",
+        body: JSON.stringify(mockDataBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockSet);
   });
 });

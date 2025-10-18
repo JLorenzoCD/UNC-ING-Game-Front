@@ -1,3 +1,4 @@
+import { Toaster } from "sonner";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Route, Routes } from "react-router";
@@ -25,6 +26,8 @@ createRoot(document.getElementById("root")!).render(
       <PlayerProvider>
         <HttpServiceProvider>
           <WebSocketServiceProvider>
+            <Toaster position="top-center" />
+
             <Routes>
               <Route element={<MainLayout />}>
                 <Route
