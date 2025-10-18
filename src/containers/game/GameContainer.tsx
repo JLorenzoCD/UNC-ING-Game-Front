@@ -22,7 +22,6 @@ import {
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type {
-  AnotherVictimEventPayload,
   RegularAndDiscardEventPayload,
   LookIntoTheAshesEventPayload,
   AndThenThereWasOneMoreEventPayload,
@@ -34,6 +33,7 @@ import type { GameSecret } from "@/types/secret";
 
 type GameCardMap = Record<UUID, GameCard>;
 type HandCardList = Array<GameCard | null>;
+type EventStep = "select_secret" | "select_player" | null;
 
 interface SetEvent {
   isSetEvent: boolean;
@@ -46,7 +46,7 @@ interface SetEvent {
 const defaultStateSetEvent: SetEvent = {
   isSetEvent: false,
   isValidSet: false,
-  isTargetPlayer: true, // caso contrario el target es un secreto
+  isTargetPlayer: true,
   isSelectedTargetSet: false,
   target: null,
 };
@@ -62,9 +62,16 @@ export default function GameContainer() {
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
   const [discardedCards, setDiscardedCards] = useState<GameCardMap>({});
   const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
+
+  // Estados para eventos de cartas
   const [currentEventCard, setCurrentEventCard] = useState<GameCard | null>(
     null,
   );
+  const [selectedTargetPlayer, setSelectedTargetPlayer] =
+    useState<GamePlayer | null>(null);
+  const [selectedTargetSecret, setSelectedTargetSecret] =
+    useState<GameSecret | null>(null);
+  const [currentEventStep, setCurrentEventStep] = useState<EventStep>(null);
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
@@ -73,6 +80,30 @@ export default function GameContainer() {
 
   const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
+  const isEndEventDisabled = useMemo(() => {
+    if (!currentEventCard) return true;
+
+    switch (currentEventCard.name) {
+      case "CARDS OFF THE TABLE":
+        return selectedTargetPlayer === null;
+
+      case "LOOK INTO THE ASHES":
+        return Object.keys(selectedCards).length !== 1;
+
+      case "AND THEN THERE WAS ONE MORE":
+        return selectedTargetSecret === null || selectedTargetPlayer === null;
+
+      default:
+        return false;
+    }
+  }, [
+    currentEventCard,
+    selectedTargetPlayer,
+    selectedCards,
+    selectedTargetSecret,
+  ]);
+
+  // -- Utilidades --
   const handleClickSetEvent = () => {
     if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
     else if (setEvent.isValidSet && !setEvent.isSetEvent) {
@@ -82,7 +113,7 @@ export default function GameContainer() {
 
       setSetEvent((prev) => ({
         ...prev,
-        isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
+        isValidSet: false,
         isSetEvent: true,
         isSelectedTargetSet: false,
         target: null,
@@ -93,6 +124,27 @@ export default function GameContainer() {
   };
 
   const handleSelectTargetEvent = (target: GamePlayer | GameSecret) => {
+    // Eventos de cartas
+    if (currentEventCard?.name === "AND THEN THERE WAS ONE MORE") {
+      if (currentEventStep === "select_secret" && "secret_id" in target) {
+        setSelectedTargetSecret(target as GameSecret);
+        setCurrentEventStep("select_player");
+        return;
+      } else if (currentEventStep === "select_player" && "avatar" in target) {
+        setSelectedTargetPlayer(target as GamePlayer);
+        return;
+      }
+    }
+
+    if (
+      currentEventCard?.name === "CARDS OFF THE TABLE" &&
+      "avatar" in target
+    ) {
+      setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    // Eventos de sets
     const isSetEventPlayerTarget =
       setEvent.isSetEvent && setEvent.isTargetPlayer && "avatar" in target;
     const isSetEventSecretTarget =
@@ -144,14 +196,24 @@ export default function GameContainer() {
     setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
   };
 
-  const isSelectablePlayer = (player: GamePlayer) => {
+  const isSelectablePlayer = (checkPlayer: GamePlayer) => {
+    //* Validacion por eventos
+    if (currentEventCard?.name === "CARDS OFF THE TABLE") {
+      return checkPlayer.id !== player?.id;
+    }
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_player"
+    ) {
+      return true;
+    }
+
     // Se deben de poner todos los posibles eventos validos
     if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
 
-    const secretsPlayer = secrets.filter((s) => s.player_id === player.id);
+    const secretsPlayer = secrets.filter((s) => s.player_id === checkPlayer.id);
     const isAllSecretsReveled = secretsPlayer.every((s) => s.is_revealed);
-
-    //* Validacion por eventos
 
     // Eventos de seleccionar jugador por set para revelar secreto
     if (setEvent.isSetEvent && setEvent.isTargetPlayer && !isAllSecretsReveled)
@@ -161,6 +223,12 @@ export default function GameContainer() {
   };
 
   const isSelectableSecret = (secret: GameSecret) => {
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      return secret.is_revealed;
+    }
     // Se deben de poner todos los posibles eventos validos
     if (!setEvent.isSetEvent || setEvent.isTargetPlayer) return false;
 
@@ -170,8 +238,6 @@ export default function GameContainer() {
       const isActionRevealSecret = isSetActionRevealSecret(
         Object.values(selectedCards),
       );
-
-      //* Validacion por eventos
 
       // Eventos de seleccionar secreto a revelarlo por jugar set
       if (
@@ -357,8 +423,6 @@ export default function GameContainer() {
 
     const discardedCardsAmount = Object.keys(discardedCards).length;
 
-    // Si no se han marcado cartas como descartadas,
-    // cancelamos la operación.
     if (discardedCardsAmount === 0) return;
 
     // TODO: corregir esto con la lógica de tomar cartas
@@ -523,7 +587,7 @@ export default function GameContainer() {
 
     // 1. Lógica Local: Chequeamos el tipo de evento, para mostrarle al jugador que hacer
     const nameEvent = cardEvent.name;
-    console.log(`Se jugaría la carta: ${nameEvent}`);
+    console.log(`Se jugará la carta: ${nameEvent}`);
 
     switch (nameEvent) {
       case "DELAY THE MURDERER ESCAPE": {
@@ -535,6 +599,20 @@ export default function GameContainer() {
       case "LOOK INTO THE ASHES": {
         setCurrentEventCard(cardEvent);
         handleEventDiscard();
+        break;
+      }
+
+      case "CARDS OFF THE TABLE": {
+        setCurrentEventCard(cardEvent);
+        setSelectedCards({});
+        setCurrentEventStep("select_player");
+        break;
+      }
+
+      case "AND THEN THERE WAS ONE MORE": {
+        setCurrentEventCard(cardEvent);
+        setSelectedCards({});
+        setCurrentEventStep("select_secret");
         break;
       }
     }
@@ -584,12 +662,44 @@ export default function GameContainer() {
         eventPayload = {
           cards_ids: idsInDiscardPile,
         } as RegularAndDiscardEventPayload;
-        setCurrentEventCard(null);
+        break;
+      }
+
+      case "CARDS OFF THE TABLE": {
+        if (!selectedTargetPlayer) {
+          console.warn("Debe seleccionar un jugador objetivo");
+          return;
+        }
+
+        eventPayload = {
+          target_player_id: selectedTargetPlayer.id,
+        } as CardsOffTheTableEventPayload;
+
+        setSelectedTargetPlayer(null);
+        setCurrentEventStep(null);
+        break;
+      }
+
+      case "AND THEN THERE WAS ONE MORE": {
+        if (!selectedTargetPlayer || !selectedTargetSecret) {
+          console.warn("Debe seleccionar un jugador objetivo y un secreto");
+          return;
+        }
+
+        eventPayload = {
+          target_secret_id: selectedTargetSecret.id,
+          target_player_id: selectedTargetPlayer.id,
+        } as AndThenThereWasOneMoreEventPayload;
+
+        setSelectedTargetPlayer(null);
+        setSelectedTargetSecret(null);
+        setCurrentEventStep(null);
         break;
       }
 
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
+        return;
     }
     // Llamada a la API
     try {
@@ -601,14 +711,17 @@ export default function GameContainer() {
         eventPayload,
       );
 
+      setCurrentEventCard(null);
+      setSelectedCards({});
+
       console.log("Evento completado exitosamente");
     } catch (error) {
-      console.error("Error al ejecutar el evento Look Into The Ashes:", error);
+      console.error("Error al ejecutar el evento", error);
     }
   };
 
-  // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
-  // y no se hayan descartado. Luego, se actualizarán por WebSocket.
+  // -- Effects --
+
   useEffect(() => {
     // Evitamos generar la mano del jugador si todavía hay datos cargando
     // o si ya tiene cartas en su mano
@@ -675,13 +788,23 @@ export default function GameContainer() {
             onSelectTargetEvent={handleSelectTargetEvent}
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
-            isEvent={setEvent.isSetEvent}
-            isTargetPlayer={setEvent.isTargetPlayer}
-            isTargetSecret={!setEvent.isTargetPlayer}
-            target={setEvent.target}
+            isEvent={setEvent.isSetEvent || currentEventCard !== null}
+            isTargetPlayer={
+              setEvent.isTargetPlayer ||
+              currentEventCard?.name === "CARDS OFF THE TABLE" ||
+              (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+                currentEventStep === "select_player")
+            }
+            isTargetSecret={
+              !setEvent.isTargetPlayer ||
+              (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+                currentEventStep === "select_secret")
+            }
+            target={
+              setEvent.target || selectedTargetPlayer || selectedTargetSecret
+            }
           />
 
-          {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
             <div className="flex flex-col gap-y-3">
               <Secrets
@@ -707,9 +830,11 @@ export default function GameContainer() {
               onPlaySet={handleClickSetEvent}
               onSelectPlayer={handleSelectedPlayer}
               onSelectSecret={handleSelectedSecret}
+              onEndEvent={handleEndEvent}
               isDiscarding={isDiscardingCards}
               isDisabled={!isPlayerTurn}
               isDisabledEvent={!isPlayable}
+              isDisabledEndEvent={isEndEventDisabled}
               isSetButtonDisabled={
                 !(setEvent.isValidSet && !setEvent.isSetEvent)
               }
