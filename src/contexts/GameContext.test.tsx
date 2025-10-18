@@ -25,6 +25,7 @@ describe("GameContext", () => {
     getMatchCards: vi.fn(),
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
+    getMatchSets: vi.fn(),
   };
 
   const mockMatchId = crypto.randomUUID();
