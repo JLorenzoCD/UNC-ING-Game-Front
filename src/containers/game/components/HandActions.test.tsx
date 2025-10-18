@@ -37,7 +37,11 @@ vi.mock("@/components/Button", () => ({
     onClick: () => void;
     disabled?: boolean;
   }) => (
-    <button data-testid="mock-button" onClick={onClick} disabled={disabled}>
+    <button
+      data-testid="mock-button"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+    >
       {children}
     </button>
   ),
@@ -61,7 +65,6 @@ describe("HandActions", () => {
           isSelectionSecretEvent={false}
           isSetButtonDisabled={false}
           isDisabled={false}
-          isDiscarding={false}
         />,
       );
 
@@ -75,28 +78,6 @@ describe("HandActions", () => {
       expect(buttons[2]).toHaveTextContent("Select player");
       expect(buttons[3]).toHaveTextContent("Select secret");
       expect(buttons[4]).toHaveTextContent("Finish turn");
-    });
-
-    it("shows 'Cancel discard' when the user is discarding", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSetButtonDisabled={false}
-          isDisabled={false}
-          isDiscarding={true}
-        />,
-      );
-
-      const cancelDiscardButton = screen.getAllByTestId("mock-button")[0];
-
-      expect(cancelDiscardButton).toBeInTheDocument();
-      expect(cancelDiscardButton).toHaveTextContent("Cancel discard");
     });
   });
 
@@ -113,7 +94,6 @@ describe("HandActions", () => {
           isSelectionSecretEvent={false}
           isSetButtonDisabled={false}
           isDisabled={false}
-          isDiscarding={false}
         />,
       );
 
@@ -136,7 +116,6 @@ describe("HandActions", () => {
           isSelectionSecretEvent={false}
           isSetButtonDisabled={false}
           isDisabled={false}
-          isDiscarding={false}
         />,
       );
 
@@ -159,7 +138,6 @@ describe("HandActions", () => {
           isSelectionSecretEvent={false}
           isSetButtonDisabled={false}
           isDisabled={true}
-          isDiscarding={false}
         />,
       );
 

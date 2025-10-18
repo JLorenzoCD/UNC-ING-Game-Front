@@ -611,40 +611,6 @@ describe("httpService", () => {
       expect(result).toHaveLength(3);
     });
 
-    it("putMatchCards sends correct request to update cards", async () => {
-      const matchId = crypto.randomUUID();
-      const playerId = crypto.randomUUID();
-      const takenCardIds = [crypto.randomUUID(), crypto.randomUUID()];
-      const discardedCardIds = [crypto.randomUUID(), crypto.randomUUID()];
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(undefined),
-      });
-
-      await httpService.putMatchCards(
-        matchId,
-        playerId,
-        takenCardIds,
-        discardedCardIds,
-      );
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/cards`,
-        {
-          method: "PUT",
-          body: JSON.stringify({
-            player_id: playerId,
-            taken_card_ids: takenCardIds,
-            discarded_card_ids: discardedCardIds,
-          }),
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    });
-
     it("putPassTurn sends correct request to pass turn", async () => {
       const matchId = crypto.randomUUID();
 
@@ -659,6 +625,54 @@ describe("httpService", () => {
         `http://localhost:8000/matches/${matchId}/pass_turn`,
         {
           method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    });
+
+    it("putTakeCards sends correct request to take cards", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+      const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.putTakeCards(matchId, playerId, cardIds);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/cards/take`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    });
+
+    it("putDiscardCards sends correct request to discard cards", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+      const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.putDiscardCards(matchId, playerId, cardIds);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/cards/discard`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
           headers: {
             "Content-Type": "application/json",
           },

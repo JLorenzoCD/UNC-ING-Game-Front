@@ -119,7 +119,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -138,7 +137,6 @@ describe("Hand", () => {
           cards={partialHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -157,7 +155,6 @@ describe("Hand", () => {
           cards={emptyHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -176,7 +173,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={true} // Mano deshabilitada
         />,
@@ -197,7 +193,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -216,7 +211,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={true} // Mano deshabilitada
         />,
@@ -236,7 +230,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -254,7 +247,6 @@ describe("Hand", () => {
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={false}
           isDisabled={false}
         />,
@@ -266,41 +258,17 @@ describe("Hand", () => {
       });
     });
 
-    it("decreases opacity and sets grayscale when card is discarded", () => {
-      mockIsDiscarded.mockReturnValueOnce(true); // La primera carta estará descartada
-
-      render(
-        <Hand
-          cards={fullHand}
-          onSelect={mockOnSelect}
-          isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
-          isSelecting={false}
-          isDisabled={false}
-        />,
-      );
-
-      const cardElements = screen.getAllByTestId("hand-card");
-      expect(cardElements[0].className).toContain("opacity-50");
-      expect(cardElements[0].className).toContain("grayscale");
-    });
-
     it("decreases opacity when user is selecting other cards", () => {
       // Por defecto, devolvemos false.
       // Para la primer, segunda y tercera llamada devolvemos true
       // (chequeo de `isSelected` and `shouldDecreaseOpacity`)
-      mockIsSelected
-        .mockReturnValue(false)
-        .mockReturnValueOnce(true) // 1ra carta aria-selected
-        .mockReturnValueOnce(true) // 1ra carta className
-        .mockReturnValueOnce(true); // 1ra carta shouldDecreaseOpacity
+      mockIsSelected.mockReturnValueOnce(true);
 
       render(
         <Hand
           cards={fullHand}
           onSelect={mockOnSelect}
           isSelected={mockIsSelected}
-          isDiscarded={mockIsDiscarded}
           isSelecting={true} // El usuario está en modo selección
           isDisabled={false}
         />,
