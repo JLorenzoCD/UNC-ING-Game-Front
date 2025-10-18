@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
+import { toast } from "sonner";
 
-import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
-
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
@@ -19,7 +18,7 @@ import DiscardModal from "./components/DiscardModal";
 
 import { useHand } from "./hooks/useHand";
 
-const DRAFT_SIZE = 3;
+export const DRAFT_SIZE = 3;
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -29,20 +28,22 @@ export default function GameContainer() {
   const { match, secrets, players, cards, sets } = useGame();
 
   const {
-    addCard,
     clearSelectedCards,
+    discardCards,
     getRandomCard,
     handCards,
     isCardSelected,
     isHandFull,
     isSelectingCards,
-    removeCard,
-    replaceCard,
     selectCard,
+    hasDiscardedCards,
+    hasTakenCards,
+    replaceCard,
     selectedCards,
+    setHasDiscardedCards,
+    setHasTakenCards,
+    takeCards,
   } = useHand();
-
-  const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
@@ -62,8 +63,15 @@ export default function GameContainer() {
   }, [match, player, players]);
 
   const canTakeCards = useMemo(() => {
-    return isPlayerTurn && !isHandFull;
-  }, [isHandFull, isPlayerTurn]);
+    // El jugador puede tomar cartas si está en su turno.
+    // y su mano no está llena.
+    return !hasTakenCards && !isHandFull && isPlayerTurn;
+  }, [hasTakenCards, isHandFull, isPlayerTurn]);
+
+  const canDiscardCards = useMemo(() => {
+    // El jugador puede descartar cartas si está en su turno.
+    return !hasDiscardedCards && isPlayerTurn;
+  }, [hasDiscardedCards, isPlayerTurn]);
 
   const playerSecrets = useMemo(() => {
     if (!player) return [];
@@ -103,6 +111,31 @@ export default function GameContainer() {
     });
   }, [cards]);
 
+  // -- Utilidades --
+
+  const getTakeErrorMessage = () => {
+    if (!isPlayerTurn) {
+      return "You can't take cards right now.";
+    }
+    if (hasTakenCards) {
+      return "You have already taken cards this turn.";
+    }
+
+    if (isHandFull) {
+      return "Your hand is full.";
+    }
+
+    return "There was an error taking cards.";
+  };
+
+  const getDiscardErrorMessage = () => {
+    if (hasDiscardedCards) {
+      return "You have already discarded cards this turn.";
+    }
+
+    return "You can't discard cards right now.";
+  };
+
   // -- Manejadores --
 
   const handleClickDiscardPile = () => {
@@ -124,52 +157,128 @@ export default function GameContainer() {
 
   // -- Llamadas a la API --
 
-  const handleTakeCardFromDraft = async (card: GameCard) => {
-    if (!httpService || !player || !match) return;
+  const handleClickDraftCard = async (card: GameCard) => {
+    if (!canTakeCards) {
+      toast.error(getTakeErrorMessage());
+
+      return;
+    }
 
     try {
-      await httpService.putTakeCards(match.id, player.id, [card.id]);
+      await takeCards([card]);
 
-      addCard(card);
+      const emptySlots = handCards.filter((c) => c === null).length;
+
+      // Si tomar una carta del draft llena la mano,
+      // marcamos que el jugador ha tomado cartas.
+      // Esto es relevante para permitirle
+      // tomar cartas del draft sin impedir tomar de
+      // la pila regular.
+      if (emptySlots === 1) {
+        setHasTakenCards(true);
+      }
     } catch (error) {
       console.error("Failed to take card from draft:", error);
+      toast.error("Failed to take card from draft.");
     }
   };
 
-  /**
-   * Ejecuta el descarte obligatorio (y reposición) de una carta.
-   * Esto sucede cuando el jugador quiere finalizar su turno sin haber
-   * descartado cartas de forma manual.
-   */
-  const handleMandatoryDiscard = async () => {
-    if (!httpService || !player || !match) return;
+  const handleClickDrawPile = async () => {
+    if (!canTakeCards) {
+      toast.error(getTakeErrorMessage());
 
-    const firstTakeableCard = cards.find((card) => {
-      return card.player_id === null && !card.is_discarded;
-    });
-
-    if (!firstTakeableCard) {
-      throw new Error("No cards available to take from the draw pile.");
+      return;
     }
 
-    const randomDiscardableCard = getRandomCard();
+    const emptyHandPositions = handCards
+      .map((card, index) => (card === null ? index : -1))
+      .filter((index) => index !== -1);
 
-    if (!randomDiscardableCard) {
-      throw new Error("No cards available to discard from the hand.");
+    if (emptyHandPositions.length === 0) return;
+
+    // Tenemos que tomar los índices por detrás
+    // de las cartas del draft (las que están en la pila).
+    const cardsTaken = drawableCards.slice(
+      DRAFT_SIZE,
+      DRAFT_SIZE + Math.min(emptyHandPositions.length, drawableCards.length),
+    );
+
+    try {
+      await takeCards(cardsTaken);
+
+      setHasTakenCards(true);
+    } catch (error) {
+      console.error("Failed to take cards from draw pile:", error);
+
+      toast.error("Failed to take cards from draw pile.");
+    }
+  };
+
+  const discardSelectedCards = async () => {
+    if (!httpService || !player || !match) return;
+
+    if (!canDiscardCards) {
+      toast.error(getDiscardErrorMessage());
+
+      return;
+    }
+
+    const cardIds = Object.keys(selectedCards);
+
+    if (cardIds.length === 0) {
+      toast.error("No cards selected to discard.");
+      return;
     }
 
     try {
-      await httpService.putDiscardCards(match.id, player.id, [
-        randomDiscardableCard.id,
-      ]);
+      await discardCards(Object.values(selectedCards));
 
-      await httpService.putTakeCards(match.id, player.id, [
-        firstTakeableCard.id,
-      ]);
+      setHasDiscardedCards(true);
+
+      clearSelectedCards();
+    } catch (error) {
+      console.error("Failed to discard selected cards:", error);
+
+      toast.error("Failed to discard selected cards.");
+
+      throw error;
+    }
+  };
+
+  const mandatoryDiscard = async () => {
+    if (!httpService || !player || !match) return;
+
+    try {
+      const firstTakeableCard = cards.find(
+        (card) => card.player_id === null && !card.is_discarded,
+      );
+
+      if (!firstTakeableCard) {
+        toast.error("No cards available to take for mandatory discard.");
+        console.error("No cards available to take from the draw pile.");
+        return;
+      }
+
+      const randomDiscardableCard = getRandomCard();
+
+      if (!randomDiscardableCard) {
+        toast.error("No cards available to discard for mandatory discard.");
+        console.error("No cards available to discard from the hand.");
+        return;
+      }
+
+      await discardCards([randomDiscardableCard]);
+
+      await takeCards([firstTakeableCard]);
 
       replaceCard(randomDiscardableCard, firstTakeableCard);
+
+      setHasTakenCards(true);
+      setHasDiscardedCards(true);
     } catch (error) {
       console.error("Failed to perform mandatory discard:", error);
+
+      toast.error("Failed to perform mandatory discard.");
 
       // Lanzamos el error de nuevo para que no pueda pasar el turno
       // si el descarte falló.
@@ -177,52 +286,35 @@ export default function GameContainer() {
     }
   };
 
-  const handleDiscardSelectedCards = async () => {
+  const handleFinishTurn = async () => {
     if (!httpService || !player || !match) return;
 
-    const selectedCardIds = Object.keys(selectedCards);
-
-    if (selectedCardIds.length === 0) return;
-
-    try {
-      await httpService.putDiscardCards(
-        match.id,
-        player.id,
-        selectedCardIds as UUID[],
-      );
-
-      for (const cardId of selectedCardIds) {
-        const card = selectedCards[cardId];
-
-        if (!card) continue;
-
-        removeCard(card);
-      }
-
-      clearSelectedCards();
-      setHasDiscardedCards(true);
-    } catch (error) {
-      console.error("Failed to discard selected cards:", error);
+    if (handCards.includes(null)) {
+      toast.error("You must have a full hand to finish your turn.");
 
       return;
     }
-  };
 
-  const handleFinishTurn = async () => {
-    if (!httpService || !player || !match) return;
+    if (!isPlayerTurn) {
+      toast.error("It's not your turn.");
+
+      return;
+    }
 
     try {
       // Si el jugador no ha descartado cartas, se fuerza
       // el descarte obligatorio de una carta.
       if (!hasDiscardedCards) {
-        await handleMandatoryDiscard();
+        await mandatoryDiscard();
       }
 
+      await httpService.putPassTurn(match.id);
+
       // Reseteamos los estados relacionados con el descarte
-      clearSelectedCards();
+      setHasTakenCards(false);
       setHasDiscardedCards(false);
 
-      await httpService.putPassTurn(match.id);
+      clearSelectedCards();
     } catch (error) {
       console.error("Failed to finish turn:", error);
     }
@@ -241,15 +333,20 @@ export default function GameContainer() {
             draft={
               <Draft
                 cards={cardsInDraft}
-                onTake={handleTakeCardFromDraft}
-                canTake={canTakeCards}
+                onClick={handleClickDraftCard}
+                isDisabled={!canTakeCards}
               />
             }
-            drawPile={<DrawPile cardCount={drawableCards.length} />}
+            drawPile={
+              <DrawPile
+                onClick={handleClickDrawPile}
+                cardCount={drawableCards.length}
+              />
+            }
             discardPile={
               <DiscardPile
-                topCard={cardsInDiscardPile[0]}
                 onClick={handleClickDiscardPile}
+                topCard={cardsInDiscardPile[0]}
               />
             }
           />
@@ -271,8 +368,7 @@ export default function GameContainer() {
 
             <HandActions
               onFinish={handleFinishTurn}
-              onDiscard={handleDiscardSelectedCards}
-              isDisabled={!isPlayerTurn}
+              onDiscard={discardSelectedCards}
             />
           </div>
         </div>

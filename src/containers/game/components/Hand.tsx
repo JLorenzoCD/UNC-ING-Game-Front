@@ -14,7 +14,7 @@ interface HandProps {
 function EmptyHandPosition() {
   return (
     <div
-      className={`${CARD_SIZES.small} border-2 border-gray-400 border-dashed flex items-center justify-center`}
+      className={`${CARD_SIZES.default} border-2 border-gray-400 border-dashed flex items-center justify-center`}
     >
       <div className="text-center text-gray-400 italic p-4">
         Draw a card here

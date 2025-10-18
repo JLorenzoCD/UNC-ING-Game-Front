@@ -16,13 +16,11 @@ vi.mock("@/components/Button", () => ({
   default: ({
     children,
     onClick,
-    disabled,
   }: {
     children: ReactNode;
     onClick: () => void;
-    disabled?: boolean;
   }) => (
-    <button data-testid="mock-button" onClick={onClick} disabled={disabled}>
+    <button data-testid="mock-button" onClick={onClick}>
       {children}
     </button>
   ),
@@ -35,14 +33,7 @@ describe("HandActions", () => {
 
   describe("Rendering", () => {
     it("renders correctly with default props", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          isDisabled={false}
-          isDiscarding={false}
-        />,
-      );
+      render(<HandActions onFinish={mockOnFinish} onDiscard={mockOnDiscard} />);
 
       const handActions = screen.getByTestId("hand-actions");
       expect(handActions).toBeInTheDocument();
@@ -52,34 +43,11 @@ describe("HandActions", () => {
       expect(buttons[0]).toHaveTextContent("Discard cards");
       expect(buttons[1]).toHaveTextContent("Finish turn");
     });
-
-    it("shows 'Cancel discard' when the user is discarding", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          isDisabled={false}
-          isDiscarding={true}
-        />,
-      );
-
-      const cancelDiscardButton = screen.getAllByTestId("mock-button")[0];
-
-      expect(cancelDiscardButton).toBeInTheDocument();
-      expect(cancelDiscardButton).toHaveTextContent("Cancel discard");
-    });
   });
 
   describe("Interactions", () => {
     it("calls onDiscard when 'Discard cards' button is clicked", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          isDisabled={false}
-          isDiscarding={false}
-        />,
-      );
+      render(<HandActions onFinish={mockOnFinish} onDiscard={mockOnDiscard} />);
 
       const discardCardsButton = screen.getAllByTestId("mock-button")[0];
       expect(discardCardsButton).toBeInTheDocument();
@@ -89,40 +57,13 @@ describe("HandActions", () => {
     });
 
     it("calls onFinish when 'Finish turn' button is clicked", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          isDisabled={false}
-          isDiscarding={false}
-        />,
-      );
+      render(<HandActions onFinish={mockOnFinish} onDiscard={mockOnDiscard} />);
 
       const finishTurnButton = screen.getAllByTestId("mock-button")[1];
       expect(finishTurnButton).toBeInTheDocument();
 
       fireEvent.click(finishTurnButton);
       expect(mockOnFinish).toHaveBeenCalled();
-    });
-
-    it("does not call onDiscard or onFinish when buttons are disabled", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          isDisabled={true}
-          isDiscarding={false}
-        />,
-      );
-
-      const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(2);
-
-      fireEvent.click(buttons[0]);
-      fireEvent.click(buttons[1]);
-
-      expect(mockOnDiscard).not.toHaveBeenCalled();
-      expect(mockOnFinish).not.toHaveBeenCalled();
     });
   });
 });

@@ -3,31 +3,25 @@ import Card from "./Card";
 
 interface DraftProps {
   cards: GameCard[];
-  onTake: (card: GameCard) => void; // Callback que se ejecuta al tomar una carta del draft
-  canTake: boolean; // Indica si el jugador puede tomar cartas del draft
+  onClick: (card: GameCard) => void; // Callback que se ejecuta al tomar una carta del draft
+  isDisabled: boolean; // Indica si el jugador puede tomar cartas del draft
 }
 
-export default function Draft({ cards, onTake, canTake }: DraftProps) {
-  const handleTake = (card: GameCard) => {
-    if (!canTake) return;
-
-    onTake(card);
-  };
-
+export default function Draft({ cards, onClick, isDisabled }: DraftProps) {
   return (
     <div data-testid="draft" className="flex gap-x-3">
       {cards.map((card) => (
-        <div
+        <button
           key={card.id}
-          onClick={() => handleTake(card)}
+          onClick={() => onClick(card)}
           className={
-            canTake
+            !isDisabled
               ? "cursor-pointer"
-              : "cursor-not-allowed pointer-events-none"
+              : "cursor-not-allowed opacity-75 grayscale"
           }
         >
           <Card size="xsmall" name={card.name} description={card.description} />
-        </div>
+        </button>
       ))}
     </div>
   );

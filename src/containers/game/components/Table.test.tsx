@@ -167,15 +167,14 @@ describe("Table Component", () => {
 
     mockUsePlayer.mockReturnValue({
       player: mockCurrPlayer,
-      isLoading: false,
-      hasError: false,
-      error: null,
+      setPlayer: vi.fn(),
     });
   });
 
   it("should render without crashing", () => {
     render(
       <Table
+        draft={<div>Draft Area</div>}
         drawPile={<div>Draw Pile</div>}
         discardPile={<div>Discard Pile</div>}
       />,
@@ -199,6 +198,7 @@ describe("Table Component", () => {
     // Jugador con order 2, luego Jugador con order 3.
     render(
       <Table
+        draft={<div>Draft Area</div>}
         drawPile={<div>Draw Pile</div>}
         discardPile={<div>Discard Pile</div>}
       />,
@@ -228,13 +228,12 @@ describe("Table Component", () => {
 
     mockUsePlayer.mockReturnValue({
       player: currPlayerP2,
-      isLoading: false,
-      hasError: false,
-      error: null,
+      setPlayer: vi.fn(),
     });
 
     render(
       <Table
+        draft={<div>Draft Area</div>}
         drawPile={<div>Draw Pile</div>}
         discardPile={<div>Discard Pile</div>}
       />,
@@ -257,6 +256,7 @@ describe("Table Component", () => {
   it("should pass correct secrets and sets counts to each Player component", () => {
     render(
       <Table
+        draft={<div>Draft Area</div>}
         drawPile={<div>Draw Pile</div>}
         discardPile={<div>Discard Pile</div>}
       />,
@@ -285,6 +285,7 @@ describe("Table Component", () => {
       });
       render(
         <Table
+          draft={<div>Draft Area</div>}
           drawPile={<div>Draw Pile</div>}
           discardPile={<div>Discard Pile</div>}
         />,
@@ -308,6 +309,7 @@ describe("Table Component", () => {
       });
       render(
         <Table
+          draft={<div>Draft Area</div>}
           drawPile={<div>Draw Pile</div>}
           discardPile={<div>Discard Pile</div>}
         />,
@@ -329,6 +331,7 @@ describe("Table Component", () => {
       // Tenemos 3 jugadores en total, se renderizan 2 'other players'
       render(
         <Table
+          draft={<div>Draft Area</div>}
           drawPile={<div>Draw Pile</div>}
           discardPile={<div>Discard Pile</div>}
         />,
@@ -358,6 +361,7 @@ describe("Table Component", () => {
 
       render(
         <Table
+          draft={<div>Draft Area</div>}
           drawPile={<div>Draw Pile</div>}
           discardPile={<div>Discard Pile</div>}
         />,

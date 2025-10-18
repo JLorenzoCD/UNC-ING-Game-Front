@@ -8,6 +8,7 @@ import type { GameCard } from "@/types/card";
 
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
 
 type HandCardList = Array<GameCard | null>;
 type GameCardMap = Record<string, GameCard>;
@@ -15,13 +16,17 @@ type GameCardMap = Record<string, GameCard>;
 const HAND_SIZE = 6;
 
 export function useHand() {
-  const { cards } = useGame();
+  const { httpService } = useHttpService();
+  const { cards, match } = useGame();
   const { player } = usePlayer();
 
   /* -- Estado y referencias --  */
 
   const [handCards, setHandCards] = useState<HandCardList>([]);
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
+
+  const [hasTakenCards, setHasTakenCards] = useState<boolean>(false);
+  const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
   // Determina si es la primera vez que se carga el componente.
   // Se usa para cargar la mano del jugador solo una vez.
@@ -90,8 +95,36 @@ export function useHand() {
     );
   };
 
-  const clearSelectedCards = () => {
-    setSelectedCards({});
+  /* -- Llamadas a la API -- */
+
+  const takeCards = async (cards: GameCard[]) => {
+    if (!httpService || !player || !match) return;
+
+    try {
+      const cardIds = cards.map((card) => card.id);
+      await httpService.putTakeCards(match.id, player.id, cardIds);
+
+      for (const card of cards) addCard(card);
+    } catch (error) {
+      console.error("Failed to take card:", error);
+
+      throw error;
+    }
+  };
+
+  const discardCards = async (cards: GameCard[]) => {
+    if (!httpService || !player || !match) return;
+
+    try {
+      const cardIds = cards.map((card) => card.id);
+      await httpService.putDiscardCards(match.id, player.id, cardIds);
+
+      for (const card of cards) removeCard(card);
+    } catch (error) {
+      console.error("Failed to discard card:", error);
+
+      throw error;
+    }
   };
 
   /* -- Utilidades -- */
@@ -123,6 +156,12 @@ export function useHand() {
     return handCards[randomIndex];
   };
 
+  const clearSelectedCards = () => {
+    setSelectedCards({});
+  };
+
+  /* -- Efectos -- */
+
   // Inicialmente, cargamos manualmente las cartas que pertenezcan al jugador
   // y no se hayan descartado. Luego, se actualizarán por WebSocket.
   useEffect(() => {
@@ -144,16 +183,22 @@ export function useHand() {
   }, [cards, player]);
 
   return {
-    handCards,
-    selectedCards,
-    getRandomCard,
     addCard,
-    removeCard,
-    selectCard,
-    replaceCard,
-    isHandFull,
-    isCardSelected,
-    isSelectingCards,
     clearSelectedCards,
+    discardCards,
+    getRandomCard,
+    handCards,
+    hasDiscardedCards,
+    hasTakenCards,
+    isCardSelected,
+    isHandFull,
+    isSelectingCards,
+    removeCard,
+    replaceCard,
+    selectCard,
+    selectedCards,
+    setHasDiscardedCards,
+    setHasTakenCards,
+    takeCards,
   };
 }

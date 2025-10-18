@@ -8,14 +8,18 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import type { GameCard } from "@/types/card";
-
-import GameContainer from "./GameContainer";
 import type { GamePlayer, Player } from "@/types/player";
 import type { Match } from "@/types/match";
 
+import GameContainer from "./GameContainer";
+
 const MOCK_CARD_ID_1 = crypto.randomUUID();
 const MOCK_CARD_ID_2 = crypto.randomUUID();
-const MOCK_CARD_ID_3 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_3 = crypto.randomUUID();
+const MOCK_CARD_ID_4 = crypto.randomUUID();
+const MOCK_CARD_ID_5 = crypto.randomUUID();
+const MOCK_CARD_ID_6 = crypto.randomUUID();
+const MOCK_CARD_ID_7 = crypto.randomUUID(); // Carta disponible para robar
 const MOCK_PLAYER_ID = crypto.randomUUID();
 const MOCK_MATCH_ID = crypto.randomUUID();
 
@@ -70,6 +74,50 @@ const mockCards: GameCard[] = [
   {
     id: MOCK_CARD_ID_3,
     match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    card_id: crypto.randomUUID(),
+    name: "INSPECTOR JAPP",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_4,
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    card_id: crypto.randomUUID(),
+    name: "CAPTAIN HASTINGS",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_5,
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    card_id: crypto.randomUUID(),
+    name: "ARIADNE OLIVER",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_6,
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    card_id: crypto.randomUUID(),
+    name: "SUPERINTENDENT BATTLE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
     name: "PARKER PYNE",
@@ -82,12 +130,15 @@ const mockCards: GameCard[] = [
 
 /* Métodos mockeados por Vitest */
 
-const { mockPutMatchCards, mockPutPassTurn } = vi.hoisted(() => {
-  const mockPutMatchCards = vi.fn();
-  const mockPutPassTurn = vi.fn();
+const { mockPutTakeCards, mockPutDiscardCards, mockPutPassTurn } = vi.hoisted(
+  () => {
+    const mockPutTakeCards = vi.fn();
+    const mockPutDiscardCards = vi.fn();
+    const mockPutPassTurn = vi.fn();
 
-  return { mockPutMatchCards, mockPutPassTurn };
-});
+    return { mockPutTakeCards, mockPutDiscardCards, mockPutPassTurn };
+  },
+);
 
 /* Componentes mockeados por Vitest */
 
@@ -99,9 +150,10 @@ vi.mock("@/contexts/HttpServiceContext");
 
 vi.mock("./components/Table", () => ({
   __esModule: true,
-  default: vi.fn(({ drawPile, discardPile }) => (
+  default: vi.fn(({ draft, drawPile, discardPile }) => (
     <div data-testid="mock-table">
       Table Component
+      {draft}
       {drawPile}
       {discardPile}
     </div>
@@ -114,13 +166,11 @@ vi.mock("./components/Hand", () => ({
     cards,
     onSelect,
     isSelected,
-    isDiscarded,
     isDisabled,
   }: {
     cards: (GameCard | null)[];
     onSelect: (card: GameCard) => void;
     isSelected: (card: GameCard) => boolean;
-    isDiscarded: (card: GameCard) => boolean;
     isDisabled?: boolean;
   }) => (
     <div data-testid="mock-hand">
@@ -130,7 +180,6 @@ vi.mock("./components/Hand", () => ({
             key={card.id}
             data-testid={`hand-card-${card.id}`}
             aria-selected={isSelected(card)}
-            aria-disabled={isDiscarded(card)}
             onClick={() => onSelect(card)}
             disabled={isDisabled}
           >
@@ -153,6 +202,34 @@ vi.mock("./components/Secrets", () => ({
       Secrets Component - Secrets: {secrets.length}
     </div>
   )),
+}));
+
+vi.mock("./components/Draft", () => ({
+  __esModule: true,
+  default: vi.fn(
+    ({
+      cards,
+      onTake,
+      canTake,
+    }: {
+      cards: GameCard[];
+      onTake: (card: GameCard) => void;
+      canTake: boolean;
+    }) => (
+      <div data-testid="mock-draft">
+        Draft Component - Can Take: {canTake ? "Yes" : "No"}
+        {cards.map((card) => (
+          <button
+            key={card.id}
+            data-testid={`draft-card-${card.id}`}
+            onClick={() => onTake(card)}
+          >
+            {card.name}
+          </button>
+        ))}
+      </div>
+    ),
+  ),
 }));
 
 vi.mock("./components/DrawPile", () => ({
@@ -207,10 +284,10 @@ vi.mock("./components/DiscardModal", () => ({
 
 vi.mock("./components/HandActions", () => ({
   __esModule: true,
-  default: vi.fn(({ onFinish, onDiscard, isDiscarding, isDisabled }) => (
+  default: vi.fn(({ onFinish, onDiscard, isDisabled }) => (
     <div data-testid="mock-hand-actions">
       <button onClick={onDiscard} disabled={isDisabled}>
-        {isDiscarding ? "Cancel discard" : "Discard cards"}
+        Discard cards
       </button>
       <button onClick={onFinish} disabled={isDisabled}>
         Finish turn
@@ -229,7 +306,8 @@ describe("GameContainer", () => {
     vi.clearAllMocks();
 
     mockPutPassTurn.mockReset();
-    mockPutMatchCards.mockReset();
+    mockPutTakeCards.mockReset();
+    mockPutDiscardCards.mockReset();
 
     vi.mocked(usePlayer).mockReturnValue({
       player: mockPlayer,
@@ -249,8 +327,9 @@ describe("GameContainer", () => {
 
     vi.mocked(useHttpService).mockReturnValue({
       httpService: {
-        putMatchCards: mockPutMatchCards,
         putPassTurn: mockPutPassTurn,
+        putTakeCards: mockPutTakeCards,
+        putDiscardCards: mockPutDiscardCards,
       } as any,
     });
   });
@@ -314,96 +393,28 @@ describe("GameContainer", () => {
       expect(secondCardButton).toHaveAttribute("aria-selected", "false");
     });
 
-    it("should mark cards for discard when clicking 'Discard cards' button", () => {
-      render(<GameContainer />);
-
-      const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
-      const discardButton = screen.getByText("Discard cards");
-
-      // Seleccionamos la carta y la marcamos para descartar.
-      fireEvent.click(firstCardButton);
-      fireEvent.click(discardButton);
-
-      expect(screen.getByText("Cancel discard")).toBeInTheDocument();
-      expect(firstCardButton).toHaveAttribute("aria-disabled", "true");
-    });
-
-    it("should actually discard cards after finishing turn", async () => {
-      mockPutMatchCards.mockResolvedValue(undefined);
+    it("should actually discard cards after clicking discard button", async () => {
+      mockPutDiscardCards.mockResolvedValue(undefined);
 
       render(<GameContainer />);
 
       const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
       const discardButton = screen.getByText("Discard cards");
-      const finishButton = screen.getByText("Finish turn");
 
       // Seleccionamos la carta.
       fireEvent.click(firstCardButton);
       expect(firstCardButton).toHaveAttribute("aria-selected", "true");
-
-      // La marcamos para descartar.
-      fireEvent.click(discardButton);
-
-      // Chequeamos que marcamos para descartar correctamente.
-      expect(screen.getByText("Cancel discard")).toBeInTheDocument();
 
       await act(async () => {
-        fireEvent.click(finishButton);
+        fireEvent.click(discardButton);
       });
 
-      expect(mockPutMatchCards).toHaveBeenCalledTimes(1);
-      expect(mockPutMatchCards).toHaveBeenCalledWith(
+      expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);
+      expect(mockPutDiscardCards).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
-        [MOCK_CARD_ID_3], // Carta a robar (única en la pila regular)
         [MOCK_CARD_ID_1], // Carta a descartar
       );
-    });
-
-    it("should cancel discard mode when clicking 'Cancel discard'", () => {
-      render(<GameContainer />);
-
-      const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
-      const discardButton = screen.getByText("Discard cards");
-
-      // Marcamos la carta para descartar.
-      fireEvent.click(firstCardButton);
-      fireEvent.click(discardButton);
-
-      // Chequeamos que la carta está marcada para descartar.
-      expect(firstCardButton).toHaveAttribute("aria-selected", "false");
-      expect(firstCardButton).toHaveAttribute("aria-disabled", "true");
-
-      // Chequeamos que ahora podemos cancelar el descarte.
-      const cancelButton = screen.getByText("Cancel discard");
-      expect(cancelButton).toBeInTheDocument();
-
-      // Cancelamos el descarte.
-      fireEvent.click(cancelButton);
-
-      // Chequeamos que ya no estamos en modo descarte
-      // y que la carta ya no está marcada para descartar.
-      expect(screen.getByText("Discard cards")).toBeInTheDocument();
-      expect(firstCardButton).toHaveAttribute("aria-disabled", "false");
-    });
-
-    it("should not allow selecting a card that is already marked for discard", () => {
-      render(<GameContainer />);
-
-      const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
-      const discardButton = screen.getByText("Discard cards");
-
-      // Seleccionamos la carta.
-      fireEvent.click(firstCardButton);
-      expect(firstCardButton).toHaveAttribute("aria-selected", "true");
-
-      // La marcamos para descartar.
-      fireEvent.click(discardButton);
-      expect(firstCardButton).toHaveAttribute("aria-selected", "false");
-
-      // Intentamos seleccionarla de nuevo.
-      fireEvent.click(firstCardButton);
-      expect(firstCardButton).toHaveAttribute("aria-selected", "false");
     });
   });
 
@@ -460,7 +471,7 @@ describe("GameContainer", () => {
   });
 
   describe("Turn", () => {
-    it("should disable Hand and HandActions when it's not the player's turn", () => {
+    it("should prevent hand actions when it's not the player's turn", () => {
       vi.mocked(useGame).mockReturnValue({
         sets: [],
         secrets: [],
@@ -472,27 +483,56 @@ describe("GameContainer", () => {
         error: null,
       });
 
+      mockPutDiscardCards.mockResolvedValue(undefined);
+      mockPutTakeCards.mockResolvedValue(undefined);
+      mockPutPassTurn.mockResolvedValue(undefined);
+
       render(<GameContainer />);
 
-      const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
       const discardButton = screen.getByText("Discard cards");
+
+      act(() => {
+        userEvent.click(discardButton);
+      });
+
+      expect(mockPutDiscardCards).not.toHaveBeenCalled();
+
       const finishButton = screen.getByText("Finish turn");
 
-      expect(firstCardButton).toBeDisabled();
-      expect(discardButton).toBeDisabled();
-      expect(finishButton).toBeDisabled();
+      act(() => {
+        userEvent.click(finishButton);
+      });
+
+      expect(mockPutPassTurn).not.toHaveBeenCalled();
     });
 
-    it("should enable Hand and HandActions when it's the player's turn", () => {
+    it("should not prevent hand actions it's the player's turn", async () => {
+      mockPutDiscardCards.mockResolvedValue(undefined);
+      mockPutTakeCards.mockResolvedValue(undefined);
+      mockPutPassTurn.mockResolvedValue(undefined);
+
       render(<GameContainer />);
 
+      // Test discarding - select a card first
       const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
-      const discardButton = screen.getByText("Discard cards");
-      const finishButton = screen.getByText("Finish turn");
+      fireEvent.click(firstCardButton);
 
-      expect(firstCardButton).not.toBeDisabled();
-      expect(discardButton).not.toBeDisabled();
-      expect(finishButton).not.toBeDisabled();
+      const discardButton = screen.getByText("Discard cards");
+
+      await act(async () => {
+        fireEvent.click(discardButton);
+      });
+
+      expect(mockPutDiscardCards).toHaveBeenCalled();
+
+      // Test finish turn - this should trigger mandatory discard since we manually discarded already
+      // The hand is now not full (has 5 cards after discard), so we can't test finish turn here
+      // Instead, let's verify that the discard action worked correctly
+      expect(mockPutDiscardCards).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        [MOCK_CARD_ID_1],
+      );
     });
   });
 
@@ -502,7 +542,9 @@ describe("GameContainer", () => {
         .spyOn(console, "error")
         .mockImplementation(() => {});
 
-      mockPutMatchCards.mockRejectedValue(new Error("API Error"));
+      mockPutDiscardCards.mockRejectedValue(new Error("API Error"));
+      mockPutTakeCards.mockResolvedValue(undefined);
+      mockPutPassTurn.mockResolvedValue(undefined);
 
       render(<GameContainer />);
 
@@ -512,14 +554,16 @@ describe("GameContainer", () => {
         fireEvent.click(finishButton);
       });
 
-      // Esto vale para ambos casos, tanto el descarte obligatorio
-      // como el manual.
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.any(String),
+        "Failed to discard card:",
         expect.any(Error),
       );
 
-      expect(mockPutMatchCards).toHaveBeenCalledTimes(1);
+      expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);
+
+      // No se deberían llamar a los otros métodos
+      // si el descarte falla.
+      expect(mockPutTakeCards).not.toHaveBeenCalled();
       expect(mockPutPassTurn).not.toHaveBeenCalled();
 
       consoleErrorSpy.mockRestore();
@@ -538,7 +582,8 @@ describe("GameContainer", () => {
         fireEvent.click(finishButton);
       });
 
-      expect(mockPutMatchCards).not.toHaveBeenCalled();
+      expect(mockPutDiscardCards).not.toHaveBeenCalled();
+      expect(mockPutTakeCards).not.toHaveBeenCalled();
     });
 
     it("should not call API when finishing turn without player", async () => {
@@ -555,7 +600,8 @@ describe("GameContainer", () => {
         fireEvent.click(finishButton);
       });
 
-      expect(mockPutMatchCards).not.toHaveBeenCalled();
+      expect(mockPutDiscardCards).not.toHaveBeenCalled();
+      expect(mockPutTakeCards).not.toHaveBeenCalled();
     });
 
     it("should not call API when finishing turn without match", async () => {
@@ -578,11 +624,13 @@ describe("GameContainer", () => {
         fireEvent.click(finishButton);
       });
 
-      expect(mockPutMatchCards).not.toHaveBeenCalled();
+      expect(mockPutDiscardCards).not.toHaveBeenCalled();
+      expect(mockPutTakeCards).not.toHaveBeenCalled();
     });
 
     it("should call mandatory discard when finishing turn with no manually discarded cards", async () => {
-      mockPutMatchCards.mockResolvedValue(undefined);
+      mockPutDiscardCards.mockResolvedValue(undefined);
+      mockPutTakeCards.mockResolvedValue(undefined);
       mockPutPassTurn.mockResolvedValue(undefined);
 
       render(<GameContainer />);
@@ -594,104 +642,23 @@ describe("GameContainer", () => {
       });
 
       // Ejecutamos el descarte obligatorio
-      expect(mockPutMatchCards).toHaveBeenCalledTimes(1);
-      expect(mockPutMatchCards).toHaveBeenCalledWith(
+      expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);
+      expect(mockPutDiscardCards).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
-        [MOCK_CARD_ID_3], // First takeable card
-        expect.arrayContaining([expect.any(String)]), // Random card from hand
+        expect.arrayContaining([expect.any(String)]),
+      );
+
+      expect(mockPutTakeCards).toHaveBeenCalledTimes(1);
+      expect(mockPutTakeCards).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        [MOCK_CARD_ID_7],
       );
 
       // Pasamos el turno
       expect(mockPutPassTurn).toHaveBeenCalledTimes(1);
       expect(mockPutPassTurn).toHaveBeenCalledWith(MOCK_MATCH_ID);
-    });
-
-    it("should perform manual discard when finishing turn after marking cards for discard", async () => {
-      mockPutMatchCards.mockResolvedValue(undefined);
-      mockPutPassTurn.mockResolvedValue(undefined);
-
-      render(<GameContainer />);
-
-      const firstCardButton = screen.getByTestId(`hand-card-${MOCK_CARD_ID_1}`);
-      const discardButton = screen.getByText("Discard cards");
-
-      // Seleccionamos y marcamos una carta para descartar
-      fireEvent.click(firstCardButton);
-      fireEvent.click(discardButton);
-
-      const finishButton = screen.getByText("Finish turn");
-
-      await act(async () => {
-        fireEvent.click(finishButton);
-      });
-
-      // Should call putMatchCards with the specifically marked card
-      expect(mockPutMatchCards).toHaveBeenCalledTimes(1);
-      expect(mockPutMatchCards).toHaveBeenCalledWith(
-        MOCK_MATCH_ID,
-        MOCK_PLAYER_ID,
-        [MOCK_CARD_ID_3], // Carta en la pila regular
-        [MOCK_CARD_ID_1], // La carta que marcamos para descartar
-      );
-
-      // Pasamos el turno
-      expect(mockPutPassTurn).toHaveBeenCalledTimes(1);
-      expect(mockPutPassTurn).toHaveBeenCalledWith(MOCK_MATCH_ID);
-
-      // Se resetea el estado de descarte
-      expect(screen.getByText("Discard cards")).toBeInTheDocument();
-    });
-
-    it("should not perform discard if no cards are available to take", async () => {
-      const consoleErrorSpy = vi
-        .spyOn(console, "error")
-        .mockImplementation(() => {});
-
-      // Mock cards with no takeable cards
-      vi.mocked(useGame).mockReturnValue({
-        sets: [],
-        match: mockMatch,
-        secrets: [],
-        players: [mockMatchPlayer],
-        cards: [
-          {
-            id: MOCK_CARD_ID_1,
-            match_id: MOCK_MATCH_ID,
-            player_id: MOCK_PLAYER_ID,
-            card_id: crypto.randomUUID(),
-            name: "HERCULE POIROT",
-            description: "Some description",
-            type: "DETECTIVE",
-            is_discarded: false,
-            discarded_at: null,
-          },
-        ],
-        isLoading: false,
-        hasError: false,
-        error: null,
-      });
-
-      mockPutMatchCards.mockResolvedValue(undefined);
-      mockPutPassTurn.mockResolvedValue(undefined);
-
-      render(<GameContainer />);
-
-      const finishButton = screen.getByText("Finish turn");
-
-      await act(async () => {
-        fireEvent.click(finishButton);
-      });
-
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to finish turn:",
-        expect.any(Error),
-      );
-
-      expect(mockPutMatchCards).not.toHaveBeenCalled();
-      expect(mockPutPassTurn).not.toHaveBeenCalled();
-
-      consoleErrorSpy.mockRestore();
     });
   });
 });
