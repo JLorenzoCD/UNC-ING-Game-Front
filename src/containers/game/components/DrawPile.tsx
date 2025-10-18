@@ -12,7 +12,7 @@ interface DrawPileProps {
 export default function DrawPile({ onClick, cardCount }: DrawPileProps) {
   return (
     <img
-      src={cardCount === DRAFT_SIZE ? cardMurdererEscapes : cardBackImage}
+      src={cardCount === 0 ? cardMurdererEscapes : cardBackImage}
       alt="Draw pile top card"
       data-testid="draw-pile"
       onClick={onClick}
