@@ -102,7 +102,14 @@ export default function GameContainer() {
         return selectedTargetPlayer === null;
 
       case "LOOK INTO THE ASHES":
-        return Object.keys(selectedCards).length !== 1;
+        // Deshabilitar el botón porque se usa el botón del modal
+        return true;
+
+      case "DELAY THE MURDERER ESCAPE":
+        return true;
+
+      case "EARLY TRAIN TO PADDINGTON":
+        return true;
 
       case "AND THEN THERE WAS ONE MORE":
         return selectedTargetSecret === null || selectedTargetPlayer === null;
@@ -110,12 +117,7 @@ export default function GameContainer() {
       default:
         return false;
     }
-  }, [
-    currentEventCard,
-    selectedTargetPlayer,
-    selectedCards,
-    selectedTargetSecret,
-  ]);
+  }, [currentEventCard, selectedTargetPlayer, selectedTargetSecret]);
 
   // -- Utilidades --
   const handleClickSetEvent = () => {
@@ -350,8 +352,21 @@ export default function GameContainer() {
       "DELAY THE MURDERER ESCAPE",
       "EARLY TRAIN TO PADDINGTON",
     ];
+    if (hasDiscardedCards) return false;
+    if (currentEventCard !== null) return false;
+    if (
+      (nameCard === "LOOK INTO THE ASHES" ||
+        nameCard === "DELAY THE MURDERER ESCAPE") &&
+      cardsInDiscardPile.length === 0
+    )
+      return false;
     return permittedCards.includes(nameCard);
-  }, [selectedCards]);
+  }, [
+    selectedCards,
+    hasDiscardedCards,
+    currentEventCard,
+    cardsInDiscardPile.length,
+  ]);
 
   // -- Utilidades --
 
@@ -568,6 +583,7 @@ export default function GameContainer() {
       // Reseteamos los estados relacionados con el descarte
       setHasTakenCards(false);
       setHasDiscardedCards(false);
+      setCurrentEventCard(null);
 
       clearSelectedCards();
     } catch (error) {
@@ -595,12 +611,14 @@ export default function GameContainer() {
     switch (nameEvent) {
       case "DELAY THE MURDERER ESCAPE": {
         setCurrentEventCard(cardEvent);
+        clearSelectedCards();
         handleEndEvent();
         break;
       }
 
       case "LOOK INTO THE ASHES": {
         setCurrentEventCard(cardEvent);
+        clearSelectedCards();
         handleEventDiscard();
         break;
       }
@@ -618,10 +636,18 @@ export default function GameContainer() {
         setCurrentEventStep("select_secret");
         break;
       }
+
+      case "EARLY TRAIN TO PADDINGTON": {
+        setCurrentEventCard(cardEvent);
+        clearSelectedCards();
+        handleEndEvent();
+        break;
+      }
     }
   };
 
   const handleEndEvent = async () => {
+    console.log(currentEventCard);
     if (!httpService || !player || !match || !currentEventCard) {
       console.error("Faltan datos necesarios para completar el evento");
       return;
@@ -655,7 +681,6 @@ export default function GameContainer() {
 
         // Limpiamos los estados
         clearSelectedCards();
-        setCurrentEventCard(null);
         break;
       }
 
@@ -700,6 +725,17 @@ export default function GameContainer() {
         break;
       }
 
+      case "EARLY TRAIN TO PADDINGTON": {
+        // Saltar las primeras 3 cartas y tomar las siguientes 6
+        const cardsToReveal = drawableCards.slice(3, 9);
+
+        // Construir el payload con los IDs de las 6 cartas
+        eventPayload = {
+          cards_ids: cardsToReveal.map((card) => card.id),
+        } as RegularAndDiscardEventPayload;
+        break;
+      }
+
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
         return;
@@ -714,7 +750,6 @@ export default function GameContainer() {
         eventPayload,
       );
 
-      setCurrentEventCard(null);
       clearSelectedCards();
 
       console.log("Evento completado exitosamente");
