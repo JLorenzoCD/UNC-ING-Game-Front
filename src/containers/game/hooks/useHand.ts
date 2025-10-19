@@ -5,6 +5,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { GameCard } from "@/types/card";
+import type { UUID } from "@/types/common";
 
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -48,6 +49,8 @@ export function useHand() {
       if (emptyIndex !== -1) {
         // Si hay una posición vacía, colocamos la carta allí
         const updated = [...current];
+        card.player_id = player?.id as UUID;
+
         updated[emptyIndex] = card;
         return updated;
       }
