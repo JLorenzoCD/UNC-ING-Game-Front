@@ -173,19 +173,31 @@ export default function GameContextProvider({
       });
     };
 
-    const handleUpdateSets = (set: MatchSet) => {
+    const handleUpdateSets = (set: MatchSet & { deleted_cards: UUID[] }) => {
       setSets((prevSets) => {
         const exists = prevSets.find((prevSet) => prevSet.id === set.id);
         let updateSet = prevSets;
 
         //* Solo manejo la creación de un set.
         if (!exists) {
+          console.log(set);
           const playerOwnerSet = players.find((p) => p.id === set.player_id);
           if (!playerOwnerSet) return prevSets;
 
-          toast(`Player "${playerOwnerSet.name}" played a set.`);
+          const newSet = {
+            ...set,
+            cards_to_delete: undefined,
+          } as MatchSet;
 
-          updateSet = [...prevSets, set];
+          toast(`Player "${playerOwnerSet.name}" played a set.`);
+          updateSet = [...prevSets, newSet];
+
+          setCards((prevCards) => {
+            // Se eliminan las cartas cuyos ids estén en el arreglo de set.deleted_cards
+            return prevCards.filter(
+              (card) => !set.deleted_cards.includes(card.id),
+            );
+          });
         }
 
         // TODO: Se debe manejar los otros eventos.

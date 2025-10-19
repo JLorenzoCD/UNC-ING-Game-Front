@@ -323,6 +323,13 @@ describe("GameContainer", () => {
       isLoading: false,
       hasError: false,
       error: null,
+      isPlayerFinishAction: false,
+      lastUpdatedSecretId: null,
+      playerFinishActionTurn: () => undefined,
+      playerSelectsOneOfHisSecrets: {
+        isCurrPlayer: false,
+        isSelecting: false,
+      },
     });
 
     vi.mocked(useHttpService).mockReturnValue({
@@ -456,6 +463,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       render(<GameContainer />);
@@ -481,6 +495,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       mockPutDiscardCards.mockResolvedValue(undefined);
@@ -614,6 +635,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       render(<GameContainer />);

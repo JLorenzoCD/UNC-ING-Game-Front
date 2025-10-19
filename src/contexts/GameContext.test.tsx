@@ -352,6 +352,8 @@ describe("GameContext", () => {
         ),
       });
 
+      console.log(result.current);
+
       expect(result.current).toEqual({
         match: null,
         cards: [],
@@ -361,6 +363,13 @@ describe("GameContext", () => {
         isLoading: true,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: expect.any(Function),
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
     });
   });
