@@ -79,11 +79,11 @@ export default function GameContainer() {
   };
 
   const handleSelectedPlayer = () => {
-    executeSetActionToTarget();
+    if (isSetEvent) executeSetActionToTarget();
   };
 
   const handleSelectedSecret = () => {
-    executeSetActionToTarget();
+    if (isSetEvent) executeSetActionToTarget();
   };
 
   const isSelectablePlayer = (player: GamePlayer) => {
