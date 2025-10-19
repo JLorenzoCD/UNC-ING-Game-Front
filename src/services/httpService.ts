@@ -2,7 +2,7 @@ import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
-import type { GameSecret } from "@/types/secret";
+import type { GameSecret, SecretUpdateAction } from "@/types/secret";
 import type { GamePlayer, Player } from "@/types/player";
 import type {
   Match,
@@ -186,6 +186,23 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.CREATE_AND_PLAY_SET(matchId), options);
   };
 
+  const putSecret = async (
+    matchId: UUID,
+    secretId: UUID,
+    targetPlayerId: UUID,
+    action: SecretUpdateAction,
+  ) => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify({
+        target_player_id: targetPlayerId,
+        action,
+      }),
+    };
+
+    return request(BACKEND_ENDPOINTS.PUT_SECRET(matchId, secretId), options);
+  };
+
   return {
     request,
     createPlayer,
@@ -202,6 +219,7 @@ export function createHttpService() {
     putTakeCards,
     putDiscardCards,
     putPassTurn,
+    putSecret,
     createAndPlaySet,
   };
 }

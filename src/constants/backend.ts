@@ -23,6 +23,9 @@ const BACKEND_ENDPOINTS = {
   PASS_TURN: (matchId: UUID) => `/matches/${matchId}/pass_turn`,
 
   CREATE_AND_PLAY_SET: (matchId: UUID) => `/matches/${matchId}/sets`,
+
+  PUT_SECRET: (matchId: UUID, secretId: UUID) =>
+    `/matches/${matchId}/secrets/${secretId}`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
