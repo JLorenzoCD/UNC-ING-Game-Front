@@ -612,7 +612,7 @@ export default function GameContainer() {
       case "DELAY THE MURDERER ESCAPE": {
         setCurrentEventCard(cardEvent);
         clearSelectedCards();
-        handleEndEvent();
+        handleEndEvent(cardEvent);
         break;
       }
 
@@ -640,20 +640,21 @@ export default function GameContainer() {
       case "EARLY TRAIN TO PADDINGTON": {
         setCurrentEventCard(cardEvent);
         clearSelectedCards();
-        handleEndEvent();
+        handleEndEvent(cardEvent);
         break;
       }
     }
   };
 
-  const handleEndEvent = async () => {
+  const handleEndEvent = async (eventCard?: GameCard) => {
     console.log(currentEventCard);
-    if (!httpService || !player || !match || !currentEventCard) {
+    const cardToUse = eventCard || currentEventCard;
+    if (!httpService || !player || !match || !cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
       return;
     }
 
-    const nameEvent = currentEventCard.name;
+    const nameEvent = cardToUse.name;
     let eventPayload: EventPayload | undefined;
 
     switch (nameEvent) {
@@ -746,7 +747,7 @@ export default function GameContainer() {
       await httpService.postEvent(
         match.id,
         player.id,
-        currentEventCard.id,
+        cardToUse.id,
         eventPayload,
       );
 

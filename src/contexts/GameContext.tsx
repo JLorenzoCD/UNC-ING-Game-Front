@@ -33,6 +33,13 @@ export interface GameContextType {
   error: Error | null;
 }
 
+interface CardEventPayload {
+  type: string;
+  card_to_discard: string;
+  cards_to_update: GameCard[];
+  secrets_to_update?: GameSecret[];
+}
+
 const GameContext = createContext<GameContextType>({
   match: null,
   cards: [],
@@ -142,12 +149,94 @@ export default function GameContextProvider({
       });
     };
 
+    const handleCardEvent = (payload: CardEventPayload) => {
+      if (payload.cards_to_update && payload.cards_to_update.length > 0) {
+        setCards((current) => {
+          const updatedCards = [...current];
+
+          // Caso especial: DELAY THE MURDERER ESCAPE
+          if (payload.type === "DELAY THE MURDERER ESCAPE") {
+            // 1. Marcar la carta del evento como descartada
+            const eventCardIndex = updatedCards.findIndex(
+              (c) => c.id === payload.card_to_discard,
+            );
+            if (eventCardIndex !== -1) {
+              updatedCards[eventCardIndex] = {
+                ...updatedCards[eventCardIndex],
+                is_discarded: true,
+                discarded_at: new Date(),
+                player_id: null,
+              };
+            }
+
+            // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
+            const regularDeckCards = updatedCards.filter(
+              (card) => card.player_id === null && !card.is_discarded,
+            );
+
+            // 3. Obtener las primeras 3 cartas que NO se tocarán
+            const firstThreeCards = regularDeckCards.slice(0, 3);
+
+            // 4. Las cartas actualizadas van después de las primeras 3
+            // Primero quitamos las cartas que vamos a actualizar de su posición actual
+            const cardsToUpdateIds = payload.cards_to_update.map((c) => c.id);
+            const cardsWithoutUpdated = updatedCards.filter(
+              (card) => !cardsToUpdateIds.includes(card.id),
+            );
+
+            // 5. Insertar las cartas actualizadas después de las primeras 3
+            // Encontrar los índices de las primeras 3 cartas en el array completo
+            const firstThreeIndices = firstThreeCards.map((card) =>
+              cardsWithoutUpdated.findIndex((c) => c.id === card.id),
+            );
+
+            // Insertar las cartas actualizadas después de la tercera carta
+            const insertPosition = Math.max(...firstThreeIndices) + 1;
+
+            const finalCards = [
+              ...cardsWithoutUpdated.slice(0, insertPosition),
+              ...payload.cards_to_update,
+              ...cardsWithoutUpdated.slice(insertPosition),
+            ];
+
+            return finalCards;
+          }
+
+          payload.cards_to_update.forEach((newCard) => {
+            const index = updatedCards.findIndex((c) => c.id === newCard.id);
+            if (index !== -1) {
+              updatedCards[index] = newCard;
+            }
+          });
+          return updatedCards;
+        });
+      }
+      if (payload.secrets_to_update && payload.secrets_to_update.length > 0) {
+        setSecrets((current) => {
+          const updatedSecrets = [...current];
+
+          payload.secrets_to_update?.forEach((newSecret) => {
+            const index = updatedSecrets.findIndex(
+              (s) => s.id === newSecret.id,
+            );
+            if (index !== -1) {
+              updatedSecrets[index] = newSecret;
+            }
+          });
+
+          return updatedSecrets;
+        });
+      }
+    };
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+      wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
     };
   }, [matchId, wsService, isConnected]);
 
