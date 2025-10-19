@@ -16,7 +16,9 @@ const MAX_CARD_COUNT = Math.max(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MIN_CARD_COUNT = Math.min(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MAX_QUIN_COUNT = 2 as const;
 
-// La función no valida si un arreglo de cartas es un set valido
+/*
+ * pre: isCardsValidSet.
+ */
 export function cardsToSetTypeDetective(cards: GameCard[]) {
   let setType: SetType | null = null;
 
@@ -174,10 +176,10 @@ export function isSetTargetOneSecret(cards: GameCard[]) {
   }
 }
 
+/*
+ * pre: isCardsValidSet.
+ */
 export function isSetActionRevealSecret(cards: GameCard[]) {
-  if (!isCardsValidSet(cards))
-    throw new Error("The cards given are not a valid Set.");
-
   const setType = cardsToSetTypeDetective(cards) as SetType;
 
   return setType !== "PARKER PYNE";
