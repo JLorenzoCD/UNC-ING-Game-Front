@@ -79,7 +79,7 @@ export function useSetEvent() {
         const isActionRevealSecret = isSetActionRevealSecret(selectedCards);
 
         if (isActionRevealSecret && allSecretReveled) return;
-        if (!isActionRevealSecret && !allSecretReveled) return;
+        if (!isActionRevealSecret && allSecretReveled) return;
       }
 
       setSetEvent((prev) => ({ ...prev, isValidSet }));

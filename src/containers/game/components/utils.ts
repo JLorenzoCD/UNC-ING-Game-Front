@@ -136,7 +136,7 @@ export function cardsToSet(
   ) as GameCard;
 
   const player_id = cardDetective.player_id as UUID;
-  const card_ids = cards.filter((card) => card.id) as unknown as UUID[];
+  const card_ids = cards.map((card) => card.id) as unknown as UUID[];
   const target_player_id = targetPlayerId;
   const target_secret_id = targetSecretId;
 
