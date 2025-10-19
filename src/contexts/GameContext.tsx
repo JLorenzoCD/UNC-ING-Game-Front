@@ -35,6 +35,7 @@ export interface GameContextType {
   hasError: boolean;
   error: Error | null;
 
+  lastUpdatedSecretId: UUID | null;
   isPlayerFinishAction: boolean;
   playerFinishActionTurn: () => void;
   playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
@@ -51,6 +52,7 @@ const GameContext = createContext<GameContextType>({
   hasError: false,
   error: null,
 
+  lastUpdatedSecretId: null,
   isPlayerFinishAction: false,
   playerFinishActionTurn: () => undefined,
   playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
@@ -74,6 +76,9 @@ export default function GameContextProvider({
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const [lastUpdatedSecretId, setLastUpdatedSecretId] = useState<UUID | null>(
+    null,
+  );
   const [playerSelectsOneOfHisSecrets, setPlayerSelectsOneOfHisSecrets] =
     useState<{ isCurrPlayer: boolean; isSelecting: boolean }>({
       isCurrPlayer: false,
@@ -227,6 +232,8 @@ export default function GameContextProvider({
         }
         toast(msg);
 
+        setLastUpdatedSecretId(secret.id);
+
         updatedCards[indexSecret] = {
           ...updatedCards[indexSecret],
           is_revealed: secret.is_revealed,
@@ -298,6 +305,7 @@ export default function GameContextProvider({
       hasError,
       error,
 
+      lastUpdatedSecretId,
       playerSelectsOneOfHisSecrets,
       isPlayerFinishAction,
       playerFinishActionTurn,
@@ -313,6 +321,7 @@ export default function GameContextProvider({
       error,
       isPlayerFinishAction,
       playerSelectsOneOfHisSecrets,
+      lastUpdatedSecretId,
     ],
   );
 

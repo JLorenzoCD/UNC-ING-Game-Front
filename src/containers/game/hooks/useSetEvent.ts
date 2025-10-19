@@ -11,6 +11,7 @@ import {
   cardsToSetTypeDetective,
   isCardsValidSet,
   isSetActionRevealSecret,
+  isSetActionStolenSecret,
   isSetTargetOneSecret,
 } from "../components/utils";
 
@@ -26,6 +27,7 @@ interface SetEvent {
   isTargetSecret: boolean;
   isRevealSecret: boolean;
   isRevealCurrPlayerSecret: boolean;
+  isStolenSecret: boolean;
   cards: GameCard[];
   setType: SetType | null;
   target: GamePlayer | GameSecret | null;
@@ -36,6 +38,7 @@ const defaultStateSetEvent: SetEvent = {
   isTargetPlayer: false,
   isTargetSecret: false,
   isRevealSecret: false,
+  isStolenSecret: false,
   cards: [],
   setType: null,
   target: null,
@@ -44,7 +47,12 @@ const defaultStateSetEvent: SetEvent = {
 
 export function useSetEvent() {
   const { player } = usePlayer();
-  const { secrets, players, playerSelectsOneOfHisSecrets } = useGame();
+  const {
+    secrets,
+    players,
+    playerSelectsOneOfHisSecrets,
+    lastUpdatedSecretId,
+  } = useGame();
   const { httpService } = useHttpService();
 
   const params = useParams();
@@ -55,6 +63,7 @@ export function useSetEvent() {
   const isSetEvent = setEvent.isTargetPlayer || setEvent.isTargetSecret;
   const isTargetPlayerSetEvent = setEvent.isTargetPlayer;
   const isTargetSecretSetEvent = setEvent.isTargetSecret;
+  const isStolenSecretSetEvent = setEvent.isStolenSecret;
   const isSetEventButtonDisabled = !(setEvent.isValidSet && !isSetEvent);
 
   const playSet = (selectedCards: GameCard[]) => {
@@ -63,6 +72,7 @@ export function useSetEvent() {
       const setType = cardsToSetTypeDetective(selectedCards);
       const isTargetSecret = isSetTargetOneSecret(selectedCards);
       const isRevealSecret = isSetActionRevealSecret(selectedCards);
+      const isStolenSecret = isSetActionStolenSecret(selectedCards);
 
       setSetEvent((prev) => ({
         ...prev,
@@ -73,6 +83,7 @@ export function useSetEvent() {
         setType,
         cards: selectedCards,
         isRevealSecret,
+        isStolenSecret,
       }));
       return;
     }
@@ -129,7 +140,7 @@ export function useSetEvent() {
       ((setEvent.isRevealSecret &&
         target.player_id !== player?.id &&
         !setEvent.isRevealCurrPlayerSecret) ||
-        !setEvent.isRevealSecret)
+        (!setEvent.isRevealSecret && target.is_revealed))
     ) {
       setSetEvent((prev) => ({
         ...prev,
@@ -139,7 +150,8 @@ export function useSetEvent() {
       isTargetSecret &&
       setEvent.isRevealSecret &&
       setEvent.isRevealCurrPlayerSecret &&
-      target.player_id === player?.id
+      target.player_id === player?.id &&
+      !target.is_revealed
     ) {
       // El jugador fue seleccionado para revelar un secreto de su elección
       setSetEvent((prev) => ({
@@ -166,7 +178,11 @@ export function useSetEvent() {
         const dataBody = cardsToSet(setEvent.cards, setEvent.target.player_id);
 
         await httpService?.createAndPlaySet(matchId, dataBody);
-        setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+
+        setSetEvent({
+          ...defaultStateSetEvent,
+          isStolenSecret: setEvent.isStolenSecret,
+        });
 
         return true;
       } catch (err) {
@@ -240,6 +256,29 @@ export function useSetEvent() {
     return false;
   };
 
+  const executeFinishTurnSetEvent = async () => {
+    if (!setEvent.isStolenSecret) return;
+
+    const secretId = lastUpdatedSecretId;
+    if (secretId === null) return;
+
+    try {
+      await httpService?.putSecret(
+        matchId,
+        secretId,
+        player?.id as UUID,
+        "steal_secret",
+      );
+    } catch (err) {
+      console.error(err);
+
+      // Lo maneja la función de terminar turno.
+      throw err;
+    }
+
+    setSetEvent({ ...defaultStateSetEvent });
+  };
+
   const isPlayerSelectableForSetEvent = (player: GamePlayer) => {
     if (!isSetEvent || !setEvent.isTargetPlayer) return false;
 
@@ -256,7 +295,12 @@ export function useSetEvent() {
     if (!isSetEvent || !setEvent.isTargetSecret) return false;
     if (secret.player_id !== player?.id) return false;
 
-    if (setEvent.isRevealSecret && !secret.is_revealed) return true;
+    if (
+      setEvent.isRevealSecret &&
+      !secret.is_revealed &&
+      setEvent.isRevealCurrPlayerSecret
+    )
+      return true;
 
     // Jugar un Payne para uno mismo
     if (!setEvent.isRevealSecret && secret.is_revealed) return true;
@@ -301,10 +345,12 @@ export function useSetEvent() {
     isSetEvent,
     isTargetPlayerSetEvent,
     isTargetSecretSetEvent,
+    isStolenSecretSetEvent,
     isSetEventButtonDisabled,
     playSet,
     setTargetSet,
     executeSetActionToTarget,
+    executeFinishTurnSetEvent,
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,

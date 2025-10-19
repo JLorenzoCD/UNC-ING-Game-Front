@@ -179,8 +179,28 @@ export function isSetTargetOneSecret(cards: GameCard[]) {
 /*
  * pre: isCardsValidSet.
  */
+export function isSetWithQuin(cards: GameCard[]) {
+  const cardsGroupByDetective = Object.groupBy(cards, (card) => card.name);
+
+  const quinDetective = cardsGroupByDetective["HARLEY QUIN WILDCARD"] ?? [];
+
+  return quinDetective.length !== 0;
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
 export function isSetActionRevealSecret(cards: GameCard[]) {
   const setType = cardsToSetTypeDetective(cards) as SetType;
 
   return setType !== "PARKER PYNE";
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
+export function isSetActionStolenSecret(cards: GameCard[]) {
+  const setType = cardsToSetTypeDetective(cards) as SetType;
+
+  return setType === "MR SATTERTHWAITE" && isSetWithQuin(cards);
 }

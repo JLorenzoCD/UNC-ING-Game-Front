@@ -70,8 +70,10 @@ export default function GameContainer() {
     isTargetPlayerSetEvent,
     isTargetSecretSetEvent,
     isSetEventButtonDisabled,
+    isStolenSecretSetEvent,
     setTargetSet,
     executeSetActionToTarget,
+    executeFinishTurnSetEvent,
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
@@ -413,6 +415,8 @@ export default function GameContainer() {
       if (!(hasDiscardedCards || isPlayerFinishAction)) {
         await mandatoryDiscard();
       }
+
+      if (isStolenSecretSetEvent) await executeFinishTurnSetEvent();
 
       await httpService.putPassTurn(match.id);
 
