@@ -21,6 +21,8 @@ import { useHttpService } from "./HttpServiceContext";
 import { useWebSocketService } from "./WebSocketServiceContext";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 import { toast } from "sonner";
+import { usePlayer } from "./PlayerContext";
+import type { UUID } from "@/types/common";
 
 export interface GameContextType {
   match: Match | null;
@@ -35,6 +37,7 @@ export interface GameContextType {
 
   isPlayerFinishAction: boolean;
   playerFinishActionTurn: () => void;
+  playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
 }
 
 const GameContext = createContext<GameContextType>({
@@ -43,12 +46,14 @@ const GameContext = createContext<GameContextType>({
   secrets: [],
   players: [],
   sets: [],
-  isPlayerFinishAction: false,
-  playerFinishActionTurn: () => undefined,
 
   isLoading: false,
   hasError: false,
   error: null,
+
+  isPlayerFinishAction: false,
+  playerFinishActionTurn: () => undefined,
+  playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
 });
 
 export interface GameContextProviderProps {
@@ -63,11 +68,17 @@ export default function GameContextProvider({
 
   const params = useParams();
   const matchId = params.matchId;
+  const { player } = usePlayer();
 
   const [error, setError] = useState<Error | null>(null);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  const [playerSelectsOneOfHisSecrets, setPlayerSelectsOneOfHisSecrets] =
+    useState<{ isCurrPlayer: boolean; isSelecting: boolean }>({
+      isCurrPlayer: false,
+      isSelecting: false,
+    });
   const [isPlayerFinishAction, setPlayerFinishAction] =
     useState<boolean>(false);
 
@@ -222,22 +233,56 @@ export default function GameContextProvider({
           player_id: secret.player_id,
         };
 
+        setPlayerSelectsOneOfHisSecrets({
+          isCurrPlayer: false,
+          isSelecting: false,
+        });
+
         return updatedCards;
       });
+    };
+
+    const handleCurrPlayerSelectItsSecret = (targetPlayerId: {
+      target_player_id: UUID;
+    }) => {
+      const isCurrPlayer = player?.id === targetPlayerId.target_player_id;
+
+      setPlayerSelectsOneOfHisSecrets({ isCurrPlayer, isSelecting: true });
+
+      if (isCurrPlayer)
+        toast(
+          "You've been selected to reveal one of your secrets. Choose one.",
+        );
+      else toast("A player was selected to reveal one of his secrets.");
     };
 
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
     wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
     wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+    wsService.on(
+      BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
+      handleCurrPlayerSelectItsSecret,
+    );
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
       wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
       wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
+        handleCurrPlayerSelectItsSecret,
+      );
     };
-  }, [matchId, wsService, isConnected, players]);
+  }, [
+    matchId,
+    wsService,
+    isConnected,
+    players,
+    player,
+    playerSelectsOneOfHisSecrets,
+  ]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
@@ -253,6 +298,7 @@ export default function GameContextProvider({
       hasError,
       error,
 
+      playerSelectsOneOfHisSecrets,
       isPlayerFinishAction,
       playerFinishActionTurn,
     }),
@@ -266,6 +312,7 @@ export default function GameContextProvider({
       hasError,
       error,
       isPlayerFinishAction,
+      playerSelectsOneOfHisSecrets,
     ],
   );
 

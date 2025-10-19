@@ -37,6 +37,7 @@ export default function GameContainer() {
     sets,
     isPlayerFinishAction,
     playerFinishActionTurn,
+    playerSelectsOneOfHisSecrets,
   } = useGame();
 
   const {
@@ -123,7 +124,8 @@ export default function GameContainer() {
   };
 
   const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent) return isCurrPlayerSecretSelectableForSetEvent(secret);
+    if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return isCurrPlayerSecretSelectableForSetEvent(secret);
 
     return false;
   };
@@ -136,7 +138,8 @@ export default function GameContainer() {
   };
 
   const isTargetSecretEvent = () => {
-    if (isTargetSecretSetEvent) return true;
+    if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return true;
     // Other events
 
     return false;
@@ -476,6 +479,9 @@ export default function GameContainer() {
               <Secrets
                 secrets={playerSecrets}
                 isSelectableSecret={isCurrPlayersSecretSelectable}
+                isTargetSecret={isTargetSecretEvent()}
+                onSelectTargetEvent={handleSelectTargetEvent}
+                target={getTargetSetEvent()}
               />
               <Sets sets={playerSets} />
             </div>

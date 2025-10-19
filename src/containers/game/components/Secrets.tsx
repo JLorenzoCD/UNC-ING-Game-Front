@@ -10,7 +10,7 @@ type SecretsProps = {
   secrets: GameSecret[];
 
   isTargetSecret?: boolean;
-  target?: GamePlayer | GameSecret | null;
+  target: GamePlayer | GameSecret | null;
 };
 
 export default function Secrets({

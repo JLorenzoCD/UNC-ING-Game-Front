@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router";
 
 import { useGame } from "@/contexts/GameContext";
@@ -25,6 +25,7 @@ interface SetEvent {
   isTargetPlayer: boolean;
   isTargetSecret: boolean;
   isRevealSecret: boolean;
+  isRevealCurrPlayerSecret: boolean;
   cards: GameCard[];
   setType: SetType | null;
   target: GamePlayer | GameSecret | null;
@@ -38,11 +39,12 @@ const defaultStateSetEvent: SetEvent = {
   cards: [],
   setType: null,
   target: null,
+  isRevealCurrPlayerSecret: false,
 };
 
 export function useSetEvent() {
   const { player } = usePlayer();
-  const { secrets, players } = useGame();
+  const { secrets, players, playerSelectsOneOfHisSecrets } = useGame();
   const { httpService } = useHttpService();
 
   const params = useParams();
@@ -94,7 +96,6 @@ export function useSetEvent() {
           (isActionRevealSecret && allOtherPlayersSecretAreReveled) ||
           (!isActionRevealSecret && !someSecretReveled)
         ) {
-          console.log("first");
           setSetEvent((prev) => ({ ...prev, isValidSet: false }));
           return;
         }
@@ -106,7 +107,37 @@ export function useSetEvent() {
   );
 
   const setTargetSet = (target: GamePlayer | GameSecret) => {
-    if (isSetEvent && ("avatar" in target || "secret_id" in target)) {
+    if (!isSetEvent) return;
+
+    // target player
+    if (isTargetPlayerSetEvent && "avatar" in target) {
+      setSetEvent((prev) => ({
+        ...prev,
+        target: target,
+      }));
+    }
+
+    // target secret
+    const isTargetSecret = isTargetSecretSetEvent && "secret_id" in target;
+    if (
+      // Se juega para revelar el secreto de otro o ocultar un secreto
+      isTargetSecret &&
+      ((setEvent.isRevealSecret &&
+        target.player_id !== player?.id &&
+        !setEvent.isRevealCurrPlayerSecret) ||
+        !setEvent.isRevealSecret)
+    ) {
+      setSetEvent((prev) => ({
+        ...prev,
+        target: target,
+      }));
+    } else if (
+      isTargetSecret &&
+      setEvent.isRevealSecret &&
+      setEvent.isRevealCurrPlayerSecret &&
+      target.player_id === player?.id
+    ) {
+      // El jugador fue seleccionado para revelar un secreto de su elección
       setSetEvent((prev) => ({
         ...prev,
         target: target,
@@ -141,8 +172,12 @@ export function useSetEvent() {
       }
     }
 
-    // Evento de set para un secreto
-    if (setEvent.isTargetSecret && "secret_id" in setEvent.target) {
+    // Evento de set para un secreto, que no es del jugador actual revelando uno suyo
+    if (
+      setEvent.isTargetSecret &&
+      "secret_id" in setEvent.target &&
+      !setEvent.isRevealCurrPlayerSecret
+    ) {
       const playerTarget = players.find(
         (p) => p.id === setEvent.target?.player_id,
       );
@@ -167,6 +202,37 @@ export function useSetEvent() {
         toast.error("An unexpected error has occurred, please try again.");
       }
     }
+
+    // El jugador actual revela un secreto
+    if (
+      setEvent.isTargetSecret &&
+      "secret_id" in setEvent.target &&
+      setEvent.isRevealCurrPlayerSecret
+    ) {
+      const playerTarget = players.find(
+        (p) => p.id === setEvent.target?.player_id,
+      );
+
+      if (!playerTarget || playerTarget.player_id !== player?.id) {
+        toast.error("The selected secret is not valid.");
+        return false;
+      }
+
+      try {
+        await httpService?.putSecret(
+          matchId,
+          setEvent.target.id,
+          player.id,
+          "reveal_secret",
+        );
+        setSetEvent(defaultStateSetEvent);
+        return true;
+      } catch (err) {
+        console.error(err);
+        toast.error("An unexpected error has occurred, please try again.");
+      }
+    }
+
     return false;
   };
 
@@ -196,7 +262,8 @@ export function useSetEvent() {
 
   const isOtherPlayerSecretSelectableForSetEvent = (secret: GameSecret) => {
     if (!isSetEvent || !setEvent.isTargetSecret) return false;
-    if (secret.player_id === player?.id) return false;
+    if (secret.player_id === player?.id || setEvent.isRevealCurrPlayerSecret)
+      return false;
 
     const isActionRevealSecret = setEvent.isRevealSecret;
 
@@ -214,6 +281,16 @@ export function useSetEvent() {
   const getSetCards = () => setEvent.cards;
 
   const clearSetEvent = () => setSetEvent(defaultStateSetEvent);
+
+  useEffect(() => {
+    if (playerSelectsOneOfHisSecrets.isCurrPlayer)
+      setSetEvent({
+        ...defaultStateSetEvent,
+        isRevealSecret: true,
+        isTargetSecret: true,
+        isRevealCurrPlayerSecret: true,
+      });
+  }, [playerSelectsOneOfHisSecrets.isCurrPlayer]);
 
   return {
     setEvent,
