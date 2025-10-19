@@ -169,7 +169,6 @@ describe("Secret Component", () => {
           target={null}
         />,
       );
-      screen.debug();
       const borderDiv = container.querySelector(".border-red-500");
       expect(borderDiv).toBeInTheDocument();
       expect(borderDiv).toHaveClass(

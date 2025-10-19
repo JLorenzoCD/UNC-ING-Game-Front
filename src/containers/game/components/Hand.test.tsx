@@ -274,8 +274,6 @@ describe("Hand", () => {
         />,
       );
 
-      screen.debug();
-
       const cardElements = screen.getAllByTestId("hand-card");
       cardElements.forEach((card, index) => {
         if (index === 0) {
