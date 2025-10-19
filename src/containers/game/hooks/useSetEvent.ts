@@ -1,6 +1,13 @@
+import { toast } from "sonner";
 import { useCallback, useState } from "react";
+import { useParams } from "react-router";
+
+import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import {
+  cardsToSet,
   cardsToSetTypeDetective,
   isCardsValidSet,
   isSetActionRevealSecret,
@@ -10,10 +17,8 @@ import {
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 import type { GameCard } from "@/types/card";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { toast } from "sonner";
-import { useGame } from "@/contexts/GameContext";
 import type { SetType } from "@/types/set";
+import type { UUID } from "@/types/common";
 
 interface SetEvent {
   isValidSet: boolean;
@@ -37,7 +42,11 @@ const defaultStateSetEvent: SetEvent = {
 
 export function useSetEvent() {
   const { player } = usePlayer();
-  const { secrets } = useGame();
+  const { secrets, players } = useGame();
+  const { httpService } = useHttpService();
+
+  const params = useParams();
+  const matchId = params.matchId as UUID;
 
   const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
@@ -96,7 +105,7 @@ export function useSetEvent() {
     }
   };
 
-  const executeSetActionToTarget = () => {
+  const executeSetActionToTarget = async () => {
     if (!isSetEvent) return;
 
     if (setEvent.target === null) {
@@ -106,23 +115,48 @@ export function useSetEvent() {
 
     // Evento de set para un jugador
     if (setEvent.isTargetPlayer && "avatar" in setEvent.target) {
-      console.log(
-        "El jugador " +
-          setEvent.target.name +
-          " fue seleccionado para revelar su secreto",
-      );
+      const msg = `Player "${setEvent.target.name}" was selected to reveal one of his secrets.`;
+      toast(msg);
+
+      try {
+        const dataBody = cardsToSet(setEvent.cards, setEvent.target.player_id);
+
+        await httpService?.createAndPlaySet(matchId, dataBody);
+      } catch (err) {
+        console.error(err);
+
+        toast.error("An unexpected error has occurred, please try again.");
+        return;
+      }
 
       setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
     }
 
     // Evento de set para un secreto
     if (setEvent.isTargetSecret && "secret_id" in setEvent.target) {
-      console.log(
-        "Se selecciono el secreto con id: " +
-          setEvent.target.id +
-          ", fue seleccionado para revelar su secreto. Este es " +
-          setEvent.target.type,
+      const playerTarget = players.find(
+        (p) => p.id === setEvent.target?.player_id,
       );
+
+      if (!playerTarget) {
+        toast.error("The selected secret is not valid.");
+        return;
+      }
+
+      try {
+        const dataBody = cardsToSet(
+          setEvent.cards,
+          setEvent.target.player_id as UUID,
+          setEvent.target.id,
+        );
+
+        await httpService?.createAndPlaySet(matchId, dataBody);
+      } catch (err) {
+        console.error(err);
+
+        toast.error("An unexpected error has occurred, please try again.");
+        return;
+      }
 
       setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
     }
@@ -142,13 +176,17 @@ export function useSetEvent() {
 
   const isCurrPlayerSecretSelectableForSetEvent = (secret: GameSecret) => {
     if (!isSetEvent || !setEvent.isTargetSecret) return false;
+    if (secret.player_id !== player?.id) return false;
 
-    if (secret.player_id === player?.id && !secret.is_revealed) return true;
+    if (setEvent.isRevealSecret && !secret.is_revealed) return true;
+
+    // Jugar un Payne para uno mismo
+    if (!setEvent.isRevealSecret && secret.is_revealed) return true;
 
     return false;
   };
 
-  const isSecretSelectableForSetEvent = (secret: GameSecret) => {
+  const isOtherPlayerSecretSelectableForSetEvent = (secret: GameSecret) => {
     if (!isSetEvent || !setEvent.isTargetSecret) return false;
     if (secret.player_id === player?.id) return false;
 
@@ -177,7 +215,7 @@ export function useSetEvent() {
     setTargetSet,
     executeSetActionToTarget,
     isPlayerSelectableForSetEvent,
-    isSecretSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     getTargetSetEvent,

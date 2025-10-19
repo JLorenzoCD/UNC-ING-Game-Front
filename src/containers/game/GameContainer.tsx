@@ -63,7 +63,7 @@ export default function GameContainer() {
     setTargetSet,
     executeSetActionToTarget,
     isPlayerSelectableForSetEvent,
-    isSecretSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     getTargetSetEvent,
@@ -93,7 +93,7 @@ export default function GameContainer() {
   };
 
   const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent) return isSecretSelectableForSetEvent(secret);
+    if (isSetEvent) return isOtherPlayerSecretSelectableForSetEvent(secret);
 
     return false;
   };
