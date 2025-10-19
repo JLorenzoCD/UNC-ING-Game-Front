@@ -360,12 +360,17 @@ export default function GameContainer() {
       cardsInDiscardPile.length === 0
     )
       return false;
+    if (nameCard === "AND THEN THERE WAS ONE MORE") {
+      const hasRevealedSecret = secrets.some((secret) => secret.is_revealed);
+      if (!hasRevealedSecret) return false;
+    }
     return permittedCards.includes(nameCard);
   }, [
     selectedCards,
     hasDiscardedCards,
     currentEventCard,
     cardsInDiscardPile.length,
+    secrets,
   ]);
 
   // -- Utilidades --
@@ -648,7 +653,7 @@ export default function GameContainer() {
 
   const handleEndEvent = async (eventCard?: GameCard) => {
     console.log(currentEventCard);
-    const cardToUse = eventCard || currentEventCard;
+    const cardToUse = currentEventCard || eventCard;
     if (!httpService || !player || !match || !cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
       return;

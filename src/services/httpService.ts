@@ -159,16 +159,20 @@ export function createHttpService() {
     matchCardId: UUID,
     eventPayload: T,
   ) => {
+    const baseUrl = BACKEND_ENDPOINTS.PLAY_EVENT(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("match_card_id", matchCardId);
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
     const options: RequestInit = {
       method: "POST",
-      body: JSON.stringify({
-        player_id: playerId,
-        match_id: matchId,
-        match_card_id: matchCardId,
-        event_payload: eventPayload,
-      }),
+      body: JSON.stringify(eventPayload),
     };
-    return request(BACKEND_ENDPOINTS.PLAY_EVENT(matchId), options);
+
+    return request(urlWithParams, options);
   };
 
   return {
