@@ -20,6 +20,7 @@ import type { MatchSet } from "@/types/set";
 import { useHttpService } from "./HttpServiceContext";
 import { useWebSocketService } from "./WebSocketServiceContext";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
+import { toast } from "sonner";
 
 export interface GameContextType {
   match: Match | null;
@@ -147,13 +148,21 @@ export default function GameContextProvider({
     const handleUpdateSets = (set: MatchSet) => {
       setSets((prevSets) => {
         const exists = prevSets.find((prevSet) => prevSet.id === set.id);
+        let updateSet = prevSets;
 
         //* Solo manejo la creación de un set.
-        if (!exists) return [...prevSets, set];
+        if (!exists) {
+          const playerOwnerSet = players.find((p) => p.id === set.player_id);
+          if (!playerOwnerSet) return prevSets;
+
+          toast(`Player "${playerOwnerSet.name}" played a set.`);
+
+          updateSet = [...prevSets, set];
+        }
 
         // TODO: Se debe manejar los otros eventos.
 
-        return prevSets;
+        return updateSet;
       });
     };
 
@@ -164,9 +173,11 @@ export default function GameContextProvider({
           (prevSet) => prevSet.id === secret.id,
         );
 
+        const currSecret = updatedCards[indexSecret];
         if (indexSecret === -1) return prevSecrets;
 
-        const currSecret = updatedCards[indexSecret];
+        const playerTarget = players.find((p) => p.id === currSecret.player_id);
+        if (!playerTarget) return prevSecrets;
 
         const isSecretReveled = !currSecret.is_revealed && secret.is_revealed;
         const isDetectivesWin =
@@ -175,16 +186,23 @@ export default function GameContextProvider({
         const isSecretStolen =
           currSecret.player_id !== secret.player_id && isSecretHidden;
 
-        // TODO: Añadir las notificaciones
+        let msg = "";
         if (isDetectivesWin) {
           // Los detectives ganaron.
+          msg = "The murderer has been discovered.";
         } else if (isSecretStolen) {
           // Notificar que se robo y oculto un secreto
+          msg = `A secret was stolen from player "${playerTarget.name}" and hidden.`;
         } else if (isSecretReveled) {
           // Notificar que se revelo un secreto
+          msg = `A secret from player "${playerTarget.name}" was selected to be revealed.`;
         } else if (isSecretHidden) {
           // Notificar que se oculto un secreto
+          msg = `A secret of player "${playerTarget.name}" has been hidden.`;
+        } else {
+          msg = "Something strange has happened with a secret.";
         }
+        toast(msg);
 
         updatedCards[indexSecret] = {
           ...updatedCards[indexSecret],
@@ -207,7 +225,7 @@ export default function GameContextProvider({
       wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
       wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
     };
-  }, [matchId, wsService, isConnected]);
+  }, [matchId, wsService, isConnected, players]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
