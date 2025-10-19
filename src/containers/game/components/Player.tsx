@@ -26,11 +26,11 @@ function getBoderPlayer(
       if (isTarget) {
         // Es el objetivo ya seleccionado (Borde fijo)
         borderClass =
-          "border-blue-400 border-10 shadow-lg shadow-blue-400/50 animate-none";
+          "border-red-400 border-10 shadow-lg shadow-red-400/50 animate-none";
       } else if (isSelectingTarget) {
         // Es una opción válida y se está esperando la selección (Pulso)
         borderClass =
-          "border-red-400 border-10 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
+          "border-blue-400 border-10 shadow-lg shadow-blue-400/50 animate-pulse cursor-pointer";
       }
     } else {
       // NO Seleccionable (Atenuado)

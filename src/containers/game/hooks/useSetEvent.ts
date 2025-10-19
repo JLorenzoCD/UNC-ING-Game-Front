@@ -96,6 +96,10 @@ export function useSetEvent() {
           (isActionRevealSecret && allOtherPlayersSecretAreReveled) ||
           (!isActionRevealSecret && !someSecretReveled)
         ) {
+          toast.warning(
+            "The conditions for playing this set are not met. There are no cards to reveal or hide.",
+          );
+
           setSetEvent((prev) => ({ ...prev, isValidSet: false }));
           return;
         }
