@@ -32,6 +32,9 @@ export interface GameContextType {
   isLoading: boolean;
   hasError: boolean;
   error: Error | null;
+
+  isPlayerFinishAction: boolean;
+  playerFinishActionTurn: () => void;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -40,6 +43,8 @@ const GameContext = createContext<GameContextType>({
   secrets: [],
   players: [],
   sets: [],
+  isPlayerFinishAction: false,
+  playerFinishActionTurn: () => undefined,
 
   isLoading: false,
   hasError: false,
@@ -62,6 +67,9 @@ export default function GameContextProvider({
   const [error, setError] = useState<Error | null>(null);
   const [hasError, setHasError] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  const [isPlayerFinishAction, setPlayerFinishAction] =
+    useState<boolean>(false);
 
   const [match, setMatch] = useState<Match | null>(null);
   const [cards, setCards] = useState<GameCard[]>([]);
@@ -107,6 +115,8 @@ export default function GameContextProvider({
     }
   }, [httpService, matchId]);
 
+  const playerFinishActionTurn = () => setPlayerFinishAction(true);
+
   useEffect(() => {
     fetchMatchData();
   }, [fetchMatchData]);
@@ -137,6 +147,8 @@ export default function GameContextProvider({
     const handleUpdateMatchTurn = (match: Match) => {
       setMatch((current) => {
         if (!current) return match;
+
+        setPlayerFinishAction(false);
 
         return {
           ...current,
@@ -240,8 +252,21 @@ export default function GameContextProvider({
       isLoading,
       hasError,
       error,
+
+      isPlayerFinishAction,
+      playerFinishActionTurn,
     }),
-    [match, cards, secrets, players, sets, isLoading, hasError, error],
+    [
+      match,
+      cards,
+      secrets,
+      players,
+      sets,
+      isLoading,
+      hasError,
+      error,
+      isPlayerFinishAction,
+    ],
   );
 
   return (

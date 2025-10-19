@@ -1,3 +1,5 @@
+import { useGame } from "@/contexts/GameContext";
+
 import Button from "@/components/Button";
 
 interface HandActionsProps {
@@ -25,29 +27,36 @@ export default function HandActions({
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
+  const { isPlayerFinishAction } = useGame();
   const shouldDisableOption =
     isDisabled || isSelectionPlayerEvent || isSelectionSecretEvent;
 
   return (
     <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
-      <Button onClick={onDiscard} disabled={shouldDisableOption}>
+      <Button
+        onClick={onDiscard}
+        disabled={shouldDisableOption || isPlayerFinishAction}
+      >
         Discard cards
       </Button>
 
-      <Button onClick={onPlaySet} disabled={isDisabled || isSetButtonDisabled}>
+      <Button
+        onClick={onPlaySet}
+        disabled={isDisabled || isSetButtonDisabled || isPlayerFinishAction}
+      >
         Play set
       </Button>
 
       <Button
         onClick={onSelectPlayer}
-        disabled={isDisabled || !isSelectionPlayerEvent}
+        disabled={isDisabled || !isSelectionPlayerEvent || isPlayerFinishAction}
       >
         Select player
       </Button>
 
       <Button
         onClick={onSelectSecret}
-        disabled={isDisabled || !isSelectionSecretEvent}
+        disabled={isDisabled || !isSelectionSecretEvent || isPlayerFinishAction}
       >
         Select secret
       </Button>

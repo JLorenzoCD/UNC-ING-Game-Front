@@ -60,6 +60,7 @@ export function useSetEvent() {
     else if (setEvent.isValidSet && !isSetEvent) {
       const setType = cardsToSetTypeDetective(selectedCards);
       const isTargetSecret = isSetTargetOneSecret(selectedCards);
+      const isRevealSecret = isSetActionRevealSecret(selectedCards);
 
       setSetEvent((prev) => ({
         ...prev,
@@ -69,6 +70,7 @@ export function useSetEvent() {
         isTargetSecret,
         setType,
         cards: selectedCards,
+        isRevealSecret,
       }));
       return;
     }
@@ -78,17 +80,24 @@ export function useSetEvent() {
     (selectedCards: GameCard[]) => {
       const isValidSet = isCardsValidSet(selectedCards);
       if (isValidSet) {
-        const otherSecrets = secrets.filter(
-          (secret) => secret.player_id !== player?.id,
-        );
-
-        const allSecretReveled = otherSecrets.every(
-          (secret) => secret.is_revealed,
-        );
         const isActionRevealSecret = isSetActionRevealSecret(selectedCards);
 
-        if (isActionRevealSecret && allSecretReveled) return;
-        if (!isActionRevealSecret && allSecretReveled) return;
+        const allOtherPlayersSecretAreReveled = secrets
+          .filter((secret) => secret.player_id !== player?.id)
+          .every((secret) => secret.is_revealed);
+        const someSecretReveled = secrets.some((secret) => secret.is_revealed);
+
+        // No se puede revelar ningún secreto de los otros jugadores
+        // o
+        // Algún secreto propio o de otro jugador esta revelado y puede ser ocultado
+        if (
+          (isActionRevealSecret && allOtherPlayersSecretAreReveled) ||
+          (!isActionRevealSecret && !someSecretReveled)
+        ) {
+          console.log("first");
+          setSetEvent((prev) => ({ ...prev, isValidSet: false }));
+          return;
+        }
       }
 
       setSetEvent((prev) => ({ ...prev, isValidSet }));
@@ -106,11 +115,11 @@ export function useSetEvent() {
   };
 
   const executeSetActionToTarget = async () => {
-    if (!isSetEvent) return;
+    if (!isSetEvent) return false;
 
     if (setEvent.target === null) {
       toast.error("The target of the set must be selected.");
-      return;
+      return false;
     }
 
     // Evento de set para un jugador
@@ -122,14 +131,14 @@ export function useSetEvent() {
         const dataBody = cardsToSet(setEvent.cards, setEvent.target.player_id);
 
         await httpService?.createAndPlaySet(matchId, dataBody);
+        setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+
+        return true;
       } catch (err) {
         console.error(err);
 
         toast.error("An unexpected error has occurred, please try again.");
-        return;
       }
-
-      setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
     }
 
     // Evento de set para un secreto
@@ -140,7 +149,7 @@ export function useSetEvent() {
 
       if (!playerTarget) {
         toast.error("The selected secret is not valid.");
-        return;
+        return false;
       }
 
       try {
@@ -151,15 +160,14 @@ export function useSetEvent() {
         );
 
         await httpService?.createAndPlaySet(matchId, dataBody);
+        setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+        return true;
       } catch (err) {
         console.error(err);
-
         toast.error("An unexpected error has occurred, please try again.");
-        return;
       }
-
-      setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
     }
+    return false;
   };
 
   const isPlayerSelectableForSetEvent = (player: GamePlayer) => {
@@ -190,7 +198,7 @@ export function useSetEvent() {
     if (!isSetEvent || !setEvent.isTargetSecret) return false;
     if (secret.player_id === player?.id) return false;
 
-    const isActionRevealSecret = isSetActionRevealSecret(setEvent.cards);
+    const isActionRevealSecret = setEvent.isRevealSecret;
 
     // Eventos de seleccionar secreto a revelarlo por jugar set
     if (isActionRevealSecret && !secret.is_revealed) return true;
@@ -202,6 +210,8 @@ export function useSetEvent() {
   };
 
   const getTargetSetEvent = () => setEvent.target;
+
+  const getSetCards = () => setEvent.cards;
 
   const clearSetEvent = () => setSetEvent(defaultStateSetEvent);
 
@@ -219,6 +229,7 @@ export function useSetEvent() {
     isCurrPlayerSecretSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     getTargetSetEvent,
+    getSetCards,
     clearSetEvent,
   };
 }

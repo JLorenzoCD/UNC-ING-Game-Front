@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import type { GameCard } from "@/types/card";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
@@ -19,6 +18,7 @@ import DiscardModal from "./components/DiscardModal";
 import { useHand } from "./hooks/useHand";
 import { useSetEvent } from "./hooks/useSetEvent";
 
+import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 
@@ -29,7 +29,15 @@ export default function GameContainer() {
 
   const { httpService } = useHttpService();
 
-  const { match, secrets, players, cards, sets } = useGame();
+  const {
+    match,
+    secrets,
+    players,
+    cards,
+    sets,
+    isPlayerFinishAction,
+    playerFinishActionTurn,
+  } = useGame();
 
   const {
     clearSelectedCards,
@@ -47,6 +55,7 @@ export default function GameContainer() {
     setHasDiscardedCards,
     setHasTakenCards,
     takeCards,
+    removeCard,
   } = useHand();
 
   const [discardModal, setDiscardModal] = useState({
@@ -67,6 +76,7 @@ export default function GameContainer() {
     isCurrPlayerSecretSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     getTargetSetEvent,
+    getSetCards,
     clearSetEvent,
   } = useSetEvent();
 
@@ -78,12 +88,26 @@ export default function GameContainer() {
     if (isSetEvent) setTargetSet(target);
   };
 
-  const handleSelectedPlayer = () => {
-    if (isSetEvent) executeSetActionToTarget();
+  const handleSelectedPlayer = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
+
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
+    }
   };
 
-  const handleSelectedSecret = () => {
-    if (isSetEvent) executeSetActionToTarget();
+  const handleSelectedSecret = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
+
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
+    }
   };
 
   const isSelectablePlayer = (player: GamePlayer) => {
@@ -314,6 +338,7 @@ export default function GameContainer() {
       setHasDiscardedCards(true);
 
       clearSelectedCards();
+      playerFinishActionTurn();
     } catch (error) {
       console.error("Failed to discard selected cards:", error);
 
@@ -380,9 +405,9 @@ export default function GameContainer() {
     }
 
     try {
-      // Si el jugador no ha descartado cartas, se fuerza
+      // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
-      if (!hasDiscardedCards) {
+      if (!(hasDiscardedCards || isPlayerFinishAction)) {
         await mandatoryDiscard();
       }
 
