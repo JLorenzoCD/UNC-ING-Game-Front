@@ -188,8 +188,9 @@ export default function GameContextProvider({
 
     const handleCardEvent = (payload: CardEventPayload) => {
       if (
-        payload.updated_match_cards &&
-        payload.updated_match_cards.length > 0
+        (payload.updated_match_cards &&
+          payload.updated_match_cards.length > 0) ||
+        payload.discarded_card_event
       ) {
         setCards((current) => {
           const updatedCards = [...current];

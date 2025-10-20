@@ -245,7 +245,13 @@ export default function GameContainer() {
   const isTargetPlayerEvent = () => {
     if (isTargetPlayerSetEvent) return true;
     // Other events
-
+    if (
+      currentEventCard?.name === "CARDS OFF THE TABLE" ||
+      (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+        currentEventStep === "select_player")
+    ) {
+      return true;
+    }
     return false;
   };
 
@@ -253,6 +259,12 @@ export default function GameContainer() {
     if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
     // Other events
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      return true;
+    }
 
     return false;
   };
@@ -726,7 +738,7 @@ export default function GameContainer() {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
         }
-
+        console.log(selectedTargetPlayer, selectedTargetSecret);
         eventPayload = {
           target_secret_id: selectedTargetSecret.id,
           target_player_id: selectedTargetPlayer.id,
@@ -832,17 +844,8 @@ export default function GameContainer() {
             }
             isSelectableSet={isSelectableSet}
             isEvent={isSetEvent || currentEventCard !== null}
-            isTargetPlayer={
-              isTargetPlayerEvent() ||
-              currentEventCard?.name === "CARDS OFF THE TABLE" ||
-              (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-                currentEventStep === "select_player")
-            }
-            isTargetSecret={
-              isTargetSecretEvent() ||
-              (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-                currentEventStep === "select_secret")
-            }
+            isTargetPlayer={isTargetPlayerEvent()}
+            isTargetSecret={isTargetSecretEvent()}
             isTargetSet={
               currentEventCard?.name === "ANOTHER VICTIM" &&
               currentEventStep === "select_set"

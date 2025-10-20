@@ -46,17 +46,19 @@ function getBoderClass(
       if (isTarget) {
         // Set seleccionado
         borderClass =
-          "border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-none";
+          "outline outline-2 outline-blue-400 shadow-lg shadow-blue-400/50 animate-none";
       } else if (isSelectingTarget) {
         // Aún no se ha seleccionado y es una opción válida
         borderClass =
-          "border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
+          "outline outline-2 outline-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
       } else {
-        borderClass = "border-2 border-transparent shadow-none brightness-50";
+        borderClass =
+          "outline outline-2 outline-transparent shadow-none brightness-50";
       }
     } else {
       // NO Seleccionable (Atenuado)
-      borderClass = "border-2 border-transparent shadow-none brightness-50";
+      borderClass =
+        "outline outline-2 outline-transparent shadow-none brightness-50";
     }
   }
 
