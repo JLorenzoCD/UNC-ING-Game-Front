@@ -65,6 +65,8 @@ export default function GameContainer() {
     clearSelectedCards,
     discardCards,
     getRandomCard,
+    removeCard,
+    addCard,
     handCards,
     isCardSelected,
     isHandFull,
@@ -659,42 +661,36 @@ export default function GameContainer() {
     switch (nameEvent) {
       case "DELAY THE MURDERER ESCAPE": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         handleEndEvent(cardEvent);
         break;
       }
 
       case "LOOK INTO THE ASHES": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         handleEventDiscard();
         break;
       }
 
       case "CARDS OFF THE TABLE": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         setCurrentEventStep("select_player");
         break;
       }
 
       case "AND THEN THERE WAS ONE MORE": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         setCurrentEventStep("select_secret");
         break;
       }
 
       case "EARLY TRAIN TO PADDINGTON": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         handleEndEvent(cardEvent);
         break;
       }
 
       case "ANOTHER VICTIM": {
         setCurrentEventCard(cardEvent);
-        clearSelectedCards();
         setCurrentEventStep("select_set");
         break;
       }
@@ -722,7 +718,7 @@ export default function GameContainer() {
           return;
         }
 
-        const selectedDiscardedCard = selectedDiscardedCardsArray[0];
+        const selectedDiscardedCard = selectedDiscardedCardsArray[1];
 
         // Construimos el payload para el evento
         eventPayload = {
@@ -735,8 +731,6 @@ export default function GameContainer() {
           isEventDiscard: false,
         });
 
-        // Limpiamos los estados
-        clearSelectedCards();
         break;
       }
 
@@ -817,6 +811,10 @@ export default function GameContainer() {
         eventPayload,
       );
 
+      removeCard(cardToUse);
+      if (currentEventCard?.name === "LOOK INTO THE ASHES") {
+        addCard(selectedCards[1]);
+      }
       clearSelectedCards();
 
       console.log("Evento completado exitosamente");
