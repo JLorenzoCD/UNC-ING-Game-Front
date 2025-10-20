@@ -1,8 +1,9 @@
 import "@testing-library/jest-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { ReactNode } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+
 import HandActions from "./HandActions";
 
 const {
@@ -11,21 +12,30 @@ const {
   mockOnPlaySet,
   mockOnSelectPlayer,
   mockOnSelectSecret,
+  mockUseGame,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
   const mockOnPlaySet = vi.fn();
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
+  const mockUseGame = vi.fn();
 
   return {
     mockOnFinish,
     mockOnDiscard,
     mockOnPlaySet,
+    mockUseGame,
     mockOnSelectPlayer,
     mockOnSelectSecret,
   };
 });
+
+// 1. Mock de useGame
+
+vi.mock("@/contexts/GameContext", () => ({
+  useGame: mockUseGame,
+}));
 
 vi.mock("@/components/Button", () => ({
   default: ({
@@ -47,108 +57,181 @@ vi.mock("@/components/Button", () => ({
   ),
 }));
 
+const baseProps = {
+  onFinish: mockOnFinish,
+  onDiscard: mockOnDiscard,
+  onPlaySet: mockOnPlaySet,
+  onSelectPlayer: mockOnSelectPlayer,
+  onSelectSecret: mockOnSelectSecret,
+  isSelectionPlayerEvent: false,
+  isSelectionSecretEvent: false,
+  isSetButtonDisabled: true,
+  isDisabled: false,
+};
+
 describe("HandActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseGame.mockReturnValue({
+      isPlayerFinishAction: false,
+      playerSelectsOneOfHisSecrets: {
+        isSelecting: false,
+        isCurrPlayer: false,
+      },
+    });
   });
 
   describe("Rendering", () => {
     it("renders correctly with default props", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSetButtonDisabled={false}
-          isDisabled={false}
-        />,
-      );
-
-      const handActions = screen.getByTestId("hand-actions");
-      expect(handActions).toBeInTheDocument();
+      render(<HandActions {...baseProps} />);
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(5);
-      expect(buttons[0]).toHaveTextContent("Discard cards");
-      expect(buttons[1]).toHaveTextContent("Play set");
-      expect(buttons[2]).toHaveTextContent("Select player");
-      expect(buttons[3]).toHaveTextContent("Select secret");
-      expect(buttons[4]).toHaveTextContent("Finish turn");
-    });
-  });
+      expect(buttons).toHaveLength(5);
+      expect(screen.getByText("Discard cards")).toBeInTheDocument();
+      expect(screen.getByText("Play set")).toBeInTheDocument();
+      expect(screen.getByText("Select player")).toBeInTheDocument();
+      expect(screen.getByText("Select secret")).toBeInTheDocument();
+      expect(screen.getByText("Finish turn")).toBeInTheDocument();
 
-  describe("Interactions", () => {
-    it("calls onDiscard when 'Discard cards' button is clicked", async () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSetButtonDisabled={false}
-          isDisabled={false}
-        />,
+      expect(buttons[0]).not.toBeDisabled();
+      expect(buttons[1]).toBeDisabled();
+      expect(buttons[2]).toBeDisabled();
+      expect(buttons[3]).toBeDisabled();
+      expect(buttons[4]).not.toBeDisabled();
+    });
+
+    it("disables the 'Play set' button based on isSetButtonDisabled prop", () => {
+      render(<HandActions {...baseProps} isSetButtonDisabled={true} />);
+
+      expect(screen.getByText("Play set")).toBeDisabled();
+      expect(screen.getByText("Discard cards")).not.toBeDisabled();
+    });
+
+    it("disables the 'Select player' button based on isSelectionPlayerEvent prop (inverted logic)", () => {
+      const { unmount } = render(
+        <HandActions {...baseProps} isSelectionPlayerEvent={false} />,
       );
+      expect(screen.getByText("Select player")).toBeDisabled();
+      unmount();
 
-      const discardCardsButton = screen.getAllByTestId("mock-button")[0];
-      expect(discardCardsButton).toBeInTheDocument();
-
-      await fireEvent.click(discardCardsButton);
-      expect(mockOnDiscard).toHaveBeenCalled();
-    });
-
-    it("calls onFinish when 'Finish turn' button is clicked", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSetButtonDisabled={false}
-          isDisabled={false}
-        />,
+      const { rerender } = render(
+        <HandActions {...baseProps} isSelectionPlayerEvent={true} />,
       );
+      expect(screen.getByText("Select player")).not.toBeDisabled();
 
-      const finishTurnButton = screen.getAllByTestId("mock-button")[4];
-      expect(finishTurnButton).toBeInTheDocument();
-
-      fireEvent.click(finishTurnButton);
-      expect(mockOnFinish).toHaveBeenCalled();
-    });
-
-    it("does not call onDiscard or onFinish when buttons are disabled", () => {
-      render(
+      // Check if it's disabled when the main isDisabled prop is true
+      rerender(
         <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSetButtonDisabled={false}
+          {...baseProps}
+          isSelectionPlayerEvent={true}
           isDisabled={true}
         />,
       );
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+  });
+
+  describe("Click actions", () => {
+    it("calls onDiscard when 'Discard cards' button is clicked", () => {
+      render(<HandActions {...baseProps} />);
+
+      fireEvent.click(screen.getByText("Discard cards"));
+      expect(mockOnDiscard).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onPlaySet when 'Play set' button is clicked", () => {
+      render(<HandActions {...baseProps} isSetButtonDisabled={false} />);
+
+      fireEvent.click(screen.getByText("Play set"));
+      expect(mockOnPlaySet).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onSelectPlayer when 'Select player' button is clicked", () => {
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      fireEvent.click(screen.getByText("Select player"));
+      expect(mockOnSelectPlayer).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onSelectSecret when 'Select secret' button is clicked", () => {
+      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+
+      fireEvent.click(screen.getByText("Select secret"));
+      expect(mockOnSelectSecret).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls onFinish when 'Finish turn' button is clicked", () => {
+      render(<HandActions {...baseProps} />);
+
+      fireEvent.click(screen.getByText("Finish turn"));
+      expect(mockOnFinish).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not call any callback when main isDisabled prop is true", () => {
+      render(<HandActions {...baseProps} isDisabled={true} />);
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(5);
-
-      fireEvent.click(buttons[0]);
-      fireEvent.click(buttons[4]);
+      buttons.forEach((button) => fireEvent.click(button));
 
       expect(mockOnDiscard).not.toHaveBeenCalled();
+      expect(mockOnPlaySet).not.toHaveBeenCalled();
+      expect(mockOnSelectPlayer).not.toHaveBeenCalled();
+      expect(mockOnSelectSecret).not.toHaveBeenCalled();
       expect(mockOnFinish).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("useGame logic", () => {
+    it("disables all main action buttons when isPlayerFinishAction is true", () => {
+      mockUseGame.mockReturnValue({
+        isPlayerFinishAction: true,
+        playerSelectsOneOfHisSecrets: {
+          isSelecting: false,
+          isCurrPlayer: false,
+        },
+      });
+
+      render(<HandActions {...baseProps} />);
+
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Play set")).toBeDisabled();
+      expect(screen.getByText("Select player")).toBeDisabled();
+      expect(screen.getByText("Select secret")).toBeDisabled();
+
+      expect(screen.getByText("Finish turn")).not.toBeDisabled();
+    });
+
+    it("disables 'Finish turn' when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
+      mockUseGame.mockReturnValue({
+        isPlayerFinishAction: false,
+        playerSelectsOneOfHisSecrets: {
+          isSelecting: true,
+          isCurrPlayer: false,
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionSecretEvent />);
+
+      // Botón Finish turn se deshabilita
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Play set")).toBeDisabled();
+    });
+
+    it("ENABLES 'Select secret' even if event conditions fail, when isCurrPlayer is true", () => {
+      mockUseGame.mockReturnValue({
+        isPlayerFinishAction: false,
+        playerSelectsOneOfHisSecrets: {
+          isSelecting: false,
+          isCurrPlayer: true,
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
+
+      expect(screen.getByText("Select secret")).not.toBeDisabled();
+      expect(screen.getByText("Discard cards")).not.toBeDisabled();
     });
   });
 });
