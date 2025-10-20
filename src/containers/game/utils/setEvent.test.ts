@@ -12,7 +12,7 @@ import {
   isSetWithQuin,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
-} from "./utils";
+} from "./setEvent";
 
 const MOCK_PLAYER_ID = "player-123" as UUID;
 const MOCK_MATCH_ID = "match-456" as UUID;

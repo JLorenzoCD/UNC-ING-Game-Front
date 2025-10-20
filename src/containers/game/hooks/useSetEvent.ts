@@ -13,7 +13,7 @@ import {
   isSetActionRevealSecret,
   isSetActionStolenSecret,
   isSetTargetOneSecret,
-} from "../components/utils";
+} from "../utils/setEvent";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";

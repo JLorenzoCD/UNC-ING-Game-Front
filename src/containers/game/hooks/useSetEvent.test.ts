@@ -152,7 +152,7 @@ const {
 });
 
 // Mocks de funciones de utilidad
-vi.mock("../components/utils", () => ({
+vi.mock("../utils/setEvent", () => ({
   cardsToSet: cardsToSet,
   cardsToSetTypeDetective: cardsToSetTypeDetective,
   isCardsValidSet: isCardsValidSet,
