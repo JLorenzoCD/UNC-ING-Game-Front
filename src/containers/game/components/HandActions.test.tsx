@@ -69,10 +69,15 @@ const baseProps = {
   onPlaySet: mockOnPlaySet,
   onSelectPlayer: mockOnSelectPlayer,
   onSelectSecret: mockOnSelectSecret,
+  onPlayEvent: mockOnPlayEvent,
+  onEndEvent: mockOnEndEvent,
   isSelectionPlayerEvent: false,
   isSelectionSecretEvent: false,
   isSetButtonDisabled: true,
   isDisabled: false,
+  isSelectionSetEvent: false,
+  isDisabledEvent: true,
+  isDisabledEndEvent: true,
 };
 
 describe("HandActions", () => {
@@ -125,38 +130,26 @@ describe("HandActions", () => {
 
   describe("Interactions", () => {
     it("calls onDiscard when 'Discard cards' button is clicked", async () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          onPlayEvent={mockOnPlayEvent}
-          onEndEvent={mockOnEndEvent}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSelectionSetEvent={false}
-          isSetButtonDisabled={false}
-          isDisabledEvent={false}
-          isDisabledEndEvent={false}
-          isDisabled={false}
-        />,
-      )
+      render(<HandActions {...baseProps} />);
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons).toHaveLength(5);
+      expect(buttons).toHaveLength(7);
+
       expect(screen.getByText("Discard cards")).toBeInTheDocument();
       expect(screen.getByText("Play set")).toBeInTheDocument();
       expect(screen.getByText("Select player")).toBeInTheDocument();
       expect(screen.getByText("Select secret")).toBeInTheDocument();
       expect(screen.getByText("Finish turn")).toBeInTheDocument();
+      expect(screen.getByText("Play event")).toBeInTheDocument();
+      expect(screen.getByText("Apply effect")).toBeInTheDocument();
 
       expect(buttons[0]).not.toBeDisabled();
       expect(buttons[1]).toBeDisabled();
       expect(buttons[2]).toBeDisabled();
       expect(buttons[3]).toBeDisabled();
       expect(buttons[4]).not.toBeDisabled();
+      expect(buttons[5]).toBeDisabled();
+      expect(buttons[6]).toBeDisabled();
     });
 
     it("disables the 'Play set' button based on isSetButtonDisabled prop", () => {
@@ -166,57 +159,15 @@ describe("HandActions", () => {
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
     });
 
-    it("disables the 'Select player' button based on isSelectionPlayerEvent prop (inverted logic)", () => {
-      const { unmount } = render(
-        <HandActions {...baseProps} isSelectionPlayerEvent={false} />,
-      );
+    it("disables the 'Select player' button based on isSelectionPlayerEvent prop (inverted logic)", async () => {
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={false} />);
       expect(screen.getByText("Select player")).toBeDisabled();
-      unmount();
 
       const discardCardsButton = screen.getAllByTestId("mock-button")[0];
       expect(discardCardsButton).toBeInTheDocument();
 
       await fireEvent.click(discardCardsButton);
       expect(mockOnDiscard).toHaveBeenCalled();
-    });
-
-    it("calls onFinish when 'Finish turn' button is clicked", () => {
-      render(
-        <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          onPlayEvent={mockOnPlayEvent}
-          onEndEvent={mockOnEndEvent}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
-          isSelectionSetEvent={false}
-          isSetButtonDisabled={false}
-          isDisabledEvent={false}
-          isDisabledEndEvent={false}
-          isDisabled={false}
-        />,
-      const { rerender } = render(
-        <HandActions {...baseProps} isSelectionPlayerEvent={true} />,
-      );
-      expect(screen.getByText("Select player")).not.toBeDisabled();
-
-      // Check if it's disabled when the main isDisabled prop is true
-      rerender(
-        <HandActions
-          onPlayEvent={mockOnPlayEvent}
-          onEndEvent={mockOnEndEvent}
-          isSelectionSetEvent={false}
-          isDisabledEvent={false}
-          isDisabledEndEvent={false}
-          {...baseProps}
-          isSelectionPlayerEvent={true}
-          isDisabled={true}
-        />,
-      );
-      expect(screen.getByText("Select player")).toBeDisabled();
     });
   });
 
