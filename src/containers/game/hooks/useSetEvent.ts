@@ -139,7 +139,8 @@ export function useSetEvent() {
       isTargetSecret &&
       ((setEvent.isRevealSecret &&
         target.player_id !== player?.id &&
-        !setEvent.isRevealCurrPlayerSecret) ||
+        !setEvent.isRevealCurrPlayerSecret &&
+        !target.is_revealed) ||
         (!setEvent.isRevealSecret && target.is_revealed))
     ) {
       setSetEvent((prev) => ({
