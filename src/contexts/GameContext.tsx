@@ -180,7 +180,6 @@ export default function GameContextProvider({
 
         //* Solo manejo la creación de un set.
         if (!exists) {
-          console.log(set);
           const playerOwnerSet = players.find((p) => p.id === set.player_id);
           if (!playerOwnerSet) return prevSets;
 
