@@ -155,24 +155,13 @@ export default function GameContextProvider({
         payload.updated_match_cards &&
         payload.updated_match_cards.length > 0
       ) {
-        if (payload.type === "LOOK INTO THE ASHES") {
-          const cardsToUpdateList: GameCard[] = [];
-          cardsToUpdateList.push(payload.discarded_card_event);
-          cardsToUpdateList.push(...payload.updated_match_cards);
-          handleUpdateCards(cardsToUpdateList);
-        }
         setCards((current) => {
           const updatedCards = [...current];
 
           // Caso especial: DELAY THE MURDERER ESCAPE
           if (payload.type === "DELAY THE MURDERER ESCAPE") {
             // 1. Marcar la carta del evento como descartada
-            const eventCardIndex = updatedCards.findIndex(
-              (c) => c.id === payload.discarded_card_event.id,
-            );
-            if (eventCardIndex !== -1) {
-              updatedCards[eventCardIndex] = payload.discarded_card_event;
-            }
+            handleUpdateCards([payload.discarded_card_event]);
 
             // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
             const regularDeckCards = updatedCards.filter(
@@ -209,25 +198,14 @@ export default function GameContextProvider({
             return finalCards;
           }
 
-          // if (payload.updated_match_cards) {
-          //   payload.updated_match_cards.forEach((newCard) => {
-          //     const index = updatedCards.findIndex((c) => c.id === newCard.id);
-          //     if (index !== -1) {
-          //       updatedCards[index] = newCard;
-          //     }
-          //   });
-          // }
+          if (payload.updated_match_cards) {
+            handleUpdateCards(payload.updated_match_cards);
+          }
 
-          // // 8. AÑADIR: Actualizar también la carta de evento que se descartó
-          // // (Esto es lo que descarta "LOOK INTO THE ASHES" de la mano del jugador)
-          // if (payload.discarded_card_event) {
-          //   const index = updatedCards.findIndex(
-          //     (c) => c.id === payload.discarded_card_event.id,
-          //   );
-          //   if (index !== -1) {
-          //     updatedCards[index] = payload.discarded_card_event;
-          //   }
-          // }
+          // 8. AÑADIR: Actualizar también la carta de evento que se descartó
+          if (payload.discarded_card_event) {
+            handleUpdateCards([payload.discarded_card_event]);
+          }
 
           return updatedCards;
         });
