@@ -23,6 +23,7 @@ const {
   mockUsePlayer,
   mockUseGame,
   defaultMockUseGame,
+  mockCurrentGamePlayer,
   mockCreateAndPlaySet,
   mockPutSecret,
   mockHttpService,
@@ -433,6 +434,185 @@ describe("useSetEvent", () => {
         MOCK_PLAYER_ID,
         "reveal_secret",
       );
+    });
+
+    it("should successfully execute a TargetSecret set action (not curr player) and reset state", async () => {
+      isCardsValidSet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetActionRevealSecret.mockReturnValue(true); // Reveal Secret (Other Player's)
+
+      const { result } = renderHook(() => useSetEvent());
+
+      act(() => {
+        result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
+      });
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+
+      act(() => {
+        result.current.setTargetSet(mockSecret);
+      });
+
+      const success = await result.current.executeSetActionToTarget();
+
+      expect(success).toBe(true);
+      expect(mockCreateAndPlaySet).toHaveBeenCalled();
+      expect(result.current.setEvent.isValidSet).toBe(false);
+    });
+
+    it("should return false and show error if target secret player is not found", async () => {
+      isCardsValidSet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(true);
+      isSetActionRevealSecret.mockReturnValue(true);
+
+      mockUseGame.mockReturnValue({
+        ...defaultMockUseGame,
+        players: [mockCurrentGamePlayer], // Sólo el jugador actual
+      });
+
+      const { result } = renderHook(() => useSetEvent());
+
+      act(() => {
+        result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
+      });
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+
+      act(() => {
+        result.current.setTargetSet(mockSecret);
+      });
+
+      const success = await result.current.executeSetActionToTarget();
+
+      expect(success).toBe(false);
+      expect(mockCreateAndPlaySet).not.toHaveBeenCalled();
+      expect(toast.error).toHaveBeenCalledWith(
+        "The selected secret is not valid.",
+      );
+    });
+  });
+
+  describe("Selectability Functions", () => {
+    beforeEach(() => {
+      isCardsValidSet.mockReturnValue(true);
+      isSetActionRevealSecret.mockReturnValue(true); // Para forzar el paso de validación en playSet
+    });
+
+    // Helper para simular el inicio de un evento de Target Player
+    const startTargetPlayerEvent = (result: any) => {
+      isSetTargetOneSecret.mockReturnValue(false); // Target Player
+      act(() => {
+        result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
+      });
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+    };
+
+    // Helper para simular el inicio de un evento de Target Secret (Reveal)
+    const startTargetSecretRevealEvent = (result: any) => {
+      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetActionRevealSecret.mockReturnValue(true); // Reveal
+      act(() => {
+        result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
+      });
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+    };
+
+    describe("isPlayerSelectableForSetEvent", () => {
+      it("should return true if in TargetPlayer event and player has unrevealed secrets", () => {
+        const { result } = renderHook(() => useSetEvent());
+        startTargetPlayerEvent(result);
+
+        expect(
+          result.current.isPlayerSelectableForSetEvent(mockGamePlayer),
+        ).toBe(true);
+      });
+
+      it("should return false if in TargetPlayer event but player has ALL secrets revealed", () => {
+        mockUseGame.mockReturnValue({
+          ...defaultMockUseGame,
+          secrets: [
+            mockRevealedSecret, // Secreto revelado del otro jugador
+            mockCurrentPlayerSecret,
+          ],
+        });
+
+        const { result } = renderHook(() => useSetEvent());
+        startTargetPlayerEvent(result);
+
+        // mockGamePlayer sólo tiene mockRevealedSecret que está revelado
+        expect(
+          result.current.isPlayerSelectableForSetEvent(mockGamePlayer),
+        ).toBe(false);
+      });
+
+      it("should return false if not in a TargetPlayer event", () => {
+        const { result } = renderHook(() => useSetEvent());
+        // No se inicia ningún evento de set
+        expect(
+          result.current.isPlayerSelectableForSetEvent(mockGamePlayer),
+        ).toBe(false);
+      });
+    });
+
+    describe("isCurrPlayerSecretSelectableForSetEvent", () => {
+      it("should return true for unrevealed current player secret when playerSelectsOneOfHisSecrets is true (via useEffect)", () => {
+        // Simula el estado post-useEffect cuando el jugador debe revelar uno de sus secretos
+        mockUseGame.mockReturnValue({
+          ...defaultMockUseGame,
+          playerSelectsOneOfHisSecrets: {
+            isCurrPlayer: true,
+            isSelecting: true,
+          },
+        });
+
+        const { result } = renderHook(() => useSetEvent());
+
+        // El estado se inicializa con isRevealCurrPlayerSecret: true gracias al useEffect
+        expect(result.current.setEvent.isRevealCurrPlayerSecret).toBe(true);
+
+        expect(
+          result.current.isCurrPlayerSecretSelectableForSetEvent(
+            mockCurrentPlayerSecret, // No revelado
+          ),
+        ).toBe(true);
+      });
+
+      it("should return false if secret belongs to another player", () => {
+        const { result } = renderHook(() => useSetEvent());
+        startTargetSecretRevealEvent(result);
+
+        expect(
+          result.current.isCurrPlayerSecretSelectableForSetEvent(mockSecret),
+        ).toBe(false); // mockSecret pertenece a MOCK_OTHER_PLAYER_ID
+      });
+    });
+
+    describe("isOtherPlayerSecretSelectableForSetEvent", () => {
+      it("should return true for an UNREVEALED other player secret during a REVEAL set event", () => {
+        const { result } = renderHook(() => useSetEvent());
+        startTargetSecretRevealEvent(result); // isRevealSecret: true
+
+        expect(
+          result.current.isOtherPlayerSecretSelectableForSetEvent(mockSecret), // mockSecret no revelado, de otro jugador
+        ).toBe(true);
+      });
+
+      it("should return false if secret belongs to the current player", () => {
+        const { result } = renderHook(() => useSetEvent());
+        startTargetSecretRevealEvent(result);
+
+        expect(
+          result.current.isOtherPlayerSecretSelectableForSetEvent(
+            mockCurrentPlayerSecret,
+          ),
+        ).toBe(false); // mockCurrentPlayerSecret es del jugador actual
+      });
     });
   });
 
