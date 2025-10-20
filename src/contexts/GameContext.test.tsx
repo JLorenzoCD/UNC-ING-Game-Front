@@ -510,6 +510,7 @@ describe("GameContext", () => {
 
       expect(result.current).toEqual({
         match: null,
+        result: null,
         cards: [],
         secrets: [],
         players: [],

@@ -9,6 +9,7 @@ import Hand from "./components/Hand";
 import Sets from "./components/Sets";
 import Table from "./components/Table";
 import Draft from "./components/Draft";
+import Result from "./components/Result";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
@@ -34,6 +35,7 @@ export default function GameContainer() {
     secrets,
     players,
     cards,
+    result,
     sets,
     isPlayerFinishAction,
     playerFinishActionTurn,
@@ -522,6 +524,8 @@ export default function GameContainer() {
         isEventDiscard={discardModal.isEventDiscard}
         discardedCards={cardsInDiscardPile}
       />
+
+      <Result result={result} />
     </>
   );
 }

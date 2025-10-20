@@ -134,22 +134,33 @@ const {
   mockPutTakeCards,
   mockPutDiscardCards,
   mockPutPassTurn,
+  mockUseNavigate,
   mockUseSetEvent,
 } = vi.hoisted(() => {
   const mockPutTakeCards = vi.fn();
   const mockPutDiscardCards = vi.fn();
   const mockPutPassTurn = vi.fn();
+  const mockUseNavigate = vi.fn();
   const mockUseSetEvent = vi.fn();
 
   return {
     mockPutTakeCards,
     mockPutDiscardCards,
     mockPutPassTurn,
+    mockUseNavigate,
     mockUseSetEvent,
   };
 });
 
 /* Componentes mockeados por Vitest */
+
+vi.mock("react-router", async (importOriginal) => {
+  const mod = await importOriginal<typeof import("react-router")>();
+  return {
+    ...mod,
+    useNavigate: () => mockUseNavigate,
+  };
+});
 
 vi.mock("@/contexts/GameContext");
 
@@ -338,6 +349,11 @@ vi.mock("./components/Sets", () => ({
   default: vi.fn(() => <div data-testid="mock-sets">Sets Component</div>),
 }));
 
+vi.mock("./components/Result", () => ({
+  __esModule: true,
+  default: vi.fn(() => null),
+}));
+
 import GameContainer from "./GameContainer";
 
 describe("GameContainer", () => {
@@ -366,6 +382,7 @@ describe("GameContainer", () => {
       cards: mockCards,
       match: mockMatch,
       players: [mockMatchPlayer],
+      result: null,
       isLoading: false,
       hasError: false,
       error: null,
@@ -516,6 +533,7 @@ describe("GameContainer", () => {
         secrets: [],
         players: [],
         match: mockMatch,
+        result: null,
         cards: [
           ...mockCards,
           {
@@ -562,6 +580,7 @@ describe("GameContainer", () => {
         cards: mockCards,
         players: [mockMatchPlayer],
         match: { ...mockMatch, current_player_order: 2 }, // Turno de otro jugador
+        result: null,
         isLoading: false,
         hasError: false,
         error: null,
@@ -702,6 +721,7 @@ describe("GameContainer", () => {
         match: null,
         players: [],
         sets: [],
+        result: null,
         isLoading: false,
         hasError: false,
         error: null,
