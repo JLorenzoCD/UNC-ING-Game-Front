@@ -7,35 +7,58 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import type { GamePlayer, Player as PlayerSchema } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
-
-import Table from "./Table";
 import type { MatchSet } from "@/types/set";
 import type { UUID } from "@/types/common";
 import type { Match } from "@/types/match";
 
-// Mocks de dependencias
+import Table from "./Table";
+
 vi.mock("@/contexts/GameContext");
 vi.mock("@/contexts/PlayerContext");
-
+vi.mock("../utils/tablePositions.ts", () => ({
+  getVisiblePlayersWithGridPositions: vi.fn(),
+}));
 vi.mock("./Player", () => ({
   __esModule: true,
-  default: vi.fn(({ player, secrets, sets, hasCurrentTurn }) => (
-    <div
-      data-testid={`mock-player-${player.id}`}
-      data-player-name={player.name}
-      data-player-order={player.order}
-      data-secrets-count={secrets.length}
-      data-sets-count={sets.length}
-      data-current-turn={hasCurrentTurn ? "true" : "false"}
-    >
-      Player: {player.name}
-    </div>
-  )),
+  default: vi.fn(
+    ({
+      player,
+      secrets,
+      sets,
+      hasCurrentTurn,
+      isSelectablePlayer,
+      isSelectableSecret,
+      isPlayerEvent,
+      isTargetSecret,
+    }) => (
+      <div
+        data-testid={`mock-player-${player.id}`}
+        data-player-name={player.name}
+        data-player-order={player.order}
+        data-secrets-count={secrets.length}
+        data-sets-count={sets.length}
+        data-current-turn={hasCurrentTurn ? "true" : "false"}
+        // NUEVOS ATRIBUTOS PARA PROPS BOOLEANAS
+        data-is-selectable-player={isSelectablePlayer ? "true" : "false"}
+        data-is-selectable-secret={isSelectableSecret ? "true" : "false"}
+        data-is-player-event={isPlayerEvent ? "true" : "false"}
+        data-is-target-secret={isTargetSecret ? "true" : "false"}
+      >
+        Player: {player.name}
+      </div>
+    ),
+  ),
 }));
+
+import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
+
+const mockGetVisiblePlayersWithGridPositions = vi.mocked(
+  getVisiblePlayersWithGridPositions,
+);
 const mockUseGame = vi.mocked(useGame);
 const mockUsePlayer = vi.mocked(usePlayer);
 
-// Datos Mock
+// Datos Mock (Se mantienen)
 const MOCK_PLAYER_ID_1 = crypto.randomUUID();
 const MOCK_PLAYER_ID_2 = crypto.randomUUID();
 const MOCK_PLAYER_ID_3 = crypto.randomUUID();
@@ -112,7 +135,7 @@ const mockSecrets: GameSecret[] = [
   },
 ];
 
-const mockSets: MatchSet[] = [
+const mockSets = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
     type: "HERCULE POIROT",
@@ -148,7 +171,32 @@ const mockSets: MatchSet[] = [
     match_id: MOCK_MATCH_ID,
     quin_play: false,
   },
-];
+] as unknown as MatchSet[];
+
+// Datos que simulan el resultado de getVisiblePlayersWithGridPositions
+const getMockVisiblePlayers = (
+  currPlayerId: string,
+  players: GamePlayer[],
+  secrets: GameSecret[],
+  sets: MatchSet[],
+  currentPlayerOrder: number = 1,
+) => {
+  const visiblePlayers = players.filter((p) => p.id !== currPlayerId);
+
+  const sortedPlayers = [...visiblePlayers].sort(
+    (a, b) => (a.order ?? 0) - (b.order ?? 0),
+  );
+
+  return sortedPlayers.map((playerData, i) => ({
+    turn: currentPlayerOrder === playerData.order,
+    position: i === 0 ? "col-start-2 row-start-1" : "col-start-3 row-start-2", // Simplified positions for 2 other players
+    playerData,
+    playerSets: sets.filter((set) => set.player_id === playerData.id),
+    playerSecrets: secrets.filter(
+      (secret) => secret.player_id === playerData.id,
+    ),
+  }));
+};
 
 // Default props for Table component (will be changed later)
 const defaultTableProps = {
@@ -179,12 +227,23 @@ describe("Table Component", () => {
       isLoading: false,
       hasError: false,
       error: null,
-    });
+    } as any);
 
     mockUsePlayer.mockReturnValue({
       player: mockCurrPlayer,
       setPlayer: vi.fn(),
     });
+
+    // Mock por defecto de la función de utilidades
+    mockGetVisiblePlayersWithGridPositions.mockImplementation(() =>
+      getMockVisiblePlayers(
+        mockCurrPlayer.id,
+        mockGamePlayers,
+        mockSecrets,
+        mockSets,
+        mockMatch.current_player_order,
+      ),
+    );
   });
 
   it("should render without crashing", () => {
@@ -197,6 +256,15 @@ describe("Table Component", () => {
       screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`),
     ).toBeInTheDocument();
 
+    // Se verifica que la función de utilidades fue llamada
+    expect(mockGetVisiblePlayersWithGridPositions).toHaveBeenCalledWith(
+      mockCurrPlayer,
+      mockGamePlayers,
+      mockMatch,
+      mockSecrets,
+      mockSets,
+    );
+
     // No debería renderizar al jugador actual
     expect(
       screen.queryByTestId(`mock-player-${MOCK_PLAYER_ID_1}`),
@@ -205,7 +273,7 @@ describe("Table Component", () => {
 
   it("should render other players in order, starting from the next one", () => {
     // Como el jugador actual tiene el order = 1. Entonces el orden esperado es:
-    // Jugador con order 2, luego Jugador con order 3.
+    // Jugador con order 2, luego Jugador con order 3. (Manejado por getMockVisiblePlayers)
     render(<Table {...defaultTableProps} />);
 
     const renderedPlayers = screen.getAllByTestId(/mock-player-/);
@@ -226,36 +294,39 @@ describe("Table Component", () => {
       birthday: new Date("2000-01-01"),
     };
 
-    // El orden de los jugadores de la partida sigue siendo 1, 2, 3
-    // El jugador a excluir es el de order 2.
-    // Orden esperado: Jugador con order 3, luego Jugador con order 1.
-
     mockUsePlayer.mockReturnValue({
       player: currPlayerP2,
       setPlayer: vi.fn(),
     });
+
+    // Mock específico para este caso
+    mockGetVisiblePlayersWithGridPositions.mockImplementation(() =>
+      getMockVisiblePlayers(
+        currPlayerP2.id,
+        mockGamePlayers,
+        mockSecrets,
+        mockSets,
+        mockMatch.current_player_order,
+      ),
+    );
 
     render(<Table {...defaultTableProps} />);
 
     const renderedPlayers = screen.getAllByTestId(/mock-player-/);
     expect(renderedPlayers).toHaveLength(2);
 
-    // Los jugadores se ordenan por 'order' ascendente
-    // El primer jugador renderizado debería ser Player 1 (orden 1)
+    // Los jugadores se ordenan por 'order' ascendente dentro del mock:
+    // Player 1 (orden 1), luego Player 3 (orden 3)
     expect(renderedPlayers[0]).toHaveAttribute(
       "data-player-name",
       "Current Player",
     );
-
-    // El segundo jugador renderizado debería ser Player 3 (orden 3)
     expect(renderedPlayers[1]).toHaveAttribute("data-player-name", "Player 3");
   });
 
   it("should pass correct secrets and sets counts to each Player component", () => {
+    // Los datos se pasan a través del resultado mockeado de getVisiblePlayersWithGridPositions
     render(<Table {...defaultTableProps} />);
-
-    //* En el juego siempre se pasan 3 secretos, pero a la hora de hacer el test
-    //* es lo prácticamente lo mismo, ya que se basa en un arreglo.
 
     // Player 2 (MOCK_PLAYER_ID_2): 2 secretos, 3 sets
     const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`);
@@ -271,10 +342,24 @@ describe("Table Component", () => {
   describe("Current Turn Indicator", () => {
     it("should mark the correct player as 'hasCurrentTurn' when match.current_player_order changes", () => {
       // Caso 1: Turno del Player 2 (Order 2)
+      const mockMatchP2 = { ...mockMatch, current_player_order: 2 };
+
       mockUseGame.mockReturnValue({
         ...mockUseGame(),
-        match: { ...mockUseGame().match!, current_player_order: 2 },
+        match: mockMatchP2,
       });
+
+      // Se actualiza el mock de utilidades para el nuevo turno
+      mockGetVisiblePlayersWithGridPositions.mockImplementation(() =>
+        getMockVisiblePlayers(
+          mockCurrPlayer.id,
+          mockGamePlayers,
+          mockSecrets,
+          mockSets,
+          mockMatchP2.current_player_order,
+        ),
+      );
+
       render(<Table {...defaultTableProps} />);
 
       // Player 2 tiene el turno
@@ -289,10 +374,24 @@ describe("Table Component", () => {
 
     it("should mark the correct player as 'hasCurrentTurn' when match.current_player_order matches player 3 (Order 3)", () => {
       // Caso 2: Turno del Player 3 (Order 3)
+      const mockMatchP3 = { ...mockMatch, current_player_order: 3 };
+
       mockUseGame.mockReturnValue({
         ...mockUseGame(),
-        match: { ...mockUseGame().match!, current_player_order: 3 },
+        match: mockMatchP3,
       });
+
+      // Se actualiza el mock de utilidades para el nuevo turno
+      mockGetVisiblePlayersWithGridPositions.mockImplementation(() =>
+        getMockVisiblePlayers(
+          mockCurrPlayer.id,
+          mockGamePlayers,
+          mockSecrets,
+          mockSets,
+          mockMatchP3.current_player_order,
+        ),
+      );
+
       render(<Table {...defaultTableProps} />);
 
       // Player 2 no tiene el turno
@@ -309,15 +408,20 @@ describe("Table Component", () => {
   describe("Position Class Name", () => {
     it("should apply correct positionClassName for 2 other players", () => {
       // Tenemos 3 jugadores en total, se renderizan 2 'other players'
+      // Las posiciones mockeadas son:
+      // Player 2 (Order 2): col-start-2 row-start-1 (posición [0])
+      // Player 3 (Order 3): col-start-3 row-start-2 (posición [1])
       render(<Table {...defaultTableProps} />);
 
-      const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`); // Orden de renderizado: 0
-      const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`); // Orden de renderizado: 1
+      const player2Div = screen.getByTestId(
+        `mock-player-${MOCK_PLAYER_ID_2}`,
+      ).parentElement;
+      const player3Div = screen.getByTestId(
+        `mock-player-${MOCK_PLAYER_ID_3}`,
+      ).parentElement;
 
-      // Position classes are now applied in the parent div, not passed as props
-      // Just verify the players are rendered
-      expect(player2).toBeInTheDocument();
-      expect(player3).toBeInTheDocument();
+      expect(player2Div).toHaveClass("col-start-2 row-start-1");
+      expect(player3Div).toHaveClass("col-start-3 row-start-2");
     });
 
     it("should apply correct positionClassName for 1 other player", () => {
@@ -326,23 +430,69 @@ describe("Table Component", () => {
         mockGamePlayers[1], // Player 2 (Order 2)
       ];
 
+      const mockSecretsP2 = mockSecrets.filter(
+        (s) => s.player_id === MOCK_PLAYER_ID_2,
+      );
+      const mockSetsP2 = mockSets.filter(
+        (s) => s.player_id === MOCK_PLAYER_ID_2,
+      );
+
       mockUseGame.mockReturnValue({
         ...mockUseGame(),
         players: mockGamePlayers2, // 1 solo "otro" jugador
-        secrets: mockSecrets.filter((s) => s.player_id === MOCK_PLAYER_ID_2),
-        sets: mockSets.filter((s) => s.player_id === MOCK_PLAYER_ID_2),
+        secrets: mockSecretsP2,
+        sets: mockSetsP2,
       });
+
+      // Mock específico para 1 jugador visible (posición 0)
+      mockGetVisiblePlayersWithGridPositions.mockImplementation(() =>
+        getMockVisiblePlayers(
+          mockCurrPlayer.id,
+          mockGamePlayers2,
+          mockSecretsP2,
+          mockSetsP2,
+        ).slice(0, 1),
+      );
 
       render(<Table {...defaultTableProps} />);
 
       const renderedPlayers = screen.getAllByTestId(/mock-player-/);
       expect(renderedPlayers).toHaveLength(1);
 
-      const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`); // Orden de renderizado: 0
+      const player2Div = screen.getByTestId(
+        `mock-player-${MOCK_PLAYER_ID_2}`,
+      ).parentElement;
 
-      // Position classes are now applied in the parent div, not passed as props
-      // Just verify the player is rendered
-      expect(player2).toBeInTheDocument();
+      // Debería usar la posición 0 del mock (col-start-2 row-start-1)
+      expect(player2Div).toHaveClass("col-start-2 row-start-1");
     });
+  });
+
+  it("should correctly pass isSelectable, isPlayerEvent, and isTargetSecret props to Player", () => {
+    const MOCK_TARGET = { id: "some-target-id" };
+
+    const customProps = {
+      ...defaultTableProps,
+      isEvent: true,
+      isTargetPlayer: true,
+      isTargetSecret: false,
+      target: MOCK_TARGET,
+
+      isSelectablePlayer: (player: GamePlayer) => player.order === 2,
+      isSelectableSecret: () => true,
+    } as any;
+
+    render(<Table {...customProps} />);
+
+    // Obtenemos las referencias a los elementos mockeados
+    const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`);
+    const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`);
+
+    expect(player2).toHaveAttribute("data-is-selectable-player", "true");
+
+    // Verificaciones adicionales de las otras props
+    expect(player3).toHaveAttribute("data-is-selectable-secret", "true");
+    expect(player3).toHaveAttribute("data-is-player-event", "true");
+    expect(player3).toHaveAttribute("data-is-target-secret", "false");
   });
 });

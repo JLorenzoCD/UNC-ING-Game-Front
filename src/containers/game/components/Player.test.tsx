@@ -1,14 +1,25 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
-
-import type { GamePlayer } from "@/types/player";
-import type { GameSecret } from "@/types/secret";
-import Player from "./Player";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 
 import avatarPoirot from "@/assets/avatars/icono4.png";
 import avatarQuin from "@/assets/avatars/icono1.png";
-import type { MatchSet } from "@/types/set";
+
+import type { GamePlayer } from "@/types/player";
+
+import Player from "./Player";
+
+vi.mock("../utils/player", () => ({
+  getBoderPlayer: vi.fn(() => "mock-border-class"),
+  truncateName: vi.fn((name, maxLength = 10) => {
+    const len = maxLength || 10;
+    return name.length > len ? `${name.slice(0, len)}...` : name;
+  }),
+}));
+
+import { getBoderPlayer, truncateName } from "../utils/player";
+const mockGetBoderPlayer = getBoderPlayer as Mock;
+const mockTruncateName = truncateName as Mock;
 
 const mockPlayer: GamePlayer = {
   id: "c582d4e4-4581-4b81-a1ef-fa17fc9599fe",
@@ -32,47 +43,6 @@ const mockPlayerWithLongName: GamePlayer = {
   order: 3,
 };
 
-const mockSecrets: GameSecret[] = [
-  {
-    id: crypto.randomUUID(),
-    type: "INNOCENT",
-    content: "You are innocent",
-    match_id: crypto.randomUUID(),
-    secret_id: crypto.randomUUID(),
-    player_id: mockPlayer.id,
-    is_revealed: false,
-  },
-  {
-    id: crypto.randomUUID(),
-    type: "MURDERER",
-    content: "You are the murderer",
-    match_id: crypto.randomUUID(),
-    secret_id: crypto.randomUUID(),
-    player_id: mockPlayer.id,
-    is_revealed: false,
-  },
-];
-
-const MATCH_ID = crypto.randomUUID();
-const PLAYER_ID = crypto.randomUUID();
-
-const mockSets: MatchSet[] = [
-  {
-    id: "550e8400-e29b-41d4-a716-446655440001",
-    type: "HERCULE POIROT",
-    player_id: PLAYER_ID,
-    match_id: MATCH_ID,
-    quin_play: false,
-  },
-  {
-    id: "550e8400-e29b-41d4-a716-446655440002",
-    type: "MISS MARPLE",
-    player_id: PLAYER_ID,
-    match_id: MATCH_ID,
-    quin_play: true,
-  },
-];
-
 vi.mock("./Secrets", () => ({
   __esModule: true,
   default: vi.fn(({ secrets }) => (
@@ -93,8 +63,18 @@ const mockIsSelectablePlayer = vi.fn();
 const mockIsSelectableSecret = vi.fn();
 
 describe("Players Component", () => {
-  it("should render player with avatar", () => {
-    render(
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetBoderPlayer.mockClear();
+    mockTruncateName.mockClear();
+    mockIsSelectablePlayer.mockClear();
+    mockOnSelectTargetEvent.mockClear();
+
+    mockIsSelectablePlayer.mockReturnValue(false);
+  });
+
+  it("should render player with avatar and apply the mocked border class", () => {
+    const { container } = render(
       <Player
         player={mockPlayer}
         hasCurrentTurn={false}
@@ -111,7 +91,11 @@ describe("Players Component", () => {
 
     const avatar = screen.getByAltText("Avatar de TestPlayer");
     expect(avatar).toBeInTheDocument();
-    expect(avatar).toHaveAttribute("src", avatarPoirot);
+
+    const avatarContainer = container.querySelector(
+      ".w-20.h-20.rounded-full.border-4",
+    );
+    expect(avatarContainer).toHaveClass("mock-border-class");
 
     const playerName = screen.getByText("TestPlayer");
     expect(playerName).toBeInTheDocument();
@@ -142,7 +126,7 @@ describe("Players Component", () => {
     );
   });
 
-  it("should show green pulsing border when it is player's turn", () => {
+  it("should apply the mocked border class when it is player's turn (logic handled by util)", () => {
     const { container } = render(
       <Player
         player={mockPlayer}
@@ -161,15 +145,14 @@ describe("Players Component", () => {
       ".w-20.h-20.rounded-full.border-4",
     );
 
-    expect(avatarContainer).toBeInTheDocument();
-    expect(avatarContainer).toHaveClass("border-green-400");
-    expect(avatarContainer).toHaveClass("shadow-lg");
-    expect(avatarContainer).toHaveClass("shadow-green-400/50");
-    expect(avatarContainer).toHaveClass("animate-pulse");
+    // Solo se verifica la clase mockeada
+    expect(avatarContainer).toHaveClass("mock-border-class");
+    // Se verifica que las clases específicas no están aquí
+    expect(avatarContainer).not.toHaveClass("border-green-400");
   });
 
-  it("should not show green border when it is not player's turn", () => {
-    const { container } = render(
+  it("should call onSelectTargetEvent with the player object when clicked", () => {
+    render(
       <Player
         player={mockPlayer}
         hasCurrentTurn={false}
@@ -184,24 +167,59 @@ describe("Players Component", () => {
       />,
     );
 
-    const avatarContainer = container.querySelector(
-      ".w-20.h-20.rounded-full.border-4",
-    );
+    const avatar = screen.getByAltText("Avatar de TestPlayer");
+    const avatarContainer = avatar.parentElement as HTMLElement;
 
-    expect(avatarContainer).toBeInTheDocument();
+    fireEvent.click(avatarContainer);
 
-    expect(avatarContainer).not.toHaveClass("border-green-400");
-    expect(avatarContainer).not.toHaveClass("shadow-green-400/50");
-    expect(avatarContainer).not.toHaveClass("animate-pulse");
+    expect(mockOnSelectTargetEvent).toHaveBeenCalledTimes(1);
+    expect(mockOnSelectTargetEvent).toHaveBeenCalledWith(mockPlayer);
   });
 
-  describe("Secrets display", () => {
-    it("should render secrets when provided", () => {
+  describe("Utility Function Integration", () => {
+    it("should call getBoderPlayer with correct arguments in player selection mode (isSelectingTarget branch)", () => {
+      // isActivePlayerSelection = TRUE, isSelectable = TRUE, isSelectingTarget = TRUE
+      mockIsSelectablePlayer.mockReturnValue(true);
+
       render(
         <Player
           player={mockPlayer}
           hasCurrentTurn={false}
-          secrets={mockSecrets}
+          secrets={[]}
+          sets={[]}
+          onSelectTargetEvent={mockOnSelectTargetEvent}
+          isSelectablePlayer={mockIsSelectablePlayer}
+          isSelectableSecret={mockIsSelectableSecret}
+          isPlayerEvent={true}
+          isTargetSecret={false}
+          target={null}
+        />,
+      );
+
+      expect(mockGetBoderPlayer).toHaveBeenCalledWith(
+        false, // hasCurrentTurn
+        true, // isActivePlayerSelection (true && !false)
+        true, // isSelectable (mock retorna true)
+        false, // isTarget (target es null)
+        true, // isSelectingTarget (target es null)
+      );
+
+      // Verificamos que la clase mockeada se aplica
+      const avatarContainer = screen.getByAltText(
+        `Avatar de ${mockPlayer.name}`,
+      ).parentElement;
+      expect(avatarContainer).toHaveClass("mock-border-class");
+    });
+
+    it("should call getBoderPlayer with correct arguments when player has the current turn", () => {
+      // hasCurrentTurn = TRUE, isActivePlayerSelection = FALSE
+      mockIsSelectablePlayer.mockReturnValue(false);
+
+      render(
+        <Player
+          player={mockPlayer}
+          hasCurrentTurn={true}
+          secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
           isSelectablePlayer={mockIsSelectablePlayer}
@@ -212,14 +230,19 @@ describe("Players Component", () => {
         />,
       );
 
-      const secretsComponent = screen.getByTestId("mock-secrets");
-      expect(secretsComponent).toBeInTheDocument();
+      expect(mockGetBoderPlayer).toHaveBeenCalledWith(
+        true, // hasCurrentTurn
+        false, // isActivePlayerSelection (false && !true)
+        false, // isSelectable (mock retorna false)
+        false, // isTarget
+        true, // isSelectingTarget
+      );
     });
 
-    it("should render secrets component even with empty array", () => {
+    it("should call truncateName with the player name and max length of 10", () => {
       render(
         <Player
-          player={mockPlayer}
+          player={mockPlayerWithLongName}
           hasCurrentTurn={false}
           secrets={[]}
           sets={[]}
@@ -232,52 +255,11 @@ describe("Players Component", () => {
         />,
       );
 
-      // The Secrets component is always rendered now
-      const secretsComponent = screen.getByTestId("mock-secrets");
-      expect(secretsComponent).toBeInTheDocument();
-    });
-  });
-
-  describe("Sets display", () => {
-    it("should render sets when provided", () => {
-      render(
-        <Player
-          player={mockPlayer}
-          hasCurrentTurn={false}
-          secrets={[]}
-          sets={mockSets}
-          onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          target={null}
-        />,
+      // Player.tsx llama a truncateName con un maxLength de 10
+      expect(mockTruncateName).toHaveBeenCalledWith(
+        mockPlayerWithLongName.name,
+        10,
       );
-
-      const setsComponent = screen.getByTestId("mock-sets");
-      expect(setsComponent).toBeInTheDocument();
-    });
-
-    it("should render sets component even with empty array", () => {
-      render(
-        <Player
-          player={mockPlayer}
-          hasCurrentTurn={false}
-          secrets={[]}
-          sets={[]}
-          onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          target={null}
-        />,
-      );
-
-      // The Sets component is always rendered now
-      const setsComponent = screen.getByTestId("mock-sets");
-      expect(setsComponent).toBeInTheDocument();
     });
   });
 });

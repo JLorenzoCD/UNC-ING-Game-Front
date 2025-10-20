@@ -9,11 +9,6 @@ import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
-import {
-  isCardsValidSet,
-  isSetActionRevealSecret,
-  isSetTargetOneSecret,
-} from "./components/utils";
 import type {
   RegularAndDiscardEventPayload,
   LookIntoTheAshesEventPayload,
@@ -26,6 +21,7 @@ import Hand from "./components/Hand";
 import Sets from "./components/Sets";
 import Table from "./components/Table";
 import Draft from "./components/Draft";
+import Result from "./components/Result";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
@@ -33,33 +29,28 @@ import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
 import { useHand } from "./hooks/useHand";
+import { useSetEvent } from "./hooks/useSetEvent";
 
 type EventStep = "select_secret" | "select_player" | "select_set" | null;
 
 export const DRAFT_SIZE = 3;
-
-interface SetEvent {
-  isSetEvent: boolean;
-  isValidSet: boolean;
-  isTargetPlayer: boolean;
-  isSelectedTargetSet: boolean;
-  target: GamePlayer | GameSecret | null;
-}
-
-const defaultStateSetEvent: SetEvent = {
-  isSetEvent: false,
-  isValidSet: false,
-  isTargetPlayer: true,
-  isSelectedTargetSet: false,
-  target: null,
-};
 
 export default function GameContainer() {
   const { player } = usePlayer();
 
   const { httpService } = useHttpService();
 
-  const { match, secrets, players, cards, sets } = useGame();
+  const {
+    match,
+    secrets,
+    players,
+    cards,
+    result,
+    sets,
+    isPlayerFinishAction,
+    playerFinishActionTurn,
+    playerSelectsOneOfHisSecrets,
+  } = useGame();
 
   const {
     clearSelectedCards,
@@ -99,7 +90,24 @@ export default function GameContainer() {
     isEventDiscard: false,
   });
 
-  const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
+  const {
+    playSet,
+    isSetEvent,
+    isTargetPlayerSetEvent,
+    isTargetSecretSetEvent,
+    isSetEventButtonDisabled,
+    isStolenSecretSetEvent,
+    setTargetSet,
+    executeSetActionToTarget,
+    executeFinishTurnSetEvent,
+    isPlayerSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
+    isCurrPlayerSecretSelectableForSetEvent,
+    setEventToggleDisableButtonPlaySet,
+    getTargetSetEvent,
+    getSetCards,
+    clearSetEvent,
+  } = useSetEvent();
 
   const isEndEventDisabled = useMemo(() => {
     if (!currentEventCard) return true;
@@ -136,22 +144,7 @@ export default function GameContainer() {
 
   // -- Utilidades --
   const handleClickSetEvent = () => {
-    if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
-    else if (setEvent.isValidSet && !setEvent.isSetEvent) {
-      const isTargetPlayer = !isSetTargetOneSecret(
-        Object.values(selectedCards),
-      );
-
-      setSetEvent((prev) => ({
-        ...prev,
-        isValidSet: false,
-        isSetEvent: true,
-        isSelectedTargetSet: false,
-        target: null,
-        isTargetPlayer,
-      }));
-      return;
-    }
+    playSet(Object.values(selectedCards));
   };
 
   const handleSelectTargetEvent = (
@@ -181,57 +174,29 @@ export default function GameContainer() {
       setSelectedTargetSet(target as MatchSet);
       return;
     }
+    if (isSetEvent) setTargetSet(target as GamePlayer | GameSecret);
+  };
 
-    // Eventos de sets
-    const isSetEventPlayerTarget =
-      setEvent.isSetEvent && setEvent.isTargetPlayer && "avatar" in target;
-    const isSetEventSecretTarget =
-      setEvent.isSetEvent && !setEvent.isTargetPlayer && "secret_id" in target;
+  const handleSelectedPlayer = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
 
-    if (isSetEventPlayerTarget || isSetEventSecretTarget) {
-      setSetEvent((prev) => ({
-        ...prev,
-        target: target,
-        isSelectedTargetSet: true,
-      }));
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
     }
   };
 
-  const handleSelectedPlayer = () => {
-    if (
-      !setEvent.isSetEvent ||
-      !setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("avatar" in setEvent.target)
-    )
-      return;
+  const handleSelectedSecret = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
 
-    alert(
-      "El jugador " +
-        setEvent.target.name +
-        " fue seleccionado para revelar su secreto",
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
-  };
-
-  const handleSelectedSecret = () => {
-    if (
-      !setEvent.isSetEvent ||
-      setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("secret_id" in setEvent.target)
-    )
-      return;
-
-    alert(
-      "Se selecciono el secreto con id: " +
-        setEvent.target.id +
-        ", fue seleccionado para revelar su secreto. Este es " +
-        setEvent.target.type,
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
+    }
   };
 
   const isSelectablePlayer = (checkPlayer: GamePlayer) => {
@@ -248,14 +213,7 @@ export default function GameContainer() {
     }
 
     // Se deben de poner todos los posibles eventos validos
-    if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
-
-    const secretsPlayer = secrets.filter((s) => s.player_id === checkPlayer.id);
-    const isAllSecretsReveled = secretsPlayer.every((s) => s.is_revealed);
-
-    // Eventos de seleccionar jugador por set para revelar secreto
-    if (setEvent.isSetEvent && setEvent.isTargetPlayer && !isAllSecretsReveled)
-      return true;
+    if (isSetEvent) return isPlayerSelectableForSetEvent(checkPlayer);
 
     return false;
   };
@@ -267,36 +225,34 @@ export default function GameContainer() {
     ) {
       return secret.is_revealed;
     }
-    // Se deben de poner todos los posibles eventos validos
-    if (!setEvent.isSetEvent || setEvent.isTargetPlayer) return false;
 
-    if (secret.player_id === player?.id) return false;
+    return false;
+  };
 
-    try {
-      const isActionRevealSecret = isSetActionRevealSecret(
-        Object.values(selectedCards),
-      );
+  const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
+    if (isSetEvent) return isOtherPlayerSecretSelectableForSetEvent(secret);
 
-      // Eventos de seleccionar secreto a revelarlo por jugar set
-      if (
-        setEvent.isSetEvent &&
-        !setEvent.isTargetPlayer &&
-        isActionRevealSecret &&
-        !secret.is_revealed
-      )
-        return true;
+    return false;
+  };
 
-      // Eventos de seleccionar secreto a des-revelar por jugar set (Pyne)
-      if (
-        setEvent.isSetEvent &&
-        !setEvent.isTargetPlayer &&
-        !isActionRevealSecret &&
-        secret.is_revealed
-      )
-        return true;
-    } catch (error) {
-      console.error(error);
-    }
+  const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
+    if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return isCurrPlayerSecretSelectableForSetEvent(secret);
+
+    return false;
+  };
+
+  const isTargetPlayerEvent = () => {
+    if (isTargetPlayerSetEvent) return true;
+    // Other events
+
+    return false;
+  };
+
+  const isTargetSecretEvent = () => {
+    if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return true;
+    // Other events
 
     return false;
   };
@@ -445,7 +401,7 @@ export default function GameContainer() {
   // -- Manejadores --
 
   const handleClickDiscardPile = () => {
-    if (setEvent.isSetEvent) return;
+    if (isSetEvent) return;
 
     if (cardsInDiscardPile.length === 0) return;
 
@@ -528,7 +484,7 @@ export default function GameContainer() {
   const handleSelectCard = (card: GameCard) => {
     if (discardModal.isOpen && !discardModal.isEventDiscard) return;
 
-    if (setEvent.isSetEvent) return;
+    if (isSetEvent) return;
 
     selectCard(card);
   };
@@ -555,6 +511,7 @@ export default function GameContainer() {
       setHasDiscardedCards(true);
 
       clearSelectedCards();
+      playerFinishActionTurn();
     } catch (error) {
       console.error("Failed to discard selected cards:", error);
 
@@ -621,11 +578,16 @@ export default function GameContainer() {
     }
 
     try {
-      // Si el jugador no ha descartado cartas, se fuerza
+      // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
-      if (!hasDiscardedCards && currentEventCard === null) {
+      if (
+        !(hasDiscardedCards || isPlayerFinishAction) &&
+        currentEventCard === null
+      ) {
         await mandatoryDiscard();
       }
+
+      if (isStolenSecretSetEvent) await executeFinishTurnSetEvent();
 
       await httpService.putPassTurn(match.id);
 
@@ -640,7 +602,7 @@ export default function GameContainer() {
       console.error("Failed to finish turn:", error);
     }
 
-    setSetEvent(defaultStateSetEvent);
+    clearSetEvent();
   };
 
   const handlePlayEvent = async () => {
@@ -829,25 +791,8 @@ export default function GameContainer() {
   useEffect(() => {
     if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
-    const isValidSet = isCardsValidSet(Object.values(selectedCards));
-    if (isValidSet) {
-      const otherSecrets = secrets.filter(
-        (secret) => secret.player_id !== player?.id,
-      );
-
-      const allSecretReveled = otherSecrets.every(
-        (secret) => secret.is_revealed,
-      );
-      const isActionRevealSecret = isSetActionRevealSecret(
-        Object.values(selectedCards),
-      );
-
-      if (isActionRevealSecret && allSecretReveled) return;
-      if (!isActionRevealSecret && !allSecretReveled) return;
-    }
-
-    setSetEvent((prev) => ({ ...prev, isValidSet }));
-  }, [discardModal, selectedCards, secrets, player]);
+    setEventToggleDisableButtonPlaySet(Object.values(selectedCards));
+  }, [discardModal, selectedCards, setEventToggleDisableButtonPlaySet]);
 
   return (
     <>
@@ -880,17 +825,19 @@ export default function GameContainer() {
             }
             onSelectTargetEvent={handleSelectTargetEvent}
             isSelectablePlayer={isSelectablePlayer}
-            isSelectableSecret={isSelectableSecret}
+            isSelectableSecret={
+              isSelectableSecret || isOtherPlayersSecretSelectable
+            }
             isSelectableSet={isSelectableSet}
-            isEvent={setEvent.isSetEvent || currentEventCard !== null}
+            isEvent={isSetEvent || currentEventCard !== null}
             isTargetPlayer={
-              setEvent.isTargetPlayer ||
+              isTargetPlayerEvent() ||
               currentEventCard?.name === "CARDS OFF THE TABLE" ||
               (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
                 currentEventStep === "select_player")
             }
             isTargetSecret={
-              !setEvent.isTargetPlayer ||
+              isTargetPlayerEvent() ||
               (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
                 currentEventStep === "select_secret")
             }
@@ -899,7 +846,7 @@ export default function GameContainer() {
               currentEventStep === "select_set"
             }
             target={
-              setEvent.target ||
+              getTargetSetEvent() ||
               selectedTargetPlayer ||
               selectedTargetSecret ||
               selectedTargetSet
@@ -910,7 +857,10 @@ export default function GameContainer() {
             <div className="flex flex-col gap-y-3">
               <Secrets
                 secrets={playerSecrets}
-                isSelectableSecret={isSelectableSecret}
+                isSelectableSecret={isCurrPlayersSecretSelectable}
+                isTargetSecret={isTargetSecretEvent()}
+                onSelectTargetEvent={handleSelectTargetEvent}
+                target={getTargetSetEvent()}
               />
               <Sets sets={playerSets} />
             </div>
@@ -934,19 +884,13 @@ export default function GameContainer() {
               isDisabled={!isPlayerTurn}
               isDisabledEvent={!isPlayable}
               isDisabledEndEvent={isEndEventDisabled}
-              isSetButtonDisabled={
-                !(setEvent.isValidSet && !setEvent.isSetEvent)
-              }
-              isSelectionPlayerEvent={
-                setEvent.isSetEvent && setEvent.isTargetPlayer
-              }
-              isSelectionSecretEvent={
-                setEvent.isSetEvent && !setEvent.isTargetPlayer
-              }
               isSelectionSetEvent={
                 currentEventCard?.name === "ANOTHER VICTIM" &&
                 currentEventStep === "select_set"
               }
+              isSetButtonDisabled={isSetEventButtonDisabled}
+              isSelectionPlayerEvent={isTargetPlayerEvent()}
+              isSelectionSecretEvent={isTargetSecretEvent()}
             />
           </div>
         </div>
@@ -961,6 +905,8 @@ export default function GameContainer() {
         isEventDiscard={discardModal.isEventDiscard}
         discardedCards={cardsInDiscardPile}
       />
+
+      <Result result={result} />
     </>
   );
 }
