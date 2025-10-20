@@ -35,9 +35,10 @@ export interface GameContextType {
 
 interface CardEventPayload {
   type: string;
-  card_to_discard: string;
-  cards_to_update: GameCard[];
-  secrets_to_update?: GameSecret[];
+  discarded_card_event: GameCard;
+  updated_match_cards: GameCard[];
+  updated_secret?: GameSecret;
+  updated_set?: MatchSet;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -150,7 +151,10 @@ export default function GameContextProvider({
     };
 
     const handleCardEvent = (payload: CardEventPayload) => {
-      if (payload.cards_to_update && payload.cards_to_update.length > 0) {
+      if (
+        payload.updated_match_cards &&
+        payload.updated_match_cards.length > 0
+      ) {
         setCards((current) => {
           const updatedCards = [...current];
 
@@ -158,16 +162,11 @@ export default function GameContextProvider({
           if (payload.type === "DELAY THE MURDERER ESCAPE") {
             // 1. Marcar la carta del evento como descartada
             const eventCardIndex = updatedCards.findIndex(
-              (c) => c.id === payload.card_to_discard,
+              (c) => c.id === payload.discarded_card_event.id,
             );
             if (eventCardIndex !== -1) {
-              updatedCards[eventCardIndex] = {
-                ...updatedCards[eventCardIndex],
-                is_discarded: true,
-                discarded_at: new Date(),
-                player_id: null,
-              };
-            }
+              updatedCards[eventCardIndex] = payload.discarded_card_event;
+            } // <-- Aquí se eliminó el ';'
 
             // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
             const regularDeckCards = updatedCards.filter(
@@ -179,7 +178,9 @@ export default function GameContextProvider({
 
             // 4. Las cartas actualizadas van después de las primeras 3
             // Primero quitamos las cartas que vamos a actualizar de su posición actual
-            const cardsToUpdateIds = payload.cards_to_update.map((c) => c.id);
+            const cardsToUpdateIds = payload.updated_match_cards.map(
+              (c) => c.id,
+            );
             const cardsWithoutUpdated = updatedCards.filter(
               (card) => !cardsToUpdateIds.includes(card.id),
             );
@@ -195,35 +196,48 @@ export default function GameContextProvider({
 
             const finalCards = [
               ...cardsWithoutUpdated.slice(0, insertPosition),
-              ...payload.cards_to_update,
+              ...payload.updated_match_cards,
               ...cardsWithoutUpdated.slice(insertPosition),
             ];
 
             return finalCards;
           }
 
-          payload.cards_to_update.forEach((newCard) => {
-            const index = updatedCards.findIndex((c) => c.id === newCard.id);
+          if (payload.updated_match_cards) {
+            payload.updated_match_cards.forEach((newCard) => {
+              const index = updatedCards.findIndex((c) => c.id === newCard.id);
+              if (index !== -1) {
+                updatedCards[index] = newCard;
+              }
+            });
+          }
+
+          // 8. AÑADIR: Actualizar también la carta de evento que se descartó
+          // (Esto es lo que descarta "LOOK INTO THE ASHES" de la mano del jugador)
+          if (payload.discarded_card_event) {
+            const index = updatedCards.findIndex(
+              (c) => c.id === payload.discarded_card_event.id,
+            );
             if (index !== -1) {
-              updatedCards[index] = newCard;
+              updatedCards[index] = payload.discarded_card_event;
             }
-          });
+          }
           return updatedCards;
         });
       }
-      if (payload.secrets_to_update && payload.secrets_to_update.length > 0) {
+
+      if (payload.updated_secret) {
         setSecrets((current) => {
           const updatedSecrets = [...current];
-
-          payload.secrets_to_update?.forEach((newSecret) => {
+          const newSecret = payload.updated_secret;
+          if (newSecret) {
             const index = updatedSecrets.findIndex(
               (s) => s.id === newSecret.id,
             );
             if (index !== -1) {
               updatedSecrets[index] = newSecret;
             }
-          });
-
+          }
           return updatedSecrets;
         });
       }

@@ -29,7 +29,7 @@ const BACKEND_SOCKETS_EVENTS = {
   CARDS: "cards",
   MATCH: "match",
   LOBBY_JOIN: "player_join",
-  CARD_EVENT: "cardOfEvent",
+  CARD_EVENT: "card_event",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };
