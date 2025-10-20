@@ -10,19 +10,21 @@ import {
 import { useParams } from "react-router";
 
 import { isUUID } from "@/utils";
+import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
-import type { Match } from "@/types/match";
+import type { Match, MatchResult } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 import type { MatchSet } from "@/types/set";
+import type { EventMatchCompletedPayload } from "@/types/ws";
 
 import { useHttpService } from "./HttpServiceContext";
 import { useWebSocketService } from "./WebSocketServiceContext";
-import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
 export interface GameContextType {
   match: Match | null;
+  result: MatchResult | null;
   cards: GameCard[];
   secrets: GameSecret[];
   players: GamePlayer[];
@@ -35,6 +37,7 @@ export interface GameContextType {
 
 const GameContext = createContext<GameContextType>({
   match: null,
+  result: null,
   cards: [],
   secrets: [],
   players: [],
@@ -63,6 +66,8 @@ export default function GameContextProvider({
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   const [match, setMatch] = useState<Match | null>(null);
+  const [result, setResult] = useState<MatchResult | null>(null);
+
   const [cards, setCards] = useState<GameCard[]>([]);
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
@@ -111,7 +116,7 @@ export default function GameContextProvider({
   useEffect(() => {
     if (!wsService || !isConnected || !matchId || !isUUID(matchId)) return;
 
-    const handleUpdateCards = (cards: GameCard[]) => {
+    const handleEventCards = (cards: GameCard[]) => {
       setCards((current) => {
         const updatedCards = [...current];
 
@@ -131,7 +136,7 @@ export default function GameContextProvider({
       });
     };
 
-    const handleUpdateMatchTurn = (match: Match) => {
+    const handleEventTurn = (match: Match) => {
       setMatch((current) => {
         if (!current) return match;
 
@@ -142,12 +147,33 @@ export default function GameContextProvider({
       });
     };
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
-    wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+    const handleEventMatchCompleted = (payload: EventMatchCompletedPayload) => {
+      setMatch((current) => {
+        if (!current) return current;
+
+        return {
+          ...current,
+          status: "COMPLETED",
+        };
+      });
+
+      setResult(payload);
+    };
+
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+    wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+    wsService.on(
+      BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
+      handleEventMatchCompleted,
+    );
 
     return () => {
-      wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleUpdateCards);
-      wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleUpdateMatchTurn);
+      wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+      wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
+        handleEventMatchCompleted,
+      );
     };
   }, [matchId, wsService, isConnected]);
 
@@ -156,6 +182,7 @@ export default function GameContextProvider({
   const contextValue: GameContextType = useMemo(
     () => ({
       match,
+      result,
       cards,
       secrets,
       players,
@@ -165,7 +192,7 @@ export default function GameContextProvider({
       hasError,
       error,
     }),
-    [match, cards, secrets, players, sets, isLoading, hasError, error],
+    [match, result, cards, secrets, players, sets, isLoading, hasError, error],
   );
 
   return (

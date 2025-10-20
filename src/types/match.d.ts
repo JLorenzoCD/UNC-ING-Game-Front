@@ -1,4 +1,5 @@
 import type { UUID } from "./common";
+import type { EventMatchCompletedPayload } from "./ws";
 
 export type MatchStatus = "WAITING" | "IN_PROGRESS" | "COMPLETED";
 
@@ -52,3 +53,5 @@ export type MatchCreateInput = Pick<
 >;
 
 export type MatchWithPlayerCount = Match & { current_player_count: number };
+
+export type MatchResult = EventMatchCompletedPayload;
