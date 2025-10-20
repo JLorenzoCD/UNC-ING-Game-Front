@@ -60,7 +60,7 @@ describe("HttpServiceContext", () => {
     });
 
     it("provides context value after initialization", () => {
-      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE);
+      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE as any);
 
       renderWithProvider(<TestServiceComponent />);
 
@@ -78,7 +78,7 @@ describe("HttpServiceContext", () => {
     });
 
     it("can be used inside provider", () => {
-      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE);
+      vi.mocked(createHttpService).mockReturnValue(MOCK_HTTP_SERVICE as any);
 
       const { result } = renderHook(() => useHttpService(), {
         wrapper: ({ children }) => (

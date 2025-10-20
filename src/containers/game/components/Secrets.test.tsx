@@ -71,6 +71,7 @@ describe("Secrets", () => {
         <Secrets
           secrets={mockSecrets}
           isSelectableSecret={mockIsSelectableSecret}
+          target={null}
         />,
       );
 
@@ -93,6 +94,7 @@ describe("Secrets", () => {
         <Secrets
           secrets={mockSecrets}
           isSelectableSecret={mockIsSelectableSecret}
+          target={null}
         />,
       );
 

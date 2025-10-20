@@ -56,7 +56,7 @@ const mockSecrets: GameSecret[] = [
 const MATCH_ID = crypto.randomUUID();
 const PLAYER_ID = crypto.randomUUID();
 
-const mockSets: MatchSet[] = [
+const mockSets = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
     type: "HERCULE POIROT",
@@ -71,7 +71,7 @@ const mockSets: MatchSet[] = [
     match_id: MATCH_ID,
     quin_play: true,
   },
-];
+] as unknown as MatchSet[];
 
 vi.mock("./Secrets", () => ({
   __esModule: true,
