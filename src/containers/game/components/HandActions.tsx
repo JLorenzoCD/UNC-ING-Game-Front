@@ -14,6 +14,7 @@ interface HandActionsProps {
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
   isDisabledEndEvent: boolean; // Indica si el boton para teminar eveto esta habilitado
+  isSelectionSetEvent: boolean; // Indica si se esta seleccionado un set
 }
 
 export default function HandActions({
@@ -28,13 +29,17 @@ export default function HandActions({
   isSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
+  isSelectionSetEvent,
   isDisabledEvent,
   isDisabledEndEvent,
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
   const shouldDisableOption =
-    isDisabled || isSelectionPlayerEvent || isSelectionSecretEvent;
+    isDisabled ||
+    isSelectionPlayerEvent ||
+    isSelectionSecretEvent ||
+    isSelectionSetEvent;
 
   return (
     <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
@@ -65,11 +70,11 @@ export default function HandActions({
       </Button>
 
       <Button onClick={onPlayEvent} disabled={isDisabledEvent}>
-        Play Event
+        Play event
       </Button>
 
       <Button onClick={onEndEvent} disabled={isDisabledEndEvent}>
-        Apply Effect
+        Apply effect
       </Button>
     </div>
   );

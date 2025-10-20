@@ -943,6 +943,10 @@ export default function GameContainer() {
               isSelectionSecretEvent={
                 setEvent.isSetEvent && !setEvent.isTargetPlayer
               }
+              isSelectionSetEvent={
+                currentEventCard?.name === "ANOTHER VICTIM" &&
+                currentEventStep === "select_set"
+              }
             />
           </div>
         </div>
