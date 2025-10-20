@@ -30,7 +30,9 @@ vi.mock("@/assets/13-detective_tuppenceberesford.png", () => ({
 // El resto de imágenes no es necesario mockearlas si no se testean sus rutas específicas.
 
 vi.mock("@remixicon/react", () => ({
-  RiVipCrown2Fill: vi.fn(() => <div data-testid="mock-crown" />),
+  RiVipCrown2Fill: vi.fn(({ color }) => (
+    <div data-testid="mock-crown" data-color={color} />
+  )),
 }));
 
 // Mock Data
@@ -40,7 +42,7 @@ const mockSetTypeTwoBeresford: SetType = "TWO BERESFORD";
 
 describe("Set Component", () => {
   it("should render a standard set type with correct image and without the crown icon", () => {
-    render(<Set type={mockSetTypeStandard} quin_play={false} />);
+    render(<Set type={mockSetTypeStandard} quin_play={false} quin_count={0} />);
 
     const setImage = screen.getByRole("img", {
       name: `set-type-${mockSetTypeStandard}`,
@@ -65,14 +67,32 @@ describe("Set Component", () => {
   });
 
   it("should render the crown icon when quin_play is true", () => {
-    render(<Set type={mockSetTypeQuinPlay} quin_play={true} />);
+    render(<Set type={mockSetTypeQuinPlay} quin_play={true} quin_count={1} />);
 
     // El componente mock de la corona SÍ esté presente
     expect(screen.getByTestId("mock-crown")).toBeInTheDocument();
   });
 
+  it("should render the crown icon with 'peru' color when quin_play is true and quin_count is 1", () => {
+    render(<Set type={mockSetTypeQuinPlay} quin_play={true} quin_count={1} />);
+
+    const crownIcon = screen.getByTestId("mock-crown");
+    expect(crownIcon).toBeInTheDocument();
+    expect(crownIcon).toHaveAttribute("data-color", "peru");
+  });
+
+  it("should render the crown icon with 'gold' color when quin_play is true and quin_count is greater than 1", () => {
+    render(<Set type={mockSetTypeQuinPlay} quin_play={true} quin_count={2} />);
+
+    const crownIcon = screen.getByTestId("mock-crown");
+    expect(crownIcon).toBeInTheDocument();
+    expect(crownIcon).toHaveAttribute("data-color", "gold");
+  });
+
   it("should render Two_Beresford type with two cards and the correct container spacing", () => {
-    render(<Set type={mockSetTypeTwoBeresford} quin_play={false} />);
+    render(
+      <Set type={mockSetTypeTwoBeresford} quin_play={false} quin_count={0} />,
+    );
 
     expect(screen.getAllByTestId("set")).toHaveLength(2);
 
