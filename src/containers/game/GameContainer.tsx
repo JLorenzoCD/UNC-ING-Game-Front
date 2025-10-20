@@ -756,6 +756,8 @@ export default function GameContainer() {
         eventPayload = {
           target_set_id: selectedTargetSet?.id,
         } as AnotherVictimEventPayload;
+        setSelectedTargetSet(null);
+        setCurrentEventStep(null);
         break;
       }
 
@@ -837,7 +839,7 @@ export default function GameContainer() {
                 currentEventStep === "select_player")
             }
             isTargetSecret={
-              isTargetPlayerEvent() ||
+              isTargetSecretEvent() ||
               (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
                 currentEventStep === "select_secret")
             }

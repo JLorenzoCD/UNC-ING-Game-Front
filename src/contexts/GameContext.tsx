@@ -262,6 +262,20 @@ export default function GameContextProvider({
           return updatedSecrets;
         });
       }
+
+      if (payload.updated_set) {
+        setSets((current) => {
+          const updatedSets = [...current];
+          const newSet = payload.updated_set;
+          if (newSet) {
+            const index = updatedSets.findIndex((s) => s.id === newSet.id);
+            if (index !== -1) {
+              updatedSets[index] = newSet;
+            }
+          }
+          return updatedSets;
+        });
+      }
     };
 
     const handleUpdateSets = (set: MatchSet & { deleted_cards: UUID[] }) => {
