@@ -18,6 +18,7 @@ import Hand from "./components/Hand";
 import Sets from "./components/Sets";
 import Table from "./components/Table";
 import Draft from "./components/Draft";
+import Result from "./components/Result";
 import Secrets from "./components/Secrets";
 import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
@@ -49,7 +50,7 @@ export default function GameContainer() {
 
   const { httpService } = useHttpService();
 
-  const { match, secrets, players, cards, sets } = useGame();
+  const { match, secrets, players, cards, result, sets } = useGame();
 
   const {
     clearSelectedCards,
@@ -592,6 +593,8 @@ export default function GameContainer() {
         isEventDiscard={discardModal.isEventDiscard}
         discardedCards={cardsInDiscardPile}
       />
+
+      <Result result={result} />
     </>
   );
 }
