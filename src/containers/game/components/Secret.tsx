@@ -11,44 +11,13 @@ import secretBack from "@/assets/05-secret_back.png";
 import type { GameSecret, Secret, SecretType } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 
+import { getBoderClass } from "../utils/secretClassName";
+
 const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
   INNOCENT: secretFront,
   ACCOMPLICE: secretAccomplice,
   MURDERER: secretMurder,
 };
-
-function getBoderClass(
-  isSelfRevealed: boolean,
-  isSelectionMode: boolean,
-  isSelectable: boolean,
-  isTarget: boolean,
-  isSelectingTarget: boolean,
-) {
-  let borderClass = "";
-  if (isSelfRevealed) {
-    borderClass =
-      "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31";
-  } else if (isSelectionMode) {
-    if (isSelectable) {
-      if (isTarget) {
-        // Secreto seleccionado
-        borderClass =
-          "border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-none";
-      } else if (isSelectingTarget) {
-        // Aún no se ha seleccionado y es una opción válida
-        borderClass =
-          "border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
-      } else {
-        borderClass = "border-2 border-transparent shadow-none brightness-50";
-      }
-    } else {
-      // NO Seleccionable (Atenuado)
-      borderClass = "border-2 border-transparent shadow-none brightness-50";
-    }
-  }
-
-  return borderClass;
-}
 
 interface SecretProps {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;

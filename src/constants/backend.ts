@@ -9,6 +9,7 @@ const BACKEND_ENDPOINTS = {
   GET_MATCH_CARDS: (matchId: UUID) => `/matches/${matchId}/cards`,
   GET_MATCH_SECRETS: (matchId: UUID) => `/matches/${matchId}/secrets`,
   GET_MATCH_PLAYERS: (matchId: UUID) => `/matches/${matchId}/players`,
+  GET_MATCH_SETS: (matchId: UUID) => `/matches/${matchId}/sets`,
 
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
@@ -20,6 +21,11 @@ const BACKEND_ENDPOINTS = {
   DISCARD_CARDS: (matchId: UUID) => `/matches/${matchId}/cards/discard`,
 
   PASS_TURN: (matchId: UUID) => `/matches/${matchId}/pass_turn`,
+
+  CREATE_AND_PLAY_SET: (matchId: UUID) => `/matches/${matchId}/sets`,
+
+  PUT_SECRET: (matchId: UUID, secretId: UUID) =>
+    `/matches/${matchId}/secrets/${secretId}`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
@@ -27,6 +33,9 @@ const BACKEND_SOCKETS_EVENTS = {
   CARDS: "cards",
   MATCH: "match",
   LOBBY_JOIN: "player_join",
+  SET: "set",
+  PLAYER_SECRET_REVEAL: "player_secret_reveal",
+  SECRET: "secret",
   MATCH_COMPLETED: "match_completed",
 } as const;
 

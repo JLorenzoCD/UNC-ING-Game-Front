@@ -40,6 +40,12 @@ export interface MatchSet {
    * @example false
    */
   quin_play: boolean;
+
+  /**
+   * Indica el numero de comodines jugados, de 0 a 2.
+   * @example 1
+   */
+  quin_count: 0 | 1 | 2;
 }
 
 export interface SetCreationData {

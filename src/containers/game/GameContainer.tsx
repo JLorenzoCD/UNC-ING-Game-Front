@@ -1,18 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import type { GameCard } from "@/types/card";
-import type { GamePlayer } from "@/types/player";
-import type { GameSecret } from "@/types/secret";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
-
-import {
-  isCardsValidSet,
-  isSetActionRevealSecret,
-  isSetTargetOneSecret,
-} from "./components/utils";
 
 import Hand from "./components/Hand";
 import Sets from "./components/Sets";
@@ -26,31 +17,30 @@ import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 
 import { useHand } from "./hooks/useHand";
+import { useSetEvent } from "./hooks/useSetEvent";
+
+import type { GameCard } from "@/types/card";
+import type { GamePlayer } from "@/types/player";
+import type { GameSecret } from "@/types/secret";
 
 export const DRAFT_SIZE = 3;
-
-interface SetEvent {
-  isSetEvent: boolean;
-  isValidSet: boolean;
-  isTargetPlayer: boolean;
-  isSelectedTargetSet: boolean;
-  target: GamePlayer | GameSecret | null;
-}
-
-const defaultStateSetEvent: SetEvent = {
-  isSetEvent: false,
-  isValidSet: false,
-  isTargetPlayer: true, // caso contrario el target es un secreto
-  isSelectedTargetSet: false,
-  target: null,
-};
 
 export default function GameContainer() {
   const { player } = usePlayer();
 
   const { httpService } = useHttpService();
 
-  const { match, secrets, players, cards, result, sets } = useGame();
+  const {
+    match,
+    secrets,
+    players,
+    cards,
+    result,
+    sets,
+    isPlayerFinishAction,
+    playerFinishActionTurn,
+    playerSelectsOneOfHisSecrets,
+  } = useGame();
 
   const {
     clearSelectedCards,
@@ -68,6 +58,7 @@ export default function GameContainer() {
     setHasDiscardedCards,
     setHasTakenCards,
     takeCards,
+    removeCard,
   } = useHand();
 
   const [discardModal, setDiscardModal] = useState({
@@ -75,128 +66,85 @@ export default function GameContainer() {
     isEventDiscard: false,
   });
 
-  const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
+  const {
+    playSet,
+    isSetEvent,
+    isTargetPlayerSetEvent,
+    isTargetSecretSetEvent,
+    isSetEventButtonDisabled,
+    isStolenSecretSetEvent,
+    setTargetSet,
+    executeSetActionToTarget,
+    executeFinishTurnSetEvent,
+    isPlayerSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
+    isCurrPlayerSecretSelectableForSetEvent,
+    setEventToggleDisableButtonPlaySet,
+    getTargetSetEvent,
+    getSetCards,
+    clearSetEvent,
+  } = useSetEvent();
 
   const handleClickSetEvent = () => {
-    if (!setEvent.isValidSet && !setEvent.isSetEvent) return;
-    else if (setEvent.isValidSet && !setEvent.isSetEvent) {
-      const isTargetPlayer = !isSetTargetOneSecret(
-        Object.values(selectedCards),
-      );
-
-      setSetEvent((prev) => ({
-        ...prev,
-        isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
-        isSetEvent: true,
-        isSelectedTargetSet: false,
-        target: null,
-        isTargetPlayer,
-      }));
-      return;
-    }
+    playSet(Object.values(selectedCards));
   };
 
   const handleSelectTargetEvent = (target: GamePlayer | GameSecret) => {
-    const isSetEventPlayerTarget =
-      setEvent.isSetEvent && setEvent.isTargetPlayer && "avatar" in target;
-    const isSetEventSecretTarget =
-      setEvent.isSetEvent && !setEvent.isTargetPlayer && "secret_id" in target;
+    if (isSetEvent) setTargetSet(target);
+  };
 
-    if (isSetEventPlayerTarget || isSetEventSecretTarget) {
-      setSetEvent((prev) => ({
-        ...prev,
-        target: target,
-        isSelectedTargetSet: true,
-      }));
+  const handleSelectedPlayer = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
+
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
     }
   };
 
-  const handleSelectedPlayer = () => {
-    if (
-      !setEvent.isSetEvent ||
-      !setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("avatar" in setEvent.target)
-    )
-      return;
+  const handleSelectedSecret = async () => {
+    if (isSetEvent) {
+      const ok = await executeSetActionToTarget();
+      if (!ok) return;
 
-    alert(
-      "El jugador " +
-        setEvent.target.name +
-        " fue seleccionado para revelar su secreto",
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
-  };
-
-  const handleSelectedSecret = () => {
-    if (
-      !setEvent.isSetEvent ||
-      setEvent.isTargetPlayer ||
-      setEvent.target === null ||
-      !("secret_id" in setEvent.target)
-    )
-      return;
-
-    alert(
-      "Se selecciono el secreto con id: " +
-        setEvent.target.id +
-        ", fue seleccionado para revelar su secreto. Este es " +
-        setEvent.target.type,
-    );
-
-    setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+      const setCards = getSetCards();
+      for (const card of setCards) removeCard(card);
+      playerFinishActionTurn();
+    }
   };
 
   const isSelectablePlayer = (player: GamePlayer) => {
-    // Se deben de poner todos los posibles eventos validos
-    if (!setEvent.isSetEvent && setEvent.isTargetPlayer) return false;
-
-    const secretsPlayer = secrets.filter((s) => s.player_id === player.id);
-    const isAllSecretsReveled = secretsPlayer.every((s) => s.is_revealed);
-
-    //* Validacion por eventos
-
-    // Eventos de seleccionar jugador por set para revelar secreto
-    if (setEvent.isSetEvent && setEvent.isTargetPlayer && !isAllSecretsReveled)
-      return true;
+    if (isSetEvent) return isPlayerSelectableForSetEvent(player);
 
     return false;
   };
 
-  const isSelectableSecret = (secret: GameSecret) => {
-    // Se deben de poner todos los posibles eventos validos
-    if (!setEvent.isSetEvent || setEvent.isTargetPlayer) return false;
+  const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
+    if (isSetEvent) return isOtherPlayerSecretSelectableForSetEvent(secret);
 
-    if (secret.player_id === player?.id) return false;
+    return false;
+  };
 
-    try {
-      const isActionRevealSecret = isSetActionRevealSecret(
-        Object.values(selectedCards),
-      );
+  const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
+    if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return isCurrPlayerSecretSelectableForSetEvent(secret);
 
-      //* Validacion por eventos
+    return false;
+  };
 
-      // Eventos de seleccionar secreto a revelarlo por jugar set
-      if (
-        setEvent.isSetEvent &&
-        !setEvent.isTargetPlayer &&
-        isActionRevealSecret &&
-        !secret.is_revealed
-      )
-        return true;
+  const isTargetPlayerEvent = () => {
+    if (isTargetPlayerSetEvent) return true;
+    // Other events
 
-      // Eventos de seleccionar secreto a des-revelar por jugar set (Pyne)
-      if (
-        setEvent.isSetEvent &&
-        !setEvent.isTargetPlayer &&
-        !isActionRevealSecret &&
-        secret.is_revealed
-      )
-        return true;
-    } catch (error) {
-      console.error(error);
-    }
+    return false;
+  };
+
+  const isTargetSecretEvent = () => {
+    if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+      return true;
+    // Other events
 
     return false;
   };
@@ -290,7 +238,7 @@ export default function GameContainer() {
   // -- Manejadores --
 
   const handleClickDiscardPile = () => {
-    if (setEvent.isSetEvent) return;
+    if (isSetEvent) return;
 
     if (cardsInDiscardPile.length === 0) return;
 
@@ -370,7 +318,7 @@ export default function GameContainer() {
   const handleSelectCard = (card: GameCard) => {
     if (discardModal.isOpen && !discardModal.isEventDiscard) return;
 
-    if (setEvent.isSetEvent) return;
+    if (isSetEvent) return;
 
     selectCard(card);
   };
@@ -397,6 +345,7 @@ export default function GameContainer() {
       setHasDiscardedCards(true);
 
       clearSelectedCards();
+      playerFinishActionTurn();
     } catch (error) {
       console.error("Failed to discard selected cards:", error);
 
@@ -463,11 +412,13 @@ export default function GameContainer() {
     }
 
     try {
-      // Si el jugador no ha descartado cartas, se fuerza
+      // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
-      if (!hasDiscardedCards) {
+      if (!(hasDiscardedCards || isPlayerFinishAction)) {
         await mandatoryDiscard();
       }
+
+      if (isStolenSecretSetEvent) await executeFinishTurnSetEvent();
 
       await httpService.putPassTurn(match.id);
 
@@ -480,32 +431,15 @@ export default function GameContainer() {
       console.error("Failed to finish turn:", error);
     }
 
-    setSetEvent(defaultStateSetEvent);
+    clearSetEvent();
   };
 
   // Al seleccionar cartas de mano, se revisa si son un set de detectives validos
   useEffect(() => {
     if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
-    const isValidSet = isCardsValidSet(Object.values(selectedCards));
-    if (isValidSet) {
-      const otherSecrets = secrets.filter(
-        (secret) => secret.player_id !== player?.id,
-      );
-
-      const allSecretReveled = otherSecrets.every(
-        (secret) => secret.is_revealed,
-      );
-      const isActionRevealSecret = isSetActionRevealSecret(
-        Object.values(selectedCards),
-      );
-
-      if (isActionRevealSecret && allSecretReveled) return;
-      if (!isActionRevealSecret && !allSecretReveled) return;
-    }
-
-    setSetEvent((prev) => ({ ...prev, isValidSet }));
-  }, [discardModal, selectedCards, secrets, player]);
+    setEventToggleDisableButtonPlaySet(Object.values(selectedCards));
+  }, [discardModal, selectedCards, setEventToggleDisableButtonPlaySet]);
 
   return (
     <>
@@ -538,11 +472,11 @@ export default function GameContainer() {
             }
             onSelectTargetEvent={handleSelectTargetEvent}
             isSelectablePlayer={isSelectablePlayer}
-            isSelectableSecret={isSelectableSecret}
-            isEvent={setEvent.isSetEvent}
-            isTargetPlayer={setEvent.isTargetPlayer}
-            isTargetSecret={!setEvent.isTargetPlayer}
-            target={setEvent.target}
+            isSelectableSecret={isOtherPlayersSecretSelectable}
+            isEvent={isSetEvent}
+            isTargetPlayer={isTargetPlayerEvent()}
+            isTargetSecret={isTargetSecretEvent()}
+            target={getTargetSetEvent()}
           />
 
           {/* Las últimas tres casillas de la grilla pertenecen al jugador actual. */}
@@ -550,7 +484,10 @@ export default function GameContainer() {
             <div className="flex flex-col gap-y-3">
               <Secrets
                 secrets={playerSecrets}
-                isSelectableSecret={isSelectableSecret}
+                isSelectableSecret={isCurrPlayersSecretSelectable}
+                isTargetSecret={isTargetSecretEvent()}
+                onSelectTargetEvent={handleSelectTargetEvent}
+                target={getTargetSetEvent()}
               />
               <Sets sets={playerSets} />
             </div>
@@ -570,15 +507,9 @@ export default function GameContainer() {
               onSelectPlayer={handleSelectedPlayer}
               onSelectSecret={handleSelectedSecret}
               isDisabled={!isPlayerTurn}
-              isSetButtonDisabled={
-                !(setEvent.isValidSet && !setEvent.isSetEvent)
-              }
-              isSelectionPlayerEvent={
-                setEvent.isSetEvent && setEvent.isTargetPlayer
-              }
-              isSelectionSecretEvent={
-                setEvent.isSetEvent && !setEvent.isTargetPlayer
-              }
+              isSetButtonDisabled={isSetEventButtonDisabled}
+              isSelectionPlayerEvent={isTargetPlayerEvent()}
+              isSelectionSecretEvent={isTargetSecretEvent()}
             />
           </div>
         </div>

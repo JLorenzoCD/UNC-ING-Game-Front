@@ -10,7 +10,7 @@ import Sets from "./Sets";
 const MATCH_ID = "a1b2c3d4-e5f6-7890-1234-567890abcdef";
 const PLAYER_ID = "00000001-0001-0001-0001-000000000001";
 
-const playerSets: MatchSet[] = [
+const playerSets = [
   {
     id: "550e8400-e29b-41d4-a716-446655440001",
     type: "HERCULE POIROT",
@@ -53,7 +53,7 @@ const playerSets: MatchSet[] = [
     match_id: MATCH_ID,
     quin_play: false,
   },
-];
+] as unknown as MatchSet[];
 
 const emptySets: MatchSet[] = [];
 

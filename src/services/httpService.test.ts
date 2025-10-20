@@ -8,6 +8,7 @@ import type {
 } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
+import type { MatchSet, SetCreationData } from "@/types/set";
 
 import { createHttpService, type HttpService } from "./httpService";
 
@@ -679,5 +680,148 @@ describe("httpService", () => {
         },
       );
     });
+  });
+
+  it("getMatchSets fetches and returns match sets", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const mockSets: MatchSet[] = [
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        player_id: playerId,
+        quin_play: false,
+        quin_count: 0,
+        type: "HERCULE POIROT",
+      },
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        player_id: playerId,
+        quin_play: true,
+        quin_count: 1,
+        type: "PARKER PYNE",
+      },
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockSets),
+    });
+
+    const result = await httpService.getMatchSets(matchId);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/sets`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockSets);
+    expect(result).toHaveLength(2);
+  });
+
+  it("createAndPlaySet sends correct request to play one set", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+
+    const CARD_HERCULE_1 = crypto.randomUUID();
+    const CARD_HERCULE_2 = crypto.randomUUID();
+    const CARD_HERCULE_3 = crypto.randomUUID();
+
+    const TARGET_PLAYER_ID = crypto.randomUUID();
+    const TARGET_SECRET_ID = crypto.randomUUID();
+
+    const mockDataBody: SetCreationData = {
+      player_id: playerId,
+      type: "HERCULE POIROT",
+      card_ids: [CARD_HERCULE_1, CARD_HERCULE_2, CARD_HERCULE_3],
+      target_player_id: TARGET_PLAYER_ID,
+      target_secret_id: TARGET_SECRET_ID,
+    };
+
+    const mockSet: MatchSet = {
+      id: crypto.randomUUID(),
+      match_id: matchId,
+      player_id: playerId,
+      quin_play: false,
+      quin_count: 0,
+      type: "HERCULE POIROT",
+    };
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockSet),
+    });
+
+    const result = await httpService.createAndPlaySet(matchId, mockDataBody);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/sets`,
+      {
+        method: "POST",
+        body: JSON.stringify(mockDataBody),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockSet);
+  });
+
+  it("putSecret sends correct request to update a secret's status (reveal/steal)", async () => {
+    const matchId = crypto.randomUUID();
+    const secretId = crypto.randomUUID();
+    const targetPlayerId = crypto.randomUUID();
+    const action = "reveal_secret"; // Example action
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(undefined),
+    });
+
+    await httpService.putSecret(matchId, secretId, targetPlayerId, action);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/secrets/${secretId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          target_player_id: targetPlayerId,
+          action: "reveal_secret",
+        }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  });
+
+  it("putMatchCards (take) sends correct request to take cards", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(undefined),
+    });
+
+    await httpService.putMatchCards(matchId, playerId, cardIds);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/cards/take`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
   });
 });

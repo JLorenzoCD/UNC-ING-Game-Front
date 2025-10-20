@@ -2,13 +2,14 @@ import { BACKEND_ENDPOINTS } from "@/constants/backend";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
-import type { GameSecret } from "@/types/secret";
+import type { GameSecret, SecretUpdateAction } from "@/types/secret";
 import type { GamePlayer, Player } from "@/types/player";
 import type {
   Match,
   MatchCreateInput,
   MatchWithPlayerCount,
 } from "@/types/match";
+import type { MatchSet, SetCreationData } from "@/types/set";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -117,6 +118,26 @@ export function createHttpService() {
     return request<GameSecret[]>(BACKEND_ENDPOINTS.GET_MATCH_SECRETS(matchId));
   };
 
+  const getMatchSets = async (matchId: UUID) => {
+    return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
+  };
+
+  const putMatchCards = async (
+    matchId: UUID,
+    playerId: UUID,
+    cardIds: UUID[],
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify({
+        player_id: playerId,
+        card_ids: cardIds,
+      }),
+    };
+
+    return request(BACKEND_ENDPOINTS.TAKE_CARDS(matchId), options);
+  };
+
   const putTakeCards = async (
     matchId: UUID,
     playerId: UUID,
@@ -153,6 +174,35 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.PASS_TURN(matchId), { method: "PUT" });
   };
 
+  const createAndPlaySet = async (
+    matchId: UUID,
+    dataBody: SetCreationData,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify(dataBody),
+    };
+
+    return request(BACKEND_ENDPOINTS.CREATE_AND_PLAY_SET(matchId), options);
+  };
+
+  const putSecret = async (
+    matchId: UUID,
+    secretId: UUID,
+    targetPlayerId: UUID,
+    action: SecretUpdateAction,
+  ) => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify({
+        target_player_id: targetPlayerId,
+        action,
+      }),
+    };
+
+    return request(BACKEND_ENDPOINTS.PUT_SECRET(matchId, secretId), options);
+  };
+
   return {
     request,
     createPlayer,
@@ -164,8 +214,12 @@ export function createHttpService() {
     getMatchPlayers,
     getMatchCards,
     getMatchSecrets,
+    getMatchSets,
+    putMatchCards,
     putTakeCards,
     putDiscardCards,
     putPassTurn,
+    putSecret,
+    createAndPlaySet,
   };
 }

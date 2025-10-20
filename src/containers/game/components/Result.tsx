@@ -20,7 +20,7 @@ export default function Result({ result }: ResultProps) {
   };
 
   return (
-    <div data-testid="result" className="w-screen h-screen fixed inset-0">
+    <div data-testid="result" className="w-screen h-screen fixed inset-0 z-50">
       <div className="absolute inset-0 bg-black/50 backdrop-grayscale backdrop-brightness-50 pointer-events-none" />
 
       <div className="absolute top-16 w-full h-full flex flex-col justify-start items-center">

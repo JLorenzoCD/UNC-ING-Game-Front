@@ -16,7 +16,9 @@ const MAX_CARD_COUNT = Math.max(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MIN_CARD_COUNT = Math.min(...Object.values(MIN_CARD_COUT_FOR_SET));
 const MAX_QUIN_COUNT = 2 as const;
 
-// La función no valida si un arreglo de cartas es un set valido
+/*
+ * pre: isCardsValidSet.
+ */
 export function cardsToSetTypeDetective(cards: GameCard[]) {
   let setType: SetType | null = null;
 
@@ -134,7 +136,7 @@ export function cardsToSet(
   ) as GameCard;
 
   const player_id = cardDetective.player_id as UUID;
-  const card_ids = cards.filter((card) => card.id) as unknown as UUID[];
+  const card_ids = cards.map((card) => card.id) as unknown as UUID[];
   const target_player_id = targetPlayerId;
   const target_secret_id = targetSecretId;
 
@@ -146,8 +148,9 @@ export function cardsToSet(
     player_id,
     card_ids,
     target_player_id,
-    target_secret_id,
   };
+
+  if (target_secret_id) setData.target_secret_id = target_secret_id;
 
   return setData;
 }
@@ -173,11 +176,31 @@ export function isSetTargetOneSecret(cards: GameCard[]) {
   }
 }
 
-export function isSetActionRevealSecret(cards: GameCard[]) {
-  if (!isCardsValidSet(cards))
-    throw new Error("The cards given are not a valid Set.");
+/*
+ * pre: isCardsValidSet.
+ */
+export function isSetWithQuin(cards: GameCard[]) {
+  const cardsGroupByDetective = Object.groupBy(cards, (card) => card.name);
 
+  const quinDetective = cardsGroupByDetective["HARLEY QUIN WILDCARD"] ?? [];
+
+  return quinDetective.length !== 0;
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
+export function isSetActionRevealSecret(cards: GameCard[]) {
   const setType = cardsToSetTypeDetective(cards) as SetType;
 
   return setType !== "PARKER PYNE";
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
+export function isSetActionStolenSecret(cards: GameCard[]) {
+  const setType = cardsToSetTypeDetective(cards) as SetType;
+
+  return setType === "MR SATTERTHWAITE" && isSetWithQuin(cards);
 }

@@ -60,3 +60,8 @@ export interface MatchSecret {
  * distintos componentes.
  */
 export type GameSecret = MatchSecret & Secret;
+
+export type SecretUpdateAction =
+  | "steal_secret"
+  | "hide_secret"
+  | "reveal_secret";

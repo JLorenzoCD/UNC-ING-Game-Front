@@ -11,7 +11,7 @@ import type { GameCard } from "@/types/card";
 import type { GamePlayer, Player } from "@/types/player";
 import type { Match } from "@/types/match";
 
-import GameContainer from "./GameContainer";
+import { useSetEvent } from "./hooks/useSetEvent";
 
 const MOCK_CARD_ID_1 = crypto.randomUUID();
 const MOCK_CARD_ID_2 = crypto.randomUUID();
@@ -130,20 +130,27 @@ const mockCards: GameCard[] = [
 
 /* Métodos mockeados por Vitest */
 
-const { mockPutTakeCards, mockPutDiscardCards, mockPutPassTurn, mockUseNavigate } =
-  vi.hoisted(() => {
-    const mockPutTakeCards = vi.fn();
-    const mockPutDiscardCards = vi.fn();
-    const mockPutPassTurn = vi.fn();
-    const mockUseNavigate = vi.fn();
+const {
+  mockPutTakeCards,
+  mockPutDiscardCards,
+  mockPutPassTurn,
+  mockUseNavigate,
+  mockUseSetEvent,
+} = vi.hoisted(() => {
+  const mockPutTakeCards = vi.fn();
+  const mockPutDiscardCards = vi.fn();
+  const mockPutPassTurn = vi.fn();
+  const mockUseNavigate = vi.fn();
+  const mockUseSetEvent = vi.fn();
 
-    return {
-      mockPutTakeCards,
-      mockPutDiscardCards,
-      mockPutPassTurn,
-      mockUseNavigate,
-    };
-  });
+  return {
+    mockPutTakeCards,
+    mockPutDiscardCards,
+    mockPutPassTurn,
+    mockUseNavigate,
+    mockUseSetEvent,
+  };
+});
 
 /* Componentes mockeados por Vitest */
 
@@ -160,6 +167,12 @@ vi.mock("@/contexts/GameContext");
 vi.mock("@/contexts/PlayerContext");
 
 vi.mock("@/contexts/HttpServiceContext");
+
+// Mock del hook
+vi.mock("./hooks/useSetEvent", () => ({
+  __esModule: true,
+  useSetEvent: mockUseSetEvent,
+}));
 
 vi.mock("./components/Table", () => ({
   __esModule: true,
@@ -297,16 +310,38 @@ vi.mock("./components/DiscardModal", () => ({
 
 vi.mock("./components/HandActions", () => ({
   __esModule: true,
-  default: vi.fn(({ onFinish, onDiscard, isDisabled }) => (
-    <div data-testid="mock-hand-actions">
-      <button onClick={onDiscard} disabled={isDisabled}>
-        Discard cards
-      </button>
-      <button onClick={onFinish} disabled={isDisabled}>
-        Finish turn
-      </button>
-    </div>
-  )),
+  default: vi.fn(
+    ({
+      onFinish,
+      onDiscard,
+      onPlaySet,
+      onSelectPlayer,
+      onSelectSecret,
+      isDisabled,
+      isSetButtonDisabled,
+    }) => (
+      <div data-testid="mock-hand-actions">
+        <button onClick={onDiscard} disabled={isDisabled}>
+          Discard cards
+        </button>
+        <button
+          onClick={onPlaySet}
+          disabled={isDisabled || isSetButtonDisabled}
+        >
+          Play set
+        </button>
+        <button onClick={onSelectPlayer} disabled={isDisabled}>
+          Select player
+        </button>
+        <button onClick={onSelectSecret} disabled={isDisabled}>
+          Select secret
+        </button>
+        <button onClick={onFinish} disabled={isDisabled}>
+          Finish turn
+        </button>
+      </div>
+    ),
+  ),
 }));
 
 vi.mock("./components/Sets", () => ({
@@ -319,7 +354,16 @@ vi.mock("./components/Result", () => ({
   default: vi.fn(() => null),
 }));
 
+import GameContainer from "./GameContainer";
+
 describe("GameContainer", () => {
+  // mocks del useSetEvent
+  const mockPlaySet = vi.fn();
+  const mockSetTargetSet = vi.fn();
+  const mockExecuteSetActionToTarget = vi.fn();
+  const mockExecuteFinishTurnSetEvent = vi.fn();
+  const mockClearSetEvent = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -342,6 +386,13 @@ describe("GameContainer", () => {
       isLoading: false,
       hasError: false,
       error: null,
+      isPlayerFinishAction: false,
+      lastUpdatedSecretId: null,
+      playerFinishActionTurn: () => undefined,
+      playerSelectsOneOfHisSecrets: {
+        isCurrPlayer: false,
+        isSelecting: false,
+      },
     });
 
     vi.mocked(useHttpService).mockReturnValue({
@@ -350,6 +401,30 @@ describe("GameContainer", () => {
         putTakeCards: mockPutTakeCards,
         putDiscardCards: mockPutDiscardCards,
       } as any,
+    });
+
+    vi.mocked(useSetEvent).mockReturnValue({
+      setEvent: {
+        isValidSet: true,
+        isTargetPlayer: false,
+        isTargetSecret: false,
+      } as any,
+      isSetEvent: false,
+      isTargetPlayerSetEvent: false,
+      isTargetSecretSetEvent: false,
+      isStolenSecretSetEvent: false,
+      isSetEventButtonDisabled: false,
+      playSet: mockPlaySet,
+      setTargetSet: mockSetTargetSet,
+      executeSetActionToTarget: mockExecuteSetActionToTarget,
+      executeFinishTurnSetEvent: mockExecuteFinishTurnSetEvent,
+      isPlayerSelectableForSetEvent: vi.fn(),
+      isOtherPlayerSecretSelectableForSetEvent: vi.fn(),
+      isCurrPlayerSecretSelectableForSetEvent: vi.fn(),
+      setEventToggleDisableButtonPlaySet: vi.fn(),
+      getTargetSetEvent: vi.fn(),
+      getSetCards: vi.fn(),
+      clearSetEvent: mockClearSetEvent,
     });
   });
 
@@ -476,6 +551,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       render(<GameContainer />);
@@ -502,6 +584,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       mockPutDiscardCards.mockResolvedValue(undefined);
@@ -636,6 +725,13 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
+        isPlayerFinishAction: false,
+        lastUpdatedSecretId: null,
+        playerFinishActionTurn: () => undefined,
+        playerSelectsOneOfHisSecrets: {
+          isCurrPlayer: false,
+          isSelecting: false,
+        },
       });
 
       render(<GameContainer />);
@@ -681,6 +777,46 @@ describe("GameContainer", () => {
       // Pasamos el turno
       expect(mockPutPassTurn).toHaveBeenCalledTimes(1);
       expect(mockPutPassTurn).toHaveBeenCalledWith(MOCK_MATCH_ID);
+    });
+  });
+
+  describe("useSetEvent integration", () => {
+    it("uses useSetEvent inside GameContainer", () => {
+      render(<GameContainer />);
+      expect(vi.mocked(useSetEvent)).toHaveBeenCalled();
+    });
+
+    it("calls playSet when 'Play set' is clicked", async () => {
+      render(<GameContainer />);
+
+      const playSetButton = screen.getByText("Play set");
+      await act(async () => {
+        fireEvent.click(playSetButton);
+      });
+
+      expect(mockPlaySet).toHaveBeenCalledTimes(1);
+    });
+
+    it("executes clearSetEvent after finishing the turn", async () => {
+      render(<GameContainer />);
+      const finishButton = screen.getByText("Finish turn");
+
+      await act(async () => {
+        fireEvent.click(finishButton);
+      });
+
+      expect(mockClearSetEvent).toHaveBeenCalledTimes(1);
+    });
+
+    it("calls playSet if the button is enabled", async () => {
+      render(<GameContainer />);
+      const playSetButton = screen.getByText("Play set");
+
+      await act(async () => {
+        fireEvent.click(playSetButton);
+      });
+
+      expect(mockPlaySet).toHaveBeenCalled();
     });
   });
 });
