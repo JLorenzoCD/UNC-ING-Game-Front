@@ -224,6 +224,8 @@ export default function GameContainer() {
       currentEventStep === "select_secret"
     ) {
       return secret.is_revealed;
+    } else if (isSetEvent) {
+      return isOtherPlayersSecretSelectable(secret);
     }
 
     return false;
@@ -839,9 +841,7 @@ export default function GameContainer() {
             }
             onSelectTargetEvent={handleSelectTargetEvent}
             isSelectablePlayer={isSelectablePlayer}
-            isSelectableSecret={
-              isSelectableSecret || isOtherPlayersSecretSelectable
-            }
+            isSelectableSecret={isSelectableSecret}
             isSelectableSet={isSelectableSet}
             isEvent={isSetEvent || currentEventCard !== null}
             isTargetPlayer={isTargetPlayerEvent()}
