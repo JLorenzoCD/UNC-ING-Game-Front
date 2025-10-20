@@ -24,9 +24,10 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
 interface Props {
   type: SetType;
   quin_play: boolean;
+  quin_count: number;
 }
 
-export default function Set({ type, quin_play }: Props) {
+export default function Set({ type, quin_play, quin_count }: Props) {
   const cardSize = "w-15 h-22.5";
 
   const isTwoBeresford = type === "TWO BERESFORD";
@@ -37,7 +38,7 @@ export default function Set({ type, quin_play }: Props) {
     <div className={`relative ${containerSize}`}>
       {quin_play && (
         <RiVipCrown2Fill
-          color="yellow"
+          color={quin_count === 1 ? "peru" : "gold"}
           size={30}
           className="absolute -top-3 -left-3 -rotate-[20deg] z-2"
         />
