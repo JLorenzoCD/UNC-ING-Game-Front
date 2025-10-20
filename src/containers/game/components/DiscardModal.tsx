@@ -56,7 +56,7 @@ export default function DiscardModal({
   const lastFiveCardDiscarted = getLastFiveDiscarded(discardedCards);
 
   const selectedCount = lastFiveCardDiscarted.filter(isSelected).length;
-  const hasSelection = selectedCount == 2; // 2 porq tengo 1 del evento seleccionada mas 1 del modal.
+  const hasSelection = selectedCount == 1;
 
   return (
     <Modal

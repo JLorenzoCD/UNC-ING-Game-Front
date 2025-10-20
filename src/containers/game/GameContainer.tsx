@@ -623,7 +623,7 @@ export default function GameContainer() {
     try {
       // Si el jugador no ha descartado cartas, se fuerza
       // el descarte obligatorio de una carta.
-      if (!hasDiscardedCards) {
+      if (!hasDiscardedCards && currentEventCard === null) {
         await mandatoryDiscard();
       }
 
@@ -713,7 +713,7 @@ export default function GameContainer() {
         // Validamos que haya una carta seleccionada del descarte
         const selectedDiscardedCardsArray = Object.values(selectedCards);
 
-        if (selectedDiscardedCardsArray.length !== 1) {
+        if (selectedDiscardedCardsArray.length !== 2) {
           console.warn("Debe seleccionar exactamente una carta del descarte");
           return;
         }
@@ -813,7 +813,8 @@ export default function GameContainer() {
 
       removeCard(cardToUse);
       if (currentEventCard?.name === "LOOK INTO THE ASHES") {
-        addCard(selectedCards[1]);
+        const selectedCardsArray = Object.values(selectedCards);
+        addCard(selectedCardsArray[1]);
       }
       clearSelectedCards();
 
