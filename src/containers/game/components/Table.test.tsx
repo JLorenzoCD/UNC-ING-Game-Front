@@ -15,9 +15,7 @@ import Table from "./Table";
 
 vi.mock("@/contexts/GameContext");
 vi.mock("@/contexts/PlayerContext");
-
-// Se añade el mock para el nuevo módulo de utilidades
-vi.mock("../utils/table", () => ({
+vi.mock("../utils/tablePositions.ts", () => ({
   getVisiblePlayersWithGridPositions: vi.fn(),
 }));
 vi.mock("./Player", () => ({
@@ -52,7 +50,7 @@ vi.mock("./Player", () => ({
   ),
 }));
 
-import { getVisiblePlayersWithGridPositions } from "../utils/table";
+import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
 
 const mockGetVisiblePlayersWithGridPositions = vi.mocked(
   getVisiblePlayersWithGridPositions,

@@ -9,7 +9,7 @@ import type { UUID } from "@/types/common";
 import {
   getGridPositionsForPlayerCount,
   getVisiblePlayersWithGridPositions,
-} from "./table"; // Asegúrate que la ruta de importación sea correcta
+} from "./tablePositions"; // Asegúrate que la ruta de importación sea correcta
 
 // Datos Mock Comunes
 const MOCK_PLAYER_ID_1 = "id-curr" as UUID;

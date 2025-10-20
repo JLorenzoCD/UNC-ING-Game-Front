@@ -5,7 +5,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
 
-import { getVisiblePlayersWithGridPositions } from "../utils/table";
+import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
