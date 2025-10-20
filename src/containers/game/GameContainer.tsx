@@ -388,6 +388,12 @@ export default function GameContainer() {
     ];
     if (hasDiscardedCards) return false;
     if (currentEventCard !== null) return false;
+    if (nameCard === "ANOTHER VICTIM") {
+      const hasOtherPlayerSets = sets.some(
+        (set) => set.player_id !== player?.id,
+      );
+      if (!hasOtherPlayerSets) return false;
+    }
     if (
       (nameCard === "LOOK INTO THE ASHES" ||
         nameCard === "DELAY THE MURDERER ESCAPE") &&
@@ -405,6 +411,8 @@ export default function GameContainer() {
     currentEventCard,
     cardsInDiscardPile.length,
     secrets,
+    sets,
+    player,
   ]);
 
   // -- Utilidades --
