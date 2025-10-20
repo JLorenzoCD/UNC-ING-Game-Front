@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
+import type { MatchSet } from "@/types/set";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
@@ -18,6 +19,7 @@ import type {
   LookIntoTheAshesEventPayload,
   AndThenThereWasOneMoreEventPayload,
   CardsOffTheTableEventPayload,
+  AnotherVictimEventPayload,
 } from "@/types/event";
 import type { EventPayload } from "@/types/event";
 import Hand from "./components/Hand";
@@ -32,7 +34,7 @@ import DiscardModal from "./components/DiscardModal";
 
 import { useHand } from "./hooks/useHand";
 
-type EventStep = "select_secret" | "select_player" | null;
+type EventStep = "select_secret" | "select_player" | "select_set" | null;
 
 export const DRAFT_SIZE = 3;
 
@@ -85,6 +87,9 @@ export default function GameContainer() {
     useState<GamePlayer | null>(null);
   const [selectedTargetSecret, setSelectedTargetSecret] =
     useState<GameSecret | null>(null);
+  const [selectedTargetSet, setSelectedTargetSet] = useState<MatchSet | null>(
+    null,
+  );
   const [currentEventStep, setCurrentEventStep] = useState<EventStep>(null);
 
   const [discardModal, setDiscardModal] = useState({
@@ -114,10 +119,18 @@ export default function GameContainer() {
       case "AND THEN THERE WAS ONE MORE":
         return selectedTargetSecret === null || selectedTargetPlayer === null;
 
+      case "ANOTHER VICTIM":
+        return selectedTargetSet === null;
+
       default:
         return false;
     }
-  }, [currentEventCard, selectedTargetPlayer, selectedTargetSecret]);
+  }, [
+    currentEventCard,
+    selectedTargetPlayer,
+    selectedTargetSecret,
+    selectedTargetSet,
+  ]);
 
   // -- Utilidades --
   const handleClickSetEvent = () => {
@@ -139,7 +152,9 @@ export default function GameContainer() {
     }
   };
 
-  const handleSelectTargetEvent = (target: GamePlayer | GameSecret) => {
+  const handleSelectTargetEvent = (
+    target: GamePlayer | GameSecret | MatchSet,
+  ) => {
     // Eventos de cartas
     if (currentEventCard?.name === "AND THEN THERE WAS ONE MORE") {
       if (currentEventStep === "select_secret" && "secret_id" in target) {
@@ -157,6 +172,11 @@ export default function GameContainer() {
       "avatar" in target
     ) {
       setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    if (currentEventCard?.name === "ANOTHER VICTIM" && "quin_play" in target) {
+      setSelectedTargetSet(target as MatchSet);
       return;
     }
 
@@ -279,6 +299,20 @@ export default function GameContainer() {
     return false;
   };
 
+  const isSelectableSet = (set: MatchSet) => {
+    if (
+      currentEventCard?.name === "ANOTHER VICTIM" &&
+      currentEventStep === "select_set"
+    ) {
+      // No puedes seleccionar tus propios sets
+      if (set.player_id === player?.id) return false;
+
+      // Aquí puedes añadir más lógica si es necesario (ej. no seleccionar sets de HARLEY QUIN)
+      return true;
+    }
+
+    return false;
+  };
   // -- Valores memoizados --
 
   const isPlayerTurn = useMemo(() => {
@@ -589,6 +623,7 @@ export default function GameContainer() {
       setHasTakenCards(false);
       setHasDiscardedCards(false);
       setCurrentEventCard(null);
+      setCurrentEventStep(null);
 
       clearSelectedCards();
     } catch (error) {
@@ -646,6 +681,13 @@ export default function GameContainer() {
         setCurrentEventCard(cardEvent);
         clearSelectedCards();
         handleEndEvent(cardEvent);
+        break;
+      }
+
+      case "ANOTHER VICTIM": {
+        setCurrentEventCard(cardEvent);
+        clearSelectedCards();
+        setCurrentEventStep("select_set");
         break;
       }
     }
@@ -742,6 +784,16 @@ export default function GameContainer() {
         break;
       }
 
+      case "ANOTHER VICTIM": {
+        if (!selectedTargetSet) {
+          console.warn("Set no seleccionado");
+        }
+        eventPayload = {
+          target_set_id: selectedTargetSet?.id,
+        } as AnotherVictimEventPayload;
+        break;
+      }
+
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
         return;
@@ -821,6 +873,7 @@ export default function GameContainer() {
             onSelectTargetEvent={handleSelectTargetEvent}
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
+            isSelectableSet={isSelectableSet}
             isEvent={setEvent.isSetEvent || currentEventCard !== null}
             isTargetPlayer={
               setEvent.isTargetPlayer ||
@@ -833,8 +886,15 @@ export default function GameContainer() {
               (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
                 currentEventStep === "select_secret")
             }
+            isTargetSet={
+              currentEventCard?.name === "ANOTHER VICTIM" &&
+              currentEventStep === "select_set"
+            }
             target={
-              setEvent.target || selectedTargetPlayer || selectedTargetSecret
+              setEvent.target ||
+              selectedTargetPlayer ||
+              selectedTargetSecret ||
+              selectedTargetSet
             }
           />
 

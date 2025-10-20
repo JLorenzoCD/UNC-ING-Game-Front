@@ -10,6 +10,7 @@ import secretBack from "@/assets/05-secret_back.png";
 
 import type { GameSecret, Secret, SecretType } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
+import type { MatchSet } from "@/types/set";
 
 const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
   INNOCENT: secretFront,
@@ -51,13 +52,13 @@ function getBoderClass(
 }
 
 interface SecretProps {
-  onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;
+  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
   isSelectableSecret: (secret: GameSecret) => boolean;
 
   secret: GameSecret | null;
 
   isTargetSecret: boolean;
-  target: GamePlayer | GameSecret | null;
+  target: GamePlayer | GameSecret | MatchSet | null;
 }
 
 export default function Secret({
