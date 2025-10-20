@@ -742,9 +742,10 @@ export default function GameContainer() {
 
       case "DELAY THE MURDERER ESCAPE": {
         const idsInDiscardPile = cardsInDiscardPile.map((card) => card.id);
+        const latestFive = idsInDiscardPile.slice(0, 5);
 
         eventPayload = {
-          cards_ids: idsInDiscardPile,
+          cards_ids: latestFive,
         } as RegularAndDiscardEventPayload;
         break;
       }
