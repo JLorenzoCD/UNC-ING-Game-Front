@@ -580,10 +580,13 @@ export default function GameContainer() {
   const mandatoryDiscard = async () => {
     if (!httpService || !player || !match) return;
 
+    if (drawableCards.length <= DRAFT_SIZE) {
+      toast.error("No cards available to take for mandatory discard");
+      return;
+    }
+
     try {
-      const firstTakeableCard = cards.find(
-        (card) => card.player_id === null && !card.is_discarded,
-      );
+      const firstTakeableCard = drawableCards[DRAFT_SIZE];
 
       if (!firstTakeableCard) {
         toast.error("No cards available to take for mandatory discard.");
