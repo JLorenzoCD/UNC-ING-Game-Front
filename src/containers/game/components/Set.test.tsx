@@ -235,7 +235,7 @@ describe("Selection and Interaction", () => {
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
     expect(imgContainer).toHaveClass(
-      "animate-pulse cursor-pointer border-red-400",
+      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 outline outline-2 outline-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer",
     );
   });
 
@@ -252,7 +252,9 @@ describe("Selection and Interaction", () => {
     );
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
-    expect(imgContainer).toHaveClass("animate-none border-blue-400");
+    expect(imgContainer).toHaveClass(
+      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 outline outline-2 outline-blue-400 shadow-lg shadow-blue-400/50 animate-none",
+    );
     expect(imgContainer).not.toHaveClass("animate-pulse");
   });
 });

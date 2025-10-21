@@ -359,6 +359,7 @@ export default function GameContainer() {
       "EARLY TRAIN TO PADDINGTON",
     ];
     if (hasDiscardedCards) return false;
+    if (isPlayerFinishAction == true) return false;
     if (currentEventCard !== null) return false;
     if (nameCard === "ANOTHER VICTIM") {
       const hasOtherPlayerSets = sets.some(
@@ -385,6 +386,7 @@ export default function GameContainer() {
     secrets,
     sets,
     player,
+    isPlayerFinishAction,
   ]);
 
   // -- Utilidades --

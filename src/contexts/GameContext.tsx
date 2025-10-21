@@ -226,9 +226,16 @@ export default function GameContextProvider({
             // Insertar las cartas actualizadas después de la tercera carta
             const insertPosition = Math.max(...firstThreeIndices) + 1;
 
+            const fullUpdatedCards = payload.updated_match_cards.map(
+              (newCard) => {
+                const existingCard = current.find((c) => c.id === newCard.id);
+                return { ...existingCard, ...newCard };
+              },
+            );
+
             const finalCards = [
               ...cardsWithoutUpdated.slice(0, insertPosition),
-              ...payload.updated_match_cards,
+              ...fullUpdatedCards,
               ...cardsWithoutUpdated.slice(insertPosition),
             ];
 
