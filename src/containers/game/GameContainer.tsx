@@ -677,7 +677,6 @@ export default function GameContainer() {
 
     // 1. Lógica Local: Chequeamos el tipo de evento, para mostrarle al jugador que hacer
     const nameEvent = cardEvent.name;
-    console.log(`Se jugará la carta: ${nameEvent}`);
 
     switch (nameEvent) {
       case "DELAY THE MURDERER ESCAPE": {
@@ -719,7 +718,6 @@ export default function GameContainer() {
   };
 
   const handleEndEvent = async (eventCard?: GameCard) => {
-    console.log(currentEventCard);
     const cardToUse = currentEventCard || eventCard;
     if (!httpService || !player || !match || !cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
@@ -785,7 +783,6 @@ export default function GameContainer() {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
         }
-        console.log(selectedTargetPlayer, selectedTargetSecret);
         eventPayload = {
           target_secret_id: selectedTargetSecret.id,
           target_player_id: selectedTargetPlayer.id,
@@ -841,8 +838,6 @@ export default function GameContainer() {
       }
       clearSelectedCards();
       playerFinishActionTurn();
-
-      console.log("Evento completado exitosamente");
     } catch (error) {
       console.error("Error al ejecutar el evento", error);
     }
