@@ -26,6 +26,7 @@ export default function Sets({
           key={set.id}
           type={set.type}
           quin_play={set.quin_play}
+          quin_count={set.quin_count}
           set_object={set}
           onSelectTargetEvent={onSelectTargetEvent}
           isSelectableSet={isSelectableSet}

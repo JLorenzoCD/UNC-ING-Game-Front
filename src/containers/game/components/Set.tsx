@@ -27,6 +27,7 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
 interface Props {
   type: SetType;
   quin_play: boolean;
+  quin_count: number;
   set_object: MatchSet;
   onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
   isSelectableSet?: (set: MatchSet) => boolean;
@@ -68,6 +69,7 @@ function getBoderClass(
 export default function Set({
   type,
   quin_play,
+  quin_count,
   set_object,
   onSelectTargetEvent,
   isSelectableSet,
@@ -103,7 +105,7 @@ export default function Set({
     <div className={`relative ${containerSize}`} onClick={handleClickSet}>
       {quin_play && (
         <RiVipCrown2Fill
-          color="yellow"
+          color={quin_count === 1 ? "peru" : "gold"}
           size={30}
           className="absolute -top-3 -left-3 -rotate-[20deg] z-2"
         />

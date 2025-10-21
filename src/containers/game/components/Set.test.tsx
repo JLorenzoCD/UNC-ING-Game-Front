@@ -30,7 +30,9 @@ vi.mock("@/assets/13-detective_tuppenceberesford.png", () => ({
 // El resto de imágenes no es necesario mockearlas si no se testean sus rutas específicas.
 
 vi.mock("@remixicon/react", () => ({
-  RiVipCrown2Fill: vi.fn(() => <div data-testid="mock-crown" />),
+  RiVipCrown2Fill: vi.fn(({ color }) => (
+    <div data-testid="mock-crown" data-color={color} />
+  )),
 }));
 
 const MOCK_MATCH_ID = "34969583-cb5c-490b-9a60-dc042694516c";
@@ -72,6 +74,7 @@ describe("Set Component", () => {
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
+        quin_count={0}
       />,
     );
 
@@ -103,11 +106,42 @@ describe("Set Component", () => {
         type={mockSetTypeQuinPlay}
         quin_play={true}
         set_object={mockSetObjectQuin}
+        quin_count={0}
       />,
     );
 
     // El componente mock de la corona SÍ esté presente
     expect(screen.getByTestId("mock-crown")).toBeInTheDocument();
+  });
+
+  it("should render the crown icon with 'peru' color when quin_play is true and quin_count is 1", () => {
+    render(
+      <Set
+        type={mockSetTypeQuinPlay}
+        quin_play={true}
+        quin_count={1}
+        set_object={mockSetObjectQuin}
+      />,
+    );
+
+    const crownIcon = screen.getByTestId("mock-crown");
+    expect(crownIcon).toBeInTheDocument();
+    expect(crownIcon).toHaveAttribute("data-color", "peru");
+  });
+
+  it("should render the crown icon with 'gold' color when quin_play is true and quin_count is greater than 1", () => {
+    render(
+      <Set
+        type={mockSetTypeQuinPlay}
+        quin_play={true}
+        quin_count={2}
+        set_object={mockSetObjectQuin}
+      />,
+    );
+
+    const crownIcon = screen.getByTestId("mock-crown");
+    expect(crownIcon).toBeInTheDocument();
+    expect(crownIcon).toHaveAttribute("data-color", "gold");
   });
 
   it("should render Two_Beresford type with two cards and the correct container spacing", () => {
@@ -116,6 +150,7 @@ describe("Set Component", () => {
         type={mockSetTypeTwoBeresford}
         quin_play={false}
         set_object={mockSetObjectBeresford}
+        quin_count={0}
       />,
     );
 
@@ -157,6 +192,7 @@ describe("Selection and Interaction", () => {
   it("should call onSelectTargetEvent when clicked and is selectable", () => {
     render(
       <Set
+        quin_count={0}
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
@@ -181,6 +217,7 @@ describe("Selection and Interaction", () => {
 
     render(
       <Set
+        quin_count={0}
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
@@ -203,6 +240,7 @@ describe("Selection and Interaction", () => {
   it("should NOT call onSelectTargetEvent when not in selection mode", () => {
     render(
       <Set
+        quin_count={0}
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
@@ -224,6 +262,7 @@ describe("Selection and Interaction", () => {
   it("should apply pulsing border when selectable and no target is selected", () => {
     render(
       <Set
+        quin_count={0}
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
@@ -242,6 +281,7 @@ describe("Selection and Interaction", () => {
   it("should apply selected border when it is the target", () => {
     render(
       <Set
+        quin_count={0}
         type={mockSetTypeStandard}
         quin_play={false}
         set_object={mockSetObjectStandard}
