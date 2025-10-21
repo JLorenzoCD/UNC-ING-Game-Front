@@ -249,19 +249,7 @@ export default function GameContextProvider({
       }
 
       if (payload.updated_secret) {
-        setSecrets((current) => {
-          const updatedSecrets = [...current];
-          const newSecret = payload.updated_secret;
-          if (newSecret) {
-            const index = updatedSecrets.findIndex(
-              (s) => s.id === newSecret.id,
-            );
-            if (index !== -1) {
-              updatedSecrets[index] = newSecret;
-            }
-          }
-          return updatedSecrets;
-        });
+        handleUpdateSecrets(payload.updated_secret);
       }
 
       if (payload.updated_set) {
