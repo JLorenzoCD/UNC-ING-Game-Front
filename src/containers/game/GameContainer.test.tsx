@@ -126,6 +126,39 @@ const mockCards: GameCard[] = [
     is_discarded: false,
     discarded_at: null,
   },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
 ];
 
 /* Métodos mockeados por Vitest */
@@ -705,7 +738,7 @@ describe("GameContainer", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to discard card:",
+        "Failed to perform mandatory discard:",
         expect.any(Error),
       );
 
