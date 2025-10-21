@@ -90,6 +90,11 @@ export default function GameContainer() {
     isEventDiscard: false,
   });
 
+  const canSelectMeAsPlayer =
+    currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+    currentEventStep === "select_player" &&
+    selectedTargetPlayer === null;
+
   const {
     playSet,
     isSetEvent,
@@ -185,6 +190,41 @@ export default function GameContainer() {
       const setCards = getSetCards();
       for (const card of setCards) removeCard(card);
       playerFinishActionTurn();
+    } else if (canSelectMeAsPlayer) {
+      const cardToUse = currentEventCard;
+
+      if (
+        !httpService ||
+        !player ||
+        !match ||
+        !cardToUse ||
+        !selectedTargetSecret
+      ) {
+        return;
+      }
+
+      const eventPayload = {
+        target_secret_id: selectedTargetSecret.id,
+        target_player_id: player.id,
+      } as AndThenThereWasOneMoreEventPayload;
+
+      setSelectedTargetSecret(null);
+      setCurrentEventStep(null);
+
+      try {
+        // Llamada a la API para jugar el evento
+        await httpService.postEvent(
+          match.id,
+          player.id,
+          cardToUse.id,
+          eventPayload,
+        );
+
+        removeCard(cardToUse);
+        clearSelectedCards();
+      } catch (error) {
+        console.error("Error al ejecutar el evento", error);
+      }
     }
   };
 
@@ -797,6 +837,7 @@ export default function GameContainer() {
         addCard(selectedCardsArray[1]);
       }
       clearSelectedCards();
+      playerFinishActionTurn();
 
       console.log("Evento completado exitosamente");
     } catch (error) {
@@ -888,6 +929,7 @@ export default function GameContainer() {
               onSelectPlayer={handleSelectedPlayer}
               onSelectSecret={handleSelectedSecret}
               onEndEvent={handleEndEvent}
+              canSelectMeAsPlayer={canSelectMeAsPlayer}
               isDisabled={!isPlayerTurn}
               isDisabledEvent={!isPlayable}
               isDisabledEndEvent={isEndEventDisabled}

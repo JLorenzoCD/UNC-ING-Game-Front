@@ -17,6 +17,7 @@ interface HandActionsProps {
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
   isDisabledEndEvent: boolean; // Indica si el boton para teminar eveto esta habilitado
   isSelectionSetEvent: boolean; // Indica si se esta seleccionado un set
+  canSelectMeAsPlayer: boolean; // Indica si el jugador puede seleccionarse a si mismo.
 }
 
 export default function HandActions({
@@ -34,6 +35,7 @@ export default function HandActions({
   isSelectionSetEvent,
   isDisabledEvent,
   isDisabledEndEvent,
+  canSelectMeAsPlayer,
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
@@ -64,7 +66,7 @@ export default function HandActions({
         onClick={onSelectPlayer}
         disabled={isDisabled || !isSelectionPlayerEvent || isPlayerFinishAction}
       >
-        Select player
+        {canSelectMeAsPlayer ? "Select me" : "Select player"}
       </Button>
 
       <Button
