@@ -206,10 +206,12 @@ const defaultTableProps = {
   isEvent: false,
   isTargetPlayer: false,
   isTargetSecret: false,
+  isTargetSet: false,
   target: null,
   onSelectTargetEvent: () => {},
   isSelectablePlayer: () => false,
   isSelectableSecret: () => false,
+  isSelectableSet: () => false,
 };
 
 describe("Table Component", () => {

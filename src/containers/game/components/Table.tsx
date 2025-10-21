@@ -9,11 +9,13 @@ import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
+import type { MatchSet } from "@/types/set";
 
 interface TableProps {
-  onSelectTargetEvent: (target: GamePlayer | GameSecret) => void;
+  onSelectTargetEvent: (target: GamePlayer | GameSecret | MatchSet) => void;
   isSelectablePlayer: (player: GamePlayer) => boolean;
   isSelectableSecret: (secret: GameSecret) => boolean;
+  isSelectableSet: (set: MatchSet) => boolean;
 
   draft: ReactNode;
   drawPile: ReactNode;
@@ -21,13 +23,15 @@ interface TableProps {
   isEvent: boolean;
   isTargetPlayer: boolean;
   isTargetSecret: boolean;
-  target: GamePlayer | GameSecret | null;
+  isTargetSet: boolean;
+  target: GamePlayer | GameSecret | MatchSet | null;
 }
 
 export default function Table({
   onSelectTargetEvent,
   isSelectablePlayer,
   isSelectableSecret,
+  isSelectableSet,
 
   draft,
   drawPile,
@@ -35,6 +39,7 @@ export default function Table({
   isEvent,
   isTargetPlayer,
   isTargetSecret,
+  isTargetSet,
   target,
 }: TableProps) {
   const { player } = usePlayer();
@@ -61,12 +66,14 @@ export default function Table({
               isSelectablePlayer={isSelectablePlayer}
               onSelectTargetEvent={onSelectTargetEvent}
               isSelectableSecret={isSelectableSecret}
+              isSelectableSet={isSelectableSet}
               sets={playerSets}
               player={playerData}
               hasCurrentTurn={turn}
               secrets={playerSecrets}
               isPlayerEvent={isEvent && isTargetPlayer}
               isTargetSecret={isEvent && isTargetSecret}
+              isTargetSet={isEvent && isTargetSet}
               target={target}
             />
           </div>

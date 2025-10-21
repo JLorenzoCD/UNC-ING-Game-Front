@@ -22,6 +22,7 @@ const BACKEND_ENDPOINTS = {
 
   PASS_TURN: (matchId: UUID) => `/matches/${matchId}/pass_turn`,
 
+  PLAY_EVENT: (matchId: UUID) => `/matches/${matchId}/events`,
   CREATE_AND_PLAY_SET: (matchId: UUID) => `/matches/${matchId}/sets`,
 
   PUT_SECRET: (matchId: UUID, secretId: UUID) =>
@@ -33,6 +34,7 @@ const BACKEND_SOCKETS_EVENTS = {
   CARDS: "cards",
   MATCH: "match",
   LOBBY_JOIN: "player_join",
+  CARD_EVENT: "card_event",
   SET: "set",
   PLAYER_SECRET_REVEAL: "player_secret_reveal",
   SECRET: "secret",

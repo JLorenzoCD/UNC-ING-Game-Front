@@ -174,6 +174,28 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.PASS_TURN(matchId), { method: "PUT" });
   };
 
+  const postEvent = async <T = unknown>(
+    matchId: UUID,
+    playerId: UUID,
+    matchCardId: UUID,
+    eventPayload: T,
+  ) => {
+    const baseUrl = BACKEND_ENDPOINTS.PLAY_EVENT(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("match_card_id", matchCardId);
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify(eventPayload),
+    };
+
+    return request(urlWithParams, options);
+  };
+
   const createAndPlaySet = async (
     matchId: UUID,
     dataBody: SetCreationData,
@@ -219,6 +241,7 @@ export function createHttpService() {
     putTakeCards,
     putDiscardCards,
     putPassTurn,
+    postEvent,
     putSecret,
     createAndPlaySet,
   };

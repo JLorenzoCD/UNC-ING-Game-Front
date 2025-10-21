@@ -59,16 +59,16 @@ const emptySets: MatchSet[] = [];
 
 // Mocking the Set component
 const { MockSet } = vi.hoisted(() => {
-  const MockSet = vi.fn(
-    ({ type, quin_play }: { type: string; quin_play: boolean }) => (
-      <div
-        data-testid={`mock-set-${type}`}
-        data-quin-play={quin_play.toString()}
-      >
-        Set Component - Type: {type}
-      </div>
-    ),
-  );
+  const MockSet = vi.fn(({ type, quin_play, set_object, isTargetSet }) => (
+    <div
+      data-testid={`mock-set-${type}`}
+      data-quin-play={quin_play.toString()}
+      data-set-id={set_object.id}
+      data-is-target-set={isTargetSet?.toString() || false}
+    >
+      Set Component - Type: {type}
+    </div>
+  ));
 
   return {
     MockSet,
@@ -110,22 +110,42 @@ describe("Sets", () => {
   });
 
   it("should pass the correct props (type and quin_play) to each Set component", () => {
-    render(<Sets sets={playerSets} />);
+    const mockOnSelect = vi.fn();
+    const mockIsSelectable = vi.fn(() => true);
+    const mockTarget = null;
+    const mockIsTargetSet = true;
+
+    render(
+      <Sets
+        sets={playerSets}
+        onSelectTargetEvent={mockOnSelect}
+        isSelectableSet={mockIsSelectable}
+        target={mockTarget}
+        isTargetSet={mockIsTargetSet}
+      />,
+    );
 
     // Verificamos las props pasadas a la primera instancia de Set
     const firstSetProps = MockSet.mock.calls[0][0];
     expect(firstSetProps.type).toBe("HERCULE POIROT");
     expect(firstSetProps.quin_play).toBe(false);
+    expect(firstSetProps.set_object).toBe(playerSets[0]);
+    expect(firstSetProps.onSelectTargetEvent).toBe(mockOnSelect);
+    expect(firstSetProps.isSelectableSet).toBe(mockIsSelectable);
+    expect(firstSetProps.target).toBe(mockTarget);
+    expect(firstSetProps.isTargetSet).toBe(mockIsTargetSet);
 
     // Verificamos las props pasadas a una instancia donde quin_play es true (Miss_Marple)
     const secondSetProps = MockSet.mock.calls[1][0];
     expect(secondSetProps.type).toBe("MISS MARPLE");
     expect(secondSetProps.quin_play).toBe(true);
+    expect(secondSetProps.set_object).toBe(playerSets[1]);
 
     // Verificamos las props pasadas a la última instancia
     const lastSetProps = MockSet.mock.calls[playerSets.length - 1][0];
     expect(lastSetProps.type).toBe("MR SATTERTHWAITE");
     expect(lastSetProps.quin_play).toBe(false);
+    expect(lastSetProps.set_object).toBe(playerSets[playerSets.length - 1]);
   });
 
   it("should render the container but no Set components when the sets array is empty", () => {

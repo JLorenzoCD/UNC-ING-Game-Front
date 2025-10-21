@@ -2,15 +2,16 @@ import Secret from "./Secret";
 
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
+import type { MatchSet } from "@/types/set";
 
 type SecretsProps = {
-  onSelectTargetEvent?: (target: GamePlayer | GameSecret) => void;
+  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
   isSelectableSecret: (secret: GameSecret) => boolean;
 
   secrets: GameSecret[];
 
   isTargetSecret?: boolean;
-  target: GamePlayer | GameSecret | null;
+  target?: GamePlayer | GameSecret | MatchSet | null;
 };
 
 export default function Secrets({

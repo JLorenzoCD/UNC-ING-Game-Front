@@ -10,9 +10,10 @@ import type { GameSecret } from "@/types/secret";
 import type { MatchSet } from "@/types/set";
 
 interface PlayerProps {
-  onSelectTargetEvent: (target: GamePlayer | GameSecret) => void;
+  onSelectTargetEvent: (target: GamePlayer | GameSecret | MatchSet) => void;
   isSelectablePlayer: (player: GamePlayer) => boolean;
   isSelectableSecret: (secret: GameSecret) => boolean;
+  isSelectableSet: (set: MatchSet) => boolean;
 
   player: GamePlayer;
   secrets: GameSecret[];
@@ -21,13 +22,15 @@ interface PlayerProps {
 
   isPlayerEvent: boolean;
   isTargetSecret: boolean;
-  target: GamePlayer | GameSecret | null;
+  isTargetSet: boolean;
+  target: GamePlayer | GameSecret | MatchSet | null;
 }
 
 export default function Player({
   onSelectTargetEvent,
   isSelectablePlayer,
   isSelectableSecret,
+  isSelectableSet,
 
   player,
   secrets,
@@ -36,6 +39,7 @@ export default function Player({
 
   isPlayerEvent,
   isTargetSecret,
+  isTargetSet,
   target,
 }: PlayerProps) {
   const handleClickPlayer = () => {
@@ -92,7 +96,13 @@ export default function Player({
           isTargetSecret={isTargetSecret}
           target={target}
         />
-        <Sets sets={sets} />
+        <Sets
+          sets={sets}
+          onSelectTargetEvent={onSelectTargetEvent}
+          isSelectableSet={isSelectableSet}
+          isTargetSet={isTargetSet}
+          target={target}
+        />
       </div>
     </div>
   );

@@ -126,6 +126,39 @@ const mockCards: GameCard[] = [
     is_discarded: false,
     discarded_at: null,
   },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
+  {
+    id: MOCK_CARD_ID_7,
+    match_id: MOCK_MATCH_ID,
+    player_id: null,
+    card_id: crypto.randomUUID(),
+    name: "PARKER PYNE",
+    description: "Some description",
+    type: "DETECTIVE",
+    is_discarded: false,
+    discarded_at: null,
+  },
 ];
 
 /* Métodos mockeados por Vitest */
@@ -134,6 +167,7 @@ const {
   mockPutTakeCards,
   mockPutDiscardCards,
   mockPutPassTurn,
+  mockPostEvent,
   mockUseNavigate,
   mockUseSetEvent,
 } = vi.hoisted(() => {
@@ -141,12 +175,14 @@ const {
   const mockPutDiscardCards = vi.fn();
   const mockPutPassTurn = vi.fn();
   const mockUseNavigate = vi.fn();
+  const mockPostEvent = vi.fn();
   const mockUseSetEvent = vi.fn();
 
   return {
     mockPutTakeCards,
     mockPutDiscardCards,
     mockPutPassTurn,
+    mockPostEvent,
     mockUseNavigate,
     mockUseSetEvent,
   };
@@ -176,12 +212,30 @@ vi.mock("./hooks/useSetEvent", () => ({
 
 vi.mock("./components/Table", () => ({
   __esModule: true,
-  default: vi.fn(({ draft, drawPile, discardPile }) => (
+  default: vi.fn(({ draft, drawPile, discardPile, onSelectTargetEvent }) => (
     <div data-testid="mock-table">
       Table Component
       {draft}
       {drawPile}
       {discardPile}
+      <button
+        data-testid="mock-select-player"
+        onClick={() =>
+          onSelectTargetEvent({ id: "player-target-id", avatar: "p.png" })
+        }
+      />
+      <button
+        data-testid="mock-select-secret"
+        onClick={() =>
+          onSelectTargetEvent({ id: "secret-target-id", secret_id: "s.png" })
+        }
+      />
+      <button
+        data-testid="mock-select-set"
+        onClick={() =>
+          onSelectTargetEvent({ id: "set-target-id", quin_play: false })
+        }
+      />
     </div>
   )),
 }));
@@ -317,6 +371,10 @@ vi.mock("./components/HandActions", () => ({
       onPlaySet,
       onSelectPlayer,
       onSelectSecret,
+      onPlayEvent,
+      onEndEvent,
+      isDisabledEvent,
+      isDisabledEndEvent,
       isDisabled,
       isSetButtonDisabled,
     }) => (
@@ -338,6 +396,20 @@ vi.mock("./components/HandActions", () => ({
         </button>
         <button onClick={onFinish} disabled={isDisabled}>
           Finish turn
+        </button>
+        <button
+          onClick={onPlayEvent}
+          disabled={isDisabledEvent}
+          data-testid="play-event-btn"
+        >
+          Play event
+        </button>
+        <button
+          onClick={onEndEvent}
+          disabled={isDisabledEndEvent}
+          data-testid="apply-effect-btn"
+        >
+          Apply effect
         </button>
       </div>
     ),
@@ -400,6 +472,7 @@ describe("GameContainer", () => {
         putPassTurn: mockPutPassTurn,
         putTakeCards: mockPutTakeCards,
         putDiscardCards: mockPutDiscardCards,
+        postEvent: mockPostEvent,
       } as any,
     });
 
@@ -665,7 +738,7 @@ describe("GameContainer", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to discard card:",
+        "Failed to perform mandatory discard:",
         expect.any(Error),
       );
 
@@ -817,6 +890,258 @@ describe("GameContainer", () => {
       });
 
       expect(mockPlaySet).toHaveBeenCalled();
+    });
+  });
+  describe("Card Events (handlePlayEvent & handleEndEvent)", () => {
+    // Definimos cartas de evento
+    const cardLITA: GameCard = {
+      id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: MOCK_PLAYER_ID,
+      card_id: crypto.randomUUID(),
+      name: "LOOK INTO THE ASHES",
+      type: "EVENT",
+      description: "...",
+      is_discarded: false,
+      discarded_at: null,
+    };
+    const cardCOFT: GameCard = {
+      id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: MOCK_PLAYER_ID,
+      card_id: crypto.randomUUID(),
+      name: "CARDS OFF THE TABLE",
+      type: "EVENT",
+      description: "...",
+      is_discarded: false,
+      discarded_at: null,
+    };
+    const cardATWOME: GameCard = {
+      id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: MOCK_PLAYER_ID,
+      card_id: crypto.randomUUID(),
+      name: "AND THEN THERE WAS ONE MORE",
+      type: "EVENT",
+      description: "...",
+      is_discarded: false,
+      discarded_at: null,
+    };
+    const cardAV: GameCard = {
+      id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: MOCK_PLAYER_ID,
+      card_id: crypto.randomUUID(),
+      name: "ANOTHER VICTIM",
+      type: "EVENT",
+      description: "...",
+      is_discarded: false,
+      discarded_at: null,
+    };
+    const cardDELAY: GameCard = {
+      id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: MOCK_PLAYER_ID,
+      card_id: crypto.randomUUID(),
+      name: "DELAY THE MURDERER ESCAPE",
+      type: "EVENT",
+      description: "...",
+      is_discarded: false,
+      discarded_at: null,
+    };
+
+    const discardedCard: GameCard = {
+      id: crypto.randomUUID(),
+      card_id: crypto.randomUUID(),
+      match_id: MOCK_MATCH_ID,
+      player_id: null,
+      type: "DETECTIVE",
+      name: "HERCULE POIROT",
+      description: "A discarded card",
+      discarded_at: new Date(),
+      is_discarded: true,
+    };
+
+    beforeEach(() => {
+      mockPostEvent.mockResolvedValue({}); // Simular éxito en la API
+    });
+
+    it("handles 'LOOK INTO THE ASHES' flow", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardLITA, discardedCard], // Carta en mano y carta en descarte
+      });
+      render(<GameContainer />);
+
+      const applyButton = screen.getByTestId("apply-effect-btn");
+      expect(applyButton).toBeDisabled();
+
+      // 1. Seleccionar la carta de evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardLITA.id}`));
+      // 2. Jugar el evento
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 3. Verificar que el modal se abrió
+      expect(screen.getByTestId("mock-discard-modal")).toBeInTheDocument();
+      expect(screen.getByTestId("mock-in-event")).toBeInTheDocument();
+
+      // 4. Seleccionar la carta del descarte (el modal la trackea)
+      fireEvent.click(screen.getByTestId(`discard-card-${discardedCard.id}`));
+
+      // 5. Aplicar efecto desde el modal
+      await act(async () => {
+        fireEvent.click(screen.getByText("End event"));
+      });
+
+      // 6. Verificar la llamada a la API
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardLITA.id,
+        { target_card_id: discardedCard.id },
+      );
+    });
+
+    it("handles 'CARDS OFF THE TABLE' flow", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardCOFT],
+      });
+      render(<GameContainer />);
+
+      const applyButton = screen.getByTestId("apply-effect-btn");
+
+      // 1. Seleccionar y jugar evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardCOFT.id}`));
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 2. Botón "Apply" debe estar deshabilitado
+      expect(applyButton).toBeDisabled();
+
+      // 3. Seleccionar jugador
+      fireEvent.click(screen.getByTestId("mock-select-player"));
+
+      // 4. Botón "Apply" debe estar habilitado
+      expect(applyButton).not.toBeDisabled();
+
+      // 5. Aplicar efecto
+      await act(async () => {
+        fireEvent.click(applyButton);
+      });
+
+      // 6. Verificar API
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardCOFT.id,
+        { target_player_id: "player-target-id" },
+      );
+    });
+
+    it("handles 'AND THEN THERE WAS ONE MORE' flow", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardATWOME],
+        secrets: [{ id: "secret-target-id", is_revealed: true } as any], // Secreto revelado
+      });
+      render(<GameContainer />);
+
+      const applyButton = screen.getByTestId("apply-effect-btn");
+
+      // 1. Seleccionar y jugar evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardATWOME.id}`));
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 2. Botón "Apply" deshabilitado
+      expect(applyButton).toBeDisabled();
+
+      // 3. Seleccionar secreto
+      fireEvent.click(screen.getByTestId("mock-select-secret"));
+
+      // 4. Botón "Apply" sigue deshabilitado
+      expect(applyButton).toBeDisabled();
+
+      // 5. Seleccionar jugador
+      fireEvent.click(screen.getByTestId("mock-select-player"));
+
+      // 6. Botón "Apply" habilitado
+      expect(applyButton).not.toBeDisabled();
+
+      // 7. Aplicar efecto
+      await act(async () => {
+        fireEvent.click(applyButton);
+      });
+
+      // 8. Verificar API
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardATWOME.id,
+        {
+          target_secret_id: "secret-target-id",
+          target_player_id: "player-target-id",
+        },
+      );
+    });
+
+    it("handles 'ANOTHER VICTIM' flow", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardAV],
+        sets: [{ id: "set-target-id", player_id: "other" } as any], // Set de otro jugador
+      });
+      render(<GameContainer />);
+
+      const applyButton = screen.getByTestId("apply-effect-btn");
+
+      // 1. Seleccionar y jugar evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardAV.id}`));
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 2. Botón "Apply" deshabilitado
+      expect(applyButton).toBeDisabled();
+
+      // 3. Seleccionar set
+      fireEvent.click(screen.getByTestId("mock-select-set"));
+
+      // 4. Botón "Apply" habilitado
+      expect(applyButton).not.toBeDisabled();
+
+      // 5. Aplicar efecto
+      await act(async () => {
+        fireEvent.click(applyButton);
+      });
+
+      // 6. Verificar API
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardAV.id,
+        { target_set_id: "set-target-id" },
+      );
+    });
+
+    it("handles simple events like 'DELAY THE MURDERER ESCAPE'", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardDELAY, discardedCard], // Carta en mano y carta en descarte
+      });
+      render(<GameContainer />);
+
+      // 1. Seleccionar y jugar evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardDELAY.id}`));
+
+      await act(async () => {
+        fireEvent.click(screen.getByTestId("play-event-btn"));
+      });
+
+      // 2. Verificar API (se llama instantáneamente)
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardDELAY.id,
+        { cards_ids: [discardedCard.id] }, // Asume que es la única en descarte
+      );
     });
   });
 });

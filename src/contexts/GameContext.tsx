@@ -43,6 +43,14 @@ export interface GameContextType {
   playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
 }
 
+interface CardEventPayload {
+  type: string;
+  discarded_card_event: GameCard;
+  updated_match_cards: GameCard[];
+  updated_secret?: GameSecret;
+  updated_set?: MatchSet;
+}
+
 const GameContext = createContext<GameContextType>({
   match: null,
   result: null,
@@ -178,6 +186,94 @@ export default function GameContextProvider({
       });
     };
 
+    const handleCardEvent = (payload: CardEventPayload) => {
+      if (
+        (payload.updated_match_cards &&
+          payload.updated_match_cards.length > 0) ||
+        payload.discarded_card_event
+      ) {
+        setCards((current) => {
+          const updatedCards = [...current];
+
+          // Caso especial: DELAY THE MURDERER ESCAPE
+          if (payload.type === "DELAY THE MURDERER ESCAPE") {
+            // 1. Marcar la carta del evento como descartada
+            handleEventCards([payload.discarded_card_event]);
+
+            // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
+            const regularDeckCards = updatedCards.filter(
+              (card) => card.player_id === null && !card.is_discarded,
+            );
+
+            // 3. Obtener las primeras 3 cartas que NO se tocarán
+            const firstThreeCards = regularDeckCards.slice(0, 3);
+
+            // 4. Las cartas actualizadas van después de las primeras 3
+            // Primero quitamos las cartas que vamos a actualizar de su posición actual
+            const cardsToUpdateIds = payload.updated_match_cards.map(
+              (c) => c.id,
+            );
+            const cardsWithoutUpdated = updatedCards.filter(
+              (card) => !cardsToUpdateIds.includes(card.id),
+            );
+
+            // 5. Insertar las cartas actualizadas después de las primeras 3
+            // Encontrar los índices de las primeras 3 cartas en el array completo
+            const firstThreeIndices = firstThreeCards.map((card) =>
+              cardsWithoutUpdated.findIndex((c) => c.id === card.id),
+            );
+
+            // Insertar las cartas actualizadas después de la tercera carta
+            const insertPosition = Math.max(...firstThreeIndices) + 1;
+
+            const fullUpdatedCards = payload.updated_match_cards.map(
+              (newCard) => {
+                const existingCard = current.find((c) => c.id === newCard.id);
+                return { ...existingCard, ...newCard };
+              },
+            );
+
+            const finalCards = [
+              ...cardsWithoutUpdated.slice(0, insertPosition),
+              ...fullUpdatedCards,
+              ...cardsWithoutUpdated.slice(insertPosition),
+            ];
+
+            return finalCards;
+          }
+
+          if (payload.updated_match_cards) {
+            handleEventCards(payload.updated_match_cards);
+          }
+
+          // 8. AÑADIR: Actualizar también la carta de evento que se descartó
+          if (payload.discarded_card_event) {
+            handleEventCards([payload.discarded_card_event]);
+          }
+
+          return updatedCards;
+        });
+      }
+
+      if (payload.updated_secret) {
+        handleUpdateSecrets(payload.updated_secret);
+      }
+
+      if (payload.updated_set) {
+        setSets((current) => {
+          const updatedSets = [...current];
+          const newSet = payload.updated_set;
+          if (newSet) {
+            const index = updatedSets.findIndex((s) => s.id === newSet.id);
+            if (index !== -1) {
+              updatedSets[index] = newSet;
+            }
+          }
+          return updatedSets;
+        });
+      }
+    };
+
     const handleUpdateSets = (set: MatchSet & { deleted_cards: UUID[] }) => {
       setSets((prevSets) => {
         const exists = prevSets.find((prevSet) => prevSet.id === set.id);
@@ -304,6 +400,7 @@ export default function GameContextProvider({
       BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
       handleCurrPlayerSelectItsSecret,
     );
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
@@ -318,6 +415,7 @@ export default function GameContextProvider({
         BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
         handleCurrPlayerSelectItsSecret,
       );
+      wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
     };
   }, [
     matchId,
