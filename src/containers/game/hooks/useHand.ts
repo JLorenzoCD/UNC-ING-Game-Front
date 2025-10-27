@@ -5,7 +5,6 @@
 import { useEffect, useRef, useState } from "react";
 
 import type { GameCard } from "@/types/card";
-import type { UUID } from "@/types/common";
 
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -18,21 +17,21 @@ const HAND_SIZE = 6;
 
 export function useHand() {
   const { httpService } = useHttpService();
-  const { cards, match } = useGame();
+  const { cards, match, playerFinishActionTurn } = useGame();
   const { player } = usePlayer();
 
   /* -- Estado y referencias --  */
 
-  const [handCards, setHandCards] = useState<HandCardList>([]);
+  const [handCards, setHandCards] = useState<HandCardList>(
+    new Array(HAND_SIZE).fill(null),
+  );
   const [selectedCards, setSelectedCards] = useState<GameCardMap>({});
 
   const [hasTakenCards, setHasTakenCards] = useState<boolean>(false);
   const [hasDiscardedCards, setHasDiscardedCards] = useState<boolean>(false);
 
-  // Determina si es la primera vez que se carga el componente.
-  // Se usa para cargar la mano del jugador solo una vez.
-  // Luego, las actualizaciones de cartas se harán por WebSocket.
-  const initialLoadRef = useRef<boolean>(true);
+  const handCardsRef = useRef(handCards);
+  handCardsRef.current = handCards;
 
   /* -- Variables -- */
 
@@ -41,41 +40,6 @@ export function useHand() {
   const isHandFull = handCards.filter((c) => c !== null).length === HAND_SIZE;
 
   /* -- Acciones sobre la mano -- */
-
-  const addCard = (card: GameCard) => {
-    setHandCards((current) => {
-      const emptyIndex = current.findIndex((c) => c === null);
-
-      if (emptyIndex !== -1) {
-        // Si hay una posición vacía, colocamos la carta allí
-        const updated = [...current];
-        card.player_id = player?.id as UUID;
-
-        updated[emptyIndex] = card;
-        return updated;
-      }
-
-      // Si no hay posiciones vacías, agregamos la carta al final
-      return [...current, card];
-    });
-  };
-
-  const removeCard = (card: GameCard) => {
-    // Removemos la carta de la mano.
-    // La reemplazamos con `null` para mantener la posición.
-    setHandCards((current) =>
-      current.map((c) => (c && c.id === card.id ? null : c)),
-    );
-
-    // La de-seleccionamos si estaba seleccionada.
-    setSelectedCards((current) => {
-      if (!current[card.id]) return current;
-
-      const updated = { ...current };
-      delete updated[card.id];
-      return updated;
-    });
-  };
 
   const selectCard = (card: GameCard) => {
     setSelectedCards((current) => {
@@ -107,7 +71,7 @@ export function useHand() {
       const cardIds = cards.map((card) => card.id);
       await httpService.putTakeCards(match.id, player.id, cardIds);
 
-      for (const card of cards) addCard(card);
+      // for (const card of cards) addCard(card);
     } catch (error) {
       console.error("Failed to take card:", error);
 
@@ -122,7 +86,7 @@ export function useHand() {
       const cardIds = cards.map((card) => card.id);
       await httpService.putDiscardCards(match.id, player.id, cardIds);
 
-      for (const card of cards) removeCard(card);
+      // for (const card of cards) removeCard(card);
     } catch (error) {
       console.error("Failed to discard card:", error);
 
@@ -136,14 +100,76 @@ export function useHand() {
     return Boolean(selectedCards[card.id]);
   };
 
-  const fillHandWithNulls = (cards: GameCard[]): HandCardList => {
-    const filledHand: HandCardList = [...cards];
+  const updateAndFillHandWithNulls = (
+    currHandCards: HandCardList,
+    newHandCards: GameCard[],
+  ): HandCardList => {
+    const newHandCardsIds = new Set(newHandCards.map((c) => c.id));
 
-    while (filledHand.length < HAND_SIZE) {
-      filledHand.push(null);
+    // Mantener cartas con el mismo id en el mismo orden, pero se actualizan
+    const newHand: HandCardList = currHandCards.map((card) => {
+      if (card && newHandCardsIds.has(card.id)) {
+        const newCard = newHandCards.find((c) => c.id === card.id) as GameCard;
+
+        newHandCardsIds.delete(card.id);
+        return newCard;
+      }
+
+      return null;
+    });
+
+    // Todas las nuevas cartas de mano ya estaban en las cartas actuales, y se
+    // actualizaron
+    if (newHandCardsIds.size === 0) return newHand;
+
+    // Se tienen que añadir las nuevas cartas en los espacios vacíos (nulls)
+    for (let i = 0; i < newHand.length && newHandCardsIds.size > 0; i++) {
+      const card = newHand[i];
+
+      if (card === null) {
+        const newCardId = Array.from(newHandCardsIds)[0];
+
+        const newCard = newHandCards.find(
+          (c) => c.id === newCardId,
+        ) as GameCard;
+        newHand[i] = newCard;
+
+        newHandCardsIds.delete(newCardId);
+      }
     }
 
-    return filledHand;
+    return newHand;
+  };
+
+  // PRE:
+  //    currHandCards.every((card) => card.player_id === player.id && !card.is_discarded )
+  //    newCards.every((card) => card.player_id === player.id && !card.is_discarded )
+  const isValidCurrHand = (
+    currHandCards: HandCardList,
+    newCards: GameCard[],
+  ) => {
+    const currCardIds = new Set(
+      currHandCards.filter((card) => card !== null).map((card) => card.id),
+    );
+    const newCardIds = new Set(newCards.map((card) => card.id));
+
+    if (currCardIds.size !== newCardIds.size) return false;
+
+    // Se elimino alguna carta de mano
+    for (const cardId of currCardIds) {
+      if (!newCardIds.has(cardId)) return false;
+    }
+
+    // Se añadió alguna carta a la mano
+    for (const cardId of newCardIds) {
+      if (!currCardIds.has(cardId)) return false;
+    }
+
+    // Faltaría verificar que las cartas no tengan algún campo modificado, pero
+    // en este caso los únicos que cambian son el player_id y is_discarded/discarded_at
+    // los cuales satisfacen PRE.
+
+    return true;
   };
 
   const getRandomCard = (): GameCard | null => {
@@ -172,21 +198,22 @@ export function useHand() {
     // o si ya tiene cartas en su mano
     if (cards.length === 0 || player === null) return;
 
-    if (!initialLoadRef.current) return;
+    const playerValidCards = cards.filter(
+      (card) => card.player_id === player.id && !card.is_discarded,
+    );
 
-    initialLoadRef.current = false;
+    if (isValidCurrHand(handCardsRef.current, playerValidCards)) return;
 
     setHandCards(
-      fillHandWithNulls(
-        cards.filter(
-          (card) => card.player_id === player.id && !card.is_discarded,
-        ),
-      ),
+      updateAndFillHandWithNulls(handCardsRef.current, playerValidCards),
     );
   }, [cards, player]);
 
+  useEffect(() => {
+    if (hasTakenCards) playerFinishActionTurn();
+  }, [hasTakenCards, playerFinishActionTurn]);
+
   return {
-    addCard,
     clearSelectedCards,
     discardCards,
     getRandomCard,
@@ -196,7 +223,6 @@ export function useHand() {
     isCardSelected,
     isHandFull,
     isSelectingCards,
-    removeCard,
     replaceCard,
     selectCard,
     selectedCards,

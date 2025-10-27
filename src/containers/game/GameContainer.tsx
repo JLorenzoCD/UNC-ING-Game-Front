@@ -56,8 +56,6 @@ export default function GameContainer() {
     clearSelectedCards,
     discardCards,
     getRandomCard,
-    removeCard,
-    addCard,
     handCards,
     isCardSelected,
     isHandFull,
@@ -110,7 +108,6 @@ export default function GameContainer() {
     isCurrPlayerSecretSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     getTargetSetEvent,
-    getSetCards,
     clearSetEvent,
   } = useSetEvent();
 
@@ -187,8 +184,6 @@ export default function GameContainer() {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
-      const setCards = getSetCards();
-      for (const card of setCards) removeCard(card);
       playerFinishActionTurn();
     } else if (canSelectMeAsPlayer) {
       const cardToUse = currentEventCard;
@@ -220,7 +215,6 @@ export default function GameContainer() {
           eventPayload,
         );
 
-        removeCard(cardToUse);
         clearSelectedCards();
       } catch (error) {
         console.error("Error al ejecutar el evento", error);
@@ -233,8 +227,6 @@ export default function GameContainer() {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
-      const setCards = getSetCards();
-      for (const card of setCards) removeCard(card);
       playerFinishActionTurn();
     }
   };
@@ -653,7 +645,6 @@ export default function GameContainer() {
       // Reseteamos los estados relacionados con el descarte
       setHasTakenCards(false);
       setHasDiscardedCards(false);
-      setCurrentEventCard(null);
       setCurrentEventStep(null);
 
       clearSelectedCards();
@@ -831,13 +822,9 @@ export default function GameContainer() {
         eventPayload,
       );
 
-      removeCard(cardToUse);
-      if (currentEventCard?.name === "LOOK INTO THE ASHES") {
-        const selectedCardsArray = Object.values(selectedCards);
-        addCard(selectedCardsArray[1]);
-      }
       clearSelectedCards();
       playerFinishActionTurn();
+      setCurrentEventCard(null);
     } catch (error) {
       console.error("Error al ejecutar el evento", error);
     }
