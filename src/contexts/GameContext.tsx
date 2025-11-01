@@ -144,7 +144,10 @@ export default function GameContextProvider({
     }
   }, [httpService, matchId]);
 
-  const playerFinishActionTurn = () => setPlayerFinishAction(true);
+  const playerFinishActionTurn = useCallback(
+    () => setPlayerFinishAction(true),
+    [],
+  );
 
   useEffect(() => {
     fetchMatchData();
@@ -187,100 +190,82 @@ export default function GameContextProvider({
     };
 
     const handleCardEvent = (payload: CardEventPayload) => {
-      if (
-        (payload.updated_match_cards &&
-          payload.updated_match_cards.length > 0) ||
-        payload.discarded_card_event
-      ) {
+      if (payload.type === "DELAY THE MURDERER ESCAPE") {
         setCards((current) => {
           const updatedCards = [...current];
 
           // Caso especial: DELAY THE MURDERER ESCAPE
-          if (payload.type === "DELAY THE MURDERER ESCAPE") {
-            // 1. Marcar la carta del evento como descartada
-            handleEventCards([payload.discarded_card_event]);
+          // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
+          const regularDeckCards = updatedCards.filter(
+            (card) => card.player_id === null && !card.is_discarded,
+          );
 
-            // 2. Obtener las cartas del mazo regular (sin dueño, no descartadas)
-            const regularDeckCards = updatedCards.filter(
-              (card) => card.player_id === null && !card.is_discarded,
-            );
+          // 3. Obtener las primeras 3 cartas que NO se tocarán
+          const firstThreeCards = regularDeckCards.slice(0, 3);
 
-            // 3. Obtener las primeras 3 cartas que NO se tocarán
-            const firstThreeCards = regularDeckCards.slice(0, 3);
+          // 4. Las cartas actualizadas van después de las primeras 3
+          // Primero quitamos las cartas que vamos a actualizar de su posición actual
+          const cardsToUpdateIds = payload.updated_match_cards.map((c) => c.id);
+          const cardsWithoutUpdated = updatedCards.filter(
+            (card) => !cardsToUpdateIds.includes(card.id),
+          );
 
-            // 4. Las cartas actualizadas van después de las primeras 3
-            // Primero quitamos las cartas que vamos a actualizar de su posición actual
-            const cardsToUpdateIds = payload.updated_match_cards.map(
-              (c) => c.id,
-            );
-            const cardsWithoutUpdated = updatedCards.filter(
-              (card) => !cardsToUpdateIds.includes(card.id),
-            );
+          // 5. Insertar las cartas actualizadas después de las primeras 3
+          // Encontrar los índices de las primeras 3 cartas en el array completo
+          const firstThreeIndices = firstThreeCards.map((card) =>
+            cardsWithoutUpdated.findIndex((c) => c.id === card.id),
+          );
 
-            // 5. Insertar las cartas actualizadas después de las primeras 3
-            // Encontrar los índices de las primeras 3 cartas en el array completo
-            const firstThreeIndices = firstThreeCards.map((card) =>
-              cardsWithoutUpdated.findIndex((c) => c.id === card.id),
-            );
+          // Insertar las cartas actualizadas después de la tercera carta
+          const insertPosition = Math.max(...firstThreeIndices) + 1;
 
-            // Insertar las cartas actualizadas después de la tercera carta
-            const insertPosition = Math.max(...firstThreeIndices) + 1;
+          const fullUpdatedCards = payload.updated_match_cards.map(
+            (newCard) => {
+              const existingCard = current.find((c) => c.id === newCard.id);
+              return { ...existingCard, ...newCard };
+            },
+          );
 
-            const fullUpdatedCards = payload.updated_match_cards.map(
-              (newCard) => {
-                const existingCard = current.find((c) => c.id === newCard.id);
-                return { ...existingCard, ...newCard };
-              },
-            );
+          const finalCards = [
+            ...cardsWithoutUpdated.slice(0, insertPosition),
+            ...fullUpdatedCards,
+            ...cardsWithoutUpdated.slice(insertPosition),
+          ];
 
-            const finalCards = [
-              ...cardsWithoutUpdated.slice(0, insertPosition),
-              ...fullUpdatedCards,
-              ...cardsWithoutUpdated.slice(insertPosition),
-            ];
-
-            return finalCards;
-          }
-
-          if (payload.updated_match_cards) {
-            handleEventCards(payload.updated_match_cards);
-          }
-
-          // 8. AÑADIR: Actualizar también la carta de evento que se descartó
-          if (payload.discarded_card_event) {
-            handleEventCards([payload.discarded_card_event]);
-          }
-
-          return updatedCards;
+          return finalCards;
         });
       }
 
-      if (payload.updated_secret) {
+      if (
+        payload.updated_match_cards &&
+        payload.updated_match_cards.length > 0
+      ) {
+        handleEventCards(payload.updated_match_cards);
+      }
+
+      if (
+        payload.discarded_card_event &&
+        "card_id" in payload.discarded_card_event
+      ) {
+        handleEventCards([payload.discarded_card_event]);
+      }
+
+      if (payload.updated_secret && "secret_id" in payload.updated_secret) {
         handleUpdateSecrets(payload.updated_secret);
       }
 
       if (payload.updated_set) {
-        setSets((current) => {
-          const updatedSets = [...current];
-          const newSet = payload.updated_set;
-          if (newSet) {
-            const index = updatedSets.findIndex((s) => s.id === newSet.id);
-            if (index !== -1) {
-              updatedSets[index] = newSet;
-            }
-          }
-          return updatedSets;
-        });
+        handleUpdateSets(payload.updated_set);
       }
     };
 
-    const handleUpdateSets = (set: MatchSet & { deleted_cards: UUID[] }) => {
+    const handleUpdateSets = (set: MatchSet & { deleted_cards?: UUID[] }) => {
       setSets((prevSets) => {
-        const exists = prevSets.find((prevSet) => prevSet.id === set.id);
-        let updateSet = prevSets;
+        const index = prevSets.findIndex((prevSet) => prevSet.id === set.id);
+        let updateSet = [...prevSets];
 
-        //* Solo manejo la creación de un set.
-        if (!exists) {
+        // Creación de un set.
+        if (index === -1 && set.deleted_cards !== undefined) {
           const playerOwnerSet = players.find((p) => p.id === set.player_id);
           if (!playerOwnerSet) return prevSets;
 
@@ -295,12 +280,17 @@ export default function GameContextProvider({
           setCards((prevCards) => {
             // Se eliminan las cartas cuyos ids estén en el arreglo de set.deleted_cards
             return prevCards.filter(
-              (card) => !set.deleted_cards.includes(card.id),
+              (card) => !(set.deleted_cards as UUID[]).includes(card.id),
             );
           });
+        } else if (
+          // Modificación de un set
+          index !== -1 &&
+          set.deleted_cards === undefined &&
+          prevSets[index].player_id !== set.player_id
+        ) {
+          updateSet[index] = set;
         }
-
-        // TODO: Se debe manejar los otros eventos.
 
         return updateSet;
       });
@@ -459,6 +449,7 @@ export default function GameContextProvider({
       isPlayerFinishAction,
       playerSelectsOneOfHisSecrets,
       lastUpdatedSecretId,
+      playerFinishActionTurn,
     ],
   );
 
