@@ -52,8 +52,10 @@ export default function Secret({
     return null;
   }
 
+  const isSelectable = isSelectableSecret(secret);
+
   const handleClickSecret = () => {
-    if (typeof onSelectTargetEvent !== "function") return;
+    if (typeof onSelectTargetEvent !== "function" || !isSelectable) return;
 
     onSelectTargetEvent(secret);
   };
@@ -68,7 +70,6 @@ export default function Secret({
 
   const isTarget = target?.id === secret.id;
   const isSelectingTarget = target === null;
-  const isSelectable = isSelectableSecret(secret);
 
   const isSelfRevealed = isRevealed && isSessionPlayer;
 

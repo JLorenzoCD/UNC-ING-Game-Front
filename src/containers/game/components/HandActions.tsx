@@ -9,14 +9,13 @@ interface HandActionsProps {
   onSelectPlayer: () => void; // Callback que se ejecuta al clickear el botón seleccionar un jugador
   onSelectSecret: () => void; // Callback que se ejecuta al clickear el botón seleccionar un secreto
   onPlayEvent: () => void; // Callback que se ejecuta al clickear el boton de jugar evento
-  onEndEvent: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
+  onSelectSet: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
-  isDisabledEndEvent: boolean; // Indica si el boton para teminar eveto esta habilitado
-  isSelectionSetEvent: boolean; // Indica si se esta seleccionado un set
+  isSelectionSetEvent: boolean; // Indica si el boton para seleccionar un set esta habilitado
   canSelectMeAsPlayer: boolean; // Indica si el jugador puede seleccionarse a si mismo.
 }
 
@@ -27,14 +26,13 @@ export default function HandActions({
   onSelectPlayer,
   onSelectSecret,
   onPlayEvent,
-  onEndEvent,
+  onSelectSet,
   isDisabled,
   isSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
   isSelectionSetEvent,
   isDisabledEvent,
-  isDisabledEndEvent,
   canSelectMeAsPlayer,
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
@@ -80,6 +78,13 @@ export default function HandActions({
       </Button>
 
       <Button
+        onClick={onSelectSet}
+        disabled={isDisabled || !isSelectionSetEvent}
+      >
+        Select set
+      </Button>
+
+      <Button
         onClick={onFinish}
         disabled={
           shouldDisableOption || playerSelectsOneOfHisSecrets.isSelecting
@@ -90,10 +95,6 @@ export default function HandActions({
 
       <Button onClick={onPlayEvent} disabled={isDisabledEvent}>
         Play event
-      </Button>
-
-      <Button onClick={onEndEvent} disabled={isDisabledEndEvent}>
-        Apply effect
       </Button>
     </div>
   );
