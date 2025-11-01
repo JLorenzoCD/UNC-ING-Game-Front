@@ -122,22 +122,6 @@ export function createHttpService() {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
   };
 
-  const putMatchCards = async (
-    matchId: UUID,
-    playerId: UUID,
-    cardIds: UUID[],
-  ): Promise<void> => {
-    const options: RequestInit = {
-      method: "PUT",
-      body: JSON.stringify({
-        player_id: playerId,
-        card_ids: cardIds,
-      }),
-    };
-
-    return request(BACKEND_ENDPOINTS.TAKE_CARDS(matchId), options);
-  };
-
   const putTakeCards = async (
     matchId: UUID,
     playerId: UUID,
@@ -237,7 +221,6 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
-    putMatchCards,
     putTakeCards,
     putDiscardCards,
     putPassTurn,
