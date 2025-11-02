@@ -12,6 +12,7 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import { isUUID } from "@/utils";
 import { fillAndShufflePlayers } from "./utils";
+import { handleApiError } from "@/utils/errorHandler";
 
 import type { UUID } from "@/types/common";
 
@@ -60,8 +61,7 @@ export default function LobbyContainer() {
         throw new Error("Unexpected response at the start of the game.");
       }
     } catch (err) {
-      console.error(err);
-      alert("The game could not be started.");
+      handleApiError(err, "The game could not be started");
     }
   }
 

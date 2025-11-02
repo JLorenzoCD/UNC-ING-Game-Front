@@ -738,8 +738,12 @@ describe("GameContainer", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to perform mandatory discard:",
-        expect.any(Error),
+        "[API Error]",
+        "Failed to perform mandatory discard",
+        expect.objectContaining({
+          error: expect.any(Error),
+          timestamp: expect.any(String),
+        }),
       );
 
       expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);

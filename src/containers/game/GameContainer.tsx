@@ -36,6 +36,7 @@ import {
   GAME_RULES,
   type EventStep,
 } from "@/constants/game";
+import { handleApiError } from "@/utils/errorHandler";
 
 export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
@@ -230,7 +231,7 @@ export default function GameContainer() {
 
         clearSelectedCards();
       } catch (error) {
-        console.error("Error al ejecutar el evento", error);
+        handleApiError(error, "Error al ejecutar el evento");
       }
     }
   };
@@ -506,8 +507,7 @@ export default function GameContainer() {
         setHasTakenCards(true);
       }
     } catch (error) {
-      console.error("Failed to take card from draft:", error);
-      toast.error("Failed to take card from draft.");
+      handleApiError(error, "Failed to take card from draft");
     }
   };
 
@@ -536,9 +536,7 @@ export default function GameContainer() {
 
       setHasTakenCards(true);
     } catch (error) {
-      console.error("Failed to take cards from draw pile:", error);
-
-      toast.error("Failed to take cards from draw pile.");
+      handleApiError(error, "Failed to take cards from draw pile");
     }
   };
 
@@ -574,10 +572,7 @@ export default function GameContainer() {
       clearSelectedCards();
       playerFinishActionTurn();
     } catch (error) {
-      console.error("Failed to discard selected cards:", error);
-
-      toast.error("Failed to discard selected cards.");
-
+      handleApiError(error, "Failed to discard selected cards");
       throw error;
     }
   };
@@ -616,10 +611,7 @@ export default function GameContainer() {
       setHasTakenCards(true);
       setHasDiscardedCards(true);
     } catch (error) {
-      console.error("Failed to perform mandatory discard:", error);
-
-      toast.error("Failed to perform mandatory discard.");
-
+      handleApiError(error, "Failed to perform mandatory discard");
       // Lanzamos el error de nuevo para que no pueda pasar el turno
       // si el descarte falló.
       throw error;
@@ -662,7 +654,7 @@ export default function GameContainer() {
 
       clearSelectedCards();
     } catch (error) {
-      console.error("Failed to finish turn:", error);
+      handleApiError(error, "Failed to finish turn");
     }
 
     clearSetEvent();
@@ -839,7 +831,7 @@ export default function GameContainer() {
       playerFinishActionTurn();
       setCurrentEventCard(null);
     } catch (error) {
-      console.error("Error al ejecutar el evento", error);
+      handleApiError(error, "Error al ejecutar el evento");
     }
   };
 

@@ -10,6 +10,7 @@ import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { GAME_RULES } from "@/constants/game";
+import { logError } from "@/utils/errorHandler";
 
 type HandCardList = Array<GameCard | null>;
 type GameCardMap = Record<string, GameCard>;
@@ -74,7 +75,7 @@ export function useHand() {
 
       // for (const card of cards) addCard(card);
     } catch (error) {
-      console.error("Failed to take card:", error);
+      logError(error, "Failed to take card");
 
       throw error;
     }
@@ -89,7 +90,7 @@ export function useHand() {
 
       // for (const card of cards) removeCard(card);
     } catch (error) {
-      console.error("Failed to discard card:", error);
+      logError(error, "Failed to discard card");
 
       throw error;
     }
