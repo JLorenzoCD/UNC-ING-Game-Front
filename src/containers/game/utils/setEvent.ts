@@ -1,6 +1,6 @@
 import type { UUID } from "@/types/common";
 import type { CardName, GameCard } from "@/types/card";
-import type { SetCreationData, SetType } from "@/types/set";
+import type { MatchSet, SetCreationData, SetType } from "@/types/set";
 
 const MIN_CARD_COUT_FOR_SET: Record<SetType, number> = {
   "HERCULE POIROT": 3,
@@ -203,4 +203,37 @@ export function isSetActionStolenSecret(cards: GameCard[]) {
   const setType = cardsToSetTypeDetective(cards) as SetType;
 
   return setType === "MR SATTERTHWAITE" && isSetWithQuin(cards);
+}
+
+export function canDownTheCardToASet(
+  card: GameCard,
+  sets: MatchSet[],
+  currPlayerId: UUID,
+) {
+  if (card.type !== "DETECTIVE") return false;
+  if (sets.length === 0) return false;
+
+  if (card.name === "HARLEY QUIN WILDCARD") return false;
+  if (card.name === "ARIADNE OLIVER") return true;
+
+  const currPlayerSetsType = Object.keys(
+    Object.groupBy(
+      sets.filter((s) => s.player_id === currPlayerId),
+      (set) => set.type,
+    ),
+  ) as SetType[];
+  if (currPlayerSetsType.length === 0) return false; // El jugador no tiene sets
+
+  for (const setType of currPlayerSetsType) {
+    if (card.name === setType) return true;
+
+    if (
+      setType === "TWO BERESFORD" &&
+      (card.name === "TOMMY BERESFORD" || card.name === "TUPPENCE BERESFORD")
+    )
+      return true;
+  }
+
+  // El jugador actual no tiene ningún set valido al cual bajar la carta
+  return false;
 }
