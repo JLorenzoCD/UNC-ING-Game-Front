@@ -921,10 +921,12 @@ export default function GameContainer() {
             <div className="flex flex-col gap-y-3">
               <Secrets
                 secrets={playerSecrets}
-                isSelectableSecret={isCurrPlayersSecretSelectable}
+                isSelectableSecret={
+                  isCurrPlayersSecretSelectable || isSelectableSecret
+                }
                 isTargetSecret={isTargetSecretEvent()}
                 onSelectTargetEvent={handleSelectTargetEvent}
-                target={getTargetSetEvent()}
+                target={getTargetSetEvent() || selectedTargetSecret}
               />
               <Sets sets={playerSets} />
             </div>
