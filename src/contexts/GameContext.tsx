@@ -22,7 +22,10 @@ import type { GameCard } from "@/types/card";
 import type { GameSecret, MatchSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 import type { MatchSet } from "@/types/set";
-import type { EventMatchCompletedPayload } from "@/types/ws";
+import type {
+  EventMatchCompletedPayload,
+  EventCardEventPayload,
+} from "@/types/ws";
 import type { UUID } from "@/types/common";
 
 export interface GameContextType {
@@ -41,14 +44,6 @@ export interface GameContextType {
   isPlayerFinishAction: boolean;
   playerFinishActionTurn: () => void;
   playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
-}
-
-interface CardEventPayload {
-  type: string;
-  discarded_card_event: GameCard;
-  updated_match_cards: GameCard[];
-  updated_secret?: GameSecret;
-  updated_set?: MatchSet;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -189,7 +184,7 @@ export default function GameContextProvider({
       });
     };
 
-    const handleCardEvent = (payload: CardEventPayload) => {
+    const handleCardEvent = (payload: EventCardEventPayload) => {
       if (payload.type === "DELAY THE MURDERER ESCAPE") {
         setCards((current) => {
           const updatedCards = [...current];

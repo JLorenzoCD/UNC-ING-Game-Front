@@ -35,18 +35,28 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const storedPlayer = localStorage.getItem("player");
+    try {
+      const storedPlayer = localStorage.getItem("player");
 
-    if (storedPlayer) {
-      setPlayer(JSON.parse(storedPlayer));
+      if (storedPlayer) {
+        setPlayer(JSON.parse(storedPlayer));
+      }
+    } catch (error) {
+      console.error("Error al cargar datos del jugador desde localStorage:", error);
+      // Limpiamos datos corruptos
+      localStorage.removeItem("player");
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   }, []);
 
   useEffect(() => {
     if (player) {
-      localStorage.setItem("player", JSON.stringify(player));
+      try {
+        localStorage.setItem("player", JSON.stringify(player));
+      } catch (error) {
+        console.error("Error al guardar datos del jugador en localStorage:", error);
+      }
     }
   }, [player]);
 

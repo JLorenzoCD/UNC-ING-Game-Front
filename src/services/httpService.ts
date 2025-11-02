@@ -13,19 +13,30 @@ import type { MatchSet, SetCreationData } from "@/types/set";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
-function isApiUrlDefined(): boolean {
-  return (
-    typeof import.meta.env.VITE_API_URL === "string" &&
-    import.meta.env.VITE_API_URL.length > 0
-  );
+function getValidatedApiUrl(): string {
+  const envUrl = import.meta.env.VITE_API_URL;
+
+  // Si no está definida o es una string vacía, usar default
+  if (!envUrl || typeof envUrl !== "string" || envUrl.length === 0) {
+    return DEFAULT_BASE_URL;
+  }
+
+  // Validar que sea una URL válida
+  try {
+    new URL(envUrl);
+    return envUrl;
+  } catch {
+    console.warn(
+      `Invalid VITE_API_URL: "${envUrl}". Using default: ${DEFAULT_BASE_URL}`
+    );
+    return DEFAULT_BASE_URL;
+  }
 }
 
 export type HttpService = ReturnType<typeof createHttpService>;
 
 export function createHttpService() {
-  const baseUrl = isApiUrlDefined()
-    ? import.meta.env.VITE_API_URL
-    : DEFAULT_BASE_URL;
+  const baseUrl = getValidatedApiUrl();
 
   /**
    * Realiza una petición HTTP a una ruta específica de la API con las opciones proporcionadas.

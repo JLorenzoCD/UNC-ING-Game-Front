@@ -9,11 +9,12 @@ import type { GameCard } from "@/types/card";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
+import { GAME_RULES } from "@/constants/game";
 
 type HandCardList = Array<GameCard | null>;
 type GameCardMap = Record<string, GameCard>;
 
-const HAND_SIZE = 6;
+const HAND_SIZE = GAME_RULES.HAND_SIZE;
 
 export function useHand() {
   const { httpService } = useHttpService();

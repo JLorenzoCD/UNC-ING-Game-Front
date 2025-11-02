@@ -27,7 +27,12 @@ export default function Modal({
 }: Props) {
   const modalRoot = document.getElementById("modal-root");
 
-  if (modalRoot === null || !isOpen) return null;
+  if (!isOpen) return null;
+
+  if (modalRoot === null) {
+    console.error('Modal: DOM element "modal-root" not found');
+    return null;
+  }
 
   return ReactDOM.createPortal(
     <div

@@ -1,15 +1,34 @@
+import type { WebSocketEventMap, WebSocketEventCallback } from "@/types/ws";
+
 const MAX_RECONNECT_ATTEMPTS = 5;
 const MAX_RECONNECT_DELAY = 30000; // 30 segundos
 
-type EventCallback = (data: any) => void;
-
 export type WSService = ReturnType<typeof createWsService>;
 
-function isWsUrlDefined(): boolean {
-  return (
-    typeof import.meta.env.VITE_WS_URL === "string" &&
-    import.meta.env.VITE_WS_URL.length > 0
-  );
+const DEFAULT_WS_URL = "ws://localhost:8000/ws";
+
+function getValidatedWsUrl(): string {
+  const envUrl = import.meta.env.VITE_WS_URL;
+
+  // Si no está definida o es una string vacía, usar default
+  if (!envUrl || typeof envUrl !== "string" || envUrl.length === 0) {
+    return DEFAULT_WS_URL;
+  }
+
+  // Validar que sea una URL válida con protocolo ws:// o wss://
+  try {
+    const url = new URL(envUrl);
+    if (url.protocol !== "ws:" && url.protocol !== "wss:") {
+      throw new Error("WebSocket URL must use ws:// or wss:// protocol");
+    }
+    return envUrl;
+  } catch (error) {
+    console.warn(
+      `Invalid VITE_WS_URL: "${envUrl}". Using default: ${DEFAULT_WS_URL}`,
+      error
+    );
+    return DEFAULT_WS_URL;
+  }
 }
 
 function formatWsUrl(baseUrl: string, playerId: string | null): string {
@@ -27,13 +46,13 @@ export function createWsService(playerId: string | null = null) {
   let reconnectTimeout: number | null = null;
   let reconnectAttempts = 0;
 
-  const baseUrl = isWsUrlDefined()
-    ? import.meta.env.VITE_WS_URL
-    : "ws://localhost:8000/ws";
-
+  const baseUrl = getValidatedWsUrl();
   const wsUrl = formatWsUrl(baseUrl, playerId);
 
-  const listeners = new Map<string, EventCallback[]>();
+  const listeners = new Map<
+    keyof WebSocketEventMap,
+    Array<WebSocketEventCallback<any>>
+  >();
 
   const connect = () => {
     try {
@@ -103,7 +122,10 @@ export function createWsService(playerId: string | null = null) {
     }
   };
 
-  const emit = (event: string, data: any) => {
+  const emit = <K extends keyof WebSocketEventMap>(
+    event: K,
+    data: WebSocketEventMap[K],
+  ) => {
     const listener = listeners.get(event);
 
     if (typeof listener !== "undefined") {
@@ -111,25 +133,36 @@ export function createWsService(playerId: string | null = null) {
     }
   };
 
-  const on = (event: string, callback: EventCallback) => {
+  const on = <K extends keyof WebSocketEventMap>(
+    event: K,
+    callback: WebSocketEventCallback<K>,
+  ) => {
     if (!listeners.has(event)) {
       listeners.set(event, []);
     }
 
-    listeners.get(event)!.push(callback);
+    listeners.get(event)!.push(callback as WebSocketEventCallback<any>);
   };
 
-  const off = (event: string, callback: EventCallback) => {
+  const off = <K extends keyof WebSocketEventMap>(
+    event: K,
+    callback: WebSocketEventCallback<K>,
+  ) => {
     const eventListeners = listeners.get(event);
     if (!eventListeners) return;
 
-    const index = eventListeners.indexOf(callback);
+    const index = eventListeners.indexOf(
+      callback as WebSocketEventCallback<any>,
+    );
     if (index !== -1) {
       eventListeners.splice(index, 1);
     }
   };
 
-  const send = (event: string, payload?: any) => {
+  const send = <K extends keyof WebSocketEventMap>(
+    event: K,
+    payload?: WebSocketEventMap[K],
+  ) => {
     if (websocket && isConnected) {
       websocket.send(JSON.stringify({ event, payload }));
     } else {

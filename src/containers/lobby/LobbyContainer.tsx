@@ -4,6 +4,7 @@ import { useLobbyData } from "./useLobbyData";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
+import Loading from "@/components/Loading";
 import LobbyLayout from "./components/LobbyLayout";
 import PlayerCard, { EmptyPlayerPosition } from "./components/PlayerCard";
 
@@ -31,7 +32,7 @@ export default function LobbyContainer() {
   }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <Loading />;
   }
 
   if (error || match == null) {
@@ -68,7 +69,7 @@ export default function LobbyContainer() {
     <LobbyLayout
       match={match}
       startGame={startGame}
-      isOwner={player.id == match.owner_id}
+      isOwner={player.id === match.owner_id}
     >
       {playersToView.map((p, index) =>
         p === null ? (
