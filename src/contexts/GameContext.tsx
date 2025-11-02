@@ -41,7 +41,7 @@ export interface GameContextType {
   error: Error | null;
 
   lastUpdatedSecretId: UUID | null;
-  isPlayerFinishAction: boolean;
+  hasFinishedAction: boolean;
   playerFinishActionTurn: () => void;
   playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
 }
@@ -59,7 +59,7 @@ const GameContext = createContext<GameContextType>({
   error: null,
 
   lastUpdatedSecretId: null,
-  isPlayerFinishAction: false,
+  hasFinishedAction: false,
   playerFinishActionTurn: () => undefined,
   playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
 });
@@ -90,8 +90,7 @@ export default function GameContextProvider({
       isCurrPlayer: false,
       isSelecting: false,
     });
-  const [isPlayerFinishAction, setPlayerFinishAction] =
-    useState<boolean>(false);
+  const [hasFinishedAction, setPlayerFinishAction] = useState<boolean>(false);
 
   const [match, setMatch] = useState<Match | null>(null);
   const [result, setResult] = useState<MatchResult | null>(null);
@@ -402,14 +401,7 @@ export default function GameContextProvider({
       );
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
     };
-  }, [
-    matchId,
-    wsService,
-    isConnected,
-    players,
-    player,
-    playerSelectsOneOfHisSecrets,
-  ]);
+  }, [matchId, wsService, isConnected, players, player]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
@@ -428,7 +420,7 @@ export default function GameContextProvider({
 
       lastUpdatedSecretId,
       playerSelectsOneOfHisSecrets,
-      isPlayerFinishAction,
+      hasFinishedAction,
       playerFinishActionTurn,
     }),
     [
@@ -441,7 +433,7 @@ export default function GameContextProvider({
       isLoading,
       hasError,
       error,
-      isPlayerFinishAction,
+      hasFinishedAction,
       playerSelectsOneOfHisSecrets,
       lastUpdatedSecretId,
       playerFinishActionTurn,

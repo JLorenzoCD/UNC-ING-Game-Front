@@ -52,7 +52,7 @@ export default function GameContainer() {
     cards,
     result,
     sets,
-    isPlayerFinishAction,
+    hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
   } = useGame();
@@ -405,7 +405,7 @@ export default function GameContainer() {
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
     ];
     if (hasDiscardedCards) return false;
-    if (isPlayerFinishAction == true) return false;
+    if (hasFinishedAction === true) return false;
     if (currentEventCard !== null) return false;
     if (nameCard === GAME_EVENTS.ANOTHER_VICTIM) {
       const hasOtherPlayerSets = sets.some(
@@ -432,7 +432,7 @@ export default function GameContainer() {
     secrets,
     sets,
     player,
-    isPlayerFinishAction,
+    hasFinishedAction,
   ]);
 
   // -- Utilidades --
@@ -637,7 +637,7 @@ export default function GameContainer() {
       // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
       if (
-        !(hasDiscardedCards || isPlayerFinishAction) &&
+        !(hasDiscardedCards || hasFinishedAction) &&
         currentEventCard === null
       ) {
         await mandatoryDiscard();

@@ -458,7 +458,7 @@ describe("GameContainer", () => {
       isLoading: false,
       hasError: false,
       error: null,
-      isPlayerFinishAction: false,
+      hasFinishedAction: false,
       lastUpdatedSecretId: null,
       playerFinishActionTurn: () => undefined,
       playerSelectsOneOfHisSecrets: {
@@ -624,7 +624,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
@@ -657,7 +657,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
@@ -802,7 +802,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
