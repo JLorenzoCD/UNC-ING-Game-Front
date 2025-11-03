@@ -157,17 +157,6 @@ export default function GameContainer() {
       }
       return; // Importante: Salir después de manejar el evento de carta
     }
-    if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_player"
-    ) {
-      if (selectedTargetPlayer && selectedTargetSecret) {
-        await handleEndEvent();
-      } else {
-        toast.error("You must select a secret and a player first.");
-      }
-      return;
-    }
 
     if (isSetEvent) {
       const ok = await executeSetActionToTarget();
@@ -208,6 +197,21 @@ export default function GameContainer() {
       } catch (error) {
         console.error("Error al ejecutar el evento", error);
       }
+    }
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_player"
+    ) {
+      if (
+        (selectedTargetPlayer || canSelectMeAsPlayer) &&
+        selectedTargetSecret
+      ) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a secret and a player first.");
+      }
+      return;
     }
   };
 
@@ -275,6 +279,13 @@ export default function GameContainer() {
   const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
     if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return isCurrPlayerSecretSelectableForSetEvent(secret);
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      return secret.is_revealed;
+    }
 
     return false;
   };
@@ -801,6 +812,7 @@ export default function GameContainer() {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
         }
+        console.log(selectedTargetPlayer, selectedTargetSecret);
         eventPayload = {
           target_secret_id: selectedTargetSecret.id,
           target_player_id: selectedTargetPlayer.id,
@@ -921,9 +933,7 @@ export default function GameContainer() {
             <div className="flex flex-col gap-y-3">
               <Secrets
                 secrets={playerSecrets}
-                isSelectableSecret={
-                  isCurrPlayersSecretSelectable || isSelectableSecret
-                }
+                isSelectableSecret={isCurrPlayersSecretSelectable}
                 isTargetSecret={isTargetSecretEvent()}
                 onSelectTargetEvent={handleSelectTargetEvent}
                 target={getTargetSetEvent() || selectedTargetSecret}
