@@ -4,6 +4,7 @@ import { useLobbyData } from "./useLobbyData";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
+import Loading from "@/components/Loading";
 import LobbyLayout from "./components/LobbyLayout";
 import PlayerCard, { EmptyPlayerPosition } from "./components/PlayerCard";
 
@@ -11,6 +12,7 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import { isUUID } from "@/utils";
 import { fillAndShufflePlayers } from "./utils";
+import { handleApiError } from "@/utils/errorHandler";
 
 import type { UUID } from "@/types/common";
 
@@ -31,7 +33,7 @@ export default function LobbyContainer() {
   }
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <Loading />;
   }
 
   if (error || match == null) {
@@ -59,8 +61,7 @@ export default function LobbyContainer() {
         throw new Error("Unexpected response at the start of the game.");
       }
     } catch (err) {
-      console.error(err);
-      alert("The game could not be started.");
+      handleApiError(err, "The game could not be started");
     }
   }
 
@@ -68,7 +69,7 @@ export default function LobbyContainer() {
     <LobbyLayout
       match={match}
       startGame={startGame}
-      isOwner={player.id == match.owner_id}
+      isOwner={player.id === match.owner_id}
     >
       {playersToView.map((p, index) =>
         p === null ? (

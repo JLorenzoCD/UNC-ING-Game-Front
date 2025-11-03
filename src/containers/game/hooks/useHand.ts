@@ -9,11 +9,13 @@ import type { GameCard } from "@/types/card";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
+import { GAME_RULES } from "@/constants/game";
+import { logError } from "@/utils/errorHandler";
 
 type HandCardList = Array<GameCard | null>;
 type GameCardMap = Record<string, GameCard>;
 
-const HAND_SIZE = 6;
+const HAND_SIZE = GAME_RULES.HAND_SIZE;
 
 export function useHand() {
   const { httpService } = useHttpService();
@@ -70,10 +72,8 @@ export function useHand() {
     try {
       const cardIds = cards.map((card) => card.id);
       await httpService.putTakeCards(match.id, player.id, cardIds);
-
-      // for (const card of cards) addCard(card);
     } catch (error) {
-      console.error("Failed to take card:", error);
+      logError(error, "Failed to take card");
 
       throw error;
     }
@@ -85,10 +85,8 @@ export function useHand() {
     try {
       const cardIds = cards.map((card) => card.id);
       await httpService.putDiscardCards(match.id, player.id, cardIds);
-
-      // for (const card of cards) removeCard(card);
     } catch (error) {
-      console.error("Failed to discard card:", error);
+      logError(error, "Failed to discard card");
 
       throw error;
     }

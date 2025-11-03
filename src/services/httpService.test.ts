@@ -800,28 +800,4 @@ describe("httpService", () => {
       },
     );
   });
-
-  it("putMatchCards (take) sends correct request to take cards", async () => {
-    const matchId = crypto.randomUUID();
-    const playerId = crypto.randomUUID();
-    const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
-
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: vi.fn().mockResolvedValueOnce(undefined),
-    });
-
-    await httpService.putMatchCards(matchId, playerId, cardIds);
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      `http://localhost:8000/matches/${matchId}/cards/take`,
-      {
-        method: "PUT",
-        body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-  });
 });

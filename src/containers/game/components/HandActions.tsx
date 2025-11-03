@@ -39,7 +39,7 @@ export default function HandActions({
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
-  const { isPlayerFinishAction, playerSelectsOneOfHisSecrets } = useGame();
+  const { hasFinishedAction, playerSelectsOneOfHisSecrets } = useGame();
   const shouldDisableOption =
     isDisabled ||
     isSelectionPlayerEvent ||
@@ -50,21 +50,21 @@ export default function HandActions({
     <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
       <Button
         onClick={onDiscard}
-        disabled={shouldDisableOption || isPlayerFinishAction}
+        disabled={shouldDisableOption || hasFinishedAction}
       >
         Discard cards
       </Button>
 
       <Button
         onClick={onPlaySet}
-        disabled={isDisabled || isSetButtonDisabled || isPlayerFinishAction}
+        disabled={isDisabled || isSetButtonDisabled || hasFinishedAction}
       >
         Play set
       </Button>
 
       <Button
         onClick={onSelectPlayer}
-        disabled={isDisabled || !isSelectionPlayerEvent || isPlayerFinishAction}
+        disabled={isDisabled || !isSelectionPlayerEvent || hasFinishedAction}
       >
         {canSelectMeAsPlayer ? "Select me" : "Select player"}
       </Button>
@@ -72,7 +72,7 @@ export default function HandActions({
       <Button
         onClick={onSelectSecret}
         disabled={
-          (isDisabled || !isSelectionSecretEvent || isPlayerFinishAction) &&
+          (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
           !playerSelectsOneOfHisSecrets.isCurrPlayer
         }
       >

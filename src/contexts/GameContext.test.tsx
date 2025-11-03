@@ -518,7 +518,7 @@ describe("GameContext", () => {
         isLoading: true,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: expect.any(Function),
         playerSelectsOneOfHisSecrets: {
@@ -662,9 +662,7 @@ describe("GameContext", () => {
 
       // Simular que el jugador actual terminó su acción
       result.current.playerFinishActionTurn();
-      await waitFor(() =>
-        expect(result.current.isPlayerFinishAction).toBe(true),
-      );
+      await waitFor(() => expect(result.current.hasFinishedAction).toBe(true));
 
       const newMatch: Match = {
         ...mockMatch,
@@ -677,7 +675,7 @@ describe("GameContext", () => {
       // Assert: Verificar el estado actualizado
       await waitFor(() => {
         expect(result.current.match?.current_player_order).toBe(1);
-        expect(result.current.isPlayerFinishAction).toBe(false); // Debe resetearse
+        expect(result.current.hasFinishedAction).toBe(false); // Debe resetearse
       });
     });
 

@@ -30,10 +30,15 @@ import DiscardModal from "./components/DiscardModal";
 
 import { useHand } from "./hooks/useHand";
 import { useSetEvent } from "./hooks/useSetEvent";
+import {
+  GAME_EVENTS,
+  EVENT_STEPS,
+  GAME_RULES,
+  type EventStep,
+} from "@/constants/game";
+import { handleApiError } from "@/utils/errorHandler";
 
-type EventStep = "select_secret" | "select_player" | "select_set" | null;
-
-export const DRAFT_SIZE = 3;
+export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -47,7 +52,7 @@ export default function GameContainer() {
     cards,
     result,
     sets,
-    isPlayerFinishAction,
+    hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
   } = useGame();
@@ -89,8 +94,8 @@ export default function GameContainer() {
   });
 
   const canSelectMeAsPlayer =
-    currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-    currentEventStep === "select_player" &&
+    currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+    currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
     selectedTargetPlayer === null;
 
   const {
@@ -115,23 +120,23 @@ export default function GameContainer() {
     if (!currentEventCard) return true;
 
     switch (currentEventCard.name) {
-      case "CARDS OFF THE TABLE":
+      case GAME_EVENTS.CARDS_OFF_THE_TABLE:
         return selectedTargetPlayer === null;
 
-      case "LOOK INTO THE ASHES":
+      case GAME_EVENTS.LOOK_INTO_THE_ASHES:
         // Deshabilitar el botón porque se usa el botón del modal
         return true;
 
-      case "DELAY THE MURDERER ESCAPE":
+      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE:
         return true;
 
-      case "EARLY TRAIN TO PADDINGTON":
+      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON:
         return true;
 
-      case "AND THEN THERE WAS ONE MORE":
+      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE:
         return selectedTargetSecret === null || selectedTargetPlayer === null;
 
-      case "ANOTHER VICTIM":
+      case GAME_EVENTS.ANOTHER_VICTIM:
         return selectedTargetSet === null;
 
       default:
@@ -153,26 +158,35 @@ export default function GameContainer() {
     target: GamePlayer | GameSecret | MatchSet,
   ) => {
     // Eventos de cartas
-    if (currentEventCard?.name === "AND THEN THERE WAS ONE MORE") {
-      if (currentEventStep === "select_secret" && "secret_id" in target) {
+    if (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE) {
+      if (
+        currentEventStep === EVENT_STEPS.SELECT_SECRET &&
+        "secret_id" in target
+      ) {
         setSelectedTargetSecret(target as GameSecret);
-        setCurrentEventStep("select_player");
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         return;
-      } else if (currentEventStep === "select_player" && "avatar" in target) {
+      } else if (
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
+        "avatar" in target
+      ) {
         setSelectedTargetPlayer(target as GamePlayer);
         return;
       }
     }
 
     if (
-      currentEventCard?.name === "CARDS OFF THE TABLE" &&
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE &&
       "avatar" in target
     ) {
       setSelectedTargetPlayer(target as GamePlayer);
       return;
     }
 
-    if (currentEventCard?.name === "ANOTHER VICTIM" && "quin_play" in target) {
+    if (
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      "quin_play" in target
+    ) {
       setSelectedTargetSet(target as MatchSet);
       return;
     }
@@ -217,7 +231,7 @@ export default function GameContainer() {
 
         clearSelectedCards();
       } catch (error) {
-        console.error("Error al ejecutar el evento", error);
+        handleApiError(error, "Error al ejecutar el evento");
       }
     }
   };
@@ -233,13 +247,13 @@ export default function GameContainer() {
 
   const isSelectablePlayer = (checkPlayer: GamePlayer) => {
     //* Validacion por eventos
-    if (currentEventCard?.name === "CARDS OFF THE TABLE") {
+    if (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE) {
       return checkPlayer.id !== player?.id;
     }
 
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_player"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
     ) {
       return true;
     }
@@ -252,8 +266,8 @@ export default function GameContainer() {
 
   const isSelectableSecret = (secret: GameSecret) => {
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       return secret.is_revealed;
     } else if (isSetEvent) {
@@ -280,9 +294,9 @@ export default function GameContainer() {
     if (isTargetPlayerSetEvent) return true;
     // Other events
     if (
-      currentEventCard?.name === "CARDS OFF THE TABLE" ||
-      (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-        currentEventStep === "select_player")
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+      (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
     ) {
       return true;
     }
@@ -294,8 +308,8 @@ export default function GameContainer() {
       return true;
     // Other events
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       return true;
     }
@@ -305,8 +319,8 @@ export default function GameContainer() {
 
   const isSelectableSet = (set: MatchSet) => {
     if (
-      currentEventCard?.name === "ANOTHER VICTIM" &&
-      currentEventStep === "select_set"
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      currentEventStep === EVENT_STEPS.SELECT_SET
     ) {
       // No puedes seleccionar tus propios sets
       if (set.player_id === player?.id) return false;
@@ -383,29 +397,29 @@ export default function GameContainer() {
     if (selectedCardsArray.length !== 1) return false;
     const nameCard = selectedCardsArray[0].name;
     const permittedCards = [
-      "CARDS OFF THE TABLE",
-      "ANOTHER VICTIM",
-      "LOOK INTO THE ASHES",
-      "AND THEN THERE WAS ONE MORE",
-      "DELAY THE MURDERER ESCAPE",
-      "EARLY TRAIN TO PADDINGTON",
+      GAME_EVENTS.CARDS_OFF_THE_TABLE,
+      GAME_EVENTS.ANOTHER_VICTIM,
+      GAME_EVENTS.LOOK_INTO_THE_ASHES,
+      GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE,
+      GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
+      GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
     ];
-    if (hasDiscardedCards) return false;
-    if (isPlayerFinishAction == true) return false;
-    if (currentEventCard !== null) return false;
-    if (nameCard === "ANOTHER VICTIM") {
+    if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
+      return false;
+
+    if (nameCard === GAME_EVENTS.ANOTHER_VICTIM) {
       const hasOtherPlayerSets = sets.some(
         (set) => set.player_id !== player?.id,
       );
       if (!hasOtherPlayerSets) return false;
     }
     if (
-      (nameCard === "LOOK INTO THE ASHES" ||
-        nameCard === "DELAY THE MURDERER ESCAPE") &&
+      (nameCard === GAME_EVENTS.LOOK_INTO_THE_ASHES ||
+        nameCard === GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE) &&
       cardsInDiscardPile.length === 0
     )
       return false;
-    if (nameCard === "AND THEN THERE WAS ONE MORE") {
+    if (nameCard === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE) {
       const hasRevealedSecret = secrets.some((secret) => secret.is_revealed);
       if (!hasRevealedSecret) return false;
     }
@@ -418,7 +432,7 @@ export default function GameContainer() {
     secrets,
     sets,
     player,
-    isPlayerFinishAction,
+    hasFinishedAction,
   ]);
 
   // -- Utilidades --
@@ -493,8 +507,7 @@ export default function GameContainer() {
         setHasTakenCards(true);
       }
     } catch (error) {
-      console.error("Failed to take card from draft:", error);
-      toast.error("Failed to take card from draft.");
+      handleApiError(error, "Failed to take card from draft");
     }
   };
 
@@ -523,9 +536,7 @@ export default function GameContainer() {
 
       setHasTakenCards(true);
     } catch (error) {
-      console.error("Failed to take cards from draw pile:", error);
-
-      toast.error("Failed to take cards from draw pile.");
+      handleApiError(error, "Failed to take cards from draw pile");
     }
   };
 
@@ -561,10 +572,7 @@ export default function GameContainer() {
       clearSelectedCards();
       playerFinishActionTurn();
     } catch (error) {
-      console.error("Failed to discard selected cards:", error);
-
-      toast.error("Failed to discard selected cards.");
-
+      handleApiError(error, "Failed to discard selected cards");
       throw error;
     }
   };
@@ -603,10 +611,7 @@ export default function GameContainer() {
       setHasTakenCards(true);
       setHasDiscardedCards(true);
     } catch (error) {
-      console.error("Failed to perform mandatory discard:", error);
-
-      toast.error("Failed to perform mandatory discard.");
-
+      handleApiError(error, "Failed to perform mandatory discard");
       // Lanzamos el error de nuevo para que no pueda pasar el turno
       // si el descarte falló.
       throw error;
@@ -632,7 +637,7 @@ export default function GameContainer() {
       // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
       if (
-        !(hasDiscardedCards || isPlayerFinishAction) &&
+        !(hasDiscardedCards || hasFinishedAction) &&
         currentEventCard === null
       ) {
         await mandatoryDiscard();
@@ -649,7 +654,7 @@ export default function GameContainer() {
 
       clearSelectedCards();
     } catch (error) {
-      console.error("Failed to finish turn:", error);
+      handleApiError(error, "Failed to finish turn");
     }
 
     clearSetEvent();
@@ -670,39 +675,39 @@ export default function GameContainer() {
     const nameEvent = cardEvent.name;
 
     switch (nameEvent) {
-      case "DELAY THE MURDERER ESCAPE": {
+      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
         setCurrentEventCard(cardEvent);
         handleEndEvent(cardEvent);
         break;
       }
 
-      case "LOOK INTO THE ASHES": {
+      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
         setCurrentEventCard(cardEvent);
         handleEventDiscard();
         break;
       }
 
-      case "CARDS OFF THE TABLE": {
+      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_player");
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         break;
       }
 
-      case "AND THEN THERE WAS ONE MORE": {
+      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_secret");
+        setCurrentEventStep(EVENT_STEPS.SELECT_SECRET);
         break;
       }
 
-      case "EARLY TRAIN TO PADDINGTON": {
+      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
         setCurrentEventCard(cardEvent);
         handleEndEvent(cardEvent);
         break;
       }
 
-      case "ANOTHER VICTIM": {
+      case GAME_EVENTS.ANOTHER_VICTIM: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_set");
+        setCurrentEventStep(EVENT_STEPS.SELECT_SET);
         break;
       }
     }
@@ -719,7 +724,7 @@ export default function GameContainer() {
     let eventPayload: EventPayload | undefined;
 
     switch (nameEvent) {
-      case "LOOK INTO THE ASHES": {
+      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
         // Validamos que haya una carta seleccionada del descarte
         const selectedDiscardedCardsArray = Object.values(selectedCards);
 
@@ -744,7 +749,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "DELAY THE MURDERER ESCAPE": {
+      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
         const idsInDiscardPile = cardsInDiscardPile.map((card) => card.id);
         const latestFive = idsInDiscardPile.slice(0, 5);
 
@@ -754,7 +759,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "CARDS OFF THE TABLE": {
+      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
         if (!selectedTargetPlayer) {
           console.warn("Debe seleccionar un jugador objetivo");
           return;
@@ -769,7 +774,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "AND THEN THERE WAS ONE MORE": {
+      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
         if (!selectedTargetPlayer || !selectedTargetSecret) {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
@@ -785,7 +790,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "EARLY TRAIN TO PADDINGTON": {
+      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
         // Saltar las primeras 3 cartas y tomar las siguientes 6
         const cardsToReveal = drawableCards.slice(3, 9);
 
@@ -796,7 +801,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "ANOTHER VICTIM": {
+      case GAME_EVENTS.ANOTHER_VICTIM: {
         if (!selectedTargetSet) {
           console.warn("Set no seleccionado");
         }
@@ -826,7 +831,7 @@ export default function GameContainer() {
       playerFinishActionTurn();
       setCurrentEventCard(null);
     } catch (error) {
-      console.error("Error al ejecutar el evento", error);
+      handleApiError(error, "Error al ejecutar el evento");
     }
   };
 
@@ -875,8 +880,8 @@ export default function GameContainer() {
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
             isTargetSet={
-              currentEventCard?.name === "ANOTHER VICTIM" &&
-              currentEventStep === "select_set"
+              currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+              currentEventStep === EVENT_STEPS.SELECT_SET
             }
             target={
               getTargetSetEvent() ||
@@ -919,8 +924,8 @@ export default function GameContainer() {
               isDisabledEvent={!isPlayable}
               isDisabledEndEvent={isEndEventDisabled}
               isSelectionSetEvent={
-                currentEventCard?.name === "ANOTHER VICTIM" &&
-                currentEventStep === "select_set"
+                currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+                currentEventStep === EVENT_STEPS.SELECT_SET
               }
               isSetButtonDisabled={isSetEventButtonDisabled}
               isSelectionPlayerEvent={isTargetPlayerEvent()}
