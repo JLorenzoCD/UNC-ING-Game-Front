@@ -42,7 +42,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
         setPlayer(JSON.parse(storedPlayer));
       }
     } catch (error) {
-      console.error("Error al cargar datos del jugador desde localStorage:", error);
+      console.error(
+        "Error al cargar datos del jugador desde localStorage:",
+        error,
+      );
       // Limpiamos datos corruptos
       localStorage.removeItem("player");
     } finally {
@@ -55,7 +58,10 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
       try {
         localStorage.setItem("player", JSON.stringify(player));
       } catch (error) {
-        console.error("Error al guardar datos del jugador en localStorage:", error);
+        console.error(
+          "Error al guardar datos del jugador en localStorage:",
+          error,
+        );
       }
     }
   }, [player]);

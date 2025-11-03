@@ -662,9 +662,7 @@ describe("GameContext", () => {
 
       // Simular que el jugador actual terminó su acción
       result.current.playerFinishActionTurn();
-      await waitFor(() =>
-        expect(result.current.hasFinishedAction).toBe(true),
-      );
+      await waitFor(() => expect(result.current.hasFinishedAction).toBe(true));
 
       const newMatch: Match = {
         ...mockMatch,

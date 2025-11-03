@@ -33,7 +33,7 @@ describe("errorHandler", () => {
         expect.objectContaining({
           error,
           timestamp: expect.any(String),
-        })
+        }),
       );
       expect(toast.error).toHaveBeenCalledWith(message);
     });
@@ -52,7 +52,7 @@ describe("errorHandler", () => {
           error,
           context,
           timestamp: expect.any(String),
-        })
+        }),
       );
     });
   });
@@ -69,7 +69,7 @@ describe("errorHandler", () => {
         expect.objectContaining({
           error,
           timestamp: expect.any(String),
-        })
+        }),
       );
       expect(toast.error).not.toHaveBeenCalled();
     });
@@ -87,7 +87,7 @@ describe("errorHandler", () => {
           error,
           additionalInfo,
           timestamp: expect.any(String),
-        })
+        }),
       );
     });
   });
