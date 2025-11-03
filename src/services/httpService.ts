@@ -27,7 +27,7 @@ function getValidatedApiUrl(): string {
     return envUrl;
   } catch {
     console.warn(
-      `Invalid VITE_API_URL: "${envUrl}". Using default: ${DEFAULT_BASE_URL}`
+      `Invalid VITE_API_URL: "${envUrl}". Using default: ${DEFAULT_BASE_URL}`,
     );
     return DEFAULT_BASE_URL;
   }

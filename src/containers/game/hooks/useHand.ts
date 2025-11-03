@@ -72,8 +72,6 @@ export function useHand() {
     try {
       const cardIds = cards.map((card) => card.id);
       await httpService.putTakeCards(match.id, player.id, cardIds);
-
-      // for (const card of cards) addCard(card);
     } catch (error) {
       logError(error, "Failed to take card");
 
@@ -87,8 +85,6 @@ export function useHand() {
     try {
       const cardIds = cards.map((card) => card.id);
       await httpService.putDiscardCards(match.id, player.id, cardIds);
-
-      // for (const card of cards) removeCard(card);
     } catch (error) {
       logError(error, "Failed to discard card");
 

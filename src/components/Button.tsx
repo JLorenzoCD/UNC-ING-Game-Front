@@ -12,7 +12,7 @@ export default function Button({
         "focus:ring-4 focus:ring-[#4D4D4D] font-medium rounded-lg",
         "text-sm px-5 py-2.5 disabled:bg-[#6e6e6e]",
         "hover:disabled:bg-[#6e6e6e] disabled:cursor-not-allowed",
-        className
+        className,
       )}
       {...rest}
     />

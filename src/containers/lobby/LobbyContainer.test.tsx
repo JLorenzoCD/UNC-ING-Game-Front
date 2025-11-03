@@ -1,13 +1,6 @@
 import "@testing-library/jest-dom";
 import { act, render, screen } from "@testing-library/react";
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  beforeAll,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
 
 import type { UUID } from "@/types/common";
@@ -309,7 +302,9 @@ describe("LobbyContainer", () => {
     });
 
     expect(mockStartMatch).toHaveBeenCalled();
-    expect(mockToastError).toHaveBeenCalledWith("The game could not be started");
+    expect(mockToastError).toHaveBeenCalledWith(
+      "The game could not be started",
+    );
     expect(mockNavigate).not.toHaveBeenCalled();
 
     mockConsoleError.mockRestore();

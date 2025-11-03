@@ -9,14 +9,13 @@ interface HandActionsProps {
   onSelectPlayer: () => void; // Callback que se ejecuta al clickear el botón seleccionar un jugador
   onSelectSecret: () => void; // Callback que se ejecuta al clickear el botón seleccionar un secreto
   onPlayEvent: () => void; // Callback que se ejecuta al clickear el boton de jugar evento
-  onEndEvent: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
+  onSelectSet: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
-  isDisabledEndEvent: boolean; // Indica si el boton para teminar eveto esta habilitado
-  isSelectionSetEvent: boolean; // Indica si se esta seleccionado un set
+  isSelectionSetEvent: boolean; // Indica si el boton para seleccionar un set esta habilitado
   canSelectMeAsPlayer: boolean; // Indica si el jugador puede seleccionarse a si mismo.
 }
 
@@ -27,14 +26,13 @@ export default function HandActions({
   onSelectPlayer,
   onSelectSecret,
   onPlayEvent,
-  onEndEvent,
+  onSelectSet,
   isDisabled,
   isSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
   isSelectionSetEvent,
   isDisabledEvent,
-  isDisabledEndEvent,
   canSelectMeAsPlayer,
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
@@ -47,38 +45,59 @@ export default function HandActions({
     isSelectionSetEvent;
 
   return (
-    <div data-testid="hand-actions" className="w-36 flex flex-col gap-y-2">
-      <Button
-        onClick={onDiscard}
-        disabled={shouldDisableOption || hasFinishedAction}
-      >
-        Discard cards
-      </Button>
+    <div
+      data-testid="hand-actions"
+      className="flex flex-col items-center gap-y-2"
+    >
+      <div className="flex flex-row gap-x-2">
+        <div className="flex flex-col gap-y-2">
+          <Button
+            onClick={onDiscard}
+            disabled={shouldDisableOption || hasFinishedAction}
+          >
+            Discard cards
+          </Button>
 
-      <Button
-        onClick={onPlaySet}
-        disabled={isDisabled || isSetButtonDisabled || hasFinishedAction}
-      >
-        Play set
-      </Button>
+          <Button
+            onClick={onPlaySet}
+            disabled={isDisabled || isSetButtonDisabled || hasFinishedAction}
+          >
+            Play set
+          </Button>
 
-      <Button
-        onClick={onSelectPlayer}
-        disabled={isDisabled || !isSelectionPlayerEvent || hasFinishedAction}
-      >
-        {canSelectMeAsPlayer ? "Select me" : "Select player"}
-      </Button>
+          <Button onClick={onPlayEvent} disabled={isDisabledEvent}>
+            Play event
+          </Button>
+        </div>
 
-      <Button
-        onClick={onSelectSecret}
-        disabled={
-          (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
-          !playerSelectsOneOfHisSecrets.isCurrPlayer
-        }
-      >
-        Select secret
-      </Button>
+        <div className="flex flex-col gap-y-2">
+          <Button
+            onClick={onSelectSet}
+            disabled={isDisabled || !isSelectionSetEvent}
+          >
+            Select set
+          </Button>
 
+          <Button
+            onClick={onSelectSecret}
+            disabled={
+              (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
+              !playerSelectsOneOfHisSecrets.isCurrPlayer
+            }
+          >
+            Select secret
+          </Button>
+
+          <Button
+            onClick={onSelectPlayer}
+            disabled={
+              isDisabled || !isSelectionPlayerEvent || hasFinishedAction
+            }
+          >
+            {canSelectMeAsPlayer ? "Select me" : "Select player"}
+          </Button>
+        </div>
+      </div>
       <Button
         onClick={onFinish}
         disabled={
@@ -86,14 +105,6 @@ export default function HandActions({
         }
       >
         Finish turn
-      </Button>
-
-      <Button onClick={onPlayEvent} disabled={isDisabledEvent}>
-        Play event
-      </Button>
-
-      <Button onClick={onEndEvent} disabled={isDisabledEndEvent}>
-        Apply effect
       </Button>
     </div>
   );

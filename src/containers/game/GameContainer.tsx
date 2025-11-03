@@ -116,39 +116,6 @@ export default function GameContainer() {
     clearSetEvent,
   } = useSetEvent();
 
-  const isEndEventDisabled = useMemo(() => {
-    if (!currentEventCard) return true;
-
-    switch (currentEventCard.name) {
-      case GAME_EVENTS.CARDS_OFF_THE_TABLE:
-        return selectedTargetPlayer === null;
-
-      case GAME_EVENTS.LOOK_INTO_THE_ASHES:
-        // Deshabilitar el botón porque se usa el botón del modal
-        return true;
-
-      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE:
-        return true;
-
-      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON:
-        return true;
-
-      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE:
-        return selectedTargetSecret === null || selectedTargetPlayer === null;
-
-      case GAME_EVENTS.ANOTHER_VICTIM:
-        return selectedTargetSet === null;
-
-      default:
-        return false;
-    }
-  }, [
-    currentEventCard,
-    selectedTargetPlayer,
-    selectedTargetSecret,
-    selectedTargetSet,
-  ]);
-
   // -- Utilidades --
   const handleClickSetEvent = () => {
     playSet(Object.values(selectedCards));
@@ -194,6 +161,18 @@ export default function GameContainer() {
   };
 
   const handleSelectedPlayer = async () => {
+    if (
+      currentEventCard?.name === "CARDS OFF THE TABLE" &&
+      currentEventStep === "select_player"
+    ) {
+      if (selectedTargetPlayer) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a player first.");
+      }
+      return; // Importante: Salir después de manejar el evento de carta
+    }
+
     if (isSetEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
@@ -234,9 +213,38 @@ export default function GameContainer() {
         handleApiError(error, "Error al ejecutar el evento");
       }
     }
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_player"
+    ) {
+      if (
+        (selectedTargetPlayer || canSelectMeAsPlayer) &&
+        selectedTargetSecret
+      ) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a secret and a player first.");
+      }
+      return;
+    }
   };
 
   const handleSelectedSecret = async () => {
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      if (selectedTargetSecret) {
+        // ¡Avanzamos al siguiente paso!
+        setCurrentEventStep("select_player");
+        toast.info("Now select a player.");
+      } else {
+        toast.error("You must select a secret first.");
+      }
+      return; // Salir para no ejecutar la lógica de set event
+    }
+
     if (isSetEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
@@ -286,6 +294,13 @@ export default function GameContainer() {
   const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
     if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return isCurrPlayerSecretSelectableForSetEvent(secret);
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      return secret.is_revealed;
+    }
 
     return false;
   };
@@ -404,9 +419,9 @@ export default function GameContainer() {
       GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
     ];
-    if (hasDiscardedCards) return false;
-    if (hasFinishedAction === true) return false;
-    if (currentEventCard !== null) return false;
+    if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
+      return false;
+
     if (nameCard === GAME_EVENTS.ANOTHER_VICTIM) {
       const hasOtherPlayerSets = sets.some(
         (set) => set.player_id !== player?.id,
@@ -434,6 +449,20 @@ export default function GameContainer() {
     player,
     hasFinishedAction,
   ]);
+
+  const handleSelectSet = async () => {
+    if (
+      currentEventCard?.name === "ANOTHER VICTIM" &&
+      currentEventStep === "select_set"
+    ) {
+      // Comprobamos si el objetivo está seleccionado (handleEndEvent lo necesita)
+      if (selectedTargetSet) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a set first.");
+      }
+    }
+  };
 
   // -- Utilidades --
 
@@ -779,6 +808,7 @@ export default function GameContainer() {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
         }
+        console.log(selectedTargetPlayer, selectedTargetSecret);
         eventPayload = {
           target_secret_id: selectedTargetSecret.id,
           target_player_id: selectedTargetPlayer.id,
@@ -843,6 +873,10 @@ export default function GameContainer() {
     setEventToggleDisableButtonPlaySet(Object.values(selectedCards));
   }, [discardModal, selectedCards, setEventToggleDisableButtonPlaySet]);
 
+  const isSelectPlayerButtonEnabled = isTargetPlayerEvent();
+
+  const isSelectSecretButtonEnabled = isTargetSecretEvent();
+
   return (
     <>
       <div
@@ -898,7 +932,7 @@ export default function GameContainer() {
                 isSelectableSecret={isCurrPlayersSecretSelectable}
                 isTargetSecret={isTargetSecretEvent()}
                 onSelectTargetEvent={handleSelectTargetEvent}
-                target={getTargetSetEvent()}
+                target={getTargetSetEvent() || selectedTargetSecret}
               />
               <Sets sets={playerSets} />
             </div>
@@ -918,18 +952,17 @@ export default function GameContainer() {
               onPlaySet={handleClickSetEvent}
               onSelectPlayer={handleSelectedPlayer}
               onSelectSecret={handleSelectedSecret}
-              onEndEvent={handleEndEvent}
+              onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
               isDisabled={!isPlayerTurn}
               isDisabledEvent={!isPlayable}
-              isDisabledEndEvent={isEndEventDisabled}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
                 currentEventStep === EVENT_STEPS.SELECT_SET
               }
               isSetButtonDisabled={isSetEventButtonDisabled}
-              isSelectionPlayerEvent={isTargetPlayerEvent()}
-              isSelectionSecretEvent={isTargetSecretEvent()}
+              isSelectionPlayerEvent={isSelectPlayerButtonEnabled}
+              isSelectionSecretEvent={isSelectSecretButtonEnabled}
             />
           </div>
         </div>
