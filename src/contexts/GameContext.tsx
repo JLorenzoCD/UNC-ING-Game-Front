@@ -27,6 +27,7 @@ import type {
   EventCardEventPayload,
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
+import { GAME_EVENTS } from "@/constants/game";
 
 export interface GameContextType {
   match: Match | null;
@@ -184,7 +185,7 @@ export default function GameContextProvider({
     };
 
     const handleCardEvent = (payload: EventCardEventPayload) => {
-      if (payload.type === "DELAY THE MURDERER ESCAPE") {
+      if (payload.type === GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE) {
         setCards((current) => {
           const updatedCards = [...current];
 

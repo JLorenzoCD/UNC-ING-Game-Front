@@ -404,9 +404,9 @@ export default function GameContainer() {
       GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
     ];
-    if (hasDiscardedCards) return false;
-    if (hasFinishedAction === true) return false;
-    if (currentEventCard !== null) return false;
+    if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
+      return false;
+
     if (nameCard === GAME_EVENTS.ANOTHER_VICTIM) {
       const hasOtherPlayerSets = sets.some(
         (set) => set.player_id !== player?.id,

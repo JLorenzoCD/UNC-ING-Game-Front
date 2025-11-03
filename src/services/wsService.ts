@@ -25,7 +25,7 @@ function getValidatedWsUrl(): string {
   } catch (error) {
     console.warn(
       `Invalid VITE_WS_URL: "${envUrl}". Using default: ${DEFAULT_WS_URL}`,
-      error
+      error,
     );
     return DEFAULT_WS_URL;
   }
