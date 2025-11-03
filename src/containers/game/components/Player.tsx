@@ -46,11 +46,12 @@ export default function Player({
     onSelectTargetEvent(player);
   };
 
-  const isTarget = player.id === target?.id;
-  const isSelectingTarget = target === null;
+  const isTargetPlayer = target !== null && "avatar" in target;
+  const isTarget = isTargetPlayer && player.id === target?.id;
+  const isSelectingTarget = target === null || !isTargetPlayer;
   const isSelectable = isSelectablePlayer(player);
 
-  const isActivePlayerSelection = isPlayerEvent && !hasCurrentTurn;
+  const isActivePlayerSelection = isPlayerEvent;
 
   const baseClasses =
     "w-20 h-20 rounded-full border-4 transition-all duration-200";

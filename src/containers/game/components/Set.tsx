@@ -41,25 +41,23 @@ function getBoderClass(
   isTarget: boolean,
   isSelectingTarget: boolean,
 ) {
-  let borderClass = "";
+  let borderClass = "border-2 border-transparent";
   if (isSelectionMode) {
     if (isSelectable) {
       if (isTarget) {
         // Set seleccionado
         borderClass =
-          "outline outline-2 outline-blue-400 shadow-lg shadow-blue-400/50 animate-none";
+          "border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-none";
       } else if (isSelectingTarget) {
         // Aún no se ha seleccionado y es una opción válida
         borderClass =
-          "outline outline-2 outline-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
+          "border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer";
       } else {
-        borderClass =
-          "outline outline-2 outline-transparent shadow-none brightness-50";
+        borderClass = "border-2 border-transparent shadow-none brightness-50";
       }
     } else {
       // NO Seleccionable (Atenuado)
-      borderClass =
-        "outline outline-2 outline-transparent shadow-none brightness-50";
+      borderClass = "border-2 border-transparent shadow-none brightness-50";
     }
   }
 
@@ -118,7 +116,7 @@ export default function Set({
           src={SET_IMAGE_PATHS[type]}
           alt={`set-type-${imgTitle}`}
           className={twJoin(
-            "object-cover select-none w-full h-full absolute hover:z-1",
+            "object-cover select-none w-full h-full hover:z-1",
             isSelectionMode && !isSelectable && "brightness-50",
           )}
         />
