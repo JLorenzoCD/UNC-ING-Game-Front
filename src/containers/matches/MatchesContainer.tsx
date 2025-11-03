@@ -3,6 +3,7 @@ import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import { Link } from "react-router";
 import Button from "@/components/Button";
+import Loading from "@/components/Loading";
 import MatchList from "./components/MatchList";
 import MatchListItem from "./components/MatchListItem";
 
@@ -13,7 +14,7 @@ export default function MatchesContainer() {
   const { matches, loading } = useMatchesData();
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <Loading />;
   }
 
   if (httpService === null) {

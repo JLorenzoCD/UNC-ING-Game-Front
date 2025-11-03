@@ -84,7 +84,7 @@ describe("HandActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseGame.mockReturnValue({
-      isPlayerFinishAction: false,
+      hasFinishedAction: false,
       playerSelectsOneOfHisSecrets: {
         isSelecting: false,
         isCurrPlayer: false,
@@ -256,9 +256,9 @@ describe("HandActions", () => {
   });
 
   describe("useGame logic", () => {
-    it("disables all main action buttons when isPlayerFinishAction is true", () => {
+    it("disables all main action buttons when hasFinishedAction is true", () => {
       mockUseGame.mockReturnValue({
-        isPlayerFinishAction: true,
+        hasFinishedAction: true,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
           isCurrPlayer: false,
@@ -277,7 +277,7 @@ describe("HandActions", () => {
 
     it("disables 'Finish turn' when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
       mockUseGame.mockReturnValue({
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: true,
           isCurrPlayer: false,
@@ -295,7 +295,7 @@ describe("HandActions", () => {
 
     it("ENABLES 'Select secret' even if event conditions fail, when isCurrPlayer is true", () => {
       mockUseGame.mockReturnValue({
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
           isCurrPlayer: true,

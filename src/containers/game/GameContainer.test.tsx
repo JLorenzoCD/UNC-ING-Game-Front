@@ -20,6 +20,9 @@ const MOCK_CARD_ID_4 = crypto.randomUUID();
 const MOCK_CARD_ID_5 = crypto.randomUUID();
 const MOCK_CARD_ID_6 = crypto.randomUUID();
 const MOCK_CARD_ID_7 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_8 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_9 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_10 = crypto.randomUUID(); // Carta disponible para robar
 const MOCK_PLAYER_ID = crypto.randomUUID();
 const MOCK_MATCH_ID = crypto.randomUUID();
 
@@ -127,7 +130,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_8,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -138,7 +141,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_9,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -149,7 +152,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_10,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -458,7 +461,7 @@ describe("GameContainer", () => {
       isLoading: false,
       hasError: false,
       error: null,
-      isPlayerFinishAction: false,
+      hasFinishedAction: false,
       lastUpdatedSecretId: null,
       playerFinishActionTurn: () => undefined,
       playerSelectsOneOfHisSecrets: {
@@ -624,7 +627,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
@@ -657,7 +660,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
@@ -738,8 +741,12 @@ describe("GameContainer", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to perform mandatory discard:",
-        expect.any(Error),
+        "[API Error]",
+        "Failed to perform mandatory discard",
+        expect.objectContaining({
+          error: expect.any(Error),
+          timestamp: expect.any(String),
+        }),
       );
 
       expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);
@@ -798,7 +805,7 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
@@ -844,7 +851,7 @@ describe("GameContainer", () => {
       expect(mockPutTakeCards).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
-        [MOCK_CARD_ID_7],
+        [MOCK_CARD_ID_10],
       );
 
       // Pasamos el turno

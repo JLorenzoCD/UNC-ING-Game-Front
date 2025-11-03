@@ -52,7 +52,7 @@ export function useSetEvent() {
     players,
     playerSelectsOneOfHisSecrets,
     lastUpdatedSecretId,
-    isPlayerFinishAction,
+    hasFinishedAction,
   } = useGame();
   const { httpService } = useHttpService();
 
@@ -66,7 +66,7 @@ export function useSetEvent() {
   const isTargetSecretSetEvent = setEvent.isTargetSecret;
   const isStolenSecretSetEvent = setEvent.isStolenSecret;
   const isSetEventButtonDisabled =
-    !(setEvent.isValidSet && !isSetEvent) || isPlayerFinishAction;
+    !(setEvent.isValidSet && !isSetEvent) || hasFinishedAction;
 
   const playSet = (selectedCards: GameCard[]) => {
     if (!setEvent.isValidSet && !isSetEvent) return;
