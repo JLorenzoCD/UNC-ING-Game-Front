@@ -10,38 +10,52 @@ import {
   cardsToSet,
   cardsToSetTypeDetective,
   isCardsValidSet,
+  isSetActionHiddenSecret,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
+  isSetTargetOnePlayer,
   isSetTargetOneSecret,
 } from "../utils/setEvent";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 import type { GameCard } from "@/types/card";
-import type { SetType } from "@/types/set";
+import type { MatchSet, SetType } from "@/types/set";
 import type { UUID } from "@/types/common";
 
 interface SetEvent {
   isValidSet: boolean;
+
   isTargetPlayer: boolean;
   isTargetSecret: boolean;
+
   isRevealSecret: boolean;
-  isRevealCurrPlayerSecret: boolean;
+  isHiddenSecret: boolean;
   isStolenSecret: boolean;
+
   cards: GameCard[];
   setType: SetType | null;
+  set: MatchSet | null;
   target: GamePlayer | GameSecret | null;
+
+  isRevealCurrPlayerSecret: boolean;
 }
 
 const defaultStateSetEvent: SetEvent = {
   isValidSet: false,
+
   isTargetPlayer: false,
   isTargetSecret: false,
+
   isRevealSecret: false,
+  isHiddenSecret: false,
   isStolenSecret: false,
+
   cards: [],
   setType: null,
+  set: null,
   target: null,
+
   isRevealCurrPlayerSecret: false,
 };
 
@@ -73,18 +87,21 @@ export function useSetEvent() {
     else if (setEvent.isValidSet && !isSetEvent) {
       const setType = cardsToSetTypeDetective(selectedCards);
       const isTargetSecret = isSetTargetOneSecret(selectedCards);
+      const isTargetPlayer = isSetTargetOnePlayer(selectedCards);
       const isRevealSecret = isSetActionRevealSecret(selectedCards);
+      const isHiddenSecret = isSetActionHiddenSecret(selectedCards);
       const isStolenSecret = isSetActionStolenSecret(selectedCards);
 
       setSetEvent((prev) => ({
         ...prev,
         isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
         target: null,
-        isTargetPlayer: !isTargetSecret,
+        isTargetPlayer,
         isTargetSecret,
         setType,
         cards: selectedCards,
         isRevealSecret,
+        isHiddenSecret,
         isStolenSecret,
       }));
       return;
@@ -95,24 +112,13 @@ export function useSetEvent() {
     (selectedCards: GameCard[]) => {
       const isValidSet = isCardsValidSet(selectedCards);
       if (isValidSet) {
-        const isActionRevealSecret = isSetActionRevealSecret(selectedCards);
+        const isHiddenSecret = isSetActionHiddenSecret(selectedCards);
 
-        const allOtherPlayersSecretAreReveled = secrets
-          .filter((secret) => secret.player_id !== player?.id)
-          .every((secret) => secret.is_revealed);
         const someSecretReveled = secrets.some((secret) => secret.is_revealed);
 
-        // No se puede revelar ningún secreto de los otros jugadores
-        // o
-        // Algún secreto propio o de otro jugador esta revelado y puede ser ocultado
-        if (
-          (isActionRevealSecret && allOtherPlayersSecretAreReveled) ||
-          (!isActionRevealSecret && !someSecretReveled)
-        ) {
-          toast.warning(
-            "The conditions for playing this set are not met. There are no cards to reveal or hide.",
-          );
-
+        if (isHiddenSecret && !someSecretReveled) {
+          // Si la acción del set es ocultar secreto y no hay secreto que
+          // ocultar, entonces no se puede jugar el set
           setSetEvent((prev) => ({ ...prev, isValidSet: false }));
           return;
         }
@@ -120,11 +126,11 @@ export function useSetEvent() {
 
       setSetEvent((prev) => ({ ...prev, isValidSet }));
     },
-    [player, secrets],
+    [secrets],
   );
 
   const setTargetSet = (target: GamePlayer | GameSecret) => {
-    if (!isSetEvent) return;
+    if (!isSetEvent || player === null) return;
 
     // target player
     if (isTargetPlayerSetEvent && "avatar" in target) {
@@ -140,10 +146,10 @@ export function useSetEvent() {
       // Se juega para revelar el secreto de otro o ocultar un secreto
       isTargetSecret &&
       ((setEvent.isRevealSecret &&
-        target.player_id !== player?.id &&
+        target.player_id !== player.id &&
         !setEvent.isRevealCurrPlayerSecret &&
         !target.is_revealed) ||
-        (!setEvent.isRevealSecret && target.is_revealed))
+        (setEvent.isHiddenSecret && target.is_revealed))
     ) {
       setSetEvent((prev) => ({
         ...prev,
@@ -153,7 +159,7 @@ export function useSetEvent() {
       isTargetSecret &&
       setEvent.isRevealSecret &&
       setEvent.isRevealCurrPlayerSecret &&
-      target.player_id === player?.id &&
+      target.player_id === player.id &&
       !target.is_revealed
     ) {
       // El jugador fue seleccionado para revelar un secreto de su elección
@@ -260,16 +266,18 @@ export function useSetEvent() {
   };
 
   const executeFinishTurnSetEvent = async () => {
+    if (httpService === null || player === null) return;
+
     if (!setEvent.isStolenSecret) return;
 
     const secretId = lastUpdatedSecretId;
     if (secretId === null) return;
 
     try {
-      await httpService?.putSecret(
+      await httpService.putSecret(
         matchId,
         secretId,
-        player?.id as UUID,
+        player.id as UUID,
         "steal_secret",
       );
     } catch (err) {
@@ -306,7 +314,7 @@ export function useSetEvent() {
       return true;
 
     // Jugar un Payne para uno mismo
-    if (!setEvent.isRevealSecret && secret.is_revealed) return true;
+    if (setEvent.isHiddenSecret && secret.is_revealed) return true;
 
     return false;
   };
@@ -317,12 +325,13 @@ export function useSetEvent() {
       return false;
 
     const isActionRevealSecret = setEvent.isRevealSecret;
+    const isActionHiddenSecret = setEvent.isHiddenSecret;
 
     // Eventos de seleccionar secreto a revelarlo por jugar set
     if (isActionRevealSecret && !secret.is_revealed) return true;
 
     // Eventos de seleccionar secreto a des-revelar por jugar set (Payne)
-    if (!isActionRevealSecret && secret.is_revealed) return true;
+    if (isActionHiddenSecret && secret.is_revealed) return true;
 
     return false;
   };

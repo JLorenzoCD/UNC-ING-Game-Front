@@ -176,6 +176,10 @@ export function isSetTargetOneSecret(cards: GameCard[]) {
   }
 }
 
+export function isSetTargetOnePlayer(cards: GameCard[]) {
+  return !isSetTargetOneSecret(cards);
+}
+
 /*
  * pre: isCardsValidSet.
  */
@@ -194,6 +198,15 @@ export function isSetActionRevealSecret(cards: GameCard[]) {
   const setType = cardsToSetTypeDetective(cards) as SetType;
 
   return setType !== "PARKER PYNE";
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
+export function isSetActionHiddenSecret(cards: GameCard[]) {
+  const setType = cardsToSetTypeDetective(cards) as SetType;
+
+  return setType === "PARKER PYNE";
 }
 
 /*
