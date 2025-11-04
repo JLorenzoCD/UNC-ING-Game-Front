@@ -100,11 +100,8 @@ export default function GameContainer() {
 
   const {
     playSet,
-    isSetEvent,
-    isTargetPlayerSetEvent,
-    isTargetSecretSetEvent,
+    setEvent,
     isSetEventButtonDisabled,
-    isStolenSecretSetEvent,
     setTargetSet,
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
@@ -157,7 +154,7 @@ export default function GameContainer() {
       setSelectedTargetSet(target as MatchSet);
       return;
     }
-    if (isSetEvent) setTargetSet(target as GamePlayer | GameSecret);
+    if (setEvent.isInEvent) setTargetSet(target as GamePlayer | GameSecret);
   };
 
   const handleSelectedPlayer = async () => {
@@ -173,7 +170,7 @@ export default function GameContainer() {
       return; // Importante: Salir después de manejar el evento de carta
     }
 
-    if (isSetEvent) {
+    if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
@@ -245,7 +242,7 @@ export default function GameContainer() {
       return; // Salir para no ejecutar la lógica de set event
     }
 
-    if (isSetEvent) {
+    if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
@@ -267,7 +264,7 @@ export default function GameContainer() {
     }
 
     // Se deben de poner todos los posibles eventos validos
-    if (isSetEvent) return isPlayerSelectableForSetEvent(checkPlayer);
+    if (setEvent.isInEvent) return isPlayerSelectableForSetEvent(checkPlayer);
 
     return false;
   };
@@ -278,7 +275,7 @@ export default function GameContainer() {
       currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       return secret.is_revealed;
-    } else if (isSetEvent) {
+    } else if (setEvent.isInEvent) {
       return isOtherPlayersSecretSelectable(secret);
     }
 
@@ -286,13 +283,14 @@ export default function GameContainer() {
   };
 
   const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent) return isOtherPlayerSecretSelectableForSetEvent(secret);
+    if (setEvent.isInEvent)
+      return isOtherPlayerSecretSelectableForSetEvent(secret);
 
     return false;
   };
 
   const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+    if (setEvent.isInEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return isCurrPlayerSecretSelectableForSetEvent(secret);
 
     if (
@@ -306,7 +304,7 @@ export default function GameContainer() {
   };
 
   const isTargetPlayerEvent = () => {
-    if (isTargetPlayerSetEvent) return true;
+    if (setEvent.isTargetPlayer) return true;
     // Other events
     if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
@@ -319,7 +317,7 @@ export default function GameContainer() {
   };
 
   const isTargetSecretEvent = () => {
-    if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+    if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
     // Other events
     if (
@@ -492,7 +490,7 @@ export default function GameContainer() {
   // -- Manejadores --
 
   const handleClickDiscardPile = () => {
-    if (isSetEvent) return;
+    if (setEvent.isInEvent) return;
 
     if (cardsInDiscardPile.length === 0) return;
 
@@ -572,7 +570,7 @@ export default function GameContainer() {
   const handleSelectCard = (card: GameCard) => {
     if (discardModal.isOpen && !discardModal.isEventDiscard) return;
 
-    if (isSetEvent) return;
+    if (setEvent.isInEvent) return;
 
     selectCard(card);
   };
@@ -672,7 +670,7 @@ export default function GameContainer() {
         await mandatoryDiscard();
       }
 
-      if (isStolenSecretSetEvent) await executeFinishTurnSetEvent();
+      if (setEvent.isStolenSecret) await executeFinishTurnSetEvent();
 
       await httpService.putPassTurn(match.id);
 
@@ -910,7 +908,7 @@ export default function GameContainer() {
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
             isSelectableSet={isSelectableSet}
-            isEvent={isSetEvent || currentEventCard !== null}
+            isEvent={setEvent.isInEvent || currentEventCard !== null}
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
             isTargetSet={

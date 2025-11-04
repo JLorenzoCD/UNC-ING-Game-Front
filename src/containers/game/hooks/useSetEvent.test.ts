@@ -218,7 +218,7 @@ describe("useSetEvent", () => {
     it("should initialize to default state and disable button", () => {
       const { result } = renderHook(() => useSetEvent());
 
-      expect(result.current.isSetEvent).toBe(false);
+      expect(result.current.setEvent.isInEvent).toBe(false);
       expect(result.current.isSetEventButtonDisabled).toBe(true);
       expect(result.current.setEvent.cards).toEqual([]);
     });
@@ -242,7 +242,7 @@ describe("useSetEvent", () => {
         result.current.playSet(mockGameCards);
       });
 
-      expect(result.current.isSetEvent).toBe(true);
+      expect(result.current.setEvent.isInEvent).toBe(true);
       expect(result.current.setEvent.isTargetPlayer).toBe(true);
       expect(result.current.setEvent.isTargetSecret).toBe(false);
       expect(result.current.setEvent.isValidSet).toBe(false); // Botón deshabilitado durante evento
@@ -266,7 +266,7 @@ describe("useSetEvent", () => {
         result.current.playSet(mockGameCards);
       });
 
-      expect(result.current.isSetEvent).toBe(true);
+      expect(result.current.setEvent.isInEvent).toBe(true);
       expect(result.current.setEvent.isTargetSecret).toBe(true);
       expect(result.current.setEvent.isTargetPlayer).toBe(false);
       expect(result.current.setEvent.isValidSet).toBe(false);

@@ -481,14 +481,23 @@ describe("GameContainer", () => {
 
     vi.mocked(useSetEvent).mockReturnValue({
       setEvent: {
-        isValidSet: true,
+        isValidSet: false,
         isTargetPlayer: false,
         isTargetSecret: false,
+        isInEvent: false,
+
+        isRevealSecret: false,
+        isHiddenSecret: false,
+        isStolenSecret: false,
+
+        cards: [],
+        setType: null,
+        set: null,
+        target: null,
+
+        isRevealCurrPlayerSecret: false,
+        isDownDetectiveEvent: false,
       } as any,
-      isSetEvent: false,
-      isTargetPlayerSetEvent: false,
-      isTargetSecretSetEvent: false,
-      isStolenSecretSetEvent: false,
       isSetEventButtonDisabled: false,
       playSet: mockPlaySet,
       setTargetSet: mockSetTargetSet,
