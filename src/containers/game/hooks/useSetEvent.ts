@@ -119,14 +119,15 @@ export function useSetEvent() {
     ],
   );
 
-  const playSet = (selectedCards: GameCard[]) => {
+  const playSet = async (selectedCards: GameCard[]) => {
     if (
       !setEvent.isValidSet &&
       !setEvent.isInEvent &&
       !setEvent.canDownTheCardToASet
     )
       return;
-    else if (
+
+    if (
       setEvent.isValidSet &&
       !setEvent.isInEvent &&
       !setEvent.canDownTheCardToASet
@@ -154,13 +155,19 @@ export function useSetEvent() {
         isStolenSecret,
       }));
       return;
-    } else if (
-      !setEvent.isValidSet &&
-      !setEvent.isInEvent &&
-      setEvent.canDownTheCardToASet &&
-      setEvent.isSelectingSet &&
-      setEvent.set !== null
-    ) {
+    }
+
+    if (
+      setEvent.isValidSet ||
+      setEvent.isInEvent ||
+      !setEvent.canDownTheCardToASet ||
+      !setEvent.isSelectingSet ||
+      setEvent.set === null ||
+      selectedCards.length !== 1
+    )
+      return;
+
+    if (selectedCards[0].name !== "ARIADNE OLIVER") {
       const setType = setEvent.set.type;
       const isTargetSecret = isSetTargetOneSecret(setEvent.set);
       const isTargetPlayer = isSetTargetOnePlayer(setEvent.set);
@@ -186,6 +193,25 @@ export function useSetEvent() {
         isSelectingSet: false,
       }));
       return;
+    } else {
+      // Al bajar Oliver, directamente se juega el evento y no se selecciona nada.
+      // Ya que el jugador seleccionado es el dueño del set.
+      try {
+        const dataBody = cardsToSetUpdateData(
+          setEvent.cards[0],
+          setEvent.set,
+          setEvent.set.player_id,
+        );
+        await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+
+        setSetEvent({
+          ...defaultStateSetEvent,
+        });
+      } catch (err) {
+        console.error(err);
+
+        toast.error("An unexpected error has occurred, please try again.");
+      }
     }
   };
 
