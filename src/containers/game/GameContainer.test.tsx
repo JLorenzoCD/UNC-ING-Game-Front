@@ -496,7 +496,7 @@ describe("GameContainer", () => {
         target: null,
 
         isRevealCurrPlayerSecret: false,
-        isDownDetectiveEvent: false,
+        canDownTheCardToASet: false,
       } as any,
       isSetEventButtonDisabled: false,
       playSet: mockPlaySet,

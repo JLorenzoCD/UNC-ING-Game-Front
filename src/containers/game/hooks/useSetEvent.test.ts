@@ -28,13 +28,13 @@ const {
   mockPutSecret,
   mockHttpService,
   isCardsValidSet,
-  cardsToSetTypeDetective,
-  isSetTargetOneSecret,
+  cardsToSetCreationDataTypeDetective,
+  isSetCardsTargetOneSecret,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
-  cardsToSet,
+  cardsToSetCreationData,
   isSetActionHiddenSecret,
-  isSetTargetOnePlayer,
+  isSetCardsTargetOnePLayer,
 } = vi.hoisted(() => {
   // Mocks de Datos
   const MOCK_PLAYER_ID = "p-owner-1" as UUID;
@@ -120,13 +120,13 @@ const {
 
   // Mocks para funciones de utilidad
   const isCardsValidSet = vi.fn(() => false);
-  const cardsToSetTypeDetective = vi.fn(() => "HERCULE POIROT");
-  const isSetTargetOneSecret = vi.fn(() => true);
+  const cardsToSetCreationDataTypeDetective = vi.fn(() => "HERCULE POIROT");
+  const isSetCardsTargetOneSecret = vi.fn(() => true);
   const isSetActionRevealSecret = vi.fn(() => true);
   const isSetActionStolenSecret = vi.fn(() => false);
-  const cardsToSet = vi.fn();
+  const cardsToSetCreationData = vi.fn();
   const isSetActionHiddenSecret = vi.fn(() => false);
-  const isSetTargetOnePlayer = vi.fn(() => false);
+  const isSetCardsTargetOnePLayer = vi.fn(() => false);
 
   return {
     MOCK_PLAYER_ID,
@@ -148,26 +148,26 @@ const {
     mockPutSecret,
     mockHttpService,
     isCardsValidSet,
-    cardsToSetTypeDetective,
-    isSetTargetOneSecret,
+    cardsToSetCreationDataTypeDetective,
+    isSetCardsTargetOneSecret,
     isSetActionRevealSecret,
     isSetActionStolenSecret,
-    cardsToSet,
+    cardsToSetCreationData,
     isSetActionHiddenSecret,
-    isSetTargetOnePlayer,
+    isSetCardsTargetOnePLayer,
   };
 });
 
 // Mocks de funciones de utilidad
 vi.mock("../utils/setEvent", () => ({
-  cardsToSet: cardsToSet,
-  cardsToSetTypeDetective: cardsToSetTypeDetective,
+  cardsToSetCreationData: cardsToSetCreationData,
+  cardsToSetCreationDataTypeDetective: cardsToSetCreationDataTypeDetective,
   isCardsValidSet: isCardsValidSet,
   isSetActionRevealSecret: isSetActionRevealSecret,
   isSetActionStolenSecret: isSetActionStolenSecret,
-  isSetTargetOneSecret: isSetTargetOneSecret,
+  isSetCardsTargetOneSecret: isSetCardsTargetOneSecret,
   isSetActionHiddenSecret: isSetActionHiddenSecret,
-  isSetTargetOnePlayer: isSetTargetOnePlayer,
+  isSetCardsTargetOnePLayer: isSetCardsTargetOnePLayer,
 }));
 
 // Mocks de Hooks de Contexto y Router
@@ -205,13 +205,13 @@ describe("useSetEvent", () => {
     vi.restoreAllMocks();
 
     isCardsValidSet.mockClear();
-    cardsToSetTypeDetective.mockClear();
-    isSetTargetOneSecret.mockClear();
+    cardsToSetCreationDataTypeDetective.mockClear();
+    isSetCardsTargetOneSecret.mockClear();
     isSetActionRevealSecret.mockClear();
     isSetActionStolenSecret.mockClear();
-    cardsToSet.mockClear();
+    cardsToSetCreationData.mockClear();
     isSetActionHiddenSecret.mockClear();
-    isSetTargetOnePlayer.mockClear();
+    isSetCardsTargetOnePLayer.mockClear();
   });
 
   describe("Initialization & State Transitions", () => {
@@ -225,8 +225,8 @@ describe("useSetEvent", () => {
 
     it("should transition to TargetPlayer state when playing a player-target set", () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(false);
-      isSetTargetOnePlayer.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(false);
+      isSetCardsTargetOnePLayer.mockReturnValue(true);
       isSetActionRevealSecret.mockReturnValue(true); // Para que pase la validación de toggle
 
       const { result } = renderHook(() => useSetEvent());
@@ -250,7 +250,7 @@ describe("useSetEvent", () => {
 
     it("should transition to TargetSecret state when playing a secret-target set", () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetCardsTargetOneSecret.mockReturnValue(true); // Target Secret
       isSetActionRevealSecret.mockReturnValue(true); // Para que pase la validación de toggle
 
       const { result } = renderHook(() => useSetEvent());
@@ -291,8 +291,8 @@ describe("useSetEvent", () => {
   describe("Target Selection (setTargetSet)", () => {
     it("should set player as target for TargetPlayer event", () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(false);
-      isSetTargetOnePlayer.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(false);
+      isSetCardsTargetOnePLayer.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
       act(() => {
@@ -312,7 +312,7 @@ describe("useSetEvent", () => {
 
     it("should set other player's unrevealed secret as target for Reveal event", () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(true);
       isSetActionRevealSecret.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
@@ -333,7 +333,7 @@ describe("useSetEvent", () => {
 
     it("should NOT set an already revealed secret for a Reveal event", () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(true);
       isSetActionRevealSecret.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
@@ -356,8 +356,8 @@ describe("useSetEvent", () => {
   describe("Action Execution (executeSetActionToTarget)", () => {
     it("should return false and show error if target is null", async () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(false);
-      isSetTargetOnePlayer.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(false);
+      isSetCardsTargetOnePLayer.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
 
@@ -379,8 +379,8 @@ describe("useSetEvent", () => {
 
     it("should successfully execute a TargetPlayer set action and reset state", async () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(false);
-      isSetTargetOnePlayer.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(false);
+      isSetCardsTargetOnePLayer.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
       act(() => {
@@ -432,7 +432,7 @@ describe("useSetEvent", () => {
 
     it("should successfully execute a TargetSecret set action (not curr player) and reset state", async () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetCardsTargetOneSecret.mockReturnValue(true); // Target Secret
       isSetActionRevealSecret.mockReturnValue(true); // Reveal Secret (Other Player's)
 
       const { result } = renderHook(() => useSetEvent());
@@ -457,7 +457,7 @@ describe("useSetEvent", () => {
 
     it("should return false and show error if target secret player is not found", async () => {
       isCardsValidSet.mockReturnValue(true);
-      isSetTargetOneSecret.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(true);
       isSetActionRevealSecret.mockReturnValue(true);
 
       mockUseGame.mockReturnValue({
@@ -496,8 +496,8 @@ describe("useSetEvent", () => {
 
     // Helper para simular el inicio de un evento de Target Player
     const startTargetPlayerEvent = (result: any) => {
-      isSetTargetOneSecret.mockReturnValue(false); // Target Player
-      isSetTargetOnePlayer.mockReturnValue(true);
+      isSetCardsTargetOneSecret.mockReturnValue(false); // Target Player
+      isSetCardsTargetOnePLayer.mockReturnValue(true);
 
       act(() => {
         result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
@@ -509,7 +509,7 @@ describe("useSetEvent", () => {
 
     // Helper para simular el inicio de un evento de Target Secret (Reveal)
     const startTargetSecretRevealEvent = (result: any) => {
-      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetCardsTargetOneSecret.mockReturnValue(true); // Target Secret
       isSetActionRevealSecret.mockReturnValue(true); // Reveal
       act(() => {
         result.current.setEventToggleDisableButtonPlaySet(mockGameCards);

@@ -7,12 +7,16 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import {
-  cardsToSet,
-  cardsToSetTypeDetective,
+  canDownTheCardToASet,
+  cardsToSetCreationData,
+  cardsToSetCreationDataTypeDetective,
+  cardsToSetUpdateData,
   isCardsValidSet,
   isSetActionHiddenSecret,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
+  isSetCardsTargetOnePLayer,
+  isSetCardsTargetOneSecret,
   isSetTargetOnePlayer,
   isSetTargetOneSecret,
 } from "../utils/setEvent";
@@ -34,13 +38,15 @@ interface SetEvent {
   isHiddenSecret: boolean;
   isStolenSecret: boolean;
 
+  isSelectingSet: boolean;
+
   cards: GameCard[];
   setType: SetType | null;
   set: MatchSet | null;
   target: GamePlayer | GameSecret | null;
 
   isRevealCurrPlayerSecret: boolean;
-  isDownDetectiveEvent: boolean;
+  canDownTheCardToASet: boolean;
 }
 
 const defaultStateSetEvent: SetEvent = {
@@ -54,13 +60,15 @@ const defaultStateSetEvent: SetEvent = {
   isHiddenSecret: false,
   isStolenSecret: false,
 
+  isSelectingSet: false,
+
   cards: [],
   setType: null,
   set: null,
   target: null,
 
   isRevealCurrPlayerSecret: false,
-  isDownDetectiveEvent: false,
+  canDownTheCardToASet: false,
 };
 
 export function useSetEvent() {
@@ -68,6 +76,7 @@ export function useSetEvent() {
   const {
     secrets,
     players,
+    sets,
     playerSelectsOneOfHisSecrets,
     lastUpdatedSecretId,
     hasFinishedAction,
@@ -79,17 +88,52 @@ export function useSetEvent() {
 
   const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
-  const isSetEventButtonDisabled = useMemo(
-    () => !(setEvent.isValidSet && !setEvent.isInEvent) || hasFinishedAction,
-    [setEvent.isValidSet, setEvent.isInEvent, hasFinishedAction],
+  const isSetEventButtonDisabled = useMemo(() => {
+    if (hasFinishedAction) return true;
+
+    if (setEvent.canDownTheCardToASet && setEvent.isSelectingSet) return false;
+
+    if (!setEvent.isValidSet || setEvent.isInEvent) return true;
+
+    return false;
+  }, [
+    setEvent.isValidSet,
+    setEvent.isInEvent,
+    setEvent.canDownTheCardToASet,
+    setEvent.isSelectingSet,
+    hasFinishedAction,
+  ]);
+  const isSetEventSelectSetButtonDisabled = useMemo(
+    () =>
+      setEvent.isValidSet ||
+      setEvent.isInEvent ||
+      !setEvent.canDownTheCardToASet ||
+      setEvent.cards.length === 1 ||
+      hasFinishedAction,
+    [
+      setEvent.isValidSet,
+      setEvent.isInEvent,
+      setEvent.canDownTheCardToASet,
+      setEvent.cards,
+      hasFinishedAction,
+    ],
   );
 
   const playSet = (selectedCards: GameCard[]) => {
-    if (!setEvent.isValidSet && !setEvent.isInEvent) return;
-    else if (setEvent.isValidSet && !setEvent.isInEvent) {
-      const setType = cardsToSetTypeDetective(selectedCards);
-      const isTargetSecret = isSetTargetOneSecret(selectedCards);
-      const isTargetPlayer = isSetTargetOnePlayer(selectedCards);
+    if (
+      !setEvent.isValidSet &&
+      !setEvent.isInEvent &&
+      !setEvent.canDownTheCardToASet
+    )
+      return;
+    else if (
+      setEvent.isValidSet &&
+      !setEvent.isInEvent &&
+      !setEvent.canDownTheCardToASet
+    ) {
+      const setType = cardsToSetCreationDataTypeDetective(selectedCards);
+      const isTargetSecret = isSetCardsTargetOneSecret(selectedCards);
+      const isTargetPlayer = isSetCardsTargetOnePLayer(selectedCards);
       const isRevealSecret = isSetActionRevealSecret(selectedCards);
       const isHiddenSecret = isSetActionHiddenSecret(selectedCards);
       const isStolenSecret = isSetActionStolenSecret(selectedCards);
@@ -110,7 +154,54 @@ export function useSetEvent() {
         isStolenSecret,
       }));
       return;
+    } else if (
+      !setEvent.isValidSet &&
+      !setEvent.isInEvent &&
+      setEvent.canDownTheCardToASet &&
+      setEvent.isSelectingSet &&
+      setEvent.set !== null
+    ) {
+      const setType = setEvent.set.type;
+      const isTargetSecret = isSetTargetOneSecret(setEvent.set);
+      const isTargetPlayer = isSetTargetOnePlayer(setEvent.set);
+      const isRevealSecret = setType !== "PARKER PYNE";
+      const isHiddenSecret = setType === "PARKER PYNE";
+      const isStolenSecret =
+        setType === "MR SATTERTHWAITE" && setEvent.set.quin_play;
+
+      const isSetEvent = isTargetPlayer || isTargetSecret;
+
+      setSetEvent((prev) => ({
+        ...prev,
+        isValidSet: false, // Para deshabilitar el botón de jugar set mientras se juega el evento
+        isInEvent: isSetEvent,
+        target: null,
+        isTargetPlayer,
+        isTargetSecret,
+        setType,
+        cards: selectedCards,
+        isRevealSecret,
+        isHiddenSecret,
+        isStolenSecret,
+        isSelectingSet: false,
+      }));
+      return;
     }
+  };
+
+  const addDetectiveCardToSet = (card: GameCard) => {
+    if (
+      setEvent.isValidSet ||
+      setEvent.isInEvent ||
+      !setEvent.canDownTheCardToASet
+    )
+      return;
+
+    setSetEvent((prev) => ({
+      ...prev,
+      cards: [card],
+      isSelectingSet: true,
+    }));
   };
 
   const setEventToggleDisableButtonPlaySet = useCallback(
@@ -134,7 +225,35 @@ export function useSetEvent() {
     [secrets],
   );
 
-  const setTargetSet = (target: GamePlayer | GameSecret) => {
+  const setEventToggleDisableButtonSelectSet = useCallback(
+    (selectedCards: GameCard[]) => {
+      if (player === null) return;
+
+      if (selectedCards.length !== 1) {
+        setSetEvent((prev) => ({
+          ...prev,
+          canDownTheCardToASet: false,
+          set: prev.canDownTheCardToASet ? null : prev.set,
+          isSelectingSet: false,
+          cards: prev.canDownTheCardToASet ? [] : prev.cards,
+        }));
+        return;
+      }
+
+      const can = canDownTheCardToASet(selectedCards[0], sets, player.id);
+
+      setSetEvent((prev) => ({
+        ...prev,
+        canDownTheCardToASet: can,
+        set: prev.canDownTheCardToASet ? null : prev.set,
+        isSelectingSet: false,
+        cards: prev.canDownTheCardToASet ? [] : prev.cards,
+      }));
+    },
+    [player, sets],
+  );
+
+  const setTargetSet = (target: GamePlayer | GameSecret | MatchSet) => {
     if (!setEvent.isInEvent || player === null) return;
 
     // target player
@@ -175,6 +294,22 @@ export function useSetEvent() {
     }
   };
 
+  const setTargeSetToDown = (target: GamePlayer | GameSecret | MatchSet) => {
+    if (player === null) return;
+
+    if (
+      !setEvent.isValidSet &&
+      !setEvent.isInEvent &&
+      setEvent.canDownTheCardToASet &&
+      "quin_play" in target
+    ) {
+      setSetEvent((prev) => ({
+        ...prev,
+        set: target,
+      }));
+    }
+  };
+
   const executeSetActionToTarget = async () => {
     if (!setEvent.isInEvent) return false;
 
@@ -189,9 +324,22 @@ export function useSetEvent() {
       toast(msg);
 
       try {
-        const dataBody = cardsToSet(setEvent.cards, setEvent.target.player_id);
+        if (!setEvent.canDownTheCardToASet) {
+          const dataBody = cardsToSetCreationData(
+            setEvent.cards,
+            setEvent.target.player_id,
+          );
+          await httpService?.createAndPlaySet(matchId, dataBody);
+        } else {
+          if (setEvent.set === null) throw new Error("Set is null");
 
-        await httpService?.createAndPlaySet(matchId, dataBody);
+          const dataBody = cardsToSetUpdateData(
+            setEvent.cards[0],
+            setEvent.set,
+            setEvent.target.player_id,
+          );
+          await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+        }
 
         setSetEvent({
           ...defaultStateSetEvent,
@@ -222,14 +370,27 @@ export function useSetEvent() {
       }
 
       try {
-        const dataBody = cardsToSet(
-          setEvent.cards,
-          setEvent.target.player_id as UUID,
-          setEvent.target.id,
-        );
+        if (!setEvent.canDownTheCardToASet) {
+          const dataBody = cardsToSetCreationData(
+            setEvent.cards,
+            setEvent.target.player_id as UUID,
+            setEvent.target.id,
+          );
 
-        await httpService?.createAndPlaySet(matchId, dataBody);
-        setSetEvent({ ...defaultStateSetEvent, isValidSet: true });
+          await httpService?.createAndPlaySet(matchId, dataBody);
+        } else {
+          if (setEvent.set === null) throw new Error("Set is null");
+
+          const dataBody = cardsToSetUpdateData(
+            setEvent.cards[0],
+            setEvent.set,
+            setEvent.target.player_id as UUID,
+            setEvent.target.id,
+          );
+          await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+        }
+
+        setSetEvent({ ...defaultStateSetEvent });
         return true;
       } catch (err) {
         console.error(err);
@@ -307,6 +468,35 @@ export function useSetEvent() {
     return false;
   };
 
+  const iSetSelectableForSetEvent = (set: MatchSet) => {
+    if (
+      setEvent.isValidSet ||
+      setEvent.isInEvent ||
+      !setEvent.canDownTheCardToASet
+    )
+      return false;
+
+    const card = setEvent.cards[0];
+
+    if (card.name === "ARIADNE OLIVER") return true;
+    if (card.player_id !== set.player_id) return false;
+
+    if (
+      card.name === set.type ||
+      (set.type === "TWO BERESFORD" &&
+        (card.name === "TOMMY BERESFORD" || card.name === "TUPPENCE BERESFORD"))
+    )
+      return true;
+
+    if (
+      (set.type === "TOMMY BERESFORD" && card.name === "TUPPENCE BERESFORD") ||
+      (set.type === "TUPPENCE BERESFORD" && card.name === "TOMMY BERESFORD")
+    )
+      return true;
+
+    return false;
+  };
+
   const isCurrPlayerSecretSelectableForSetEvent = (secret: GameSecret) => {
     if (!setEvent.isInEvent || !setEvent.isTargetSecret) return false;
     if (secret.player_id !== player?.id) return false;
@@ -361,14 +551,19 @@ export function useSetEvent() {
   return {
     setEvent,
     isSetEventButtonDisabled,
+    isSetEventSelectSetButtonDisabled,
     playSet,
+    addDetectiveCardToSet,
     setTargetSet,
+    setTargeSetToDown,
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
+    iSetSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
+    setEventToggleDisableButtonSelectSet,
     getTargetSetEvent,
     getSetCards,
     clearSetEvent,

@@ -100,15 +100,20 @@ export default function GameContainer() {
 
   const {
     playSet,
+    addDetectiveCardToSet,
     setEvent,
     isSetEventButtonDisabled,
+    isSetEventSelectSetButtonDisabled,
     setTargetSet,
+    setTargeSetToDown,
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
+    iSetSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
+    setEventToggleDisableButtonSelectSet,
     getTargetSetEvent,
     clearSetEvent,
   } = useSetEvent();
@@ -154,7 +159,10 @@ export default function GameContainer() {
       setSelectedTargetSet(target as MatchSet);
       return;
     }
-    if (setEvent.isInEvent) setTargetSet(target as GamePlayer | GameSecret);
+
+    if (setEvent.isSelectingSet) setTargeSetToDown(target);
+
+    if (setEvent.isInEvent) setTargetSet(target);
   };
 
   const handleSelectedPlayer = async () => {
@@ -340,6 +348,14 @@ export default function GameContainer() {
 
       // Aquí puedes añadir más lógica si es necesario (ej. no seleccionar sets de HARLEY QUIN)
       return true;
+    } else if (
+      !setEvent.isInEvent &&
+      !setEvent.isValidSet &&
+      setEvent.canDownTheCardToASet &&
+      setEvent.cards.length === 1 &&
+      setEvent.isSelectingSet
+    ) {
+      return iSetSelectableForSetEvent(set);
     }
 
     return false;
@@ -462,6 +478,20 @@ export default function GameContainer() {
     }
   };
 
+  const handleAddDetectiveCardToSet = () => {
+    const card = Object.values(selectedCards).at(0);
+
+    if (
+      !setEvent.isInEvent &&
+      !setEvent.isValidSet &&
+      setEvent.canDownTheCardToASet &&
+      card !== undefined &&
+      !setEvent.isSelectingSet
+    ) {
+      addDetectiveCardToSet(card);
+    }
+  };
+
   // -- Utilidades --
 
   const getTakeErrorMessage = () => {
@@ -570,7 +600,7 @@ export default function GameContainer() {
   const handleSelectCard = (card: GameCard) => {
     if (discardModal.isOpen && !discardModal.isEventDiscard) return;
 
-    if (setEvent.isInEvent) return;
+    if (setEvent.isInEvent || setEvent.isSelectingSet) return;
 
     selectCard(card);
   };
@@ -869,7 +899,13 @@ export default function GameContainer() {
     if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
     setEventToggleDisableButtonPlaySet(Object.values(selectedCards));
-  }, [discardModal, selectedCards, setEventToggleDisableButtonPlaySet]);
+    setEventToggleDisableButtonSelectSet(Object.values(selectedCards));
+  }, [
+    discardModal,
+    selectedCards,
+    setEventToggleDisableButtonPlaySet,
+    setEventToggleDisableButtonSelectSet,
+  ]);
 
   const isSelectPlayerButtonEnabled = isTargetPlayerEvent();
 
@@ -908,18 +944,24 @@ export default function GameContainer() {
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
             isSelectableSet={isSelectableSet}
-            isEvent={setEvent.isInEvent || currentEventCard !== null}
+            isEvent={
+              setEvent.isInEvent ||
+              currentEventCard !== null ||
+              setEvent.isSelectingSet
+            }
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
             isTargetSet={
-              currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
-              currentEventStep === EVENT_STEPS.SELECT_SET
+              (currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+                currentEventStep === EVENT_STEPS.SELECT_SET) ||
+              setEvent.isSelectingSet
             }
             target={
               getTargetSetEvent() ||
               selectedTargetPlayer ||
               selectedTargetSecret ||
-              selectedTargetSet
+              selectedTargetSet ||
+              setEvent.set
             }
           />
 
@@ -932,7 +974,13 @@ export default function GameContainer() {
                 onSelectTargetEvent={handleSelectTargetEvent}
                 target={getTargetSetEvent() || selectedTargetSecret}
               />
-              <Sets sets={playerSets} />
+              <Sets
+                sets={playerSets}
+                onSelectTargetEvent={handleSelectTargetEvent}
+                isSelectableSet={isSelectableSet}
+                isTargetSet={setEvent.isSelectingSet}
+                target={setEvent.set}
+              />
             </div>
 
             <Hand
@@ -952,13 +1000,18 @@ export default function GameContainer() {
               onSelectSecret={handleSelectedSecret}
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
+              onAddDetectiveCardToSet={handleAddDetectiveCardToSet}
               isDisabled={!isPlayerTurn}
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
                 currentEventStep === EVENT_STEPS.SELECT_SET
               }
+              isAddingCardToSet={setEvent.isSelectingSet}
               isSetButtonDisabled={isSetEventButtonDisabled}
+              isSetEventSelectSetButtonDisabled={
+                isSetEventSelectSetButtonDisabled
+              }
               isSelectionPlayerEvent={isSelectPlayerButtonEnabled}
               isSelectionSecretEvent={isSelectSecretButtonEnabled}
             />

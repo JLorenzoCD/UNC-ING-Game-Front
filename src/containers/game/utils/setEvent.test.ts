@@ -4,11 +4,11 @@ import type { CardName, GameCard } from "@/types/card";
 import type { SetCreationData } from "@/types/set";
 
 import {
-  cardsToSetTypeDetective,
+  cardsToSetCreationDataTypeDetective,
   isValidTwoBeresfordSetType,
   isCardsValidSet,
-  cardsToSet,
-  isSetTargetOneSecret,
+  cardsToSetCreationData,
+  isSetCardsTargetOneSecret,
   isSetWithQuin,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
@@ -109,21 +109,23 @@ describe("utils", () => {
     });
   });
 
-  describe("cardsToSetTypeDetective", () => {
+  describe("cardsToSetCreationDataTypeDetective", () => {
     it("should return 'TWO BERESFORD' for a valid Tommy/Tuppence set", () => {
-      expect(cardsToSetTypeDetective(validTwoBeresfordSet)).toBe(
+      expect(cardsToSetCreationDataTypeDetective(validTwoBeresfordSet)).toBe(
         "TWO BERESFORD",
       );
     });
 
     it("should return the correct SetType for a simple set (e.g.: HERCULE POIROT)", () => {
-      expect(cardsToSetTypeDetective(validPoirotSet)).toBe("HERCULE POIROT");
+      expect(cardsToSetCreationDataTypeDetective(validPoirotSet)).toBe(
+        "HERCULE POIROT",
+      );
     });
 
     it("should return the correct SetType for a set with wildcards (e.g.: HERCULE POIROT)", () => {
-      expect(cardsToSetTypeDetective(validPoirotSetWithOneQuin)).toBe(
-        "HERCULE POIROT",
-      );
+      expect(
+        cardsToSetCreationDataTypeDetective(validPoirotSetWithOneQuin),
+      ).toBe("HERCULE POIROT");
     });
   });
 
@@ -191,9 +193,12 @@ describe("utils", () => {
     });
   });
 
-  describe("cardsToSet", () => {
+  describe("cardsToSetCreationData", () => {
     it("should create a correct SetCreationData object for a valid set", () => {
-      const result = cardsToSet(validPoirotSet, MOCK_TARGET_PLAYER_ID);
+      const result = cardsToSetCreationData(
+        validPoirotSet,
+        MOCK_TARGET_PLAYER_ID,
+      );
       expect(result).toEqual({
         type: "HERCULE POIROT",
         player_id: MOCK_PLAYER_ID,
@@ -203,7 +208,7 @@ describe("utils", () => {
     });
 
     it("should include target_secret_id if provided", () => {
-      const result = cardsToSet(
+      const result = cardsToSetCreationData(
         validPoirotSet,
         MOCK_TARGET_PLAYER_ID,
         MOCK_TARGET_SECRET_ID,
@@ -213,23 +218,23 @@ describe("utils", () => {
 
     it("should throw an error for an invalid card set", () => {
       expect(() =>
-        cardsToSet(invalidPoirotSetShort, MOCK_TARGET_PLAYER_ID),
+        cardsToSetCreationData(invalidPoirotSetShort, MOCK_TARGET_PLAYER_ID),
       ).toThrow("The cards given are not a valid Set.");
     });
   });
 
-  describe("isSetTargetOneSecret", () => {
+  describe("isSetCardsTargetOneSecret", () => {
     it("should return true for sets that target one secret (Poirot, Marple, Pyne)", () => {
-      expect(isSetTargetOneSecret(validPoirotSet)).toBe(true);
-      expect(isSetTargetOneSecret([cardMarple1, cardMarple2, cardQuin1])).toBe(
-        true,
-      );
-      expect(isSetTargetOneSecret([cardPyne1, cardPyne2])).toBe(true);
+      expect(isSetCardsTargetOneSecret(validPoirotSet)).toBe(true);
+      expect(
+        isSetCardsTargetOneSecret([cardMarple1, cardMarple2, cardQuin1]),
+      ).toBe(true);
+      expect(isSetCardsTargetOneSecret([cardPyne1, cardPyne2])).toBe(true);
     });
 
     it("should return false for sets that do not target one secret (Satterthwaite, Beresford, etc.)", () => {
-      expect(isSetTargetOneSecret(validSatterthwaiteSet)).toBe(false);
-      expect(isSetTargetOneSecret(validTwoBeresfordSet)).toBe(false);
+      expect(isSetCardsTargetOneSecret(validSatterthwaiteSet)).toBe(false);
+      expect(isSetCardsTargetOneSecret(validTwoBeresfordSet)).toBe(false);
     });
   });
 
