@@ -481,14 +481,17 @@ describe("GameContainer", () => {
 
     vi.mocked(useSetEvent).mockReturnValue({
       setEvent: {
+        isInEvent: false,
         isValidSet: false,
+
         isTargetPlayer: false,
         isTargetSecret: false,
-        isInEvent: false,
 
         isRevealSecret: false,
         isHiddenSecret: false,
         isStolenSecret: false,
+
+        isSelectingSet: false,
 
         cards: [],
         setType: null,
@@ -499,6 +502,7 @@ describe("GameContainer", () => {
         canDownTheCardToASet: false,
       } as any,
       isSetEventButtonDisabled: false,
+      isSetEventSelectSetButtonDisabled: false,
       playSet: mockPlaySet,
       setTargetSet: mockSetTargetSet,
       executeSetActionToTarget: mockExecuteSetActionToTarget,
@@ -510,6 +514,10 @@ describe("GameContainer", () => {
       getTargetSetEvent: vi.fn(),
       getSetCards: vi.fn(),
       clearSetEvent: mockClearSetEvent,
+      addDetectiveCardToSet: vi.fn(),
+      setTargeSetToDown: vi.fn(),
+      iSetSelectableForSetEvent: vi.fn(),
+      setEventToggleDisableButtonSelectSet: vi.fn(),
     });
   });
 
