@@ -25,6 +25,7 @@ import type { MatchSet } from "@/types/set";
 import type {
   EventMatchCompletedPayload,
   EventCardEventPayload,
+  EventNotSoFastPayload,
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
@@ -45,6 +46,12 @@ export interface GameContextType {
   hasFinishedAction: boolean;
   playerFinishActionTurn: () => void;
   playerSelectsOneOfHisSecrets: { isCurrPlayer: boolean; isSelecting: boolean };
+  notSoFastEvent: {
+    isActivate: boolean;
+    eventId: UUID | null;
+    nsfCount: number;
+  };
+  clearNotSoFastEvent: () => void;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -63,6 +70,8 @@ const GameContext = createContext<GameContextType>({
   hasFinishedAction: false,
   playerFinishActionTurn: () => undefined,
   playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
+  notSoFastEvent: { isActivate: false, eventId: null, nsfCount: 0 },
+  clearNotSoFastEvent: () => undefined,
 });
 
 export interface GameContextProviderProps {
@@ -92,6 +101,16 @@ export default function GameContextProvider({
       isSelecting: false,
     });
   const [hasFinishedAction, setPlayerFinishAction] = useState<boolean>(false);
+
+  const [notSoFastEvent, setNotSoFastEvent] = useState<{
+    isActivate: boolean;
+    eventId: UUID | null;
+    nsfCount: number;
+  }>({
+    isActivate: false,
+    eventId: null,
+    nsfCount: 0,
+  });
 
   const [match, setMatch] = useState<Match | null>(null);
   const [result, setResult] = useState<MatchResult | null>(null);
@@ -144,6 +163,11 @@ export default function GameContextProvider({
     [],
   );
 
+  const clearNotSoFastEvent = useCallback(
+    () => setNotSoFastEvent({ isActivate: false, eventId: null, nsfCount: 0 }),
+    [],
+  );
+
   useEffect(() => {
     fetchMatchData();
   }, [fetchMatchData]);
@@ -182,6 +206,30 @@ export default function GameContextProvider({
           current_player_order: match.current_player_order,
         };
       });
+    };
+
+    const handleNotSoFastEvent = (payload: EventNotSoFastPayload) => {
+      const hasNotSoFast = cards.some(
+        (card) => card.player_id === player?.id && card.name === "NOT SO FAST",
+      );
+
+      if (hasNotSoFast) {
+        const eventType = payload.event_type;
+        const targetPlayerId = payload.player_id;
+
+        const targetPlayer = players.find((p) => p.id === targetPlayerId);
+        const playerName = targetPlayer?.name;
+
+        const message = `Do you want to cancel the event ${eventType} played by ${playerName}? Double-click on a not so fast`;
+
+        toast.info(message);
+
+        setNotSoFastEvent({
+          isActivate: true,
+          eventId: payload.event_id,
+          nsfCount: payload.nsf_count,
+        });
+      }
     };
 
     const handleCardEvent = (payload: EventCardEventPayload) => {
@@ -386,6 +434,7 @@ export default function GameContextProvider({
       handleCurrPlayerSelectItsSecret,
     );
     wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+    wsService.on(BACKEND_SOCKETS_EVENTS.NOT_SO_FAST, handleNotSoFastEvent);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
@@ -401,8 +450,9 @@ export default function GameContextProvider({
         handleCurrPlayerSelectItsSecret,
       );
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+      wsService.off(BACKEND_SOCKETS_EVENTS.NOT_SO_FAST, handleNotSoFastEvent);
     };
-  }, [matchId, wsService, isConnected, players, player]);
+  }, [matchId, wsService, isConnected, players, player, cards]);
 
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
@@ -423,6 +473,8 @@ export default function GameContextProvider({
       playerSelectsOneOfHisSecrets,
       hasFinishedAction,
       playerFinishActionTurn,
+      notSoFastEvent,
+      clearNotSoFastEvent,
     }),
     [
       match,
@@ -438,6 +490,8 @@ export default function GameContextProvider({
       playerSelectsOneOfHisSecrets,
       lastUpdatedSecretId,
       playerFinishActionTurn,
+      notSoFastEvent,
+      clearNotSoFastEvent,
     ],
   );
 

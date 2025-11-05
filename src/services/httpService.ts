@@ -220,6 +220,25 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.PUT_SECRET(matchId, secretId), options);
   };
 
+  const postPlayNotSoFast = async (
+    matchId: UUID,
+    playerId: UUID,
+    cardId: UUID,
+    eventId: UUID,
+    nsfCount: number,
+  ) => {
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        match_card_id: cardId,
+        event_id: eventId,
+        nsf_count: nsfCount,
+      }),
+    };
+    return request(BACKEND_ENDPOINTS.PLAY_NOT_SO_FAST(matchId), options);
+  };
+
   return {
     request,
     createPlayer,
@@ -238,5 +257,6 @@ export function createHttpService() {
     postEvent,
     putSecret,
     createAndPlaySet,
+    postPlayNotSoFast,
   };
 }

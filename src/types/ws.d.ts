@@ -96,6 +96,28 @@ export interface EventErrorPayload {
   message?: string;
 }
 
+/** Payload para la instantanea not so fast */
+export interface EventNotSoFastPayload {
+  /**
+   * La ID del jugador que juega el evento o set.
+   */
+  player_id: UUID;
+
+  /**
+   * La ID del jugador que juega el evento o set.
+   */
+  event_id: UUID;
+
+  /**
+   * El nombre del evento o set que se quiere jugar.
+   */
+  event_type: string;
+
+  /**
+   * El numero de nsf por el que va.
+   */
+  nsf_count: number;
+}
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -111,6 +133,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL]: EventPlayerSecretRevealPayload;
   [BACKEND_SOCKETS_EVENTS.SECRET]: EventSecretPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
+  [BACKEND_SOCKETS_EVENTS.NOT_SO_FAST]: EventNotSoFastPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

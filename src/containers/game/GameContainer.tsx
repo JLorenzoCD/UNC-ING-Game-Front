@@ -55,6 +55,8 @@ export default function GameContainer() {
     hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
+    notSoFastEvent,
+    clearNotSoFastEvent,
   } = useGame();
 
   const {
@@ -117,6 +119,33 @@ export default function GameContainer() {
   } = useSetEvent();
 
   // -- Utilidades --
+  const handlePlayNotSoFast = async (card: GameCard) => {
+    if (!notSoFastEvent.isActivate) return;
+    if (card.name !== "NOT SO FAST") return;
+    if (!httpService || !player || !match || !notSoFastEvent.eventId) {
+      return;
+    }
+    try {
+      // Asumo que tienes un endpoint 'postPlayNotSoFast'
+      // que recibe el ID de la acción que está desafiando.
+      await httpService.postPlayNotSoFast(
+        match.id,
+        player.id,
+        card.id,
+        notSoFastEvent.eventId,
+        notSoFastEvent.nsfCount,
+      );
+
+      // Si tiene éxito, limpiamos el estado de desafío
+      clearNotSoFastEvent();
+      clearSelectedCards(); // Limpiar selección por si acaso
+      toast.success("¡NOT SO FAST jugado!");
+    } catch (error) {
+      console.error("Fallo al jugar NOT SO FAST:", error);
+      toast.error("Fallo al jugar NOT SO FAST.");
+    }
+  };
+
   const handleClickSetEvent = () => {
     playSet(Object.values(selectedCards));
   };
@@ -943,6 +972,8 @@ export default function GameContainer() {
               isSelected={isCardSelected}
               isSelecting={isSelectingCards}
               isDisabled={!isPlayerTurn}
+              isActivateNSF={notSoFastEvent.isActivate}
+              onDoubleClickCard={handlePlayNotSoFast}
             />
 
             <HandActions
