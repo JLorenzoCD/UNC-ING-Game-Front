@@ -55,3 +55,11 @@ export interface SetCreationData {
   target_player_id: UUID;
   target_secret_id?: UUID;
 }
+
+export interface SetUpdateData {
+  set_id: UUID;
+  card_ids: UUID[];
+  player_id: UUID;
+  target_player_id: UUID;
+  target_secret_id?: UUID;
+}

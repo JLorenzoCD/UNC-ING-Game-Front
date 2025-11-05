@@ -9,7 +9,7 @@ import type {
   MatchCreateInput,
   MatchWithPlayerCount,
 } from "@/types/match";
-import type { MatchSet, SetCreationData } from "@/types/set";
+import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -203,6 +203,21 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.CREATE_AND_PLAY_SET(matchId), options);
   };
 
+  const addDetectiveCardToSetAndPlay = async (
+    matchId: UUID,
+    dataBody: SetUpdateData,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify(dataBody),
+    };
+
+    return request(
+      BACKEND_ENDPOINTS.DOWN_CARD_AND_PLAY_SET(matchId, dataBody.set_id),
+      options,
+    );
+  };
+
   const putSecret = async (
     matchId: UUID,
     secretId: UUID,
@@ -238,5 +253,6 @@ export function createHttpService() {
     postEvent,
     putSecret,
     createAndPlaySet,
+    addDetectiveCardToSetAndPlay,
   };
 }
