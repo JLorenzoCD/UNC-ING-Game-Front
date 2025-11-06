@@ -836,7 +836,6 @@ export default function GameContainer() {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
         }
-        console.log(selectedTargetPlayer, selectedTargetSecret);
         eventPayload = {
           target_secret_id: selectedTargetSecret.id,
           target_player_id: selectedTargetPlayer.id,
@@ -866,6 +865,7 @@ export default function GameContainer() {
         eventPayload = {
           target_set_id: selectedTargetSet?.id,
         } as AnotherVictimEventPayload;
+
         setSelectedTargetSet(null);
         setCurrentEventStep(null);
         break;

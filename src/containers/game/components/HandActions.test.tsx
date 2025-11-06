@@ -152,8 +152,6 @@ describe("HandActions", () => {
       expect(screen.getByText("Add detective")).toBeInTheDocument();
       expect(screen.getByText("Select set")).toBeInTheDocument();
 
-      screen.debug();
-
       expect(buttons[0]).not.toBeDisabled();
       expect(buttons[1]).toBeDisabled();
       expect(buttons[2]).toBeDisabled();

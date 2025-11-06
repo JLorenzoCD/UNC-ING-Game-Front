@@ -372,6 +372,7 @@ vi.mock("./components/HandActions", () => ({
       onFinish,
       onDiscard,
       onPlaySet,
+      onSelectSet,
       onSelectPlayer,
       onSelectSecret,
       onPlayEvent,
@@ -391,11 +392,26 @@ vi.mock("./components/HandActions", () => ({
         >
           Play set
         </button>
-        <button onClick={onSelectPlayer} disabled={isDisabled}>
+        <button
+          onClick={onSelectPlayer}
+          disabled={isDisabled}
+          data-testid="select-player-btn"
+        >
           Select player
         </button>
-        <button onClick={onSelectSecret} disabled={isDisabled}>
+        <button
+          onClick={onSelectSecret}
+          disabled={isDisabled}
+          data-testid="select-secret-btn"
+        >
           Select secret
+        </button>
+        <button
+          onClick={onSelectSet}
+          disabled={isDisabled || isSetButtonDisabled}
+          data-testid="select-set-btn"
+        >
+          Select set
         </button>
         <button onClick={onFinish} disabled={isDisabled}>
           Finish turn
@@ -997,9 +1013,6 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-      expect(applyButton).toBeDisabled();
-
       // 1. Seleccionar la carta de evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardLITA.id}`));
       // 2. Jugar el evento
@@ -1033,27 +1046,23 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardCOFT.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" debe estar deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar jugador
+      // 2. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 4. Botón "Apply" debe estar habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select Player" debe estar habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1070,33 +1079,26 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardATWOME.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar secreto
+      // 2. Seleccionar secreto
       fireEvent.click(screen.getByTestId("mock-select-secret"));
 
-      // 4. Botón "Apply" sigue deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 5. Seleccionar jugador
+      // 3. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 6. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 4. Botón "Select Player" esta habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 7. Aplicar efecto
+      // 5. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 8. Verificar API
+      // 6. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1116,27 +1118,23 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardAV.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar set
+      // 2. Seleccionar set
       fireEvent.click(screen.getByTestId("mock-select-set"));
 
-      // 4. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select set" habilitado
+      const selectSetButton = screen.getByTestId("select-set-btn");
+      expect(selectSetButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectSetButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
