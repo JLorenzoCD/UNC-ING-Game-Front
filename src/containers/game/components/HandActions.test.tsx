@@ -13,7 +13,7 @@ const {
   mockOnSelectPlayer,
   mockOnSelectSecret,
   mockOnPlayEvent,
-  mockOnEndEvent,
+  mockOnSelectSet,
   mockUseGame,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
@@ -22,7 +22,7 @@ const {
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
-  const mockOnEndEvent = vi.fn();
+  const mockOnSelectSet = vi.fn();
   const mockUseGame = vi.fn();
 
   return {
@@ -33,7 +33,7 @@ const {
     mockOnSelectPlayer,
     mockOnSelectSecret,
     mockOnPlayEvent,
-    mockOnEndEvent,
+    mockOnSelectSet,
   };
 });
 
@@ -70,14 +70,14 @@ const baseProps = {
   onSelectPlayer: mockOnSelectPlayer,
   onSelectSecret: mockOnSelectSecret,
   onPlayEvent: mockOnPlayEvent,
-  onEndEvent: mockOnEndEvent,
+  onSelectSet: mockOnSelectSet,
   isSelectionPlayerEvent: false,
   isSelectionSecretEvent: false,
   isSetButtonDisabled: true,
   isDisabled: false,
   isSelectionSetEvent: false,
   isDisabledEvent: true,
-  isDisabledEndEvent: true,
+  canSelectMeAsPlayer: false,
 };
 
 describe("HandActions", () => {
@@ -102,14 +102,14 @@ describe("HandActions", () => {
           onSelectSecret={mockOnSelectSecret}
           onSelectPlayer={mockOnSelectPlayer}
           onPlayEvent={mockOnPlayEvent}
-          onEndEvent={mockOnEndEvent}
+          onSelectSet={mockOnSelectSet}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={false}
           isSetButtonDisabled={false}
           isDisabledEvent={false}
-          isDisabledEndEvent={false}
           isDisabled={false}
+          canSelectMeAsPlayer={false}
         />,
       );
 
@@ -120,11 +120,11 @@ describe("HandActions", () => {
       expect(buttons.length).toBe(7);
       expect(buttons[0]).toHaveTextContent("Discard cards");
       expect(buttons[1]).toHaveTextContent("Play set");
-      expect(buttons[2]).toHaveTextContent("Select player");
-      expect(buttons[3]).toHaveTextContent("Select secret");
-      expect(buttons[4]).toHaveTextContent("Finish turn");
-      expect(buttons[5]).toHaveTextContent("Play event");
-      expect(buttons[6]).toHaveTextContent("Apply effect");
+      expect(buttons[2]).toHaveTextContent("Play event");
+      expect(buttons[3]).toHaveTextContent("Select set");
+      expect(buttons[4]).toHaveTextContent("Select secret");
+      expect(buttons[5]).toHaveTextContent("Select player");
+      expect(buttons[6]).toHaveTextContent("Finish turn");
     });
   });
 
@@ -141,15 +141,15 @@ describe("HandActions", () => {
       expect(screen.getByText("Select secret")).toBeInTheDocument();
       expect(screen.getByText("Finish turn")).toBeInTheDocument();
       expect(screen.getByText("Play event")).toBeInTheDocument();
-      expect(screen.getByText("Apply effect")).toBeInTheDocument();
+      expect(screen.getByText("Select set")).toBeInTheDocument();
 
       expect(buttons[0]).not.toBeDisabled();
       expect(buttons[1]).toBeDisabled();
       expect(buttons[2]).toBeDisabled();
       expect(buttons[3]).toBeDisabled();
-      expect(buttons[4]).not.toBeDisabled();
+      expect(buttons[4]).toBeDisabled();
       expect(buttons[5]).toBeDisabled();
-      expect(buttons[6]).toBeDisabled();
+      expect(buttons[6]).not.toBeDisabled();
     });
 
     it("disables the 'Play set' button based on isSetButtonDisabled prop", () => {
@@ -233,19 +233,19 @@ describe("HandActions", () => {
           onSelectSecret={mockOnSelectSecret}
           onSelectPlayer={mockOnSelectPlayer}
           onPlayEvent={mockOnPlayEvent}
-          onEndEvent={mockOnEndEvent}
+          onSelectSet={mockOnSelectSet}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={true}
           isSetButtonDisabled={false}
           isDisabledEvent={false}
-          isDisabledEndEvent={false}
           isDisabled={false}
+          canSelectMeAsPlayer={false}
         />,
       );
 
       const discardButton = screen.getAllByTestId("mock-button")[0];
-      const finishButton = screen.getAllByTestId("mock-button")[4];
+      const finishButton = screen.getAllByTestId("mock-button")[6];
 
       fireEvent.click(discardButton);
       fireEvent.click(finishButton);
