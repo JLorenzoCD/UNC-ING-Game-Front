@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import { usePlayer } from "@/contexts/PlayerContext";
-
+import { toast } from "sonner";
 import Button from "@/components/Button";
 
 import { FRONTEND_PATHS } from "@/constants/frontend";
@@ -45,11 +45,11 @@ export default function MatchListItem({
       const result = await joinMatch(player.id, match.id);
 
       if (result && isUUID(result.match_id)) {
-        alert("You successfully joined the match.");
+        toast.info("You successfully joined the match.");
 
         navigate(FRONTEND_PATHS.MATCH_LOBBY(result.match_id));
       } else {
-        alert("Couldn't join the match, try another one.");
+        toast.error("Couldn't join the match, try another one.");
       }
     } catch (err) {
       console.error(err);

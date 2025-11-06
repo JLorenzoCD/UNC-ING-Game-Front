@@ -104,7 +104,7 @@ export interface EventNotSoFastPayload {
   player_id: UUID;
 
   /**
-   * La ID del jugador que juega el evento o set.
+   * La ID del evento.
    */
   event_id: UUID;
 
@@ -117,6 +117,11 @@ export interface EventNotSoFastPayload {
    * El numero de nsf por el que va.
    */
   nsf_count: number;
+
+  /**
+   * El hora a la que termina el evento.
+   */
+  resolve_at_utc: string;
 }
 /**
  * Mapa de tipos para eventos de WebSocket.
@@ -133,7 +138,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL]: EventPlayerSecretRevealPayload;
   [BACKEND_SOCKETS_EVENTS.SECRET]: EventSecretPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
-  [BACKEND_SOCKETS_EVENTS.NOT_SO_FAST]: EventNotSoFastPayload;
+  [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

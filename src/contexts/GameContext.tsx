@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -50,6 +51,8 @@ export interface GameContextType {
     isActivate: boolean;
     eventId: UUID | null;
     nsfCount: number;
+    resolvedAtUtc: string | null;
+    toastId: string | number | null;
   };
   clearNotSoFastEvent: () => void;
 }
@@ -70,7 +73,13 @@ const GameContext = createContext<GameContextType>({
   hasFinishedAction: false,
   playerFinishActionTurn: () => undefined,
   playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
-  notSoFastEvent: { isActivate: false, eventId: null, nsfCount: 0 },
+  notSoFastEvent: {
+    isActivate: false,
+    eventId: null,
+    nsfCount: 0,
+    resolvedAtUtc: null,
+    toastId: null,
+  },
   clearNotSoFastEvent: () => undefined,
 });
 
@@ -106,10 +115,14 @@ export default function GameContextProvider({
     isActivate: boolean;
     eventId: UUID | null;
     nsfCount: number;
+    resolvedAtUtc: string | null;
+    toastId: string | number | null;
   }>({
     isActivate: false,
     eventId: null,
     nsfCount: 0,
+    resolvedAtUtc: null,
+    toastId: null,
   });
 
   const [match, setMatch] = useState<Match | null>(null);
@@ -119,6 +132,8 @@ export default function GameContextProvider({
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [sets, setSets] = useState<MatchSet[]>([]);
+
+  const nsfTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const fetchMatchData = useCallback(async () => {
     // Si no tenemos el id de la partida o el servicio HTTP, no hacemos nada.
@@ -163,10 +178,71 @@ export default function GameContextProvider({
     [],
   );
 
-  const clearNotSoFastEvent = useCallback(
-    () => setNotSoFastEvent({ isActivate: false, eventId: null, nsfCount: 0 }),
-    [],
-  );
+  const clearNotSoFastEvent = useCallback(() => {
+    if (notSoFastEvent.toastId) {
+      toast.dismiss(notSoFastEvent.toastId);
+    }
+    if (nsfTimerRef.current) {
+      clearTimeout(nsfTimerRef.current);
+      nsfTimerRef.current = null;
+    }
+
+    setNotSoFastEvent({
+      isActivate: false,
+      eventId: null,
+      nsfCount: 0,
+      resolvedAtUtc: null,
+      toastId: null,
+    });
+  }, [notSoFastEvent.toastId]);
+
+  useEffect(() => {
+    // Si el desafío NO está activo o no hay fecha límite, no hacemos nada.
+    // Solo nos aseguramos de que el timer esté limpio.
+    if (!notSoFastEvent.isActivate || !notSoFastEvent.resolvedAtUtc) {
+      if (nsfTimerRef.current) {
+        clearTimeout(nsfTimerRef.current);
+        nsfTimerRef.current = null;
+      }
+      return;
+    }
+
+    // Calculamos el tiempo restante
+    const now = new Date();
+    const utcTimeString = notSoFastEvent.resolvedAtUtc;
+
+    const sanitizedTimeString = utcTimeString.replace(/(\.\d{3})\d+/, "$1");
+    const deadline = new Date(sanitizedTimeString);
+
+    const durationMs = deadline.getTime() - now.getTime();
+
+    // Si el tiempo ya pasó o es inválido, limpiamos
+    if (durationMs <= 0) {
+      clearNotSoFastEvent();
+      return;
+    }
+
+    // Creamos el temporizador
+    nsfTimerRef.current = setTimeout(() => {
+      toast.warning("Se acabó el tiempo para jugar NOT SO FAST.");
+      clearNotSoFastEvent(); // Limpiamos el estado
+      nsfTimerRef.current = null;
+    }, durationMs);
+
+    // Esta es la función de limpieza:
+    // Se ejecutará si el componente se desmonta o si clearNotSoFastEvent()
+    // es llamada desde otro lugar (ej. al jugar la carta).
+    return () => {
+      if (nsfTimerRef.current) {
+        clearTimeout(nsfTimerRef.current);
+        nsfTimerRef.current = null;
+      }
+    };
+  }, [
+    notSoFastEvent.isActivate,
+    notSoFastEvent.resolvedAtUtc,
+    clearNotSoFastEvent,
+  ]);
 
   useEffect(() => {
     fetchMatchData();
@@ -220,14 +296,25 @@ export default function GameContextProvider({
         const targetPlayer = players.find((p) => p.id === targetPlayerId);
         const playerName = targetPlayer?.name;
 
-        const message = `Do you want to cancel the event ${eventType} played by ${playerName}? Double-click on a not so fast`;
+        const now = new Date();
+        const utcTimeString = payload.resolve_at_utc;
+        const sanitizedTimeString = utcTimeString.replace(/(\.\d{3})\d+/, "$1");
+        const deadline = new Date(sanitizedTimeString);
 
-        toast.info(message);
+        const secondsLeft = Math.floor(
+          (deadline.getTime() - now.getTime()) / 1000,
+        );
+
+        const message = `Do you want to cancel the event ${eventType} played by ${playerName}? Double-click on a not so fast (${secondsLeft} s.)`;
+
+        const newToastId = toast.info(message);
 
         setNotSoFastEvent({
           isActivate: true,
           eventId: payload.event_id,
           nsfCount: payload.nsf_count,
+          resolvedAtUtc: payload.resolve_at_utc,
+          toastId: newToastId,
         });
       }
     };
@@ -434,7 +521,10 @@ export default function GameContextProvider({
       handleCurrPlayerSelectItsSecret,
     );
     wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
-    wsService.on(BACKEND_SOCKETS_EVENTS.NOT_SO_FAST, handleNotSoFastEvent);
+    wsService.on(
+      BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
+      handleNotSoFastEvent,
+    );
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
@@ -450,7 +540,10 @@ export default function GameContextProvider({
         handleCurrPlayerSelectItsSecret,
       );
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
-      wsService.off(BACKEND_SOCKETS_EVENTS.NOT_SO_FAST, handleNotSoFastEvent);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
+        handleNotSoFastEvent,
+      );
     };
   }, [matchId, wsService, isConnected, players, player, cards]);
 

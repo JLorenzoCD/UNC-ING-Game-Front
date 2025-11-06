@@ -41,7 +41,7 @@ const BACKEND_SOCKETS_EVENTS = {
   PLAYER_SECRET_REVEAL: "player_secret_reveal",
   SECRET: "secret",
   MATCH_COMPLETED: "match_completed",
-  NOT_SO_FAST: "not_so_fast",
+  CANCELLATION_WINDOW_OPEN: "cancellation_window_open",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };
