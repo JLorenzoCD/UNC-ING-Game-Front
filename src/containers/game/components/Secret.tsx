@@ -1,7 +1,7 @@
 import { twJoin } from "tailwind-merge";
 
 import { usePlayer } from "@/contexts/PlayerContext";
-import { RiEyeLine } from "@remixicon/react";
+import { RiCloseLargeFill, RiEyeLine } from "@remixicon/react";
 
 import secretFront from "@/assets/06-secret_front.png";
 import secretAccomplice from "@/assets/04-secret_accomplice.png";
@@ -42,9 +42,7 @@ export default function Secret({
   const { player } = usePlayer();
 
   if (!secret) {
-    console.warn("Secret component: secret prop is missing");
-
-    return null;
+    return <EmptySecret />;
   }
 
   if (!Object.keys(SECRET_IMAGE_PATHS).includes(secret.type)) {
@@ -77,8 +75,9 @@ export default function Secret({
   const isSelectionMode = !isSelfRevealed && isTargetSecret;
 
   // ClassNames
-  const sizeClasses = isSessionPlayer ? "w-20 h-30" : "w-15 h-22.5";
-  const baseClasses = "rounded-lg overflow-hidden transition-all duration-200";
+  const baseClasses =
+    "w-15 h-22.5 rounded-lg overflow-hidden transition-all duration-200";
+
   const boderClass = getBoderClass(
     isSelfRevealed,
     isSelectionMode,
@@ -91,7 +90,7 @@ export default function Secret({
     <div className="relative">
       <div
         onClick={handleClickSecret}
-        className={twJoin(baseClasses, sizeClasses, boderClass)}
+        className={twJoin(baseClasses, boderClass)}
       >
         <img
           data-testid="secret"
@@ -112,6 +111,17 @@ export default function Secret({
           <RiEyeLine size={14} color="white" />
         </div>
       )}
+    </div>
+  );
+}
+
+function EmptySecret() {
+  return (
+    <div
+      data-testid="empty-secret"
+      className="w-15 h-22.5 flex items-center justify-center border-2 border-dashed border-gray-400 text-gray-400 rounded-lg"
+    >
+      <RiCloseLargeFill />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { RiVipCrown2Fill } from "@remixicon/react";
+import { RiCloseLargeFill, RiVipCrown2Fill } from "@remixicon/react";
 import { twJoin } from "tailwind-merge";
 
 import cardPoirot from "@/assets/07-detective_poirot.png";
@@ -25,14 +25,11 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
 };
 
 interface Props {
-  type: SetType;
-  quin_play: boolean;
-  quin_count: number;
-  set_object: MatchSet;
-  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectableSet?: (set: MatchSet) => boolean;
-  isTargetSet?: boolean;
+  set: MatchSet | null;
   target?: GamePlayer | GameSecret | MatchSet | null;
+  isTargetSet?: boolean;
+  isSelectableSet?: (set: MatchSet) => boolean;
+  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
 }
 
 function getBoderClass(
@@ -65,29 +62,30 @@ function getBoderClass(
 }
 
 export default function Set({
-  type,
-  quin_play,
-  quin_count,
-  set_object,
-  onSelectTargetEvent,
-  isSelectableSet,
-  isTargetSet = false,
+  set = null,
   target = null,
+  isTargetSet = false,
+  isSelectableSet,
+  onSelectTargetEvent,
 }: Props) {
   const cardSize = "w-15 h-22.5";
 
-  const isTwoBeresford = type === "TWO BERESFORD";
+  if (!set) {
+    return <EmptySet />;
+  }
+
+  const isTwoBeresford = set.type === "TWO BERESFORD";
   const containerSize = isTwoBeresford ? "mr-4" : "";
-  const imgTitle = isTwoBeresford ? "TOMMY BERESFORD" : type;
+  const imgTitle = isTwoBeresford ? "TOMMY BERESFORD" : set.type;
 
   const handleClickSet = () => {
     if (typeof onSelectTargetEvent !== "function" || !isSelectable) return;
-    onSelectTargetEvent(set_object);
+    onSelectTargetEvent(set);
   };
 
-  const isTarget = target?.id === set_object.id;
+  const isTarget = target?.id === set.id;
   const isSelectingTarget = target === null;
-  const isSelectable = isSelectableSet ? isSelectableSet(set_object) : false;
+  const isSelectable = isSelectableSet ? isSelectableSet(set) : false;
 
   const isSelectionMode = isTargetSet;
 
@@ -101,9 +99,9 @@ export default function Set({
 
   return (
     <div className={`relative ${containerSize}`} onClick={handleClickSet}>
-      {quin_play && (
+      {set.quin_play && (
         <RiVipCrown2Fill
-          color={quin_count === 1 ? "peru" : "gold"}
+          color={set.quin_count === 1 ? "peru" : "gold"}
           size={30}
           className="absolute -top-3 -left-3 -rotate-[20deg] z-2"
         />
@@ -113,7 +111,7 @@ export default function Set({
           title={imgTitle}
           draggable="false"
           data-testid="set"
-          src={SET_IMAGE_PATHS[type]}
+          src={SET_IMAGE_PATHS[set.type]}
           alt={`set-type-${imgTitle}`}
           className={twJoin(
             "object-cover select-none w-full h-full hover:z-1",
@@ -143,6 +141,17 @@ export default function Set({
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function EmptySet() {
+  return (
+    <div
+      data-testid="empty-set"
+      className="w-15 h-22.5 flex items-center justify-center border-2 border-dashed border-gray-400 text-gray-400 rounded-lg"
+    >
+      <RiCloseLargeFill />
     </div>
   );
 }

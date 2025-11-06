@@ -3,13 +3,13 @@ import { describe, it, expect } from "vitest";
 import { getBoderClass } from "./secretClassName";
 
 const BORDER_RED_REVEALED =
-  "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31";
+  "border-4 border-red-500 shadow-lg shadow-red-500/50";
 const BORDER_RED_TARGET_SELECTED =
   "border-2 border-red-400 shadow-lg shadow-red-400/50 animate-none";
 const BORDER_BLUE_SELECTING =
   "border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-pulse cursor-pointer";
 const BORDER_BLUE_TARGET_REVEALED =
-  "border-4 border-blue-500 shadow-lg shadow-blue-500/50 w-21 h-31";
+  "border-4 border-blue-500 shadow-lg shadow-blue-500/50";
 const BORDER_TRANSPARENT_DIMMED =
   "border-2 border-transparent shadow-none brightness-50";
 const BORDER_ANIMATED_PULSE = " animate-pulse cursor-pointer";

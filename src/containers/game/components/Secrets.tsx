@@ -3,9 +3,8 @@ import Secret from "./Secret";
 import type { GameSecret } from "@/types/secret";
 import type { GamePlayer } from "@/types/player";
 import type { MatchSet } from "@/types/set";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
-import { twMerge } from "tailwind-merge";
 
 const MAX_SECRETS_DISPLAYED = 3;
 
@@ -32,7 +31,18 @@ export default function Secrets({
 
   const startIndex = page * MAX_SECRETS_DISPLAYED;
   const endIndex = startIndex + MAX_SECRETS_DISPLAYED;
-  const displayedSecrets = secrets.slice(startIndex, endIndex);
+  const displayedSecrets: Array<GameSecret | null> = useMemo(() => {
+    let slicedSecrets = secrets.slice(startIndex, endIndex);
+
+    if (slicedSecrets.length < MAX_SECRETS_DISPLAYED) {
+      slicedSecrets = [
+        ...slicedSecrets,
+        ...Array(MAX_SECRETS_DISPLAYED - slicedSecrets.length).fill(null),
+      ];
+    }
+
+    return slicedSecrets;
+  }, [secrets, startIndex, endIndex]);
 
   const canGoPrevPage = page > 0;
   const canGoNextPage = endIndex < secrets.length;
@@ -59,9 +69,7 @@ export default function Secrets({
         type="button"
         onClick={handlePrevPage}
         disabled={!canGoPrevPage}
-        className={twMerge(
-          "text-white disabled:opacity-50 disabled:cursor-not-allowed",
-        )}
+        className="text-white disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <RiArrowLeftSLine />
       </button>
@@ -69,12 +77,12 @@ export default function Secrets({
       <div className="flex gap-x-2 justify-center items-center">
         {displayedSecrets.map((secret) => (
           <Secret
-            key={secret.id}
-            onSelectTargetEvent={onSelectTargetEvent}
-            isSelectableSecret={isSelectableSecret}
+            key={secret !== null ? secret.id : crypto.randomUUID()}
             secret={secret}
-            isTargetSecret={isTargetSecret}
             target={target}
+            isTargetSecret={isTargetSecret}
+            isSelectableSecret={isSelectableSecret}
+            onSelectTargetEvent={onSelectTargetEvent}
           />
         ))}
       </div>
@@ -83,9 +91,7 @@ export default function Secrets({
         type="button"
         onClick={handleNextPage}
         disabled={!canGoNextPage}
-        className={twMerge(
-          "text-white disabled:opacity-50 disabled:cursor-not-allowed",
-        )}
+        className="text-white disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <RiArrowRightSLine />
       </button>
