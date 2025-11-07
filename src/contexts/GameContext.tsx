@@ -53,6 +53,7 @@ export interface GameContextType {
     nsfCount: number;
     resolvedAtUtc: string | null;
     toastId: string | number | null;
+    discardedCard: GameCard | null;
   };
   clearNotSoFastEvent: () => void;
 }
@@ -79,6 +80,7 @@ const GameContext = createContext<GameContextType>({
     nsfCount: 0,
     resolvedAtUtc: null,
     toastId: null,
+    discardedCard: null,
   },
   clearNotSoFastEvent: () => undefined,
 });
@@ -117,12 +119,14 @@ export default function GameContextProvider({
     nsfCount: number;
     resolvedAtUtc: string | null;
     toastId: string | number | null;
+    discardedCard: GameCard | null;
   }>({
     isActivate: false,
     eventId: null,
     nsfCount: 0,
     resolvedAtUtc: null,
     toastId: null,
+    discardedCard: null,
   });
 
   const [match, setMatch] = useState<Match | null>(null);
@@ -193,6 +197,7 @@ export default function GameContextProvider({
       nsfCount: 0,
       resolvedAtUtc: null,
       toastId: null,
+      discardedCard: null,
     });
   }, [notSoFastEvent.toastId]);
 
@@ -315,7 +320,11 @@ export default function GameContextProvider({
           nsfCount: payload.nsf_count,
           resolvedAtUtc: payload.resolve_at_utc,
           toastId: newToastId,
+          discardedCard: payload.discarded_card,
         });
+        if (payload.discarded_card) {
+          handleEventCards([payload.discarded_card]);
+        }
       }
     };
 

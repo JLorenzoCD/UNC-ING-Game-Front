@@ -122,6 +122,11 @@ export interface EventNotSoFastPayload {
    * El hora a la que termina el evento.
    */
   resolve_at_utc: string;
+
+  /**
+   * La carta que se descarta.
+   */
+  discarded_card: GameCard;
 }
 /**
  * Mapa de tipos para eventos de WebSocket.

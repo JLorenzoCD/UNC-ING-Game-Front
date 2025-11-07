@@ -227,6 +227,16 @@ export function createHttpService() {
     eventId: UUID,
     nsfCount: number,
   ) => {
+    const baseUrl = BACKEND_ENDPOINTS.PLAY_NOT_SO_FAST(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("match_card_id", cardId);
+    params.append("event_id", eventId);
+    params.append("nsf_count", nsfCount.toString());
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
     const options: RequestInit = {
       method: "POST",
       body: JSON.stringify({
@@ -236,7 +246,7 @@ export function createHttpService() {
         nsf_count: nsfCount,
       }),
     };
-    return request(BACKEND_ENDPOINTS.PLAY_NOT_SO_FAST(matchId), options);
+    return request(urlWithParams, options);
   };
 
   return {
