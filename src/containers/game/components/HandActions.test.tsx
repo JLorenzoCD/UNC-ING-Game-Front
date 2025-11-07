@@ -13,10 +13,9 @@ const {
   mockOnSelectPlayer,
   mockOnSelectSecret,
   mockOnPlayEvent,
-  mockOnEndEvent,
+  mockOnSelectSet,
   mockUseGame,
   mockOnAddDetectiveCardToSet,
-  mockOnSelectSet,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
@@ -24,7 +23,6 @@ const {
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
-  const mockOnEndEvent = vi.fn();
   const mockUseGame = vi.fn();
   const mockOnAddDetectiveCardToSet = vi.fn();
   const mockOnSelectSet = vi.fn();
@@ -34,12 +32,11 @@ const {
     mockOnDiscard,
     mockOnPlaySet,
     mockUseGame,
-    mockOnSelectSet,
     mockOnAddDetectiveCardToSet,
     mockOnSelectPlayer,
     mockOnSelectSecret,
     mockOnPlayEvent,
-    mockOnEndEvent,
+    mockOnSelectSet,
   };
 });
 
@@ -76,7 +73,6 @@ const baseProps = {
   onSelectPlayer: mockOnSelectPlayer,
   onSelectSecret: mockOnSelectSecret,
   onPlayEvent: mockOnPlayEvent,
-  onEndEvent: mockOnEndEvent,
   onAddDetectiveCardToSet: mockOnAddDetectiveCardToSet,
   onSelectSet: mockOnSelectSet,
   isSetEventSelectSetButtonDisabled: true,
@@ -88,7 +84,6 @@ const baseProps = {
   isDisabled: false,
   isSelectionSetEvent: false,
   isDisabledEvent: true,
-  isDisabledEndEvent: true,
 };
 
 describe("HandActions", () => {
@@ -246,11 +241,12 @@ describe("HandActions", () => {
           isSetButtonDisabled={false}
           isDisabledEvent={false}
           isDisabled={false}
+          canSelectMeAsPlayer={false}
         />,
       );
 
       const discardButton = screen.getAllByTestId("mock-button")[0];
-      const finishButton = screen.getAllByTestId("mock-button")[4];
+      const finishButton = screen.getAllByTestId("mock-button")[6];
 
       fireEvent.click(discardButton);
       fireEvent.click(finishButton);

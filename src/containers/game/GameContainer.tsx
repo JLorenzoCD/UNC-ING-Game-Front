@@ -974,6 +974,7 @@ export default function GameContainer() {
                 onSelectTargetEvent={handleSelectTargetEvent}
                 target={getTargetSetEvent() || selectedTargetSecret}
               />
+
               <Sets
                 sets={playerSets}
                 onSelectTargetEvent={handleSelectTargetEvent}

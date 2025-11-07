@@ -376,9 +376,8 @@ vi.mock("./components/HandActions", () => ({
       onSelectPlayer,
       onSelectSecret,
       onPlayEvent,
-      onEndEvent,
       isDisabledEvent,
-      isDisabledEndEvent,
+      isSelectionSetEvent,
       isDisabled,
       isSetButtonDisabled,
     }) => (
@@ -422,13 +421,6 @@ vi.mock("./components/HandActions", () => ({
           data-testid="play-event-btn"
         >
           Play event
-        </button>
-        <button
-          onClick={onEndEvent}
-          disabled={isDisabledEndEvent}
-          data-testid="apply-effect-btn"
-        >
-          Apply effect
         </button>
       </div>
     ),
