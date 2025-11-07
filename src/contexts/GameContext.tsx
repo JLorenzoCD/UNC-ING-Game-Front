@@ -259,11 +259,11 @@ export default function GameContextProvider({
         const index = prevSets.findIndex((prevSet) => prevSet.id === set.id);
         let updateSet = [...prevSets];
 
+        const playerOwnerSet = players.find((p) => p.id === set.player_id);
+        if (!playerOwnerSet) return prevSets;
+
         // Creación de un set.
         if (index === -1 && set.deleted_cards !== undefined) {
-          const playerOwnerSet = players.find((p) => p.id === set.player_id);
-          if (!playerOwnerSet) return prevSets;
-
           const newSet = {
             ...set,
             cards_to_delete: undefined,
@@ -285,6 +285,7 @@ export default function GameContextProvider({
           prevSets[index].player_id !== set.player_id
         ) {
           updateSet[index] = set;
+          toast(`Player "${playerOwnerSet.name}" stolen a set.`);
         }
 
         return updateSet;
@@ -311,7 +312,7 @@ export default function GameContextProvider({
         const isSecretStolen =
           currSecret.player_id !== secret.player_id && isSecretHidden;
 
-        let msg = "";
+        let msg = "Something strange has happened with a secret.";
         if (isDetectivesWin) {
           // Los detectives ganaron.
           msg = "The murderer has been discovered.";
@@ -324,8 +325,6 @@ export default function GameContextProvider({
         } else if (isSecretHidden) {
           // Notificar que se oculto un secreto
           msg = `A secret of player "${playerTarget.name}" has been hidden.`;
-        } else {
-          msg = "Something strange has happened with a secret.";
         }
         toast(msg);
 
