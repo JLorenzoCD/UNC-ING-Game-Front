@@ -24,6 +24,12 @@ const {
   mockOliverCard,
   mockEileenCard,
   mockEileenSet,
+  mockTuppenceCard,
+  mockTommyCard,
+  mockTwoBeresfordSet,
+  mockTommySet,
+  mockTuppenceSet,
+  mockOtherPlayerPoirotSet,
   mockUseParams,
   mockUsePlayer,
   mockUseGame,
@@ -31,6 +37,7 @@ const {
   mockCurrentGamePlayer,
   mockCreateAndPlaySet,
   mockPutSecret,
+  mockAddDetectiveCardToSetAndPlay,
   mockHttpService,
   isCardsValidSet,
   cardsToSetCreationDataTypeDetective,
@@ -142,6 +149,63 @@ const {
     type: "LADY EILEEN",
   };
 
+  const mockTommyCard: GameCard = {
+    id: crypto.randomUUID(),
+    name: "TOMMY BERESFORD",
+    player_id: MOCK_PLAYER_ID,
+    type: "DETECTIVE",
+    card_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    description: "test",
+    is_discarded: false,
+    discarded_at: null,
+  };
+
+  const mockTuppenceCard: GameCard = {
+    id: crypto.randomUUID(),
+    name: "TUPPENCE BERESFORD",
+    player_id: MOCK_PLAYER_ID,
+    type: "DETECTIVE",
+    card_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    description: "test",
+    is_discarded: false,
+    discarded_at: null,
+  };
+
+  const mockTwoBeresfordSet: MatchSet = {
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    quin_count: 1,
+    quin_play: true,
+    type: "TWO BERESFORD",
+  };
+
+  const mockTommySet: MatchSet = {
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    quin_count: 1,
+    quin_play: true,
+    type: "TOMMY BERESFORD",
+  };
+
+  const mockTuppenceSet: MatchSet = {
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    quin_count: 1,
+    quin_play: true,
+    type: "TUPPENCE BERESFORD",
+  };
+
+  const mockOtherPlayerPoirotSet: MatchSet = {
+    ...mockPoirotSet,
+    id: crypto.randomUUID(),
+    player_id: MOCK_OTHER_PLAYER_ID,
+  };
+
   const mockUseParams = vi.fn(() => ({ matchId: MOCK_MATCH_ID }));
   const mockUsePlayer = vi.fn(() => ({ player: mockPlayer }));
 
@@ -201,6 +265,12 @@ const {
     mockOliverCard,
     mockEileenCard,
     mockEileenSet,
+    mockTommyCard,
+    mockTuppenceCard,
+    mockTwoBeresfordSet,
+    mockTommySet,
+    mockTuppenceSet,
+    mockOtherPlayerPoirotSet,
     mockUseParams,
     mockUsePlayer,
     mockUseGame,
@@ -285,6 +355,7 @@ describe("useSetEvent", () => {
     isSetTargetOneSecret.mockClear();
     isSetTargetOnePlayer.mockClear();
     canDownTheCardToASet.mockClear();
+    cardsToSetUpdateData.mockClear();
   });
 
   describe("Initialization & State Transitions", () => {
@@ -488,6 +559,50 @@ describe("useSetEvent", () => {
         isRevealCurrPlayerSecret: false,
         canDownTheCardToASet: false,
       });
+    });
+
+    it("should show error message when Oliver is down to set generate error", async () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      cardsToSetUpdateData.mockReturnValue({});
+      mockAddDetectiveCardToSetAndPlay.mockRejectedValue(
+        new Error("http error"),
+      );
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet([mockOliverCard]);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      // Ejecutar addDetectiveCardToSet
+      act(() => {
+        result.current.addDetectiveCardToSet(mockOliverCard);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      // Ejecutar setTargeSetToDown
+      act(() => {
+        result.current.setTargeSetToDown(mockPoirotSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockPoirotSet);
+
+      // Ejecutar playSet
+      await act(async () => {
+        await result.current.playSet([mockOliverCard]);
+      });
+
+      expect(toast.error).toHaveBeenCalledWith(
+        "An unexpected error has occurred, please try again.",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+      consoleSpy.mockRestore();
     });
   });
 
@@ -729,6 +844,112 @@ describe("useSetEvent", () => {
         "The selected secret is not valid.",
       );
     });
+
+    it("should show error message when down a detective card to set with player-target", async () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(false);
+      isSetTargetOnePlayer.mockReturnValue(true); // Target player
+      cardsToSetUpdateData.mockReturnValue({});
+      mockAddDetectiveCardToSetAndPlay.mockRejectedValue(
+        new Error("http error"),
+      );
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet([mockEileenCard]);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      // Ejecutar addDetectiveCardToSet
+      act(() => {
+        result.current.addDetectiveCardToSet(mockEileenCard);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      // Ejecutar setTargeSetToDown
+      act(() => {
+        result.current.setTargeSetToDown(mockEileenSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockEileenSet);
+
+      // Ejecutar playSet
+      act(() => {
+        result.current.playSet([mockEileenCard]);
+      });
+
+      act(() => {
+        result.current.setTargetSet(mockGamePlayer);
+      });
+
+      await act(async () => {
+        await result.current.executeSetActionToTarget();
+      });
+
+      expect(toast.error).toHaveBeenCalledWith(
+        "An unexpected error has occurred, please try again.",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+      consoleSpy.mockRestore();
+    });
+
+    it("should show error message when down a detective card to set with secret-target", async () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetTargetOnePlayer.mockReturnValue(false);
+
+      cardsToSetUpdateData.mockReturnValue({});
+      mockAddDetectiveCardToSetAndPlay.mockRejectedValue(
+        new Error("http error"),
+      );
+
+      const consoleSpy = vi
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet(mockGameCards);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      act(() => {
+        result.current.addDetectiveCardToSet(mockGameCards[0]);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      act(() => {
+        result.current.setTargeSetToDown(mockPoirotSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockPoirotSet);
+
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+
+      act(() => {
+        result.current.setTargetSet(mockSecret);
+      });
+
+      await act(async () => {
+        await result.current.executeSetActionToTarget();
+      });
+
+      expect(toast.error).toHaveBeenCalledWith(
+        "An unexpected error has occurred, please try again.",
+      );
+      expect(consoleSpy).toHaveBeenCalledWith(expect.any(Error));
+      consoleSpy.mockRestore();
+    });
   });
 
   describe("Selectability Functions", () => {
@@ -851,6 +1072,182 @@ describe("useSetEvent", () => {
             mockCurrentPlayerSecret,
           ),
         ).toBe(false); // mockCurrentPlayerSecret es del jugador actual
+      });
+    });
+
+    describe("isSetSelectableForSetEvent", () => {
+      it("should return false if setEvent.isValidSet is true", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEvent.isValidSet = true; // Estado que bloquearía la selección
+        });
+
+        expect(result.current.isSetSelectableForSetEvent(mockPoirotSet)).toBe(
+          false,
+        );
+
+        act(() => {
+          result.current.setEvent.isValidSet = false;
+        });
+      });
+
+      it("should return true for ARIADNE OLIVER regardless of set type", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+
+        const { result } = renderHook(() => useSetEvent());
+
+        // Habilitar el botón
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet([mockOliverCard]);
+        });
+        expect(result.current.setEvent.isValidSet).toBe(false);
+        expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+        // Ejecutar addDetectiveCardToSet
+        act(() => {
+          result.current.addDetectiveCardToSet(mockOliverCard);
+        });
+
+        expect(result.current.isSetSelectableForSetEvent(mockPoirotSet)).toBe(
+          true,
+        );
+        expect(result.current.isSetSelectableForSetEvent(mockEileenSet)).toBe(
+          true,
+        );
+      });
+
+      it("should return false if the set belongs to another player", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        // Habilitar el botón
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet(mockGameCards);
+        });
+        expect(result.current.setEvent.isValidSet).toBe(false);
+        expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+        // Inicia el evento con Poirot
+        act(() => {
+          result.current.addDetectiveCardToSet(mockGameCards[0]);
+        });
+
+        expect(
+          result.current.isSetSelectableForSetEvent(mockOtherPlayerPoirotSet),
+        ).toBe(false);
+      });
+
+      it("should return true if card name matches set type (e.g., Poirot to Poirot set)", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet(mockGameCards);
+        });
+        expect(result.current.setEvent.isValidSet).toBe(false);
+        expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+        // Inicia el evento con Poirot
+        act(() => {
+          result.current.addDetectiveCardToSet(mockGameCards[0]); // HERCULE POIROT
+        });
+
+        // mockPoirotSet es de tipo HERCULE POIROT
+        expect(result.current.isSetSelectableForSetEvent(mockPoirotSet)).toBe(
+          true,
+        );
+      });
+
+      it("should return true if card is TOMMY/TUPPENCE BERESFORD and set is TWO BERESFORD", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet([mockTommyCard]);
+        });
+        expect(result.current.setEvent.isValidSet).toBe(false);
+        expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+        act(() => {
+          result.current.addDetectiveCardToSet(mockTommyCard);
+        });
+        expect(
+          result.current.isSetSelectableForSetEvent(mockTwoBeresfordSet),
+        ).toBe(true);
+
+        act(() => {
+          result.current.addDetectiveCardToSet(mockTuppenceCard);
+        });
+        expect(
+          result.current.isSetSelectableForSetEvent(mockTwoBeresfordSet),
+        ).toBe(true);
+      });
+
+      it("should return true if card is TUPPENCE BERESFORD and set is TOMMY BERESFORD", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet([
+            mockTuppenceCard,
+          ]);
+        });
+        expect(result.current.setEvent.isValidSet).toBe(false);
+        expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+        act(() => {
+          result.current.addDetectiveCardToSet(mockTuppenceCard);
+        });
+
+        expect(result.current.isSetSelectableForSetEvent(mockTommySet)).toBe(
+          true,
+        );
+      });
+
+      it("should return true if card is TOMMY BERESFORD and set is TUPPENCE BERESFORD", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet([mockTommyCard]);
+        });
+
+        act(() => {
+          result.current.addDetectiveCardToSet(mockTommyCard);
+        });
+
+        expect(result.current.isSetSelectableForSetEvent(mockTuppenceSet)).toBe(
+          true,
+        );
+      });
+
+      it("should return false for card and set type mismatch (e.g., Poirot to Eileen set)", () => {
+        // Asume que la tarjeta puede bajarse, y empieza el evento de selección
+        canDownTheCardToASet.mockReturnValue(true);
+        const { result } = renderHook(() => useSetEvent());
+
+        act(() => {
+          result.current.setEventToggleDisableButtonSelectSet(mockGameCards);
+        });
+
+        // Inicia el evento con Poirot
+        act(() => {
+          result.current.addDetectiveCardToSet(mockGameCards[0]); // HERCULE POIROT
+        });
+
+        // mockEileenSet es de tipo LADY EILEEN
+        expect(result.current.isSetSelectableForSetEvent(mockEileenSet)).toBe(
+          false,
+        );
       });
     });
   });

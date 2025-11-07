@@ -524,7 +524,7 @@ describe("GameContainer", () => {
       clearSetEvent: mockClearSetEvent,
       addDetectiveCardToSet: vi.fn(),
       setTargeSetToDown: vi.fn(),
-      iSetSelectableForSetEvent: vi.fn(),
+      isSetSelectableForSetEvent: vi.fn(),
       setEventToggleDisableButtonSelectSet: vi.fn(),
     });
   });

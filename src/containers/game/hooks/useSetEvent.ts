@@ -256,25 +256,18 @@ export function useSetEvent() {
       if (player === null) return;
 
       if (selectedCards.length !== 1) {
-        setSetEvent((prev) => ({
-          ...prev,
-          canDownTheCardToASet: false,
-          set: null,
-          isSelectingSet: false,
-          cards: [],
-        }));
+        setSetEvent({
+          ...defaultStateSetEvent,
+        });
         return;
       }
 
       const can = canDownTheCardToASet(selectedCards[0], sets, player.id);
 
-      setSetEvent((prev) => ({
-        ...prev,
+      setSetEvent({
+        ...defaultStateSetEvent,
         canDownTheCardToASet: can,
-        set: null,
-        isSelectingSet: false,
-        cards: [],
-      }));
+      });
     },
     [player, sets],
   );
@@ -494,7 +487,7 @@ export function useSetEvent() {
     return false;
   };
 
-  const iSetSelectableForSetEvent = (set: MatchSet) => {
+  const isSetSelectableForSetEvent = (set: MatchSet) => {
     if (
       setEvent.isValidSet ||
       setEvent.isInEvent ||
@@ -587,7 +580,7 @@ export function useSetEvent() {
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
-    iSetSelectableForSetEvent,
+    isSetSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     setEventToggleDisableButtonSelectSet,
     getTargetSetEvent,

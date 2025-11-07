@@ -111,7 +111,7 @@ export default function GameContainer() {
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
-    iSetSelectableForSetEvent,
+    isSetSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
     setEventToggleDisableButtonSelectSet,
     getTargetSetEvent,
@@ -355,7 +355,7 @@ export default function GameContainer() {
       setEvent.cards.length === 1 &&
       setEvent.isSelectingSet
     ) {
-      return iSetSelectableForSetEvent(set);
+      return isSetSelectableForSetEvent(set);
     }
 
     return false;
