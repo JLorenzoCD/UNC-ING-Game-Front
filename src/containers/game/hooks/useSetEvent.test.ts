@@ -9,6 +9,7 @@ import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
+import type { MatchSet } from "@/types/set";
 
 const {
   MOCK_PLAYER_ID,
@@ -19,6 +20,10 @@ const {
   mockRevealedSecret,
   mockCurrentPlayerSecret,
   mockGameCards,
+  mockPoirotSet,
+  mockOliverCard,
+  mockEileenCard,
+  mockEileenSet,
   mockUseParams,
   mockUsePlayer,
   mockUseGame,
@@ -35,6 +40,10 @@ const {
   cardsToSetCreationData,
   isSetActionHiddenSecret,
   isSetCardsTargetOnePLayer,
+  isSetTargetOneSecret,
+  isSetTargetOnePlayer,
+  canDownTheCardToASet,
+  cardsToSetUpdateData,
 } = vi.hoisted(() => {
   // Mocks de Datos
   const MOCK_PLAYER_ID = "p-owner-1" as UUID;
@@ -91,15 +100,59 @@ const {
     },
   ];
 
+  const mockOliverCard: GameCard = {
+    id: crypto.randomUUID(),
+    name: "ARIADNE OLIVER",
+    player_id: MOCK_PLAYER_ID,
+    type: "DETECTIVE",
+    card_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    description: "test",
+    is_discarded: false,
+    discarded_at: null,
+  };
+
+  const mockPoirotSet: MatchSet = {
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    quin_count: 1,
+    quin_play: true,
+    type: "HERCULE POIROT",
+  };
+
+  const mockEileenCard: GameCard = {
+    id: crypto.randomUUID(),
+    name: "LADY EILEEN",
+    player_id: MOCK_PLAYER_ID,
+    type: "DETECTIVE",
+    card_id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    description: "test",
+    is_discarded: false,
+    discarded_at: null,
+  };
+
+  const mockEileenSet: MatchSet = {
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    player_id: MOCK_PLAYER_ID,
+    quin_count: 1,
+    quin_play: true,
+    type: "LADY EILEEN",
+  };
+
   const mockUseParams = vi.fn(() => ({ matchId: MOCK_MATCH_ID }));
   const mockUsePlayer = vi.fn(() => ({ player: mockPlayer }));
 
   // Mocks de Servicios
   const mockCreateAndPlaySet = vi.fn(() => undefined);
   const mockPutSecret = vi.fn(() => undefined);
+  const mockAddDetectiveCardToSetAndPlay = vi.fn(() => undefined);
   const mockHttpService = {
     createAndPlaySet: mockCreateAndPlaySet,
     putSecret: mockPutSecret,
+    addDetectiveCardToSetAndPlay: mockAddDetectiveCardToSetAndPlay,
   };
 
   const defaultMockUseGame: {
@@ -127,6 +180,10 @@ const {
   const cardsToSetCreationData = vi.fn();
   const isSetActionHiddenSecret = vi.fn(() => false);
   const isSetCardsTargetOnePLayer = vi.fn(() => false);
+  const isSetTargetOneSecret = vi.fn(() => false);
+  const isSetTargetOnePlayer = vi.fn(() => false);
+  const canDownTheCardToASet = vi.fn(() => false);
+  const cardsToSetUpdateData = vi.fn();
 
   return {
     MOCK_PLAYER_ID,
@@ -140,12 +197,17 @@ const {
     mockRevealedSecret,
     mockCurrentPlayerSecret,
     mockGameCards,
+    mockPoirotSet,
+    mockOliverCard,
+    mockEileenCard,
+    mockEileenSet,
     mockUseParams,
     mockUsePlayer,
     mockUseGame,
     defaultMockUseGame,
     mockCreateAndPlaySet,
     mockPutSecret,
+    mockAddDetectiveCardToSetAndPlay,
     mockHttpService,
     isCardsValidSet,
     cardsToSetCreationDataTypeDetective,
@@ -155,6 +217,10 @@ const {
     cardsToSetCreationData,
     isSetActionHiddenSecret,
     isSetCardsTargetOnePLayer,
+    isSetTargetOneSecret,
+    isSetTargetOnePlayer,
+    canDownTheCardToASet,
+    cardsToSetUpdateData,
   };
 });
 
@@ -168,6 +234,10 @@ vi.mock("../utils/setEvent", () => ({
   isSetCardsTargetOneSecret: isSetCardsTargetOneSecret,
   isSetActionHiddenSecret: isSetActionHiddenSecret,
   isSetCardsTargetOnePLayer: isSetCardsTargetOnePLayer,
+  isSetTargetOneSecret: isSetTargetOneSecret,
+  isSetTargetOnePlayer: isSetTargetOnePlayer,
+  canDownTheCardToASet: canDownTheCardToASet,
+  cardsToSetUpdateData: cardsToSetUpdateData,
 }));
 
 // Mocks de Hooks de Contexto y Router
@@ -212,15 +282,36 @@ describe("useSetEvent", () => {
     cardsToSetCreationData.mockClear();
     isSetActionHiddenSecret.mockClear();
     isSetCardsTargetOnePLayer.mockClear();
+    isSetTargetOneSecret.mockClear();
+    isSetTargetOnePlayer.mockClear();
+    canDownTheCardToASet.mockClear();
   });
 
   describe("Initialization & State Transitions", () => {
     it("should initialize to default state and disable button", () => {
       const { result } = renderHook(() => useSetEvent());
 
-      expect(result.current.setEvent.isInEvent).toBe(false);
-      expect(result.current.isSetEventButtonDisabled).toBe(true);
-      expect(result.current.setEvent.cards).toEqual([]);
+      expect(result.current.setEvent).toEqual({
+        isInEvent: false,
+        isValidSet: false,
+
+        isTargetPlayer: false,
+        isTargetSecret: false,
+
+        isRevealSecret: false,
+        isHiddenSecret: false,
+        isStolenSecret: false,
+
+        isSelectingSet: false,
+
+        cards: [],
+        setType: null,
+        set: null,
+        target: null,
+
+        isRevealCurrPlayerSecret: false,
+        canDownTheCardToASet: false,
+      });
     });
 
     it("should transition to TargetPlayer state when playing a player-target set", () => {
@@ -271,6 +362,133 @@ describe("useSetEvent", () => {
       expect(result.current.setEvent.isTargetPlayer).toBe(false);
       expect(result.current.setEvent.isValidSet).toBe(false);
     });
+
+    it("should transition to TargetPlayer state when down a detective card to set with player-target", () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(false);
+      isSetTargetOnePlayer.mockReturnValue(true); // Target player
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet([mockEileenCard]);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      // Ejecutar addDetectiveCardToSet
+      act(() => {
+        result.current.addDetectiveCardToSet(mockEileenCard);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      // Ejecutar setTargeSetToDown
+      act(() => {
+        result.current.setTargeSetToDown(mockEileenSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockEileenSet);
+
+      // Ejecutar playSet
+      act(() => {
+        result.current.playSet([mockEileenCard]);
+      });
+
+      expect(result.current.setEvent.isInEvent).toBe(true);
+      expect(result.current.setEvent.isTargetSecret).toBe(false);
+      expect(result.current.setEvent.isTargetPlayer).toBe(true);
+      expect(result.current.setEvent.isValidSet).toBe(false);
+    });
+
+    it("should transition to TargetSecret state when down a detective card to set with secret-target", () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      isSetTargetOneSecret.mockReturnValue(true); // Target Secret
+      isSetTargetOnePlayer.mockReturnValue(false);
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet(mockGameCards);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      // Ejecutar addDetectiveCardToSet
+      act(() => {
+        result.current.addDetectiveCardToSet(mockGameCards[0]);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      // Ejecutar setTargeSetToDown
+      act(() => {
+        result.current.setTargeSetToDown(mockPoirotSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockPoirotSet);
+
+      // Ejecutar playSet
+      act(() => {
+        result.current.playSet(mockGameCards);
+      });
+
+      expect(result.current.setEvent.isInEvent).toBe(true);
+      expect(result.current.setEvent.isTargetSecret).toBe(true);
+      expect(result.current.setEvent.isTargetPlayer).toBe(false);
+      expect(result.current.setEvent.isValidSet).toBe(false);
+    });
+
+    it("should not transition when Oliver is down to set", async () => {
+      canDownTheCardToASet.mockReturnValue(true);
+      cardsToSetUpdateData.mockRejectedValue({});
+
+      const { result } = renderHook(() => useSetEvent());
+
+      // Habilitar el botón
+      act(() => {
+        result.current.setEventToggleDisableButtonSelectSet([mockOliverCard]);
+      });
+      expect(result.current.setEvent.isValidSet).toBe(false);
+      expect(result.current.setEvent.canDownTheCardToASet).toBe(true);
+
+      // Ejecutar addDetectiveCardToSet
+      act(() => {
+        result.current.addDetectiveCardToSet(mockOliverCard);
+      });
+      expect(result.current.setEvent.isSelectingSet).toBe(true);
+
+      // Ejecutar setTargeSetToDown
+      act(() => {
+        result.current.setTargeSetToDown(mockPoirotSet);
+      });
+      expect(result.current.setEvent.set).toEqual(mockPoirotSet);
+
+      // Ejecutar playSet
+      await act(async () => {
+        await result.current.playSet([mockOliverCard]);
+      });
+
+      expect(result.current.setEvent).toEqual({
+        isInEvent: false,
+        isValidSet: false,
+
+        isTargetPlayer: false,
+        isTargetSecret: false,
+
+        isRevealSecret: false,
+        isHiddenSecret: false,
+        isStolenSecret: false,
+
+        isSelectingSet: false,
+
+        cards: [],
+        setType: null,
+        set: null,
+        target: null,
+
+        isRevealCurrPlayerSecret: false,
+        canDownTheCardToASet: false,
+      });
+    });
   });
 
   describe("Validation (Toggle Play Set Button)", () => {
@@ -285,6 +503,18 @@ describe("useSetEvent", () => {
 
       expect(result.current.setEvent.isValidSet).toBe(true);
       expect(toast.warning).not.toHaveBeenCalled();
+    });
+
+    it("should set isValidSet to false if valid cards and no secret has been revealed", () => {
+      isCardsValidSet.mockReturnValue(true);
+      isSetActionHiddenSecret.mockReturnValue(true);
+
+      const { result } = renderHook(() => useSetEvent());
+      act(() => {
+        result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
+      });
+
+      expect(result.current.setEvent.isValidSet).toBe(false);
     });
   });
 
@@ -383,6 +613,7 @@ describe("useSetEvent", () => {
       isSetCardsTargetOnePLayer.mockReturnValue(true);
 
       const { result } = renderHook(() => useSetEvent());
+
       act(() => {
         result.current.setEventToggleDisableButtonPlaySet(mockGameCards);
       });
@@ -394,7 +625,10 @@ describe("useSetEvent", () => {
         result.current.setTargetSet(mockGamePlayer);
       });
 
-      const success = await result.current.executeSetActionToTarget();
+      let success;
+      await act(async () => {
+        success = await result.current.executeSetActionToTarget();
+      });
 
       expect(success).toBe(true);
       expect(mockCreateAndPlaySet).toHaveBeenCalledOnce();
@@ -419,7 +653,10 @@ describe("useSetEvent", () => {
       });
 
       // Ejecutar la acción
-      const success = await result.current.executeSetActionToTarget();
+      let success;
+      await act(async () => {
+        success = await result.current.executeSetActionToTarget();
+      });
 
       expect(success).toBe(true);
       expect(mockPutSecret).toHaveBeenCalledWith(
@@ -448,7 +685,10 @@ describe("useSetEvent", () => {
         result.current.setTargetSet(mockSecret);
       });
 
-      const success = await result.current.executeSetActionToTarget();
+      let success;
+      await act(async () => {
+        success = await result.current.executeSetActionToTarget();
+      });
 
       expect(success).toBe(true);
       expect(mockCreateAndPlaySet).toHaveBeenCalled();
@@ -478,7 +718,10 @@ describe("useSetEvent", () => {
         result.current.setTargetSet(mockSecret);
       });
 
-      const success = await result.current.executeSetActionToTarget();
+      let success;
+      await act(async () => {
+        success = await result.current.executeSetActionToTarget();
+      });
 
       expect(success).toBe(false);
       expect(mockCreateAndPlaySet).not.toHaveBeenCalled();

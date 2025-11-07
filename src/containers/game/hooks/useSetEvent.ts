@@ -259,9 +259,9 @@ export function useSetEvent() {
         setSetEvent((prev) => ({
           ...prev,
           canDownTheCardToASet: false,
-          set: prev.canDownTheCardToASet ? null : prev.set,
+          set: null,
           isSelectingSet: false,
-          cards: prev.canDownTheCardToASet ? [] : prev.cards,
+          cards: [],
         }));
         return;
       }
@@ -271,9 +271,9 @@ export function useSetEvent() {
       setSetEvent((prev) => ({
         ...prev,
         canDownTheCardToASet: can,
-        set: prev.canDownTheCardToASet ? null : prev.set,
+        set: null,
         isSelectingSet: false,
-        cards: prev.canDownTheCardToASet ? [] : prev.cards,
+        cards: [],
       }));
     },
     [player, sets],
