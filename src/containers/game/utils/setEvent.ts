@@ -49,10 +49,6 @@ export function cardsToSetCreationDataTypeDetective(cards: GameCard[]) {
     case "TOMMY BERESFORD":
     case "TUPPENCE BERESFORD":
       setType = detectiveName;
-      break;
-
-    default:
-      setType = null;
   }
 
   return setType;

@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import type { UUID } from "@/types/common";
 import type { CardName, GameCard } from "@/types/card";
-import type { SetCreationData } from "@/types/set";
+import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
 
 import {
   cardsToSetCreationDataTypeDetective,
@@ -12,6 +12,12 @@ import {
   isSetWithQuin,
   isSetActionRevealSecret,
   isSetActionStolenSecret,
+  cardsToSetUpdateData,
+  isSetCardsTargetOnePLayer,
+  isSetTargetOneSecret,
+  isSetTargetOnePlayer,
+  isSetActionHiddenSecret,
+  canDownTheCardToASet,
 } from "./setEvent";
 
 const MOCK_PLAYER_ID = "player-123" as UUID;
@@ -59,6 +65,60 @@ const cardQuin1 = createMockCard("HARLEY QUIN WILDCARD", "c11");
 const cardQuin2 = createMockCard("HARLEY QUIN WILDCARD", "c12");
 
 const cardOliver = createMockCard("ARIADNE OLIVER", "c14");
+
+const setPoirot: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440001",
+  type: "HERCULE POIROT",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: false,
+  quin_count: 0,
+};
+
+const setPyne: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440001",
+  type: "PARKER PYNE",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: false,
+  quin_count: 0,
+};
+
+const setMaple: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440001",
+  type: "MISS MARPLE",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: false,
+  quin_count: 0,
+};
+
+const setTuppenceBeresford: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440002",
+  type: "TUPPENCE BERESFORD",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: true,
+  quin_count: 1,
+};
+
+const setTwoBeresford: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440002",
+  type: "TWO BERESFORD",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: false,
+  quin_count: 0,
+};
+
+const setSatterthwait: MatchSet = {
+  id: "550e8400-e29b-41d4-a716-446655440002",
+  type: "MR SATTERTHWAITE",
+  player_id: MOCK_PLAYER_ID,
+  match_id: MOCK_MATCH_ID,
+  quin_play: true,
+  quin_count: 1,
+};
 
 // Sets Válidos / Inválidos
 
@@ -223,6 +283,39 @@ describe("utils", () => {
     });
   });
 
+  describe("cardsToSetUpdateData", () => {
+    it("should create a correct SetUpdateData object", () => {
+      const result = cardsToSetUpdateData(
+        cardTuppence,
+        setTuppenceBeresford,
+        MOCK_TARGET_PLAYER_ID,
+      );
+      expect(result).toEqual({
+        set_id: setTuppenceBeresford.id,
+        player_id: MOCK_PLAYER_ID,
+        card_ids: [cardTuppence.id],
+        target_player_id: MOCK_TARGET_PLAYER_ID,
+      } as SetUpdateData);
+    });
+
+    it("should include target_secret_id if provided", () => {
+      const result = cardsToSetUpdateData(
+        cardPoirot1,
+        setPoirot,
+        MOCK_TARGET_PLAYER_ID,
+        MOCK_TARGET_SECRET_ID,
+      );
+      expect(result).toEqual({
+        set_id: setPoirot.id,
+        player_id: MOCK_PLAYER_ID,
+        card_ids: [cardPoirot1.id],
+        target_player_id: MOCK_TARGET_PLAYER_ID,
+        target_secret_id: MOCK_TARGET_SECRET_ID,
+      } as SetUpdateData);
+      expect(result.target_secret_id).toBe(MOCK_TARGET_SECRET_ID);
+    });
+  });
+
   describe("isSetCardsTargetOneSecret", () => {
     it("should return true for sets that target one secret (Poirot, Marple, Pyne)", () => {
       expect(isSetCardsTargetOneSecret(validPoirotSet)).toBe(true);
@@ -235,6 +328,47 @@ describe("utils", () => {
     it("should return false for sets that do not target one secret (Satterthwaite, Beresford, etc.)", () => {
       expect(isSetCardsTargetOneSecret(validSatterthwaiteSet)).toBe(false);
       expect(isSetCardsTargetOneSecret(validTwoBeresfordSet)).toBe(false);
+    });
+  });
+
+  describe("isSetCardsTargetOnePLayer", () => {
+    it("should return true for sets that target one player (Satterthwaite, Beresford, etc.)", () => {
+      expect(isSetCardsTargetOnePLayer(validSatterthwaiteSet)).toBe(true);
+      expect(isSetCardsTargetOnePLayer(validTwoBeresfordSet)).toBe(true);
+    });
+
+    it("should return false for sets that do not target one player (Poirot, Marple, Pyne)", () => {
+      expect(isSetCardsTargetOnePLayer(validPoirotSet)).toBe(false);
+      expect(
+        isSetCardsTargetOnePLayer([cardMarple1, cardMarple2, cardQuin1]),
+      ).toBe(false);
+      expect(isSetCardsTargetOnePLayer([cardPyne1, cardPyne2])).toBe(false);
+    });
+  });
+
+  describe("isSetTargetOneSecret", () => {
+    it("should return true for sets that target one secret (Poirot, Marple, Pyne)", () => {
+      expect(isSetTargetOneSecret(setPoirot)).toBe(true);
+      expect(isSetTargetOneSecret(setMaple)).toBe(true);
+      expect(isSetTargetOneSecret(setPyne)).toBe(true);
+    });
+
+    it("should return false for sets that do not target one secret (Satterthwaite, Beresford, etc.)", () => {
+      expect(isSetTargetOneSecret(setTuppenceBeresford)).toBe(false);
+      expect(isSetTargetOneSecret(setSatterthwait)).toBe(false);
+    });
+  });
+
+  describe("isSetTargetOnePlayer", () => {
+    it("should return true for sets that target one player (Satterthwaite, Beresford, etc.)", () => {
+      expect(isSetTargetOnePlayer(setTuppenceBeresford)).toBe(true);
+      expect(isSetTargetOnePlayer(setSatterthwait)).toBe(true);
+    });
+
+    it("should return false for sets that do not target one player (Poirot, Marple, Pyne)", () => {
+      expect(isSetTargetOnePlayer(setPoirot)).toBe(false);
+      expect(isSetTargetOnePlayer(setMaple)).toBe(false);
+      expect(isSetTargetOnePlayer(setPyne)).toBe(false);
     });
   });
 
@@ -259,6 +393,16 @@ describe("utils", () => {
     });
   });
 
+  describe("isSetActionHiddenSecret", () => {
+    it("should return true if the set hidden one secret", () => {
+      expect(isSetActionHiddenSecret([cardPyne1, cardPyne2])).toBe(true);
+    });
+
+    it("should return false if the set does not hidden one secret", () => {
+      expect(isSetActionHiddenSecret(validPoirotSetWithOneQuin)).toBe(false);
+    });
+  });
+
   describe("isSetActionStolenSecret", () => {
     it("should return true for a MR SATTERTHWAITE set that includes a Quin wildcard", () => {
       expect(isSetActionStolenSecret(validSatterthwaiteSetWithQuin)).toBe(true);
@@ -270,6 +414,29 @@ describe("utils", () => {
 
     it("should return false for a set with Quin that is not MR SATTERTHWAITE", () => {
       expect(isSetActionStolenSecret(validPoirotSetWithOneQuin)).toBe(false);
+    });
+  });
+
+  describe("canDownTheCardToASet", () => {
+    it("should return true if a TOMMY BERESFORD card is played to a TUPPENCE BERESFORD set (and vice-versa)", () => {
+      expect(
+        canDownTheCardToASet(cardTommy, [setTuppenceBeresford], MOCK_PLAYER_ID),
+      ).toBe(true);
+      expect(
+        canDownTheCardToASet(cardTuppence, [setTwoBeresford], MOCK_PLAYER_ID),
+      ).toBe(true);
+    });
+
+    it("should return true for ARIADNE OLIVER card regardless of existing set type", () => {
+      expect(
+        canDownTheCardToASet(cardOliver, [setSatterthwait], MOCK_PLAYER_ID),
+      ).toBe(true);
+    });
+
+    it("should return false if a TOMMY BERESFORD card is played to a MISS MARPLE set", () => {
+      expect(canDownTheCardToASet(cardTommy, [setMaple], MOCK_PLAYER_ID)).toBe(
+        false,
+      );
     });
   });
 });
