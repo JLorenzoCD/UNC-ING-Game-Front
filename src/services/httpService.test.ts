@@ -8,7 +8,7 @@ import type {
 } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
-import type { MatchSet, SetCreationData } from "@/types/set";
+import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
 
 import { createHttpService, type HttpService } from "./httpService";
 
@@ -794,6 +794,43 @@ describe("httpService", () => {
           target_player_id: targetPlayerId,
           action: "reveal_secret",
         }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+  });
+
+  it("addDetectiveCardToSetAndPlay sends correct PUT request to update a set", async () => {
+    const matchId = crypto.randomUUID();
+    const setId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const targetPlayerId = crypto.randomUUID();
+    const targetSecretId = crypto.randomUUID();
+
+    const mockDataBody: SetUpdateData = {
+      set_id: setId,
+      player_id: playerId,
+      card_ids: [cardId],
+      target_player_id: targetPlayerId,
+      target_secret_id: targetSecretId, // Opcional, lo incluimos para testearlo
+    };
+
+    // Mockeamos una respuesta exitosa, ya que el método retorna Promise<void>
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(undefined),
+    });
+
+    await httpService.addDetectiveCardToSetAndPlay(matchId, mockDataBody);
+
+    // Verificamos que se haya llamado a fetch con los parámetros correctos
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/sets/${setId}`,
+      {
+        method: "PUT",
+        body: JSON.stringify(mockDataBody),
         headers: {
           "Content-Type": "application/json",
         },
