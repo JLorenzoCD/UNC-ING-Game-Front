@@ -49,6 +49,7 @@ const mockSetObjectStandard: MatchSet = {
   player_id: MOCK_PLAYER_ID,
   match_id: MOCK_MATCH_ID,
   quin_play: false,
+  quin_count: 0,
 };
 
 const mockSetObjectQuin: MatchSet = {
@@ -57,6 +58,7 @@ const mockSetObjectQuin: MatchSet = {
   player_id: MOCK_PLAYER_ID,
   match_id: MOCK_MATCH_ID,
   quin_play: true,
+  quin_count: 1,
 };
 
 const mockSetObjectBeresford: MatchSet = {
@@ -65,18 +67,12 @@ const mockSetObjectBeresford: MatchSet = {
   player_id: MOCK_PLAYER_ID,
   match_id: MOCK_MATCH_ID,
   quin_play: false,
+  quin_count: 0,
 };
 
 describe("Set Component", () => {
   it("should render a standard set type with correct image and without the crown icon", () => {
-    render(
-      <Set
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
-        quin_count={0}
-      />,
-    );
+    render(<Set set={mockSetObjectStandard} />);
 
     const setImage = screen.getByRole("img", {
       name: `set-type-${mockSetTypeStandard}`,
@@ -101,28 +97,14 @@ describe("Set Component", () => {
   });
 
   it("should render the crown icon when quin_play is true", () => {
-    render(
-      <Set
-        type={mockSetTypeQuinPlay}
-        quin_play={true}
-        set_object={mockSetObjectQuin}
-        quin_count={0}
-      />,
-    );
+    render(<Set set={mockSetObjectQuin} />);
 
     // El componente mock de la corona SÍ esté presente
     expect(screen.getByTestId("mock-crown")).toBeInTheDocument();
   });
 
   it("should render the crown icon with 'peru' color when quin_play is true and quin_count is 1", () => {
-    render(
-      <Set
-        type={mockSetTypeQuinPlay}
-        quin_play={true}
-        quin_count={1}
-        set_object={mockSetObjectQuin}
-      />,
-    );
+    render(<Set set={mockSetObjectQuin} />);
 
     const crownIcon = screen.getByTestId("mock-crown");
     expect(crownIcon).toBeInTheDocument();
@@ -130,14 +112,7 @@ describe("Set Component", () => {
   });
 
   it("should render the crown icon with 'gold' color when quin_play is true and quin_count is greater than 1", () => {
-    render(
-      <Set
-        type={mockSetTypeQuinPlay}
-        quin_play={true}
-        quin_count={2}
-        set_object={mockSetObjectQuin}
-      />,
-    );
+    render(<Set set={{ ...mockSetObjectQuin, quin_count: 2 }} />);
 
     const crownIcon = screen.getByTestId("mock-crown");
     expect(crownIcon).toBeInTheDocument();
@@ -145,14 +120,7 @@ describe("Set Component", () => {
   });
 
   it("should render Two_Beresford type with two cards and the correct container spacing", () => {
-    render(
-      <Set
-        type={mockSetTypeTwoBeresford}
-        quin_play={false}
-        set_object={mockSetObjectBeresford}
-        quin_count={0}
-      />,
-    );
+    render(<Set set={mockSetObjectBeresford} />);
 
     expect(screen.getAllByTestId("set")).toHaveLength(2);
 
@@ -192,10 +160,7 @@ describe("Selection and Interaction", () => {
   it("should call onSelectTargetEvent when clicked and is selectable", () => {
     render(
       <Set
-        quin_count={0}
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
+        set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
         isSelectableSet={mockIsSelectableSet}
         isTargetSet={true}
@@ -217,10 +182,7 @@ describe("Selection and Interaction", () => {
 
     render(
       <Set
-        quin_count={0}
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
+        set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
         isSelectableSet={mockIsSelectableSet}
         isTargetSet={true}
@@ -240,10 +202,7 @@ describe("Selection and Interaction", () => {
   it("should NOT call onSelectTargetEvent when not in selection mode", () => {
     render(
       <Set
-        quin_count={0}
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
+        set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
         isSelectableSet={mockIsSelectableSet}
         isTargetSet={false} // Modo selección apagado
@@ -262,10 +221,7 @@ describe("Selection and Interaction", () => {
   it("should apply pulsing border when selectable and no target is selected", () => {
     render(
       <Set
-        quin_count={0}
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
+        set={mockSetObjectStandard}
         isSelectableSet={() => true}
         isTargetSet={true}
         target={null}
@@ -274,17 +230,14 @@ describe("Selection and Interaction", () => {
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
     expect(imgContainer).toHaveClass(
-      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 outline outline-2 outline-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer",
+      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer",
     );
   });
 
   it("should apply selected border when it is the target", () => {
     render(
       <Set
-        quin_count={0}
-        type={mockSetTypeStandard}
-        quin_play={false}
-        set_object={mockSetObjectStandard}
+        set={mockSetObjectStandard}
         isSelectableSet={() => true}
         isTargetSet={true}
         target={mockSetObjectStandard}
@@ -293,7 +246,7 @@ describe("Selection and Interaction", () => {
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
     expect(imgContainer).toHaveClass(
-      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 outline outline-2 outline-blue-400 shadow-lg shadow-blue-400/50 animate-none",
+      "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 border-2 border-blue-400 shadow-lg shadow-blue-400/50 animate-none",
     );
     expect(imgContainer).not.toHaveClass("animate-pulse");
   });
