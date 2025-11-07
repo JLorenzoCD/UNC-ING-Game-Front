@@ -128,6 +128,28 @@ export interface EventNotSoFastPayload {
    */
   discarded_card: GameCard;
 }
+
+export interface EventCanceledPayload {
+  /**
+   * La id del evento.
+   */
+  event_id: UUID;
+
+  /**
+   * Nombre del evento cancelado.
+   */
+  event_type: string;
+
+  /**
+   * Mensaje de cancelación.
+   */
+  message: string;
+
+  /**
+   * La carta del evento cancelado.
+   */
+  discarded_card: GameCard;
+}
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -144,6 +166,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.SECRET]: EventSecretPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
+  [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

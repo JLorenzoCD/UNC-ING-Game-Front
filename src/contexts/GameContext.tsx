@@ -27,6 +27,7 @@ import type {
   EventMatchCompletedPayload,
   EventCardEventPayload,
   EventNotSoFastPayload,
+  EventCanceledPayload,
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
@@ -289,6 +290,15 @@ export default function GameContextProvider({
       });
     };
 
+    const handleCanceledEvent = (payload: EventCanceledPayload) => {
+      const event = payload.event_type;
+      const message = payload.message;
+      toast.info(`${event} ${message}`);
+      if (payload.discarded_card) {
+        handleEventCards([payload.discarded_card]);
+      }
+    };
+
     const handleNotSoFastEvent = (payload: EventNotSoFastPayload) => {
       const hasNotSoFast = cards.some(
         (card) => card.player_id === player?.id && card.name === "NOT SO FAST",
@@ -534,6 +544,7 @@ export default function GameContextProvider({
       BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
       handleNotSoFastEvent,
     );
+    wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
@@ -553,6 +564,7 @@ export default function GameContextProvider({
         BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
         handleNotSoFastEvent,
       );
+      wsService.off(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
     };
   }, [matchId, wsService, isConnected, players, player, cards]);
 
