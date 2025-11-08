@@ -256,18 +256,19 @@ export function useSetEvent() {
       if (player === null) return;
 
       if (selectedCards.length !== 1) {
-        setSetEvent({
-          ...defaultStateSetEvent,
-        });
+        setSetEvent((prev) => ({
+          ...prev,
+          canDownTheCardToASet: false,
+        }));
         return;
       }
 
       const can = canDownTheCardToASet(selectedCards[0], sets, player.id);
 
-      setSetEvent({
-        ...defaultStateSetEvent,
+      setSetEvent((prev) => ({
+        ...prev,
         canDownTheCardToASet: can,
-      });
+      }));
     },
     [player, sets],
   );
