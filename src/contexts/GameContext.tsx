@@ -277,6 +277,16 @@ export default function GameContextProvider({
       });
     };
 
+    const handleRemoveCards = (cardsToRemove: GameCard[]) => {
+      if (!cardsToRemove || cardsToRemove.length === 0) return;
+
+      const idsToRemove = cardsToRemove.map((card) => card.id);
+
+      setCards((current) =>
+        current.filter((card) => !idsToRemove.includes(card.id)),
+      );
+    };
+
     const handleEventTurn = (match: Match) => {
       setMatch((current) => {
         if (!current) return match;
@@ -295,7 +305,11 @@ export default function GameContextProvider({
       const message = payload.message;
       toast.info(`${event} ${message}`);
       if (payload.discarded_card) {
-        handleEventCards([payload.discarded_card]);
+        if (payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON) {
+          handleRemoveCards([payload.discarded_card]);
+        } else {
+          handleEventCards([payload.discarded_card]);
+        }
       }
     };
 
@@ -396,7 +410,11 @@ export default function GameContextProvider({
         payload.discarded_card_event &&
         "card_id" in payload.discarded_card_event
       ) {
-        handleEventCards([payload.discarded_card_event]);
+        if (payload.type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON) {
+          handleRemoveCards([payload.discarded_card_event]);
+        } else {
+          handleEventCards([payload.discarded_card_event]);
+        }
       }
 
       if (payload.updated_secret && "secret_id" in payload.updated_secret) {
