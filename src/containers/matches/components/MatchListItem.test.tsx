@@ -7,13 +7,29 @@ import type { MatchWithPlayerCount } from "@/types/match";
 
 import MatchListItem from "./MatchListItem";
 
-const { mockUsePlayer } = vi.hoisted(() => {
-  const mockUsePlayer = vi.fn();
+const { mockUsePlayer, mockToastSuccess, mockToastError, mockToastInfo } =
+  vi.hoisted(() => {
+    const mockUsePlayer = vi.fn();
+    const mockToastSuccess = vi.fn();
+    const mockToastError = vi.fn();
+    const mockToastInfo = vi.fn();
 
-  return {
-    mockUsePlayer,
-  };
-});
+    return {
+      mockUsePlayer,
+      mockToastSuccess,
+      mockToastError,
+      mockToastInfo,
+    };
+  });
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: mockToastSuccess,
+    error: mockToastError,
+    info: mockToastInfo,
+  },
+}));
+
 // Mock de isValidMatch
 const isValidMatch = vi.fn();
 
@@ -208,8 +224,8 @@ describe("MatchListItem", () => {
       fireEvent.click(joinButton);
 
       await waitFor(() => {
-        // 1. Verificar la alerta de éxito
-        expect(mockAlert).toHaveBeenCalledWith(
+        // 1. Verificar el toast de éxito
+        expect(mockToastInfo).toHaveBeenCalledWith(
           "You successfully joined the match.",
         );
         // 2. Verificar la navegación
@@ -232,7 +248,7 @@ describe("MatchListItem", () => {
 
       await waitFor(() => {
         // 1. Verificar la alerta de fallo
-        expect(mockAlert).toHaveBeenCalledWith(
+        expect(mockToastError).toHaveBeenCalledWith(
           "Couldn't join the match, try another one.",
         );
         // 2. Verificar que NO haya navegación
@@ -260,7 +276,7 @@ describe("MatchListItem", () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(mockError);
 
         // 2. Verificar la alerta de error
-        expect(mockAlert).toHaveBeenCalledWith(
+        expect(mockToastError).toHaveBeenCalledWith(
           `There was a problem joining game "${mockMatch.name}", please try again later.`,
         );
 
@@ -286,7 +302,7 @@ describe("MatchListItem", () => {
       fireEvent.click(joinButton);
 
       await waitFor(() => {
-        expect(mockAlert).toHaveBeenCalledWith(
+        expect(mockToastError).toHaveBeenCalledWith(
           "You must create a player before joining a match.",
         );
         expect(joinMatch).not.toHaveBeenCalled();

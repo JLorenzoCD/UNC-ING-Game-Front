@@ -173,6 +173,9 @@ const {
   mockPostEvent,
   mockUseNavigate,
   mockUseSetEvent,
+  mockToastSuccess,
+  mockToastError,
+  mockToastInfo,
 } = vi.hoisted(() => {
   const mockPutTakeCards = vi.fn();
   const mockPutDiscardCards = vi.fn();
@@ -180,6 +183,9 @@ const {
   const mockUseNavigate = vi.fn();
   const mockPostEvent = vi.fn();
   const mockUseSetEvent = vi.fn();
+  const mockToastSuccess = vi.fn();
+  const mockToastError = vi.fn();
+  const mockToastInfo = vi.fn();
 
   return {
     mockPutTakeCards,
@@ -188,8 +194,19 @@ const {
     mockPostEvent,
     mockUseNavigate,
     mockUseSetEvent,
+    mockToastSuccess,
+    mockToastError,
+    mockToastInfo,
   };
 });
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: mockToastSuccess,
+    error: mockToastError,
+    info: mockToastInfo,
+  },
+}));
 
 /* Componentes mockeados por Vitest */
 
@@ -250,11 +267,15 @@ vi.mock("./components/Hand", () => ({
     onSelect,
     isSelected,
     isDisabled,
+    isActivateNSF,
+    onDoubleClickCard,
   }: {
     cards: (GameCard | null)[];
     onSelect: (card: GameCard) => void;
     isSelected: (card: GameCard) => boolean;
     isDisabled?: boolean;
+    isActivateNSF?: boolean;
+    onDoubleClickCard?: (card: GameCard) => void;
   }) => (
     <div data-testid="mock-hand">
       {cards.map((card, index) =>
@@ -264,6 +285,15 @@ vi.mock("./components/Hand", () => ({
             data-testid={`hand-card-${card.id}`}
             aria-selected={isSelected(card)}
             onClick={() => onSelect(card)}
+            onDoubleClick={() => {
+              if (
+                isActivateNSF &&
+                card.name === "NOT SO FAST" &&
+                onDoubleClickCard
+              ) {
+                onDoubleClickCard(card);
+              }
+            }}
             disabled={isDisabled}
           >
             {card.name}
@@ -417,7 +447,7 @@ vi.mock("./components/HandActions", () => ({
         </button>
         <button
           onClick={onPlayEvent}
-          disabled={isDisabledEvent}
+          disabled={isDisabled || isDisabledEvent}
           data-testid="play-event-btn"
         >
           Play event
@@ -476,6 +506,15 @@ describe("GameContainer", () => {
         isCurrPlayer: false,
         isSelecting: false,
       },
+      notSoFastEvent: {
+        isActivate: false,
+        eventId: null,
+        nsfCount: 0,
+        resolvedAtUtc: null,
+        toastId: null,
+        discardedCard: null,
+      },
+      clearNotSoFastEvent: vi.fn(),
     });
 
     vi.mocked(useHttpService).mockReturnValue({
@@ -659,6 +698,15 @@ describe("GameContainer", () => {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
       });
 
       render(<GameContainer />);
@@ -692,6 +740,15 @@ describe("GameContainer", () => {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
       });
 
       mockPutDiscardCards.mockResolvedValue(undefined);
@@ -837,6 +894,15 @@ describe("GameContainer", () => {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
       });
 
       render(<GameContainer />);
@@ -1156,6 +1222,105 @@ describe("GameContainer", () => {
         cardDELAY.id,
         { cards_ids: [discardedCard.id] }, // Asume que es la única en descarte
       );
+    });
+  });
+  describe("NOT SO FAST flow", () => {
+    let notSoFastCard: GameCard;
+    const mockClearNotSoFastEvent = vi.fn();
+    const mockPostPlayNotSoFast = vi.fn();
+
+    beforeEach(() => {
+      notSoFastCard = {
+        id: crypto.randomUUID(),
+        match_id: MOCK_MATCH_ID,
+        player_id: MOCK_PLAYER_ID,
+        card_id: crypto.randomUUID(),
+        name: "NOT SO FAST",
+        description: "Stop!",
+        type: "INSTANT",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      // Configurar httpService para este test
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          putPassTurn: mockPutPassTurn,
+          putTakeCards: mockPutTakeCards,
+          putDiscardCards: mockPutDiscardCards,
+          postEvent: mockPostEvent,
+          postPlayNotSoFast: mockPostPlayNotSoFast, // <-- Añadir
+        } as any,
+      });
+
+      mockPostPlayNotSoFast.mockResolvedValue({ success: true });
+      mockClearNotSoFastEvent.mockClear();
+    });
+
+    it("handlePlayNotSoFast: should call httpService and clear event on success", async () => {
+      const eventId = crypto.randomUUID();
+      // Mockear el contexto con el evento NSF activo
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(), // Obtener el mock base
+        cards: [notSoFastCard, ...mockCards.slice(1)], // Asegurarse de que el jugador tiene la carta
+        notSoFastEvent: {
+          isActivate: true,
+          eventId: eventId,
+          nsfCount: 1,
+          resolvedAtUtc: "2025-01-01T00:00:00Z",
+          toastId: "toast-123",
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: mockClearNotSoFastEvent, // Usar el mock local
+      });
+
+      render(<GameContainer />);
+
+      // Encontrar la carta NSF en la mano y simular doble clic
+      const nsfCardButton = screen.getByTestId(`hand-card-${notSoFastCard.id}`);
+
+      await act(async () => {
+        fireEvent.doubleClick(nsfCardButton);
+      });
+
+      // Verificar que se llamó a la API
+      expect(mockPostPlayNotSoFast).toHaveBeenCalledTimes(1);
+      expect(mockPostPlayNotSoFast).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        notSoFastCard.id,
+        eventId,
+        1,
+      );
+
+      // Verificar que el evento se limpió
+      expect(mockClearNotSoFastEvent).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith("¡NOT SO FAST played!");
+    });
+
+    it("HandActions: should disable all buttons when notSoFastEvent is active", () => {
+      // Mockear el contexto con el evento NSF activo
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        notSoFastEvent: {
+          isActivate: true,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: mockClearNotSoFastEvent,
+      });
+
+      render(<GameContainer />);
+
+      // Verificar que los botones de acción están deshabilitados
+      // El mock de HandActions ahora recibe `isDisabled={true}`
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Play set")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+      expect(screen.getByTestId("play-event-btn")).toBeDisabled();
     });
   });
 });

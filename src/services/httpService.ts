@@ -235,6 +235,35 @@ export function createHttpService() {
     return request(BACKEND_ENDPOINTS.PUT_SECRET(matchId, secretId), options);
   };
 
+  const postPlayNotSoFast = async (
+    matchId: UUID,
+    playerId: UUID,
+    cardId: UUID,
+    eventId: UUID,
+    nsfCount: number,
+  ) => {
+    const baseUrl = BACKEND_ENDPOINTS.PLAY_NOT_SO_FAST(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("match_card_id", cardId);
+    params.append("event_id", eventId);
+    params.append("nsf_count", nsfCount.toString());
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        match_card_id: cardId,
+        event_id: eventId,
+        nsf_count: nsfCount,
+      }),
+    };
+    return request(urlWithParams, options);
+  };
+
   return {
     request,
     createPlayer,
@@ -254,5 +283,6 @@ export function createHttpService() {
     putSecret,
     createAndPlaySet,
     addDetectiveCardToSetAndPlay,
+    postPlayNotSoFast,
   };
 }

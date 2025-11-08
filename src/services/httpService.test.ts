@@ -837,4 +837,49 @@ describe("httpService", () => {
       },
     );
   });
+
+  it("postPlayNotSoFast sends correct request with all parameters", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const nsfCount = 1;
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse); // Usa el helper existente
+
+    const result = await httpService.postPlayNotSoFast(
+      matchId,
+      playerId,
+      cardId,
+      eventId,
+      nsfCount,
+    );
+
+    // Construir la URL esperada
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("match_card_id", cardId);
+    expectedParams.append("event_id", eventId);
+    expectedParams.append("nsf_count", nsfCount.toString());
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/not_so_fast?${expectedParams.toString()}`;
+
+    // Construir el body esperado
+    const expectedBody = {
+      player_id: playerId,
+      match_card_id: cardId,
+      event_id: eventId,
+      nsf_count: nsfCount,
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
 });

@@ -95,6 +95,15 @@ describe("HandActions", () => {
         isSelecting: false,
         isCurrPlayer: false,
       },
+      notSoFastEvent: {
+        isActivate: false,
+        eventId: null,
+        nsfCount: 0,
+        resolvedAtUtc: null,
+        toastId: null,
+        discardedCard: null,
+      },
+      clearNotSoFastEvent: vi.fn(),
     });
   });
 
@@ -264,6 +273,7 @@ describe("HandActions", () => {
           isSelecting: false,
           isCurrPlayer: false,
         },
+        notSoFastEvent: { isActivate: false },
       });
 
       render(<HandActions {...baseProps} />);
@@ -301,6 +311,7 @@ describe("HandActions", () => {
           isSelecting: false,
           isCurrPlayer: true,
         },
+        notSoFastEvent: { isActivate: false },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
