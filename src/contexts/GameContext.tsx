@@ -263,21 +263,16 @@ export default function GameContextProvider({
         if (!playerOwnerSet) return prevSets;
 
         // Creación de un set.
-        if (index === -1 && set.deleted_cards !== undefined) {
+        if (index === -1) {
           const newSet = {
             ...set,
             cards_to_delete: undefined,
-          } as MatchSet;
+          };
+
+          delete newSet.cards_to_delete;
 
           toast(`Player "${playerOwnerSet.name}" played a set.`);
           updateSet = [...prevSets, newSet];
-
-          setCards((prevCards) => {
-            // Se eliminan las cartas cuyos ids estén en el arreglo de set.deleted_cards
-            return prevCards.filter(
-              (card) => !(set.deleted_cards as UUID[]).includes(card.id),
-            );
-          });
         } else if (
           // Modificación de un set
           index !== -1 &&
@@ -286,6 +281,15 @@ export default function GameContextProvider({
         ) {
           updateSet[index] = set;
           toast(`Player "${playerOwnerSet.name}" stolen a set.`);
+        }
+
+        if (set.deleted_cards !== undefined) {
+          setCards((prevCards) => {
+            // Se eliminan las cartas cuyos ids estén en el arreglo de set.deleted_cards
+            return prevCards.filter(
+              (card) => !(set.deleted_cards as UUID[]).includes(card.id),
+            );
+          });
         }
 
         return updateSet;
