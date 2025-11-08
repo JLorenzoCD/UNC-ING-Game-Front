@@ -96,6 +96,60 @@ export interface EventErrorPayload {
   message?: string;
 }
 
+/** Payload para la instantanea not so fast */
+export interface EventNotSoFastPayload {
+  /**
+   * La ID del jugador que juega el evento o set.
+   */
+  player_id: UUID;
+
+  /**
+   * La ID del evento.
+   */
+  event_id: UUID;
+
+  /**
+   * El nombre del evento o set que se quiere jugar.
+   */
+  event_type: string;
+
+  /**
+   * El numero de nsf por el que va.
+   */
+  nsf_count: number;
+
+  /**
+   * El hora a la que termina el evento.
+   */
+  resolve_at_utc: string;
+
+  /**
+   * La carta que se descarta.
+   */
+  discarded_card: GameCard | null;
+}
+
+export interface EventCanceledPayload {
+  /**
+   * La id del evento.
+   */
+  event_id: UUID;
+
+  /**
+   * Nombre del evento cancelado.
+   */
+  event_type: string;
+
+  /**
+   * Mensaje de cancelación.
+   */
+  message: string;
+
+  /**
+   * La carta del evento cancelado.
+   */
+  discarded_card: GameCard | null;
+}
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -111,6 +165,8 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL]: EventPlayerSecretRevealPayload;
   [BACKEND_SOCKETS_EVENTS.SECRET]: EventSecretPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
+  [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
+  [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }
