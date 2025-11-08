@@ -36,7 +36,7 @@ export default function MatchListItem({
 
   const handleClick = async () => {
     if (!player) {
-      alert("You must create a player before joining a match.");
+      toast.error("You must create a player before joining a match.");
 
       return;
     }
@@ -54,7 +54,7 @@ export default function MatchListItem({
     } catch (err) {
       console.error(err);
 
-      alert(
+      toast.error(
         `There was a problem joining game "${match.name}", please try again later.`,
       );
     }

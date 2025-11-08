@@ -126,7 +126,7 @@ export interface EventNotSoFastPayload {
   /**
    * La carta que se descarta.
    */
-  discarded_card: GameCard;
+  discarded_card: GameCard | null;
 }
 
 export interface EventCanceledPayload {
@@ -148,7 +148,7 @@ export interface EventCanceledPayload {
   /**
    * La carta del evento cancelado.
    */
-  discarded_card: GameCard;
+  discarded_card: GameCard | null;
 }
 /**
  * Mapa de tipos para eventos de WebSocket.

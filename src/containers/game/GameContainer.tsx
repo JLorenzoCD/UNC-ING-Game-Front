@@ -139,10 +139,10 @@ export default function GameContainer() {
       // Si tiene éxito, limpiamos el estado de desafío
       clearNotSoFastEvent();
       clearSelectedCards(); // Limpiar selección por si acaso
-      toast.success("¡NOT SO FAST jugado!");
+      toast.success("¡NOT SO FAST played!");
     } catch (error) {
-      console.error("Fallo al jugar NOT SO FAST:", error);
-      toast.error("Fallo al jugar NOT SO FAST.");
+      console.error("Failed to play NOT SO FAST:", error);
+      toast.error("Failed to play NOT SO FAST.");
     }
   };
 
@@ -986,7 +986,7 @@ export default function GameContainer() {
               onSelectSecret={handleSelectedSecret}
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
-              isDisabled={!isPlayerTurn}
+              isDisabled={!isPlayerTurn || notSoFastEvent.isActivate}
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
