@@ -59,16 +59,19 @@ const emptySets: MatchSet[] = [];
 
 // Mocking the Set component
 const { MockSet } = vi.hoisted(() => {
-  const MockSet = vi.fn(({ type, quin_play, set_object, isTargetSet }) => (
-    <div
-      data-testid={`mock-set-${type}`}
-      data-quin-play={quin_play.toString()}
-      data-set-id={set_object.id}
-      data-is-target-set={isTargetSet?.toString() || false}
-    >
-      Set Component - Type: {type}
-    </div>
-  ));
+  const MockSet = vi.fn(({ set, isTargetSet }) => {
+    if (!set) return null;
+    return (
+      <div
+        data-set-id={set.id}
+        data-testid={`mock-set-${set.type}`}
+        data-quin-play={set.quin_play}
+        data-is-target-set={isTargetSet?.toString() || false}
+      >
+        Set Component - Type: {set.type}
+      </div>
+    );
+  });
 
   return {
     MockSet,
@@ -92,21 +95,23 @@ describe("Sets", () => {
     const articleElement = container.querySelector("article");
     expect(articleElement).toBeInTheDocument();
 
-    // Verificamos las clases de estilo de Tailwind
+    // Verificamos las clases de estilo de Tailwind para el carousel
     expect(articleElement).toHaveClass(
-      "flex gap-5 flex-wrap justify-center items-center w-72",
+      "flex gap-x-0.5 justify-center items-center",
     );
   });
 
   it("should render the correct number of Set components", () => {
     render(<Sets sets={playerSets} />);
 
-    // El componente mock 'Set' fue llamado el número correcto de veces
-    expect(MockSet).toHaveBeenCalledTimes(playerSets.length);
+    // El componente mock 'Set' fue llamado 3 veces (MAX_SETS_DISPLAYED = 3)
+    // Se llama con los 3 primeros sets del array
+    const MAX_SETS_DISPLAYED = 3;
+    expect(MockSet).toHaveBeenCalledTimes(MAX_SETS_DISPLAYED);
 
-    // Los elementos mockeados están en el documento
+    // Los elementos mockeados están en el documento (solo los 3 primeros)
     const renderedSets = screen.getAllByTestId(/mock-set-/);
-    expect(renderedSets).toHaveLength(playerSets.length);
+    expect(renderedSets).toHaveLength(MAX_SETS_DISPLAYED);
   });
 
   it("should pass the correct props (type and quin_play) to each Set component", () => {
@@ -127,33 +132,31 @@ describe("Sets", () => {
 
     // Verificamos las props pasadas a la primera instancia de Set
     const firstSetProps = MockSet.mock.calls[0][0];
-    expect(firstSetProps.type).toBe("HERCULE POIROT");
-    expect(firstSetProps.quin_play).toBe(false);
-    expect(firstSetProps.set_object).toBe(playerSets[0]);
+    expect(firstSetProps.set).toBe(playerSets[0]);
     expect(firstSetProps.onSelectTargetEvent).toBe(mockOnSelect);
     expect(firstSetProps.isSelectableSet).toBe(mockIsSelectable);
     expect(firstSetProps.target).toBe(mockTarget);
     expect(firstSetProps.isTargetSet).toBe(mockIsTargetSet);
 
-    // Verificamos las props pasadas a una instancia donde quin_play es true (Miss_Marple)
+    // Verificamos las props pasadas a la segunda instancia (MISS MARPLE)
     const secondSetProps = MockSet.mock.calls[1][0];
-    expect(secondSetProps.type).toBe("MISS MARPLE");
-    expect(secondSetProps.quin_play).toBe(true);
-    expect(secondSetProps.set_object).toBe(playerSets[1]);
+    expect(secondSetProps.set).toBe(playerSets[1]);
+    expect(secondSetProps.set.type).toBe("MISS MARPLE");
+    expect(secondSetProps.set.quin_play).toBe(true);
 
-    // Verificamos las props pasadas a la última instancia
-    const lastSetProps = MockSet.mock.calls[playerSets.length - 1][0];
-    expect(lastSetProps.type).toBe("MR SATTERTHWAITE");
-    expect(lastSetProps.quin_play).toBe(false);
-    expect(lastSetProps.set_object).toBe(playerSets[playerSets.length - 1]);
+    // Verificamos las props pasadas a la tercera instancia (TOMMY BERESFORD)
+    const thirdSetProps = MockSet.mock.calls[2][0];
+    expect(thirdSetProps.set).toBe(playerSets[2]);
+    expect(thirdSetProps.set.type).toBe("TOMMY BERESFORD");
+    expect(thirdSetProps.set.quin_play).toBe(false);
   });
 
   it("should render the container but no Set components when the sets array is empty", () => {
     const { container } = render(<Sets sets={emptySets} />);
 
-    // El contenedor <article> debería estar presente
+    // El componente retorna null cuando no hay sets
     const articleElement = container.querySelector("article");
-    expect(articleElement).toBeInTheDocument();
+    expect(articleElement).not.toBeInTheDocument();
 
     // El componente mock 'Set' NO debería haber sido llamado
     expect(MockSet).not.toHaveBeenCalled();

@@ -53,31 +53,43 @@ export default function Table({
     sets,
   );
 
+  const currentMatchPlayer = players.find((p) => p.id === player?.id);
+  const currentMatchPlayerRole = currentMatchPlayer?.role ?? "INNOCENT";
+
   return (
     <>
       {/* Los demás jugadores (de 1 a 5 jugadores además del actual) */}
       {visiblePlayers.map(
-        ({ turn, position, playerData, playerSets, playerSecrets }) => (
-          <div
-            key={playerData.id}
-            className={`${position} flex items-center justify-center`}
-          >
-            <Player
-              isSelectablePlayer={isSelectablePlayer}
-              onSelectTargetEvent={onSelectTargetEvent}
-              isSelectableSecret={isSelectableSecret}
-              isSelectableSet={isSelectableSet}
-              sets={playerSets}
-              player={playerData}
-              hasCurrentTurn={turn}
-              secrets={playerSecrets}
-              isPlayerEvent={isEvent && isTargetPlayer}
-              isTargetSecret={isEvent && isTargetSecret}
-              isTargetSet={isEvent && isTargetSet}
-              target={target}
-            />
-          </div>
-        ),
+        ({ turn, position, playerData, playerSets, playerSecrets }) => {
+          // Si el jugador actual es el Asesino o el Cómplice,
+          // se resalta al otro jugador con rol especial.
+          const shouldHighlightRole =
+            currentMatchPlayerRole !== "INNOCENT" &&
+            playerData.role !== "INNOCENT";
+
+          return (
+            <div
+              key={playerData.id}
+              className={`${position} flex items-center justify-center`}
+            >
+              <Player
+                isSelectablePlayer={isSelectablePlayer}
+                onSelectTargetEvent={onSelectTargetEvent}
+                isSelectableSecret={isSelectableSecret}
+                isSelectableSet={isSelectableSet}
+                sets={playerSets}
+                player={playerData}
+                hasCurrentTurn={turn}
+                secrets={playerSecrets}
+                isPlayerEvent={isEvent && isTargetPlayer}
+                isTargetSecret={isEvent && isTargetSecret}
+                isTargetSet={isEvent && isTargetSet}
+                target={target}
+                shouldHighlightRole={shouldHighlightRole}
+              />
+            </div>
+          );
+        },
       )}
 
       {/* Las pilas están fijas en el centro de la pantalla. */}
