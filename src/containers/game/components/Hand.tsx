@@ -11,6 +11,7 @@ interface HandProps {
   isDisabled: boolean; // Indica si la mano está deshabilitada (no se pueden ejecutar acciones)
   isSelecting: boolean; // Indica si el jugador está en modo de selección
   isActivateNSF: boolean; // Indica si el jugador puede jugar una Not so fast
+  isPendingResponse: boolean; // Indica si el jugador tiene que seleccionar una carta para intercambiar
 }
 
 function EmptyHandPosition() {
@@ -33,6 +34,7 @@ export default function Hand({
   isDisabled,
   isActivateNSF = false,
   onDoubleClickCard,
+  isPendingResponse = false,
 }: HandProps) {
   // Si la mano está deshabilitada, aplicamos estilos para indicar que no se puede interactuar
   const disabledClassName =
@@ -61,7 +63,10 @@ export default function Hand({
     if (!isActivateNSF || card.name !== "NOT SO FAST" || !onDoubleClickCard) {
       return;
     }
-    onDoubleClickCard(card);
+
+    if (isActivateNSF || isPendingResponse) {
+      onDoubleClickCard(card);
+    }
   };
 
   return (
@@ -97,6 +102,7 @@ export default function Hand({
                     : isCardOpacityDecreased // 4. El resto
                       ? "opacity-80"
                       : "",
+              isPendingResponse ? "animate-pulse ring-4 ring-yellow-500" : "",
             )}
           >
             <Card name={card.name} description={card.description} />
