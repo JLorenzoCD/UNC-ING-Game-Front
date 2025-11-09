@@ -29,6 +29,8 @@ const BACKEND_ENDPOINTS = {
     `/matches/${matchId}/secrets/${secretId}`,
 
   PLAY_NOT_SO_FAST: (matchId: UUID) => `/matches/${matchId}/not_so_fast`,
+
+  CARD_TRADE: (matchId: UUID) => `/matches/${matchId}/card_trade`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
@@ -43,6 +45,7 @@ const BACKEND_SOCKETS_EVENTS = {
   MATCH_COMPLETED: "match_completed",
   CANCELLATION_WINDOW_OPEN: "cancellation_window_open",
   CANCELED: "event_cancelled",
+  PENDING_RESPONSE: "pending_target_response",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };

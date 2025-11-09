@@ -49,6 +49,11 @@ export interface EventCardEventPayload {
    * Set actualizado en este evento (opcional)
    */
   updated_set?: MatchSet;
+
+  /**
+   * Mensaje de exito
+   */
+  message: string;
 }
 
 /** Payload del evento de creación/actualización de set */
@@ -150,6 +155,23 @@ export interface EventCanceledPayload {
    */
   discarded_card: GameCard | null;
 }
+
+export interface EventPendingResponsePayload {
+  /**
+   * La el nombre del evento.
+   */
+  event_type: string;
+
+  /**
+   * La id del evento.
+   */
+  event_id: UUID;
+
+  /**
+   * Las id de los jugadores a seleccionar carta o jugador.
+   */
+  players_ids: UUID[];
+}
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -167,6 +189,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
+  [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }
