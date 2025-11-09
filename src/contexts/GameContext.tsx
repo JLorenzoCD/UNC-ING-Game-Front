@@ -159,20 +159,13 @@ export default function GameContextProvider({
     setIsLoading(true);
 
     try {
-      const [
-        match,
-        cards,
-        secrets,
-        players,
-        sets,
-        // logs
-      ] = await Promise.all([
+      const [match, cards, secrets, players, sets, logs] = await Promise.all([
         httpService.getMatch(matchId),
         httpService.getMatchCards(matchId),
         httpService.getMatchSecrets(matchId),
         httpService.getMatchPlayers(matchId),
         httpService.getMatchSets(matchId),
-        // httpService.getMatchLogs(matchId),
+        httpService.getMatchLogs(matchId),
       ]);
 
       setMatch(match);
@@ -180,7 +173,7 @@ export default function GameContextProvider({
       setSecrets(secrets);
       setPlayers(players);
       setSets(sets);
-      // setLogs(logs);
+      setLogs(logs);
     } catch (error) {
       console.error("Error fetching match data:", error);
 
