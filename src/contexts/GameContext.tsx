@@ -595,6 +595,13 @@ export default function GameContextProvider({
           eventId: payload.event_id,
           eventType: payload.event_type,
         });
+      } else if (payload.event_type === GAME_EVENTS.POINT) {
+        toast.info("POINT YOUR SUSPICIONS: Indicate who you suspect.");
+        setPendingResponse({
+          isPending: true,
+          eventId: payload.event_id,
+          eventType: payload.event_type,
+        });
       }
     };
 
