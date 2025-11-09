@@ -205,6 +205,7 @@ export function createHttpService() {
 
   const addDetectiveCardToSetAndPlay = async (
     matchId: UUID,
+    setId: UUID,
     dataBody: SetUpdateData,
   ): Promise<void> => {
     const options: RequestInit = {
@@ -213,7 +214,7 @@ export function createHttpService() {
     };
 
     return request(
-      BACKEND_ENDPOINTS.DOWN_CARD_AND_PLAY_SET(matchId, dataBody.set_id),
+      BACKEND_ENDPOINTS.DOWN_CARD_AND_PLAY_SET(matchId, setId),
       options,
     );
   };

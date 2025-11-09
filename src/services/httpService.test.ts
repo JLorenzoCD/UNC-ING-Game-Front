@@ -810,7 +810,6 @@ describe("httpService", () => {
     const targetSecretId = crypto.randomUUID();
 
     const mockDataBody: SetUpdateData = {
-      set_id: setId,
       player_id: playerId,
       card_ids: [cardId],
       target_player_id: targetPlayerId,
@@ -823,7 +822,11 @@ describe("httpService", () => {
       json: vi.fn().mockResolvedValueOnce(undefined),
     });
 
-    await httpService.addDetectiveCardToSetAndPlay(matchId, mockDataBody);
+    await httpService.addDetectiveCardToSetAndPlay(
+      matchId,
+      setId,
+      mockDataBody,
+    );
 
     // Verificamos que se haya llamado a fetch con los parámetros correctos
     expect(mockFetch).toHaveBeenCalledWith(

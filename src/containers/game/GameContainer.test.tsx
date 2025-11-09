@@ -407,7 +407,6 @@ vi.mock("./components/HandActions", () => ({
       onSelectSecret,
       onPlayEvent,
       isDisabledEvent,
-      isSelectionSetEvent,
       isDisabled,
       isSetButtonDisabled,
     }) => (

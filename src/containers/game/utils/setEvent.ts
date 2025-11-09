@@ -158,12 +158,10 @@ export function cardsToSetCreationData(
 
 export function cardsToSetUpdateData(
   card: GameCard,
-  set: MatchSet,
   targetPlayerId: UUID,
   targetSecretId?: UUID,
 ): SetUpdateData {
   const setData: SetUpdateData = {
-    set_id: set.id,
     player_id: card.player_id as UUID,
     card_ids: [card.id],
     target_player_id: targetPlayerId,

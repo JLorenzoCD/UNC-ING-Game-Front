@@ -285,13 +285,8 @@ describe("utils", () => {
 
   describe("cardsToSetUpdateData", () => {
     it("should create a correct SetUpdateData object", () => {
-      const result = cardsToSetUpdateData(
-        cardTuppence,
-        setTuppenceBeresford,
-        MOCK_TARGET_PLAYER_ID,
-      );
+      const result = cardsToSetUpdateData(cardTuppence, MOCK_TARGET_PLAYER_ID);
       expect(result).toEqual({
-        set_id: setTuppenceBeresford.id,
         player_id: MOCK_PLAYER_ID,
         card_ids: [cardTuppence.id],
         target_player_id: MOCK_TARGET_PLAYER_ID,
@@ -301,12 +296,10 @@ describe("utils", () => {
     it("should include target_secret_id if provided", () => {
       const result = cardsToSetUpdateData(
         cardPoirot1,
-        setPoirot,
         MOCK_TARGET_PLAYER_ID,
         MOCK_TARGET_SECRET_ID,
       );
       expect(result).toEqual({
-        set_id: setPoirot.id,
         player_id: MOCK_PLAYER_ID,
         card_ids: [cardPoirot1.id],
         target_player_id: MOCK_TARGET_PLAYER_ID,
