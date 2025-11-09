@@ -7,8 +7,10 @@ interface HandProps {
 
   onSelect: (card: GameCard) => void; // Callback que se ejecuta al seleccionar una carta
   isSelected: (card: GameCard) => boolean; // Función para determinar si una carta está seleccionada
+  onDoubleClickCard?: (card: GameCard) => void; // Handler al hacer doble click
   isDisabled: boolean; // Indica si la mano está deshabilitada (no se pueden ejecutar acciones)
   isSelecting: boolean; // Indica si el jugador está en modo de selección
+  isActivateNSF: boolean; // Indica si el jugador puede jugar una Not so fast
 }
 
 function EmptyHandPosition() {
@@ -29,6 +31,8 @@ export default function Hand({
   isSelected,
   isSelecting,
   isDisabled,
+  isActivateNSF = false,
+  onDoubleClickCard,
 }: HandProps) {
   // Si la mano está deshabilitada, aplicamos estilos para indicar que no se puede interactuar
   const disabledClassName =
@@ -37,8 +41,12 @@ export default function Hand({
   // Una carta seleccionada se resalta con un borde y se eleva ligeramente
   const selectedCardClassName = "rounded-lg ring-4 ring-red-500 -translate-y-4";
 
+  // Si estamos en momento de elegir una nsf
+  const selectedNSFClasName =
+    "rounded-lg ring-4 ring-blue-500 -translate-y-4 animate-pulse";
+
   const shouldDecreaseCardOpacity = (isSelected: boolean) => {
-    if (isSelected || isDisabled) return false;
+    if (isSelected || isDisabled || isActivateNSF) return false;
 
     return isSelecting;
   };
@@ -49,6 +57,13 @@ export default function Hand({
     onSelect(card);
   };
 
+  const handleDoubleClick = (card: GameCard) => {
+    if (!isActivateNSF || card.name !== "NOT SO FAST" || !onDoubleClickCard) {
+      return;
+    }
+    onDoubleClickCard(card);
+  };
+
   return (
     <div data-testid="hand" className="flex gap-x-4 items-center">
       {cards.map((card, index) => {
@@ -57,6 +72,7 @@ export default function Hand({
         }
 
         const isCardSelected = isSelected(card);
+        const isNotSoFastCard = card.name === "NOT SO FAST";
         const isCardOpacityDecreased =
           shouldDecreaseCardOpacity(isCardSelected);
 
@@ -67,11 +83,20 @@ export default function Hand({
             aria-disabled={isDisabled}
             aria-selected={isCardSelected}
             onClick={() => handleClick(card)}
+            onDoubleClick={() => handleDoubleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
-              isDisabled ? disabledClassName : "",
-              isCardSelected ? selectedCardClassName : "",
-              isCardOpacityDecreased ? "opacity-80" : "",
+              isActivateNSF
+                ? isNotSoFastCard // 1. Modo NSF activo
+                  ? selectedNSFClasName // 1.1 Es la carta NSF
+                  : disabledClassName // 1.2 No es la carta NSF
+                : isDisabled // 2. Modo NSF inactivo,
+                  ? disabledClassName
+                  : isCardSelected // 3. No NSF, no deshabilitada
+                    ? selectedCardClassName
+                    : isCardOpacityDecreased // 4. El resto
+                      ? "opacity-80"
+                      : "",
             )}
           >
             <Card name={card.name} description={card.description} />
