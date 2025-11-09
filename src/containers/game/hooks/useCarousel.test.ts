@@ -233,7 +233,10 @@ describe("useCarousel", () => {
       const { result, rerender } = renderHook(
         ({ items, itemsPerPage }) => useCarousel(items, itemsPerPage),
         {
-          initialProps: { items: ["a", "b", "c", "d", "e", "f"], itemsPerPage: 3 },
+          initialProps: {
+            items: ["a", "b", "c", "d", "e", "f"],
+            itemsPerPage: 3,
+          },
         },
       );
 

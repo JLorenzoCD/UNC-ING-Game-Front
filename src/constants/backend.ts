@@ -14,6 +14,9 @@ const BACKEND_ENDPOINTS = {
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
 
+  QUIT_MATCH: (matchId: UUID, playerId: UUID) =>
+    `/matches/${matchId}/quit?player_id=${playerId}`,
+
   START_MATCH: (matchId: UUID) => `/matches/${matchId}/start`,
 
   TAKE_CARDS: (matchId: UUID) => `/matches/${matchId}/cards/take`,
