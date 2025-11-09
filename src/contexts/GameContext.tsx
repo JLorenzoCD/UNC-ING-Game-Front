@@ -28,6 +28,7 @@ import type {
   EventCardEventPayload,
   EventNotSoFastPayload,
   EventCanceledPayload,
+  EventPendingResponsePayload,
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
@@ -59,6 +60,12 @@ export interface GameContextType {
     discardedCard: GameCard | null;
   };
   clearNotSoFastEvent: () => void;
+  pendingResponse: {
+    isPending: boolean;
+    eventId: UUID | null;
+    eventType: string | null;
+  };
+  clearPendingResponse: () => void;
 }
 
 const GameContext = createContext<GameContextType>({
@@ -87,6 +94,12 @@ const GameContext = createContext<GameContextType>({
     discardedCard: null,
   },
   clearNotSoFastEvent: () => undefined,
+  pendingResponse: {
+    isPending: false,
+    eventId: null,
+    eventType: null,
+  },
+  clearPendingResponse: () => undefined,
 });
 
 export interface GameContextProviderProps {
@@ -131,6 +144,16 @@ export default function GameContextProvider({
     resolvedAtUtc: null,
     toastId: null,
     discardedCard: null,
+  });
+
+  const [pendingResponse, setPendingResponse] = useState<{
+    isPending: boolean;
+    eventId: UUID | null;
+    eventType: string | null;
+  }>({
+    isPending: false,
+    eventId: null,
+    eventType: null,
   });
 
   const [match, setMatch] = useState<Match | null>(null);
@@ -207,6 +230,14 @@ export default function GameContextProvider({
       discardedCard: null,
     });
   }, [notSoFastEvent.toastId]);
+
+  const clearPendingResponse = useCallback(() => {
+    setPendingResponse({
+      isPending: false,
+      eventId: null,
+      eventType: null,
+    });
+  }, []);
 
   useEffect(() => {
     // Si el desafío NO está activo o no hay fecha límite, no hacemos nada.
@@ -323,6 +354,13 @@ export default function GameContextProvider({
       const hasNotSoFast = cards.some(
         (card) => card.player_id === player?.id && card.name === "NOT SO FAST",
       );
+      if (payload.discarded_card) {
+        if (payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON) {
+          handleRemoveCards([payload.discarded_card]);
+        } else {
+          handleEventCards([payload.discarded_card]);
+        }
+      }
 
       if (hasNotSoFast) {
         const eventType = payload.event_type;
@@ -352,9 +390,6 @@ export default function GameContextProvider({
           toastId: newToastId,
           discardedCard: payload.discarded_card,
         });
-        if (payload.discarded_card) {
-          handleEventCards([payload.discarded_card]);
-        }
       }
     };
 
@@ -429,6 +464,10 @@ export default function GameContextProvider({
 
       if (payload.updated_set) {
         handleUpdateSets(payload.updated_set);
+      }
+
+      if (payload.message) {
+        toast.success(payload.message);
       }
     };
 
@@ -551,50 +590,92 @@ export default function GameContextProvider({
       setResult(payload);
     };
 
+    const handlePendingResponse = (payload: EventPendingResponsePayload) => {
+      if (!player || !payload.players_ids.includes(player.id)) {
+        return;
+      }
+      if (payload.event_type === GAME_EVENTS.CARD_TRADE) {
+        toast.info("CARD TRADE: You must select a card to exchange.");
+        setPendingResponse({
+          isPending: true,
+          eventId: payload.event_id,
+          eventType: payload.event_type,
+        });
+      }
+    };
+
     const handleEventLog = (log: MatchLog) => {
       setLogs((currentLogs) => [...currentLogs, log]);
     };
 
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
       handleEventMatchCompleted,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
       handleCurrPlayerSelectItsSecret,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
       handleNotSoFastEvent,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
+    wsService.on(
+      BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
+      handlePendingResponse,
+    );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
 
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
         handleEventMatchCompleted,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
         handleCurrPlayerSelectItsSecret,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
         handleNotSoFastEvent,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
+        handlePendingResponse,
+      );
     };
   }, [matchId, wsService, isConnected, players, player, cards]);
 
@@ -620,6 +701,8 @@ export default function GameContextProvider({
       playerFinishActionTurn,
       notSoFastEvent,
       clearNotSoFastEvent,
+      pendingResponse,
+      clearPendingResponse,
     }),
     [
       match,
@@ -638,6 +721,8 @@ export default function GameContextProvider({
       playerFinishActionTurn,
       notSoFastEvent,
       clearNotSoFastEvent,
+      pendingResponse,
+      clearPendingResponse,
     ],
   );
 

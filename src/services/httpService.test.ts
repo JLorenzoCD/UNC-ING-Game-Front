@@ -887,4 +887,40 @@ describe("httpService", () => {
 
     expect(result).toEqual(expectedResponse);
   });
+
+  it("postCardTrade sends correct request and returns response", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse);
+
+    const result = await httpService.postCardTrade(
+      matchId,
+      playerId,
+      eventId,
+      cardId,
+    );
+
+    // Construir la URL y el body esperados
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("event_id", eventId);
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/card_trade?${expectedParams.toString()}`;
+    const expectedBody = {
+      target_card_id: cardId,
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
 });
