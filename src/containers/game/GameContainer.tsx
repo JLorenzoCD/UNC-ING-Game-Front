@@ -37,6 +37,7 @@ import {
   type EventStep,
 } from "@/constants/game";
 import { handleApiError } from "@/utils/errorHandler";
+import Logs from "./components/Logs";
 
 export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
@@ -52,6 +53,7 @@ export default function GameContainer() {
     cards,
     result,
     sets,
+    logs,
     hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
@@ -912,6 +914,8 @@ export default function GameContainer() {
         data-testid="game-container"
         className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
+        <Logs logs={logs} />
+
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">
           {/* Las primeras 6 casillas ubican a los jugadores, sus elementos y las pilas del juego. */}
