@@ -47,25 +47,35 @@ export default function Hand({
   const selectedNSFClasName =
     "rounded-lg ring-4 ring-blue-500 -translate-y-4 animate-pulse";
 
-  const shouldDecreaseCardOpacity = (isSelected: boolean) => {
-    if (isSelected || isDisabled || isActivateNSF) return false;
+  // Si estamos en un evento de seleccionar carta
+  const pendingResponseClassName =
+    "rounded-lg animate-pulse ring-4 ring-yellow-500";
 
+  const shouldDecreaseCardOpacity = (isSelected: boolean) => {
+    if (isSelected || isDisabled || isActivateNSF || isPendingResponse)
+      return false;
     return isSelecting;
   };
 
   const handleClick = (card: GameCard) => {
-    if (isDisabled) return;
+    if (isDisabled || isActivateNSF || isPendingResponse) return;
 
     onSelect(card);
   };
 
   const handleDoubleClick = (card: GameCard) => {
-    if (!isActivateNSF || card.name !== "NOT SO FAST" || !onDoubleClickCard) {
+    if (!onDoubleClickCard) return;
+
+    if (isActivateNSF) {
+      if (card.name === "NOT SO FAST") {
+        onDoubleClickCard(card);
+      }
       return;
     }
 
-    if (isActivateNSF || isPendingResponse) {
+    if (isPendingResponse) {
       onDoubleClickCard(card);
+      return;
     }
   };
 
@@ -85,24 +95,29 @@ export default function Hand({
           <div
             key={card.id}
             data-testid="hand-card"
-            aria-disabled={isDisabled}
+            aria-disabled={
+              isDisabled ||
+              (isActivateNSF && !isNotSoFastCard) ||
+              isPendingResponse
+            }
             aria-selected={isCardSelected}
             onClick={() => handleClick(card)}
             onDoubleClick={() => handleDoubleClick(card)}
             className={twMerge(
               "cursor-pointer hover:scale-105 transform transition-all duration-150",
-              isActivateNSF
-                ? isNotSoFastCard // 1. Modo NSF activo
-                  ? selectedNSFClasName // 1.1 Es la carta NSF
-                  : disabledClassName // 1.2 No es la carta NSF
-                : isDisabled // 2. Modo NSF inactivo,
-                  ? disabledClassName
-                  : isCardSelected // 3. No NSF, no deshabilitada
-                    ? selectedCardClassName
-                    : isCardOpacityDecreased // 4. El resto
-                      ? "opacity-80"
-                      : "",
-              isPendingResponse ? "animate-pulse ring-4 ring-yellow-500" : "",
+              isActivateNSF // 1. Prioridad: Evento NSF
+                ? isNotSoFastCard
+                  ? selectedNSFClasName // 1a. Carta NSF
+                  : disabledClassName // 1b. Otras cartas (deshabilitadas)
+                : isPendingResponse // 2. Prioridad: Evento Pendiente
+                  ? pendingResponseClassName // 2a. TODAS las cartas pulsando en amarillo
+                  : isDisabled // 3. Prioridad: Mano deshabilitada
+                    ? disabledClassName
+                    : isCardSelected // 4. Estado normal: Carta seleccionada
+                      ? selectedCardClassName
+                      : isCardOpacityDecreased // 5. Estado normal: Atenuado
+                        ? "opacity-80"
+                        : "",
             )}
           >
             <Card name={card.name} description={card.description} />

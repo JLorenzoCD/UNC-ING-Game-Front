@@ -155,7 +155,6 @@ export default function GameContainer() {
       return;
     }
     try {
-      // Asumo que tienes un endpoint 'postPlayNotSoFast'
       // que recibe el ID de la acción que está desafiando.
       await httpService.postPlayNotSoFast(
         match.id,
@@ -167,7 +166,7 @@ export default function GameContainer() {
 
       // Si tiene éxito, limpiamos el estado de desafío
       clearNotSoFastEvent();
-      clearSelectedCards(); // Limpiar selección por si acaso
+      clearSelectedCards();
       toast.success("¡NOT SO FAST played!");
     } catch (error) {
       console.error("Failed to play NOT SO FAST:", error);

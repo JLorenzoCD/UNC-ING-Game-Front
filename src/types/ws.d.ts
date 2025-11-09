@@ -49,6 +49,11 @@ export interface EventCardEventPayload {
    * Set actualizado en este evento (opcional)
    */
   updated_set?: MatchSet;
+
+  /**
+   * Mensaje de exito
+   */
+  message: string;
 }
 
 /** Payload del evento de creación/actualización de set */

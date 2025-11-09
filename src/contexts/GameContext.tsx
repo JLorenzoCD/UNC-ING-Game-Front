@@ -459,6 +459,10 @@ export default function GameContextProvider({
       if (payload.updated_set) {
         handleUpdateSets(payload.updated_set);
       }
+
+      if (payload.message) {
+        toast.success(payload.message);
+      }
     };
 
     const handleUpdateSets = (set: MatchSet & { deleted_cards?: UUID[] }) => {
