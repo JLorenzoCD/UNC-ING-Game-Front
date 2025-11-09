@@ -144,7 +144,7 @@ export default function GameContainer() {
       toast.success("Waiting for the other player to select one.");
       clearPendingResponse();
     } catch (error) {
-      handleApiError(error, "Error al responder al evento");
+      handleApiError(error, "Error responding to the event");
     }
   };
 
@@ -933,7 +933,7 @@ export default function GameContainer() {
 
       case GAME_EVENTS.CARD_TRADE: {
         if (!selectedTargetPlayer) {
-          console.warn("Jugador no seleccionado");
+          toast.error("Player not selected");
         }
         eventPayload = {
           target_player_id: selectedTargetPlayer?.id,
