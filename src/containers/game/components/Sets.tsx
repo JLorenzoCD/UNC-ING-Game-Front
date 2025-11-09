@@ -3,8 +3,8 @@ import Set from "./Set";
 import type { MatchSet } from "@/types/set";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
-import { useMemo, useState } from "react";
 import { RiArrowLeftSLine, RiArrowRightSLine } from "@remixicon/react";
+import { useCarousel } from "../hooks/useCarousel";
 
 const MAX_SETS_DISPLAYED = 3;
 
@@ -23,38 +23,13 @@ export default function Sets({
   isTargetSet,
   target,
 }: Props) {
-  const [page, setPage] = useState<number>(0);
-
-  const startIndex = page * MAX_SETS_DISPLAYED;
-  const endIndex = startIndex + MAX_SETS_DISPLAYED;
-
-  const displayedSets: Array<MatchSet | null> = useMemo(() => {
-    let slicedSets = sets.slice(startIndex, endIndex);
-
-    if (slicedSets.length < MAX_SETS_DISPLAYED) {
-      slicedSets = [
-        ...slicedSets,
-        ...Array(MAX_SETS_DISPLAYED - slicedSets.length).fill(null),
-      ];
-    }
-
-    return slicedSets;
-  }, [sets, startIndex, endIndex]);
-
-  const canGoPrevPage = page > 0;
-  const canGoNextPage = endIndex < sets.length;
-
-  const handlePrevPage = () => {
-    if (canGoPrevPage) {
-      setPage(page - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (canGoNextPage) {
-      setPage(page + 1);
-    }
-  };
+  const {
+    canGoNextPage,
+    canGoPrevPage,
+    displayedItems,
+    handleNextPage,
+    handlePrevPage,
+  } = useCarousel<MatchSet>(sets, MAX_SETS_DISPLAYED);
 
   if (sets.length === 0) {
     return null;
@@ -75,7 +50,7 @@ export default function Sets({
       </button>
 
       <div className="flex gap-x-2 justify-center items-center">
-        {displayedSets.map((set) => {
+        {displayedItems.map((set) => {
           return (
             <Set
               key={set ? set.id : crypto.randomUUID()}
