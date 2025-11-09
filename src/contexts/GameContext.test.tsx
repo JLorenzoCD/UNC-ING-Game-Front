@@ -543,6 +543,7 @@ describe("GameContext", () => {
         secrets: [],
         players: [],
         sets: [],
+        logs: [],
         isLoading: true,
         hasError: false,
         error: null,

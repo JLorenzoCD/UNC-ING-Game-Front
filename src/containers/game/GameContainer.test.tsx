@@ -483,6 +483,7 @@ describe("GameContainer", () => {
 
     vi.mocked(useGame).mockReturnValue({
       sets: [],
+      logs: [],
       secrets: [],
       cards: mockCards,
       match: mockMatch,
@@ -682,6 +683,7 @@ describe("GameContainer", () => {
           discardedCard: null,
         },
         clearNotSoFastEvent: vi.fn(),
+        logs: [],
       });
 
       render(<GameContainer />);
@@ -724,6 +726,7 @@ describe("GameContainer", () => {
           discardedCard: null,
         },
         clearNotSoFastEvent: vi.fn(),
+        logs: [],
       });
 
       mockPutDiscardCards.mockResolvedValue(undefined);
@@ -878,6 +881,7 @@ describe("GameContainer", () => {
           discardedCard: null,
         },
         clearNotSoFastEvent: vi.fn(),
+        logs: [],
       });
 
       render(<GameContainer />);
