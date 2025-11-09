@@ -1,4 +1,5 @@
 import { useGame } from "@/contexts/GameContext";
+import { GAME_EVENTS } from "@/constants/game";
 
 import Button from "@/components/Button";
 
@@ -96,7 +97,11 @@ export default function HandActions({
           <Button
             onClick={onSelectPlayer}
             disabled={
-              isDisabled || !isSelectionPlayerEvent || hasFinishedAction
+              (isDisabled && !pendingResponse.isPending) ||
+              (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
+              (hasFinishedAction && !pendingResponse.isPending) ||
+              (pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE)
             }
           >
             {canSelectMeAsPlayer ? "Select me" : "Select player"}
