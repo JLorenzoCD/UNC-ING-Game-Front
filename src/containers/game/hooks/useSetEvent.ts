@@ -199,10 +199,13 @@ export function useSetEvent() {
       try {
         const dataBody = cardsToSetUpdateData(
           setEvent.cards[0],
-          setEvent.set,
           setEvent.set.player_id,
         );
-        await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+        await httpService?.addDetectiveCardToSetAndPlay(
+          matchId,
+          setEvent.set.id,
+          dataBody,
+        );
 
         setSetEvent({
           ...defaultStateSetEvent,
@@ -355,10 +358,13 @@ export function useSetEvent() {
 
           const dataBody = cardsToSetUpdateData(
             setEvent.cards[0],
-            setEvent.set,
             setEvent.target.player_id,
           );
-          await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+          await httpService?.addDetectiveCardToSetAndPlay(
+            matchId,
+            setEvent.set.id,
+            dataBody,
+          );
         }
 
         setSetEvent({
@@ -403,11 +409,14 @@ export function useSetEvent() {
 
           const dataBody = cardsToSetUpdateData(
             setEvent.cards[0],
-            setEvent.set,
             setEvent.target.player_id as UUID,
             setEvent.target.id,
           );
-          await httpService?.addDetectiveCardToSetAndPlay(matchId, dataBody);
+          await httpService?.addDetectiveCardToSetAndPlay(
+            matchId,
+            setEvent.set.id,
+            dataBody,
+          );
         }
 
         setSetEvent({ ...defaultStateSetEvent });
