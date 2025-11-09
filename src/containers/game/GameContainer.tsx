@@ -390,7 +390,7 @@ export default function GameContainer() {
       pendingResponse.isPending &&
       pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
     ) {
-      return true;
+      return checkPlayer.id !== player?.id;
     }
 
     // Se deben de poner todos los posibles eventos validos
@@ -554,6 +554,7 @@ export default function GameContainer() {
       GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
       GAME_EVENTS.CARD_TRADE,
+      GAME_EVENTS.POINT_YOUR_SUSPICIONS,
     ];
     if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
       return false;
@@ -1004,6 +1005,9 @@ export default function GameContainer() {
       }
 
       case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
+        eventPayload = {
+          cards_ids: [],
+        } as RegularAndDiscardEventPayload;
         break;
       }
       default:
@@ -1073,7 +1077,12 @@ export default function GameContainer() {
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
             isSelectableSet={isSelectableSet}
-            isEvent={isSetEvent || currentEventCard !== null}
+            isEvent={
+              isSetEvent ||
+              currentEventCard !== null ||
+              (pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS)
+            }
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
             isTargetSet={
@@ -1109,7 +1118,10 @@ export default function GameContainer() {
               isDisabled={!isPlayerTurn}
               isActivateNSF={notSoFastEvent.isActivate}
               onDoubleClickCard={handleCardDoubleClick}
-              isPendingResponse={pendingResponse.isPending}
+              isPendingResponse={
+                pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE
+              }
             />
 
             <HandActions
@@ -1121,11 +1133,7 @@ export default function GameContainer() {
               onSelectSecret={handleSelectedSecret}
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
-              isDisabled={
-                !isPlayerTurn ||
-                notSoFastEvent.isActivate ||
-                pendingResponse.isPending
-              }
+              isDisabled={!isPlayerTurn || notSoFastEvent.isActivate}
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&

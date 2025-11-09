@@ -37,8 +37,12 @@ export default function HandActions({
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
-  const { hasFinishedAction, playerSelectsOneOfHisSecrets, notSoFastEvent } =
-    useGame();
+  const {
+    hasFinishedAction,
+    playerSelectsOneOfHisSecrets,
+    notSoFastEvent,
+    pendingResponse,
+  } = useGame();
   const shouldDisableOption =
     isDisabled ||
     isSelectionPlayerEvent ||
@@ -104,7 +108,8 @@ export default function HandActions({
         disabled={
           shouldDisableOption ||
           playerSelectsOneOfHisSecrets.isSelecting ||
-          notSoFastEvent.isActivate
+          notSoFastEvent.isActivate ||
+          pendingResponse.isPending
         }
       >
         Finish turn
