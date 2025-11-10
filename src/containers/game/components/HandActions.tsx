@@ -59,7 +59,12 @@ export default function HandActions({
         <div className="flex flex-col gap-y-2">
           <Button
             onClick={onDiscard}
-            disabled={shouldDisableOption || hasFinishedAction}
+            disabled={
+              shouldDisableOption ||
+              hasFinishedAction ||
+              notSoFastEvent.isActivate ||
+              pendingResponse.isPending
+            }
           >
             Discard cards
           </Button>

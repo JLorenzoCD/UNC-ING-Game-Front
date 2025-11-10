@@ -98,6 +98,7 @@ describe("HandActions", () => {
         discardedCard: null,
       },
       clearNotSoFastEvent: vi.fn(),
+      pendingResponse: { isPending: false, eventType: null },
     });
   });
 
@@ -273,6 +274,7 @@ describe("HandActions", () => {
           isCurrPlayer: false,
         },
         notSoFastEvent: { isActivate: false },
+        pendingResponse: { isPending: false, eventType: null },
       });
 
       render(<HandActions {...baseProps} />);
@@ -292,6 +294,7 @@ describe("HandActions", () => {
           isSelecting: true,
           isCurrPlayer: false,
         },
+        pendingResponse: { isPending: false, eventType: null },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent />);
@@ -311,6 +314,7 @@ describe("HandActions", () => {
           isCurrPlayer: true,
         },
         notSoFastEvent: { isActivate: false },
+        pendingResponse: { isPending: false, eventType: null },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
