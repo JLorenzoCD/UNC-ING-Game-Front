@@ -335,6 +335,28 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const postPointYourSuspicions = async (
+    matchId: UUID,
+    playerId: UUID,
+    eventId: UUID,
+    targetPlayerId: UUID,
+  ) => {
+    const baseUrl = BACKEND_ENDPOINTS.POINT_YOUR_SUSPICIONS(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("event_id", eventId);
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        target_player_id: targetPlayerId,
+      }),
+    };
+    return request(urlWithParams, options);
+  };
+
   return {
     request,
     createPlayer,
@@ -360,5 +382,6 @@ export function createHttpService() {
     playStolenSet,
     postPlayNotSoFast,
     postCardTrade,
+    postPointYourSuspicions,
   };
 }

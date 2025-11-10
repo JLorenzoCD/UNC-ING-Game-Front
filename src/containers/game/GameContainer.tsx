@@ -216,6 +216,15 @@ export default function GameContainer() {
     }
 
     if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS &&
+      "avatar" in target
+    ) {
+      setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE &&
       "avatar" in target
     ) {
@@ -257,6 +266,38 @@ export default function GameContainer() {
         toast.error("You must select a player first.");
       }
       return; // Importante: Salir después de manejar el evento de carta
+    }
+
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    ) {
+      if (
+        !selectedTargetPlayer ||
+        !httpService ||
+        !player ||
+        !match ||
+        !pendingResponse.eventId
+      ) {
+        toast.error("You must select a player first.");
+        return;
+      }
+
+      try {
+        await httpService.postPointYourSuspicions(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          selectedTargetPlayer.id,
+        );
+
+        toast.success("Your suspicion has been recorded.");
+        clearPendingResponse();
+        setSelectedTargetPlayer(null);
+      } catch (error) {
+        handleApiError(error, "Error registering suspicion");
+      }
+      return;
     }
 
     if (setEvent.isInEvent) {
@@ -356,6 +397,13 @@ export default function GameContainer() {
       return true;
     }
 
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    ) {
+      return checkPlayer.id !== player?.id;
+    }
+
     // Se deben de poner todos los posibles eventos validos
     if (setEvent.isInEvent) return isPlayerSelectableForSetEvent(checkPlayer);
 
@@ -401,6 +449,12 @@ export default function GameContainer() {
 
     if (setEvent.isTargetPlayer) return true;
     // Other events
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    ) {
+      return true;
+    }
     if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
       (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
@@ -524,6 +578,7 @@ export default function GameContainer() {
       GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
       GAME_EVENTS.CARD_TRADE,
+      GAME_EVENTS.POINT_YOUR_SUSPICIONS,
     ];
     if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
       return false;
@@ -865,6 +920,12 @@ export default function GameContainer() {
         setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         break;
       }
+
+      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
+        setCurrentEventCard(cardEvent);
+        handleEndEvent(cardEvent);
+        break;
+      }
     }
   };
 
@@ -978,6 +1039,12 @@ export default function GameContainer() {
         break;
       }
 
+      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
+        eventPayload = {
+          cards_ids: [],
+        } as RegularAndDiscardEventPayload;
+        break;
+      }
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
         return;
@@ -1068,7 +1135,9 @@ export default function GameContainer() {
             isEvent={
               setEvent.isInEvent ||
               currentEventCard !== null ||
-              setEvent.isSelectingSet
+              setEvent.isSelectingSet ||
+              (pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS)
             }
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
@@ -1113,7 +1182,10 @@ export default function GameContainer() {
               isDisabled={!isPlayerTurn}
               isActivateNSF={notSoFastEvent.isActivate}
               onDoubleClickCard={handleCardDoubleClick}
-              isPendingResponse={pendingResponse.isPending}
+              isPendingResponse={
+                pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE
+              }
             />
 
             <HandActions
@@ -1126,11 +1198,7 @@ export default function GameContainer() {
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
               onAddDetectiveCardToSet={handleAddDetectiveCardToSet}
-              isDisabled={
-                !isPlayerTurn ||
-                notSoFastEvent.isActivate ||
-                pendingResponse.isPending
-              }
+              isDisabled={!isPlayerTurn || notSoFastEvent.isActivate}
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&

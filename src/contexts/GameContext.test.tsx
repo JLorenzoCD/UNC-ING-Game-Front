@@ -1184,5 +1184,34 @@ describe("GameContext", () => {
       expect(result.current.pendingResponse.isPending).toBe(false);
       expect(result.current.pendingResponse.eventId).toBe(null);
     });
+
+    it("handlePendingResponse: should activate for POINT_YOUR_SUSPICIONS", async () => {
+      // 1. Configurar el mock de jugador y el payload
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(
+        mockSocketsEvents.PENDING_RESPONSE, //
+      );
+
+      const pysPayload: EventPendingResponsePayload = {
+        event_type: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
+        event_id: crypto.randomUUID(),
+        players_ids: [mockPlayerOne.id, mockPlayerTwo.id], //
+      };
+
+      // 2. Ejecutar el handler
+      await act(() => handler(pysPayload));
+
+      // 3. Verificar que el estado se activó
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventId).toBe(pysPayload.event_id);
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.POINT_YOUR_SUSPICIONS,
+      );
+
+      // 4. Verificar que se mostró el toast correcto
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "POINT YOUR SUSPICIONS: Indicate who you suspect.", //
+      );
+    });
   });
 });

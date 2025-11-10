@@ -1,4 +1,5 @@
 import { useGame } from "@/contexts/GameContext";
+import { GAME_EVENTS } from "@/constants/game";
 
 import Button from "@/components/Button";
 
@@ -43,8 +44,12 @@ export default function HandActions({
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
-  const { hasFinishedAction, playerSelectsOneOfHisSecrets, notSoFastEvent } =
-    useGame();
+  const {
+    hasFinishedAction,
+    playerSelectsOneOfHisSecrets,
+    notSoFastEvent,
+    pendingResponse,
+  } = useGame();
   const shouldDisableOption =
     isDisabled ||
     isSelectionPlayerEvent ||
@@ -61,7 +66,12 @@ export default function HandActions({
         <div className="flex flex-col gap-y-2">
           <Button
             onClick={onDiscard}
-            disabled={shouldDisableOption || hasFinishedAction}
+            disabled={
+              shouldDisableOption ||
+              hasFinishedAction ||
+              notSoFastEvent.isActivate ||
+              pendingResponse.isPending
+            }
           >
             Discard cards
           </Button>
@@ -111,9 +121,11 @@ export default function HandActions({
           <Button
             onClick={onSelectPlayer}
             disabled={
-              isDisabled ||
-              !isSelectionPlayerEvent ||
-              hasFinishedAction ||
+              (isDisabled && !pendingResponse.isPending) ||
+              (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
+              (hasFinishedAction && !pendingResponse.isPending) ||
+              (pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE) ||
               notSoFastEvent.isActivate
             }
           >
