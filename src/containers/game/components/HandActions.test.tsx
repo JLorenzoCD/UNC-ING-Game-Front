@@ -293,6 +293,7 @@ describe("HandActions", () => {
           isSelecting: true,
           isCurrPlayer: false,
         },
+        notSoFastEvent: { isActivate: false },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent />);
