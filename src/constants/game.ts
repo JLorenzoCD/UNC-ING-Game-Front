@@ -13,6 +13,7 @@ export const GAME_EVENTS: Record<string, CardName> = {
   EARLY_TRAIN_TO_PADDINGTON: "EARLY TRAIN TO PADDINGTON",
   CARD_TRADE: "CARD TRADE",
   POINT_YOUR_SUSPICIONS: "POINT YOUR SUSPICIONS",
+  DEAD_CARD_FOLLY: "DEAD CARD FOLLY",
 } as const;
 
 /**
@@ -22,6 +23,7 @@ export const EVENT_STEPS = {
   SELECT_SECRET: "select_secret",
   SELECT_PLAYER: "select_player",
   SELECT_SET: "select_set",
+  SELECT_DIRECTION: "select_direction",
 } as const;
 
 export type EventStep = (typeof EVENT_STEPS)[keyof typeof EVENT_STEPS] | null;

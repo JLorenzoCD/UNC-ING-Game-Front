@@ -16,6 +16,7 @@ import type {
   CardsOffTheTableEventPayload,
   AnotherVictimEventPayload,
   CardTradeEventPayload,
+  DeadCardFollyEventPayload,
 } from "@/types/event";
 import type { EventPayload } from "@/types/event";
 import Hand from "./components/Hand";
@@ -122,6 +123,9 @@ export default function GameContainer() {
   } = useSetEvent();
 
   // -- Utilidades --
+  const handleSelectDirection = (direction: "LEFT" | "RIGHT") => {
+    handleEndEvent(undefined, direction);
+  };
   const handlePendingResponseSelectCard = async (card: GameCard) => {
     if (
       !pendingResponse.isPending ||
@@ -555,6 +559,7 @@ export default function GameContainer() {
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
       GAME_EVENTS.CARD_TRADE,
       GAME_EVENTS.POINT_YOUR_SUSPICIONS,
+      GAME_EVENTS.DEAD_CARD_FOLLY,
     ];
     if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
       return false;
@@ -888,10 +893,19 @@ export default function GameContainer() {
         handleEndEvent(cardEvent);
         break;
       }
+
+      case GAME_EVENTS.DEAD_CARD_FOLLY: {
+        setCurrentEventCard(cardEvent);
+        setCurrentEventStep(EVENT_STEPS.SELECT_DIRECTION);
+        break;
+      }
     }
   };
 
-  const handleEndEvent = async (eventCard?: GameCard) => {
+  const handleEndEvent = async (
+    eventCard?: GameCard,
+    direction?: "LEFT" | "RIGHT",
+  ) => {
     const cardToUse = currentEventCard || eventCard;
     if (!httpService || !player || !match || !cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
@@ -1010,6 +1024,19 @@ export default function GameContainer() {
         } as RegularAndDiscardEventPayload;
         break;
       }
+
+      case GAME_EVENTS.DEAD_CARD_FOLLY: {
+        if (!direction) {
+          toast.error("You must select a direction first.");
+          return;
+        }
+        eventPayload = {
+          direction: direction,
+        } as DeadCardFollyEventPayload;
+        setCurrentEventStep(null);
+        break;
+      }
+
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
         return;
@@ -1043,6 +1070,10 @@ export default function GameContainer() {
   const isSelectPlayerButtonEnabled = isTargetPlayerEvent();
 
   const isSelectSecretButtonEnabled = isTargetSecretEvent();
+
+  const isSelectDirectionEvent =
+    currentEventCard?.name === GAME_EVENTS.DEAD_CARD_FOLLY &&
+    currentEventStep === EVENT_STEPS.SELECT_DIRECTION;
 
   return (
     <>
@@ -1133,7 +1164,10 @@ export default function GameContainer() {
               onSelectSecret={handleSelectedSecret}
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
-              isDisabled={!isPlayerTurn || notSoFastEvent.isActivate}
+              isDisabled={
+                !isPlayerTurn ||
+                (notSoFastEvent.isActivate && !isSelectDirectionEvent)
+              }
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
@@ -1142,6 +1176,8 @@ export default function GameContainer() {
               isSetButtonDisabled={isSetEventButtonDisabled}
               isSelectionPlayerEvent={isSelectPlayerButtonEnabled}
               isSelectionSecretEvent={isSelectSecretButtonEnabled}
+              isSelectDirectionEvent={isSelectDirectionEvent}
+              onSelectDirection={handleSelectDirection}
             />
           </div>
         </div>

@@ -10,7 +10,8 @@ interface HandActionsProps {
   onSelectPlayer: () => void; // Callback que se ejecuta al clickear el botón seleccionar un jugador
   onSelectSecret: () => void; // Callback que se ejecuta al clickear el botón seleccionar un secreto
   onPlayEvent: () => void; // Callback que se ejecuta al clickear el boton de jugar evento
-  onSelectSet: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
+  onSelectSet: () => void; // Callback que se ejecuta al clickear el boton de seleccionar set
+  onSelectDirection: (direction: "LEFT" | "RIGHT") => void; // Callback que se ejecuta al clickear una direccion
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
@@ -18,6 +19,7 @@ interface HandActionsProps {
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
   isSelectionSetEvent: boolean; // Indica si el boton para seleccionar un set esta habilitado
   canSelectMeAsPlayer: boolean; // Indica si el jugador puede seleccionarse a si mismo.
+  isSelectDirectionEvent: boolean; // Indica si el jugador debe elegir una direccion
 }
 
 export default function HandActions({
@@ -28,6 +30,7 @@ export default function HandActions({
   onSelectSecret,
   onPlayEvent,
   onSelectSet,
+  onSelectDirection,
   isDisabled,
   isSetButtonDisabled,
   isSelectionPlayerEvent,
@@ -35,6 +38,7 @@ export default function HandActions({
   isSelectionSetEvent,
   isDisabledEvent,
   canSelectMeAsPlayer,
+  isSelectDirectionEvent,
 }: HandActionsProps) {
   // Mientras se esta jugando un evento,
   // no se puede ni descartar o terminar turno.
@@ -57,17 +61,25 @@ export default function HandActions({
     >
       <div className="flex flex-row gap-x-2">
         <div className="flex flex-col gap-y-2">
-          <Button
-            onClick={onDiscard}
-            disabled={
-              shouldDisableOption ||
-              hasFinishedAction ||
-              notSoFastEvent.isActivate ||
-              pendingResponse.isPending
-            }
-          >
-            Discard cards
-          </Button>
+          {isSelectDirectionEvent ? (
+            <Button
+              onClick={() => onSelectDirection && onSelectDirection("LEFT")}
+            >
+              Left
+            </Button>
+          ) : (
+            <Button
+              onClick={onDiscard}
+              disabled={
+                shouldDisableOption ||
+                hasFinishedAction ||
+                notSoFastEvent.isActivate ||
+                pendingResponse.isPending
+              }
+            >
+              Discard cards
+            </Button>
+          )}
 
           <Button
             onClick={onPlaySet}
@@ -82,12 +94,20 @@ export default function HandActions({
         </div>
 
         <div className="flex flex-col gap-y-2">
-          <Button
-            onClick={onSelectSet}
-            disabled={isDisabled || !isSelectionSetEvent}
-          >
-            Select set
-          </Button>
+          {isSelectDirectionEvent ? (
+            <Button
+              onClick={() => onSelectDirection && onSelectDirection("RIGHT")}
+            >
+              Right
+            </Button>
+          ) : (
+            <Button
+              onClick={onSelectSet}
+              disabled={isDisabled || !isSelectionSetEvent}
+            >
+              Select set
+            </Button>
+          )}
 
           <Button
             onClick={onSelectSecret}
