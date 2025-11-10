@@ -5,6 +5,7 @@ import type { MatchSecret } from "./secret";
 import type { MatchSet } from "./set";
 import type { Player } from "./player";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
+import type { MatchLog } from "./log";
 
 type MatchCompletedReason = "deck_finished" | "murderer_revealed";
 
@@ -49,6 +50,11 @@ export interface EventCardEventPayload {
    * Set actualizado en este evento (opcional)
    */
   updated_set?: MatchSet;
+
+  /**
+   * Mensaje de exito
+   */
+  message: string;
 }
 
 /** Payload del evento de creación/actualización de set */
@@ -150,6 +156,26 @@ export interface EventCanceledPayload {
    */
   discarded_card: GameCard | null;
 }
+
+export interface EventPendingResponsePayload {
+  /**
+   * La el nombre del evento.
+   */
+  event_type: string;
+
+  /**
+   * La id del evento.
+   */
+  event_id: UUID;
+
+  /**
+   * Las id de los jugadores a seleccionar carta o jugador.
+   */
+  players_ids: UUID[];
+}
+
+type EventLogPayload = MatchLog;
+
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -167,6 +193,8 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED]: EventMatchCompletedPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
+  [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
+  [BACKEND_SOCKETS_EVENTS.LOG]: EventLogPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

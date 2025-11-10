@@ -10,6 +10,7 @@ import type {
   MatchWithPlayerCount,
 } from "@/types/match";
 import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
+import type { MatchLog } from "@/types/log";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -131,6 +132,10 @@ export function createHttpService() {
 
   const getMatchSets = async (matchId: UUID) => {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
+  };
+
+  const getMatchLogs = async (matchId: UUID): Promise<MatchLog[]> => {
+    return request<MatchLog[]>(BACKEND_ENDPOINTS.GET_MATCH_LOGS(matchId));
   };
 
   const putTakeCards = async (
@@ -265,6 +270,29 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const postCardTrade = async (
+    matchId: UUID,
+    playerId: UUID,
+    eventId: UUID,
+    cardId: UUID,
+  ) => {
+    const baseUrl = BACKEND_ENDPOINTS.CARD_TRADE(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("event_id", eventId);
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        target_card_id: cardId,
+      }),
+    };
+    return request(urlWithParams, options);
+  };
+
   return {
     request,
     createPlayer,
@@ -277,6 +305,7 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
+    getMatchLogs,
     putTakeCards,
     putDiscardCards,
     putPassTurn,
@@ -285,5 +314,6 @@ export function createHttpService() {
     createAndPlaySet,
     addDetectiveCardToSetAndPlay,
     postPlayNotSoFast,
+    postCardTrade,
   };
 }

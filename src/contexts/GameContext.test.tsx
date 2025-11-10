@@ -10,7 +10,12 @@ import {
 
 import GameContextProvider, { useGame } from "./GameContext";
 
-import type { EventNotSoFastPayload } from "@/types/ws";
+import type {
+  EventNotSoFastPayload,
+  EventPendingResponsePayload,
+} from "@/types/ws";
+
+import { GAME_EVENTS } from "@/constants/game";
 
 import type { UUID } from "@/types/common";
 import type { Match } from "@/types/match";
@@ -49,6 +54,7 @@ const {
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
     getMatchSets: vi.fn(),
+    getMatchLogs: vi.fn(),
   };
   const mockUseHttpService = vi.fn((): any => ({
     httpService: mockHttpService,
@@ -155,6 +161,7 @@ const {
     PLAYER_SECRET_REVEAL: "player_secret_reveal_WS_event",
     CANCELLATION_WINDOW_OPEN: "cancellation_window_WS_open",
     CANCELED: "event_WS_cancelled",
+    PENDING_RESPONSE: "pending_WS_target_response",
   };
 
   const mockUseParams = vi.fn((): any => ({
@@ -554,6 +561,7 @@ describe("GameContext", () => {
         secrets: [],
         players: [],
         sets: [],
+        logs: [],
         isLoading: true,
         hasError: false,
         error: null,
@@ -573,6 +581,12 @@ describe("GameContext", () => {
           discardedCard: null,
         },
         clearNotSoFastEvent: expect.any(Function),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: expect.any(Function),
       });
     });
   });
@@ -1097,6 +1111,78 @@ describe("GameContext", () => {
       // El toast de "tiempo acabado" NO debe llamarse
       expect(mainToastFunction).not.toHaveBeenCalled();
       vi.useRealTimers();
+    });
+  });
+
+  describe("WebSocket Handlers - PENDING_RESPONSE", () => {
+    let pendingPayload: EventPendingResponsePayload;
+
+    beforeEach(() => {
+      // Un payload de ejemplo donde ambos jugadores deben responder
+      pendingPayload = {
+        event_type: GAME_EVENTS.CARD_TRADE, //
+        event_id: crypto.randomUUID(),
+        players_ids: [mockPlayerOne.id, mockPlayerTwo.id], //
+      };
+
+      // Limpiamos los mocks de toast
+      mockToastInfo.mockClear();
+    });
+
+    it("handlePendingResponse: should activate if player is in the players_ids list", async () => {
+      // El jugador actual (mockPlayerOne) ESTÁ en la lista
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(pendingPayload));
+
+      // Verificar que el estado se activó
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventId).toBe(
+        pendingPayload.event_id,
+      );
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.CARD_TRADE,
+      );
+      // Verificar que se mostró el toast
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "CARD TRADE: You must select a card to exchange.",
+      );
+    });
+
+    it("handlePendingResponse: should NOT activate if player is NOT in the list", async () => {
+      // El jugador actual (mockPlayerOne) NO ESTÁ en esta lista
+      const otherPayload = {
+        ...pendingPayload,
+        players_ids: [mockPlayerTwo.id, crypto.randomUUID()],
+      };
+
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(otherPayload));
+
+      // Verificar que el estado NO cambió
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(mockToastInfo).not.toHaveBeenCalled();
+    });
+
+    it("clearPendingResponse: should reset the pending state", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      // 1. Activar el estado
+      await act(() => handler(pendingPayload));
+      expect(result.current.pendingResponse.isPending).toBe(true);
+
+      // 2. Limpiar el estado
+      act(() => {
+        result.current.clearPendingResponse(); //
+      });
+
+      // 3. Verificar que se reseteó
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(result.current.pendingResponse.eventId).toBe(null);
     });
   });
 });

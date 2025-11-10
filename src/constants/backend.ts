@@ -10,6 +10,7 @@ const BACKEND_ENDPOINTS = {
   GET_MATCH_SECRETS: (matchId: UUID) => `/matches/${matchId}/secrets`,
   GET_MATCH_PLAYERS: (matchId: UUID) => `/matches/${matchId}/players`,
   GET_MATCH_SETS: (matchId: UUID) => `/matches/${matchId}/sets`,
+  GET_MATCH_LOGS: (matchId: UUID) => `/matches/${matchId}/logs`,
 
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
@@ -32,6 +33,8 @@ const BACKEND_ENDPOINTS = {
     `/matches/${matchId}/secrets/${secretId}`,
 
   PLAY_NOT_SO_FAST: (matchId: UUID) => `/matches/${matchId}/not_so_fast`,
+
+  CARD_TRADE: (matchId: UUID) => `/matches/${matchId}/card_trade`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
@@ -46,6 +49,8 @@ const BACKEND_SOCKETS_EVENTS = {
   MATCH_COMPLETED: "match_completed",
   CANCELLATION_WINDOW_OPEN: "cancellation_window_open",
   CANCELED: "event_cancelled",
+  PENDING_RESPONSE: "pending_target_response",
+  LOG: "new_log",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };

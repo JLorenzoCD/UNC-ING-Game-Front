@@ -15,6 +15,7 @@ import type {
   AndThenThereWasOneMoreEventPayload,
   CardsOffTheTableEventPayload,
   AnotherVictimEventPayload,
+  CardTradeEventPayload,
 } from "@/types/event";
 import type { EventPayload } from "@/types/event";
 import Hand from "./components/Hand";
@@ -37,6 +38,7 @@ import {
   type EventStep,
 } from "@/constants/game";
 import { handleApiError } from "@/utils/errorHandler";
+import Logs from "./components/Logs";
 
 export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
@@ -52,11 +54,14 @@ export default function GameContainer() {
     cards,
     result,
     sets,
+    logs,
     hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
     notSoFastEvent,
     clearNotSoFastEvent,
+    pendingResponse,
+    clearPendingResponse,
   } = useGame();
 
   const {
@@ -121,6 +126,32 @@ export default function GameContainer() {
   } = useSetEvent();
 
   // -- Utilidades --
+  const handlePendingResponseSelectCard = async (card: GameCard) => {
+    if (
+      !pendingResponse.isPending ||
+      !pendingResponse.eventId ||
+      !httpService ||
+      !player ||
+      !match
+    ) {
+      return;
+    }
+
+    try {
+      await httpService.postCardTrade(
+        match.id,
+        player.id,
+        pendingResponse.eventId,
+        card.id,
+      );
+
+      toast.success("Waiting for the other player to select one.");
+      clearPendingResponse();
+    } catch (error) {
+      handleApiError(error, "Error responding to the event");
+    }
+  };
+
   const handlePlayNotSoFast = async (card: GameCard) => {
     if (!notSoFastEvent.isActivate) return;
     if (card.name !== "NOT SO FAST") return;
@@ -128,7 +159,6 @@ export default function GameContainer() {
       return;
     }
     try {
-      // Asumo que tienes un endpoint 'postPlayNotSoFast'
       // que recibe el ID de la acción que está desafiando.
       await httpService.postPlayNotSoFast(
         match.id,
@@ -140,11 +170,19 @@ export default function GameContainer() {
 
       // Si tiene éxito, limpiamos el estado de desafío
       clearNotSoFastEvent();
-      clearSelectedCards(); // Limpiar selección por si acaso
+      clearSelectedCards();
       toast.success("¡NOT SO FAST played!");
     } catch (error) {
       console.error("Failed to play NOT SO FAST:", error);
       toast.error("Failed to play NOT SO FAST.");
+    }
+  };
+
+  const handleCardDoubleClick = async (card: GameCard) => {
+    if (notSoFastEvent.isActivate) {
+      await handlePlayNotSoFast(card);
+    } else if (pendingResponse.isPending) {
+      await handlePendingResponseSelectCard(card);
     }
   };
 
@@ -182,6 +220,15 @@ export default function GameContainer() {
     }
 
     if (
+      currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
+      "avatar" in target
+    ) {
+      setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    if (
       currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
       "quin_play" in target
     ) {
@@ -196,7 +243,8 @@ export default function GameContainer() {
 
   const handleSelectedPlayer = async () => {
     if (
-      currentEventCard?.name === "CARDS OFF THE TABLE" &&
+      (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+        currentEventCard?.name === GAME_EVENTS.CARD_TRADE) &&
       currentEventStep === "select_player"
     ) {
       if (selectedTargetPlayer) {
@@ -289,7 +337,11 @@ export default function GameContainer() {
 
   const isSelectablePlayer = (checkPlayer: GamePlayer) => {
     //* Validacion por eventos
-    if (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE) {
+    if (
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+    ) {
       return checkPlayer.id !== player?.id;
     }
 
@@ -346,6 +398,8 @@ export default function GameContainer() {
     if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
       (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
+      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
         currentEventStep === EVENT_STEPS.SELECT_PLAYER)
     ) {
       return true;
@@ -461,6 +515,7 @@ export default function GameContainer() {
       GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE,
       GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
       GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
+      GAME_EVENTS.CARD_TRADE,
     ];
     if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
       return false;
@@ -796,6 +851,12 @@ export default function GameContainer() {
         setCurrentEventStep(EVENT_STEPS.SELECT_SET);
         break;
       }
+
+      case GAME_EVENTS.CARD_TRADE: {
+        setCurrentEventCard(cardEvent);
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
+        break;
+      }
     }
   };
 
@@ -900,6 +961,18 @@ export default function GameContainer() {
         break;
       }
 
+      case GAME_EVENTS.CARD_TRADE: {
+        if (!selectedTargetPlayer) {
+          toast.error("Player not selected");
+        }
+        eventPayload = {
+          target_player_id: selectedTargetPlayer?.id,
+        } as CardTradeEventPayload;
+        setSelectedTargetPlayer(null);
+        setCurrentEventStep(null);
+        break;
+      }
+
       default:
         console.warn(`Evento no manejado: ${nameEvent}`);
         return;
@@ -946,6 +1019,8 @@ export default function GameContainer() {
         data-testid="game-container"
         className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
+        <Logs logs={logs} />
+
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">
           {/* Las primeras 6 casillas ubican a los jugadores, sus elementos y las pilas del juego. */}
@@ -1020,7 +1095,8 @@ export default function GameContainer() {
               isSelecting={isSelectingCards}
               isDisabled={!isPlayerTurn}
               isActivateNSF={notSoFastEvent.isActivate}
-              onDoubleClickCard={handlePlayNotSoFast}
+              onDoubleClickCard={handleCardDoubleClick}
+              isPendingResponse={pendingResponse.isPending}
             />
 
             <HandActions
@@ -1033,7 +1109,11 @@ export default function GameContainer() {
               onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
               onAddDetectiveCardToSet={handleAddDetectiveCardToSet}
-              isDisabled={!isPlayerTurn || notSoFastEvent.isActivate}
+              isDisabled={
+                !isPlayerTurn ||
+                notSoFastEvent.isActivate ||
+                pendingResponse.isPending
+              }
               isDisabledEvent={!isPlayable}
               isSelectionSetEvent={
                 currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&

@@ -21,6 +21,8 @@ export interface CardsOffTheTableEventPayload {
   target_player_id: UUID;
 }
 
+export type CardTradeEventPayload = CardsOffTheTableEventPayload;
+
 export type EventPayload =
   | AndThenThereWasOneMoreEventPayload
   | AnotherVictimEventPayload
