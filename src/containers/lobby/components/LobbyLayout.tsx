@@ -10,34 +10,24 @@ import backgroundGame from "@/assets/background.png";
 interface Props {
   match: MatchWithPlayerCount;
   isOwner: boolean;
+
   startGame: () => Promise<void>;
   cancelGame: () => Promise<void>;
+  quitGame: () => Promise<void>;
 
   children: ReactNode;
 }
 
 export default function LobbyLayout({
-  children,
+  match,
+  isOwner,
   startGame,
   cancelGame,
-  isOwner,
-  match,
+  quitGame,
+  children,
 }: Props) {
-  const handleClick = () => {
-    if (
-      match.current_player_count < match.min_players ||
-      match.status.toUpperCase() !== "WAITING" ||
-      !isOwner
-    ) {
-      alert(
-        "The game cannot be started if the minimum number of players desired is not reached.",
-      );
-
-      return;
-    }
-
-    startGame();
-  };
+  const shouldShowQuitGameButton =
+    !isOwner && match.status.toLocaleUpperCase() === "WAITING";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -52,7 +42,7 @@ export default function LobbyLayout({
           {isOwner && (
             <div className="flex items-center gap-x-4">
               <Button
-                onClick={handleClick}
+                onClick={startGame}
                 disabled={match.current_player_count < match.min_players}
               >
                 Start game
@@ -61,6 +51,10 @@ export default function LobbyLayout({
               <Button onClick={cancelGame}>Cancel game</Button>
             </div>
           )}
+
+          {shouldShowQuitGameButton ? (
+            <Button onClick={quitGame}>Quit game</Button>
+          ) : null}
         </Container>
         ``
       </header>
