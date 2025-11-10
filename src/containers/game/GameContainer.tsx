@@ -1096,6 +1096,7 @@ export default function GameContainer() {
               isDisabled={!isPlayerTurn}
               isActivateNSF={notSoFastEvent.isActivate}
               onDoubleClickCard={handleCardDoubleClick}
+              isPendingResponse={pendingResponse.isPending}
             />
 
             <HandActions
