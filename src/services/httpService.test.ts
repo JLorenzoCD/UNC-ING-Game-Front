@@ -456,7 +456,7 @@ describe("httpService", () => {
       expect(mockFetch).toHaveBeenCalledWith(
         `http://localhost:8000/matches/${matchId}/quit?player_id=${playerId}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },

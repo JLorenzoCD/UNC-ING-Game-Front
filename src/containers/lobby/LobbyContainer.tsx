@@ -54,6 +54,8 @@ export default function LobbyContainer() {
       toast.error(
         "The game cannot be started if the minimum number of players desired is not reached.",
       );
+
+      return;
     }
 
     try {
