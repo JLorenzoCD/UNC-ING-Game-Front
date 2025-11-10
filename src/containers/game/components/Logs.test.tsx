@@ -107,8 +107,7 @@ describe("Logs", () => {
     await user.click(drawer);
 
     // A veces no me andaba la linea comentada.
-    // await waitForElementToBeRemoved(() => screen.queryByTestId("logs-drawer"));
-    await waitForElementToBeRemoved(drawer);
+    await waitForElementToBeRemoved(() => screen.queryByTestId("logs-drawer"));
   });
 
   it("closes drawer when clicking close button", async () => {
