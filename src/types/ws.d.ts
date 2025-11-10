@@ -19,10 +19,13 @@ export type EventTurnPayload = Match;
 export type EventCardsPayload = GameCard[];
 
 /** Payload del evento de actualización de partida */
-export type EventMatchPayload = MatchWithPlayerCount | { status: Match };
+export type EventMatchPayload = MatchWithPlayerCount;
 
 /** Payload del evento de jugador uniéndose al lobby */
 export type EventLobbyJoinPayload = Player;
+
+/** Payload del evento de jugador saliendo del lobby */
+export type EventLobbyQuitPayload = Player;
 
 /** Payload del evento de carta de evento jugada */
 export interface EventCardEventPayload {
@@ -186,6 +189,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CARDS]: EventCardsPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH]: EventMatchPayload;
   [BACKEND_SOCKETS_EVENTS.LOBBY_JOIN]: EventLobbyJoinPayload;
+  [BACKEND_SOCKETS_EVENTS.LOBBY_QUIT]: EventLobbyQuitPayload;
   [BACKEND_SOCKETS_EVENTS.CARD_EVENT]: EventCardEventPayload;
   [BACKEND_SOCKETS_EVENTS.SET]: EventSetPayload;
   [BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL]: EventPlayerSecretRevealPayload;

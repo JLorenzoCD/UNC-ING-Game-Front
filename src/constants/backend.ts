@@ -15,6 +15,9 @@ const BACKEND_ENDPOINTS = {
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
 
+  CANCEL_MATCH: (matchId: UUID, ownerId: UUID) =>
+    `/matches/${matchId}/cancel?owner_id=${ownerId}`,
+
   START_MATCH: (matchId: UUID) => `/matches/${matchId}/start`,
 
   TAKE_CARDS: (matchId: UUID) => `/matches/${matchId}/cards/take`,
@@ -39,6 +42,7 @@ const BACKEND_SOCKETS_EVENTS = {
   CARDS: "cards",
   MATCH: "match",
   LOBBY_JOIN: "player_join",
+  LOBBY_QUIT: "player_quit",
   CARD_EVENT: "card_event",
   SET: "set",
   PLAYER_SECRET_REVEAL: "player_secret_reveal",

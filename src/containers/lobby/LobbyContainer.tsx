@@ -65,10 +65,29 @@ export default function LobbyContainer() {
     }
   }
 
+  async function cancelGame() {
+    if (
+      httpService === null ||
+      player === null ||
+      match === null ||
+      match.owner_id !== player.id
+    )
+      return;
+
+    try {
+      await httpService.cancelMatch(match.id, player.id);
+
+      navigate(FRONTEND_PATHS.MATCH_LIST);
+    } catch (error) {
+      handleApiError(error, "The game could not be canceled");
+    }
+  }
+
   return (
     <LobbyLayout
       match={match}
       startGame={startGame}
+      cancelGame={cancelGame}
       isOwner={player.id === match.owner_id}
     >
       {playersToView.map((p, index) =>

@@ -11,6 +11,7 @@ interface Props {
   match: MatchWithPlayerCount;
   isOwner: boolean;
   startGame: () => Promise<void>;
+  cancelGame: () => Promise<void>;
 
   children: ReactNode;
 }
@@ -18,6 +19,7 @@ interface Props {
 export default function LobbyLayout({
   children,
   startGame,
+  cancelGame,
   isOwner,
   match,
 }: Props) {
@@ -46,15 +48,21 @@ export default function LobbyLayout({
             alt="AGATHA CHRISTIE'S - DEATH ON THE CARDS"
             className="w-[210px]"
           />
+
           {isOwner && (
-            <Button
-              onClick={handleClick}
-              disabled={match.current_player_count < match.min_players}
-            >
-              Start game
-            </Button>
+            <div className="flex items-center gap-x-4">
+              <Button
+                onClick={handleClick}
+                disabled={match.current_player_count < match.min_players}
+              >
+                Start game
+              </Button>
+
+              <Button onClick={cancelGame}>Cancel game</Button>
+            </div>
           )}
         </Container>
+        ``
       </header>
 
       <main

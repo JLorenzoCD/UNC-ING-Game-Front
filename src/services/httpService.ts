@@ -118,6 +118,18 @@ export function createHttpService() {
     });
   };
 
+  const cancelMatch = async (
+    matchId: UUID,
+    ownerId: UUID,
+  ): Promise<{ status: string }> => {
+    return request<{ status: string }>(
+      BACKEND_ENDPOINTS.CANCEL_MATCH(matchId, ownerId),
+      {
+        method: "POST",
+      },
+    );
+  };
+
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
     return request<GamePlayer[]>(BACKEND_ENDPOINTS.GET_MATCH_PLAYERS(matchId));
   };
@@ -282,6 +294,7 @@ export function createHttpService() {
     createPlayer,
     createMatch,
     startMatch,
+    cancelMatch,
     getMatches,
     joinMatch,
     getMatch,
