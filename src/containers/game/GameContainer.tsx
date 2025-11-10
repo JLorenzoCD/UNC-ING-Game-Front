@@ -397,6 +397,8 @@ export default function GameContainer() {
   };
 
   const isTargetPlayerEvent = () => {
+    if (notSoFastEvent.isActivate) return false;
+
     if (setEvent.isTargetPlayer) return true;
     // Other events
     if (
@@ -412,6 +414,8 @@ export default function GameContainer() {
   };
 
   const isTargetSecretEvent = () => {
+    if (notSoFastEvent.isActivate) return false;
+
     if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
     // Other events
@@ -997,11 +1001,12 @@ export default function GameContainer() {
         setSelectedTargetSet(null);
         setCurrentEventStep(null);
       } else {
-        // Se limpia los otros eventos y se bloquea los botones
-        clearSelectedCards();
-        setCurrentEventCard(null);
+        // Los otros eventos ya terminaron y no se puede continuar.
         playerFinishActionTurn();
       }
+
+      setCurrentEventCard(null);
+      clearSelectedCards();
     } catch (error) {
       handleApiError(error, "Error al ejecutar el evento");
     }

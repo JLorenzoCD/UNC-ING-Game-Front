@@ -100,8 +100,9 @@ export default function HandActions({
           <Button
             onClick={onSelectSecret}
             disabled={
-              (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
-              !playerSelectsOneOfHisSecrets.isCurrPlayer
+              ((isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
+                !playerSelectsOneOfHisSecrets.isCurrPlayer) ||
+              notSoFastEvent.isActivate
             }
           >
             Select secret
@@ -110,7 +111,10 @@ export default function HandActions({
           <Button
             onClick={onSelectPlayer}
             disabled={
-              isDisabled || !isSelectionPlayerEvent || hasFinishedAction
+              isDisabled ||
+              !isSelectionPlayerEvent ||
+              hasFinishedAction ||
+              notSoFastEvent.isActivate
             }
           >
             {canSelectMeAsPlayer ? "Select me" : "Select player"}
