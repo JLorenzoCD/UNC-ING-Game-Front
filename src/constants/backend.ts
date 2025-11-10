@@ -30,7 +30,10 @@ const BACKEND_ENDPOINTS = {
   PASS_TURN: (matchId: UUID) => `/matches/${matchId}/pass_turn`,
 
   PLAY_EVENT: (matchId: UUID) => `/matches/${matchId}/events`,
+
   CREATE_AND_PLAY_SET: (matchId: UUID) => `/matches/${matchId}/sets`,
+  DOWN_CARD_AND_PLAY_SET: (matchId: UUID, setId: UUID) =>
+    `/matches/${matchId}/sets/${setId}`,
 
   PUT_SECRET: (matchId: UUID, secretId: UUID) =>
     `/matches/${matchId}/secrets/${secretId}`,
