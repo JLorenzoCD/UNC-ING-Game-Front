@@ -268,6 +268,7 @@ describe("LobbyContainer", () => {
     mockUsePlayer.mockReturnValue({
       player: { id: MOCK_OWNER_ID, name: "Owner Player" },
     });
+
     mockUseLobbyData.mockReturnValue({
       ...defaultLobbyState,
       match: { ...mockMatch, min_players: 3, current_player_count: 2 },
