@@ -446,13 +446,18 @@ export default function GameContextProvider({
           toast(`Player "${playerOwnerSet.name}" played a set.`);
           updateSet = [...prevSets, newSet];
         } else if (
-          // Modificación de un set
+          // Robar un set
           index !== -1 &&
           set.deleted_cards === undefined &&
           prevSets[index].player_id !== set.player_id
         ) {
           updateSet[index] = set;
           toast(`Player "${playerOwnerSet.name}" stolen a set.`);
+        } else if (
+          // Modificación de un set
+          index !== -1
+        ) {
+          updateSet[index] = set;
         }
 
         if (set.deleted_cards !== undefined) {
