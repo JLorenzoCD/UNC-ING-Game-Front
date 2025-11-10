@@ -1133,10 +1133,13 @@ export default function GameContainer() {
           />
 
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
-            <div className="flex flex-col gap-y-3">
-              <p className="text-white">
-                {isInSocialDisgrace ? "DESGRACIA SOCIAL" : "SIN DESGRACIA"}
-              </p>
+            <div className="flex flex-col items-center gap-y-3">
+              {isInSocialDisgrace && (
+                <p className="text-center text-white">
+                  You are in Social Disgrace!
+                </p>
+              )}
+
               <Secrets
                 secrets={playerSecrets}
                 isSelectableSecret={isCurrPlayersSecretSelectable}
