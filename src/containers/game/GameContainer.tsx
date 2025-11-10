@@ -191,6 +191,12 @@ export default function GameContainer() {
   };
 
   const handleClickSetEvent = () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't play set cards while in social disgrace.");
+
+      return;
+    }
+
     playSet(Object.values(selectedCards));
   };
 
@@ -480,6 +486,10 @@ export default function GameContainer() {
     return secrets.filter((secret) => secret.player_id === player.id);
   }, [secrets, player]);
 
+  const isInSocialDisgrace = useMemo(() => {
+    return playerSecrets.every((secret) => secret.is_revealed);
+  }, [playerSecrets]);
+
   const playerSets = useMemo(() => {
     if (!player) return [];
 
@@ -557,6 +567,12 @@ export default function GameContainer() {
   ]);
 
   const handleSelectSet = async () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't select a set as you're in social disgrace.");
+
+      return;
+    }
+
     if (
       currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
       currentEventStep === EVENT_STEPS.SELECT_SET
@@ -571,6 +587,12 @@ export default function GameContainer() {
   };
 
   const handleAddDetectiveCardToSet = () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't add cards to sets as you're in social disgrace.");
+
+      return;
+    }
+
     const card = Object.values(selectedCards).at(0);
 
     if (
@@ -647,12 +669,18 @@ export default function GameContainer() {
 
       const emptySlots = handCards.filter((c) => c === null).length;
 
-      // Si tomar una carta del draft llena la mano,
-      // marcamos que el jugador ha tomado cartas.
-      // Esto es relevante para permitirle
-      // tomar cartas del draft sin impedir tomar de
-      // la pila regular.
-      if (emptySlots === 1) {
+      if (
+        // Si tomar una carta del draft llena la mano,
+        // marcamos que el jugador ha tomado cartas.
+        // Esto es relevante para permitirle
+        // tomar cartas del draft sin impedir tomar de
+        // la pila regular.
+        emptySlots === 1 ||
+        // Tomar una carta del draft
+        // estando en desgracia social cuenta al lìmite
+        // de tomar solo una carta por turno.
+        isInSocialDisgrace
+      ) {
         setHasTakenCards(true);
       }
     } catch (error) {
@@ -673,11 +701,16 @@ export default function GameContainer() {
 
     if (emptyHandPositions.length === 0) return;
 
+    // En desgracia social, tomamos exactamente una carta.
+    const cardsToTake = isInSocialDisgrace
+      ? 1
+      : Math.min(emptyHandPositions.length, drawableCards.length);
+
     // Tenemos que tomar los índices por detrás
     // de las cartas del draft (las que están en la pila).
     const cardsTaken = drawableCards.slice(
       DRAFT_SIZE,
-      DRAFT_SIZE + Math.min(emptyHandPositions.length, drawableCards.length),
+      DRAFT_SIZE + cardsToTake,
     );
 
     try {
@@ -710,6 +743,13 @@ export default function GameContainer() {
 
     if (cardIds.length === 0) {
       toast.error("No cards selected to discard.");
+
+      return;
+    }
+
+    if (isInSocialDisgrace && cardIds.length > 1) {
+      toast.error("You can only discard one card while in social disgrace.");
+
       return;
     }
 
@@ -810,6 +850,12 @@ export default function GameContainer() {
   };
 
   const handlePlayEvent = async () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't play event cards while in social disgrace.");
+
+      return;
+    }
+
     // OBTENER LA CARTA SELECCIONADA
     const selectedCardsArray = Object.values(selectedCards);
 
@@ -1088,6 +1134,9 @@ export default function GameContainer() {
 
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
             <div className="flex flex-col gap-y-3">
+              <p className="text-white">
+                {isInSocialDisgrace ? "DESGRACIA SOCIAL" : "SIN DESGRACIA"}
+              </p>
               <Secrets
                 secrets={playerSecrets}
                 isSelectableSecret={isCurrPlayersSecretSelectable}
