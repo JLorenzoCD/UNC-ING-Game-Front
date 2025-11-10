@@ -374,6 +374,7 @@ describe("useSetEvent", () => {
         isStolenSecret: false,
 
         isSelectingSet: false,
+        isPlayingStolenSet: false,
 
         cards: [],
         setType: null,
@@ -550,6 +551,7 @@ describe("useSetEvent", () => {
         isStolenSecret: false,
 
         isSelectingSet: false,
+        isPlayingStolenSet: false,
 
         cards: [],
         setType: null,

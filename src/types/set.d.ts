@@ -62,3 +62,5 @@ export interface SetUpdateData {
   target_player_id: UUID;
   target_secret_id?: UUID;
 }
+
+export type SetStolenData = Omit<SetUpdateData, "card_ids">;
