@@ -54,6 +54,11 @@ export function createWsService(playerId: string | null = null) {
     Array<WebSocketEventCallback<any>>
   >();
 
+  let messages: Array<{
+    event: keyof WebSocketEventMap;
+    data: WebSocketEventMap[keyof WebSocketEventMap];
+  }> = [];
+
   const connect = () => {
     try {
       websocket = new WebSocket(wsUrl);
@@ -128,9 +133,15 @@ export function createWsService(playerId: string | null = null) {
   ) => {
     const listener = listeners.get(event);
 
-    if (typeof listener !== "undefined") {
-      listener.forEach((callback) => callback(data));
+    if (!listener || listener.length === 0) {
+      // Como todavía no hay listeners para este evento,
+      // guardamos el mensaje para procesarlo más tarde.
+      messages.push({ event, data });
+
+      return;
     }
+
+    listener.forEach((callback) => callback(data));
   };
 
   const on = <K extends keyof WebSocketEventMap>(
@@ -141,7 +152,21 @@ export function createWsService(playerId: string | null = null) {
       listeners.set(event, []);
     }
 
-    listeners.get(event)!.push(callback as WebSocketEventCallback<any>);
+    // Forzamos no nulidad puesto que acabamos de inicializar el array si no existía.
+    const listener = listeners.get(event)!;
+
+    // Procesar mensajes pendientes para este evento si es el primer listener
+    if (listener.length === 0) {
+      const pending = messages.filter((message) => message.event === event);
+
+      pending.forEach((message) => {
+        callback(message.data as WebSocketEventMap[K]);
+      });
+
+      messages = messages.filter((msg) => msg.event !== event);
+    }
+
+    listener.push(callback as WebSocketEventCallback<any>);
   };
 
   const off = <K extends keyof WebSocketEventMap>(
