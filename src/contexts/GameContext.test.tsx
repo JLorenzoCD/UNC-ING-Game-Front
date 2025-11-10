@@ -10,7 +10,12 @@ import {
 
 import GameContextProvider, { useGame } from "./GameContext";
 
-import type { EventNotSoFastPayload } from "@/types/ws";
+import type {
+  EventNotSoFastPayload,
+  EventPendingResponsePayload,
+} from "@/types/ws";
+
+import { GAME_EVENTS } from "@/constants/game";
 
 import type { UUID } from "@/types/common";
 import type { Match } from "@/types/match";
@@ -36,6 +41,7 @@ const {
   mockCards,
   mockSecrets,
   mockPlayers,
+  setPoirot,
   mockToastInfo,
   mockToastWarning,
   mockToastError,
@@ -48,6 +54,7 @@ const {
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
     getMatchSets: vi.fn(),
+    getMatchLogs: vi.fn(),
   };
   const mockUseHttpService = vi.fn((): any => ({
     httpService: mockHttpService,
@@ -154,6 +161,7 @@ const {
     PLAYER_SECRET_REVEAL: "player_secret_reveal_WS_event",
     CANCELLATION_WINDOW_OPEN: "cancellation_window_WS_open",
     CANCELED: "event_WS_cancelled",
+    PENDING_RESPONSE: "pending_WS_target_response",
   };
 
   const mockUseParams = vi.fn((): any => ({
@@ -187,6 +195,15 @@ const {
   const mainToastFunction = vi.fn();
   Object.assign(mainToastFunction, mockToast);
 
+  const setPoirot: MatchSet = {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    type: "HERCULE POIROT",
+    player_id: mockPlayerTwo.player_id,
+    match_id: mockMatchId,
+    quin_play: false,
+    quin_count: 0,
+  };
+
   return {
     mockOn,
     mockOff,
@@ -204,6 +221,7 @@ const {
     mockCards,
     mockSecrets,
     mockPlayers,
+    setPoirot,
     mockToastInfo,
     mockToastWarning,
     mockToastError,
@@ -543,6 +561,7 @@ describe("GameContext", () => {
         secrets: [],
         players: [],
         sets: [],
+        logs: [],
         isLoading: true,
         hasError: false,
         error: null,
@@ -562,6 +581,12 @@ describe("GameContext", () => {
           discardedCard: null,
         },
         clearNotSoFastEvent: expect.any(Function),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: expect.any(Function),
       });
     });
   });
@@ -755,6 +780,52 @@ describe("GameContext", () => {
       );
     });
 
+    it("handleUpdateSets: should update a set", async () => {
+      mockHttpService.getMatch.mockResolvedValue(mockMatch);
+      mockHttpService.getMatchCards.mockResolvedValue(mockCards);
+      mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
+      mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
+      mockHttpService.getMatchSets.mockResolvedValue([setPoirot]);
+
+      const playerInHook = { id: mockPlayerOne.id, name: mockPlayerOne.name };
+      mockUsePlayer.mockReturnValue({ player: playerInHook });
+
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => (
+          <GameContextProvider>{children}</GameContextProvider>
+        ),
+      });
+
+      // Esperar a que la carga inicial termine
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.cards.length).toBe(2);
+      expect(result.current.players.length).toBe(2);
+
+      const handler = getEventHandler(mockSocketsEvents.SET);
+
+      const newSetEvent = {
+        ...setPoirot,
+        player_id: playerInHook.id,
+      } as MatchSet & { deleted_cards: UUID[] };
+
+      expect(result.current.players.length).toBeGreaterThan(0);
+
+      // Act: Ejecutar el handler de WS
+      await act(() => handler(newSetEvent));
+
+      // Assert: Verificar el estado actualizado (ya no necesitamos waitFor)
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.sets[0].id).toBe(setPoirot.id);
+      expect(result.current.cards.length).toBe(2);
+      expect(mainToastFunction).toHaveBeenCalledWith(
+        `Player "${mockPlayerOne.name}" stolen a set.`,
+      );
+    });
+
     it("handleUpdateSecrets: should update a secret as revealed and set lastUpdatedSecretId", async () => {
       const result = await setupContextAndGetResult(mockPlayerOne);
       const handler = getEventHandler(mockSocketsEvents.SECRET);
@@ -826,6 +897,39 @@ describe("GameContext", () => {
         // El jugador objetivo es el ANTERIOR dueño (PlayerTwo)
         expect(mainToastFunction).toHaveBeenCalledWith(
           `A secret was stolen from player "${mockPlayerTwo.name}" and hidden.`,
+        );
+      });
+    });
+
+    it("handleUpdateSecrets: should update a secret as hidden", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.SECRET);
+
+      // Se usa el mockSecrets inicial
+      const secretToUpdate = mockSecrets[0]; // Innocent
+      secretToUpdate.is_revealed = true;
+      expect(
+        result.current.secrets.find((s) => s.id === secretToUpdate.id)
+          ?.is_revealed,
+      ).toBe(true);
+
+      const updatedSecret = {
+        ...secretToUpdate,
+        is_revealed: false, // Revelado
+      };
+
+      // Act: Ejecutar el handler de WS
+      handler(updatedSecret);
+
+      // Assert: Verificar el estado actualizado
+      await waitFor(() => {
+        const updated = result.current.secrets.find(
+          (s) => s.id === secretToUpdate.id,
+        );
+        expect(updated?.is_revealed).toBe(false);
+        expect(result.current.lastUpdatedSecretId).toBe(secretToUpdate.id);
+        expect(mainToastFunction).toHaveBeenCalledWith(
+          `A secret of player "${mockPlayerOne.name}" has been hidden.`,
         );
       });
     });
@@ -1007,6 +1111,78 @@ describe("GameContext", () => {
       // El toast de "tiempo acabado" NO debe llamarse
       expect(mainToastFunction).not.toHaveBeenCalled();
       vi.useRealTimers();
+    });
+  });
+
+  describe("WebSocket Handlers - PENDING_RESPONSE", () => {
+    let pendingPayload: EventPendingResponsePayload;
+
+    beforeEach(() => {
+      // Un payload de ejemplo donde ambos jugadores deben responder
+      pendingPayload = {
+        event_type: GAME_EVENTS.CARD_TRADE, //
+        event_id: crypto.randomUUID(),
+        players_ids: [mockPlayerOne.id, mockPlayerTwo.id], //
+      };
+
+      // Limpiamos los mocks de toast
+      mockToastInfo.mockClear();
+    });
+
+    it("handlePendingResponse: should activate if player is in the players_ids list", async () => {
+      // El jugador actual (mockPlayerOne) ESTÁ en la lista
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(pendingPayload));
+
+      // Verificar que el estado se activó
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventId).toBe(
+        pendingPayload.event_id,
+      );
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.CARD_TRADE,
+      );
+      // Verificar que se mostró el toast
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "CARD TRADE: You must select a card to exchange.",
+      );
+    });
+
+    it("handlePendingResponse: should NOT activate if player is NOT in the list", async () => {
+      // El jugador actual (mockPlayerOne) NO ESTÁ en esta lista
+      const otherPayload = {
+        ...pendingPayload,
+        players_ids: [mockPlayerTwo.id, crypto.randomUUID()],
+      };
+
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(otherPayload));
+
+      // Verificar que el estado NO cambió
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(mockToastInfo).not.toHaveBeenCalled();
+    });
+
+    it("clearPendingResponse: should reset the pending state", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      // 1. Activar el estado
+      await act(() => handler(pendingPayload));
+      expect(result.current.pendingResponse.isPending).toBe(true);
+
+      // 2. Limpiar el estado
+      act(() => {
+        result.current.clearPendingResponse(); //
+      });
+
+      // 3. Verificar que se reseteó
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(result.current.pendingResponse.eventId).toBe(null);
     });
   });
 });
