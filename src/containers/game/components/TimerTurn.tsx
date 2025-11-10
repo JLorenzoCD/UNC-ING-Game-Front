@@ -47,10 +47,10 @@ export function isTimerExecuted(match: Match, logs: MatchLog[]) {
 }
 
 export default function TimerTurn() {
-  const { match, players, logs } = useGame();
+  const { match, players, logs, hasFinishedAction } = useGame();
   const { player } = usePlayer();
 
-  const [timer, setTimer] = useState<number>(GAME_RULES.TIME_TURN);
+  const [timer, setTimer] = useState<number>(-1);
   const [shouldTimerBeRun, setShouldTimerBeRun] = useState<boolean>(false);
 
   const currPlayerMatch = useMemo(() => {
@@ -94,14 +94,21 @@ export default function TimerTurn() {
     }, 1000); // Actualizar cada 1 segundo
 
     return () => clearInterval(timerInterval);
-  }, [match, logs, timer]);
+  }, [match, logs]);
+
+  // Si cambia el match, es porque se cambio de turno o el status paso a "COMPLETE"
+  // Si cambio el hasFinishedAction, entonces ya se ejecuto una acción.
+  useEffect(() => {
+    setTimer(-1);
+  }, [hasFinishedAction, match]);
 
   if (
     match === null ||
     player === null ||
     match.timer_turn === null ||
     match.timer_turn === undefined ||
-    !shouldTimerBeRun
+    !shouldTimerBeRun ||
+    timer === -1
   )
     return null;
 
