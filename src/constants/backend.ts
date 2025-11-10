@@ -28,6 +28,8 @@ const BACKEND_ENDPOINTS = {
   CREATE_AND_PLAY_SET: (matchId: UUID) => `/matches/${matchId}/sets`,
   DOWN_CARD_AND_PLAY_SET: (matchId: UUID, setId: UUID) =>
     `/matches/${matchId}/sets/${setId}`,
+  PLAY_STOLEN_SET: (matchId: UUID, setId: UUID) =>
+    `/matches/${matchId}/sets/${setId}/stolen`,
 
   PUT_SECRET: (matchId: UUID, secretId: UUID) =>
     `/matches/${matchId}/secrets/${secretId}`,
