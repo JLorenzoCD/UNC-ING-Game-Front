@@ -602,6 +602,13 @@ export default function GameContextProvider({
           eventId: payload.event_id,
           eventType: payload.event_type,
         });
+      } else if (payload.event_type === GAME_EVENTS.DEAD_CARD_FOLLY) {
+        toast.info("DEAD CARD FOLLY: You must select a card to exchange.");
+        setPendingResponse({
+          isPending: true,
+          eventId: payload.event_id,
+          eventType: payload.event_type,
+        });
       }
     };
 

@@ -123,9 +123,11 @@ export default function GameContainer() {
   } = useSetEvent();
 
   // -- Utilidades --
+
   const handleSelectDirection = (direction: "LEFT" | "RIGHT") => {
     handleEndEvent(undefined, direction);
   };
+
   const handlePendingResponseSelectCard = async (card: GameCard) => {
     if (
       !pendingResponse.isPending ||
@@ -136,19 +138,34 @@ export default function GameContainer() {
     ) {
       return;
     }
+    if (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE) {
+      try {
+        await httpService.postCardTrade(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          card.id,
+        );
 
-    try {
-      await httpService.postCardTrade(
-        match.id,
-        player.id,
-        pendingResponse.eventId,
-        card.id,
-      );
+        toast.success("Waiting for the other player to select one.");
+        clearPendingResponse();
+      } catch (error) {
+        handleApiError(error, "Error responding to the event");
+      }
+    } else if (pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY) {
+      try {
+        await httpService.postDeadCardFolly(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          card.id,
+        );
 
-      toast.success("Waiting for the other player to select one.");
-      clearPendingResponse();
-    } catch (error) {
-      handleApiError(error, "Error responding to the event");
+        toast.success("Waiting for the others players to select one.");
+        clearPendingResponse();
+      } catch (error) {
+        handleApiError(error, "Error responding to the event");
+      }
     }
   };
 
@@ -1151,7 +1168,8 @@ export default function GameContainer() {
               onDoubleClickCard={handleCardDoubleClick}
               isPendingResponse={
                 pendingResponse.isPending &&
-                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE
+                (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
+                  pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY)
               }
             />
 
