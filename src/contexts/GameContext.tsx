@@ -355,7 +355,10 @@ export default function GameContextProvider({
         (card) => card.player_id === player?.id && card.name === "NOT SO FAST",
       );
       if (payload.discarded_card) {
-        if (payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON) {
+        if (
+          payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON ||
+          payload.event_type === GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE
+        ) {
           handleRemoveCards([payload.discarded_card]);
         } else {
           handleEventCards([payload.discarded_card]);
@@ -611,6 +614,13 @@ export default function GameContextProvider({
         });
       } else if (payload.event_type === GAME_EVENTS.POINT_YOUR_SUSPICIONS) {
         toast.info("POINT YOUR SUSPICIONS: Indicate who you suspect.");
+        setPendingResponse({
+          isPending: true,
+          eventId: payload.event_id,
+          eventType: payload.event_type,
+        });
+      } else if (payload.event_type === GAME_EVENTS.DEAD_CARD_FOLLY) {
+        toast.info("DEAD CARD FOLLY: You must select a card to exchange.");
         setPendingResponse({
           isPending: true,
           eventId: payload.event_id,

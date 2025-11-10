@@ -357,6 +357,29 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const postDeadCardFolly = async (
+    matchId: UUID,
+    playerId: UUID,
+    eventId: UUID,
+    cardId: UUID,
+  ) => {
+    const baseUrl = BACKEND_ENDPOINTS.DEAD_CARD_FOLLY(matchId);
+
+    const params = new URLSearchParams();
+    params.append("player_id", playerId);
+    params.append("event_id", eventId);
+
+    const urlWithParams = `${baseUrl}?${params.toString()}`;
+
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        target_card_id: cardId,
+      }),
+    };
+    return request(urlWithParams, options);
+  };
+
   return {
     request,
     createPlayer,
@@ -383,5 +406,6 @@ export function createHttpService() {
     postPlayNotSoFast,
     postCardTrade,
     postPointYourSuspicions,
+    postDeadCardFolly,
   };
 }

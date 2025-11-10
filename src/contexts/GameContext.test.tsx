@@ -1185,6 +1185,26 @@ describe("GameContext", () => {
       expect(result.current.pendingResponse.eventId).toBe(null);
     });
 
+    it("handlePendingResponse: should activate for DEAD_CARD_FOLLY", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      const dcfPayload = {
+        ...pendingPayload,
+        event_type: GAME_EVENTS.DEAD_CARD_FOLLY, //
+      };
+
+      await act(() => handler(dcfPayload));
+
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.DEAD_CARD_FOLLY,
+      );
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "DEAD CARD FOLLY: You must select a card to exchange.",
+      );
+    });
+
     it("handlePendingResponse: should activate for POINT_YOUR_SUSPICIONS", async () => {
       // 1. Configurar el mock de jugador y el payload
       const result = await setupContextAndGetResult(mockPlayerOne);

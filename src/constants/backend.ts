@@ -46,6 +46,8 @@ const BACKEND_ENDPOINTS = {
 
   POINT_YOUR_SUSPICIONS: (matchId: UUID) =>
     `/matches/${matchId}/point_your_suspicions`,
+
+  DEAD_CARD_FOLLY: (matchId: UUID) => `/matches/${matchId}/dead_card_folly`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
