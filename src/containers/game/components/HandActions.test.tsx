@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { ReactNode } from "react";
 
+import { GAME_EVENTS } from "@/constants/game";
 import HandActions from "./HandActions";
 
 const {
@@ -15,6 +16,7 @@ const {
   mockOnPlayEvent,
   mockOnSelectSet,
   mockUseGame,
+  mockOnSelectDirection,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
@@ -24,6 +26,7 @@ const {
   const mockOnPlayEvent = vi.fn();
   const mockOnSelectSet = vi.fn();
   const mockUseGame = vi.fn();
+  const mockOnSelectDirection = vi.fn();
 
   return {
     mockOnFinish,
@@ -34,6 +37,7 @@ const {
     mockOnSelectSecret,
     mockOnPlayEvent,
     mockOnSelectSet,
+    mockOnSelectDirection,
   };
 });
 
@@ -71,6 +75,7 @@ const baseProps = {
   onSelectSecret: mockOnSelectSecret,
   onPlayEvent: mockOnPlayEvent,
   onSelectSet: mockOnSelectSet,
+  onSelectDirection: mockOnSelectDirection,
   isSelectionPlayerEvent: false,
   isSelectionSecretEvent: false,
   isSetButtonDisabled: true,
@@ -78,6 +83,7 @@ const baseProps = {
   isSelectionSetEvent: false,
   isDisabledEvent: true,
   canSelectMeAsPlayer: false,
+  isSelectDirectionEvent: false,
 };
 
 describe("HandActions", () => {
@@ -113,6 +119,7 @@ describe("HandActions", () => {
           onSelectPlayer={mockOnSelectPlayer}
           onPlayEvent={mockOnPlayEvent}
           onSelectSet={mockOnSelectSet}
+          onSelectDirection={mockOnSelectDirection}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={false}
@@ -120,6 +127,7 @@ describe("HandActions", () => {
           isDisabledEvent={false}
           isDisabled={false}
           canSelectMeAsPlayer={false}
+          isSelectDirectionEvent={false}
         />,
       );
 
@@ -244,6 +252,7 @@ describe("HandActions", () => {
           onSelectPlayer={mockOnSelectPlayer}
           onPlayEvent={mockOnPlayEvent}
           onSelectSet={mockOnSelectSet}
+          onSelectDirection={mockOnSelectDirection}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={true}
@@ -251,6 +260,7 @@ describe("HandActions", () => {
           isDisabledEvent={false}
           isDisabled={false}
           canSelectMeAsPlayer={false}
+          isSelectDirectionEvent={false}
         />,
       );
 
@@ -321,6 +331,77 @@ describe("HandActions", () => {
 
       expect(screen.getByText("Select secret")).not.toBeDisabled();
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
+    });
+  });
+
+  describe("Conditional Event Rendering", () => {
+    // Importa GAME_EVENTS al principio de este archivo de test
+    // import { GAME_EVENTS } from "@/constants/game";
+
+    it("should show Left and Right buttons for DEAD_CARD_FOLLY initiator", () => {
+      render(
+        <HandActions
+          {...baseProps}
+          isSelectDirectionEvent={true} //
+        />,
+      );
+
+      // Los botones "Discard" y "Select set" desaparecen
+      expect(screen.queryByText("Discard cards")).not.toBeInTheDocument();
+      expect(screen.queryByText("Select set")).not.toBeInTheDocument();
+
+      // Los botones "Left" y "Right" aparecen
+      expect(screen.getByText("Left")).toBeInTheDocument();
+      expect(screen.getByText("Right")).toBeInTheDocument();
+
+      // Los otros botones siguen ahí
+      expect(screen.getByText("Play set")).toBeInTheDocument();
+      expect(screen.getByText("Select player")).toBeInTheDocument();
+    });
+
+    it("should disable Select player button for CARD_TRADE pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.CARD_TRADE, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está deshabilitado por la lógica de CARD_TRADE
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should disable Select player button for DEAD_CARD_FOLLY pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.DEAD_CARD_FOLLY, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está deshabilitado por la lógica de DEAD_CARD_FOLLY
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está habilitado
+      expect(screen.getByText("Select player")).not.toBeDisabled();
     });
   });
 });
