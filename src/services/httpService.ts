@@ -9,7 +9,13 @@ import type {
   MatchCreateInput,
   MatchWithPlayerCount,
 } from "@/types/match";
-import type { MatchSet, SetCreationData } from "@/types/set";
+import type {
+  MatchSet,
+  SetCreationData,
+  SetStolenData,
+  SetUpdateData,
+} from "@/types/set";
+import type { MatchLog } from "@/types/log";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -95,6 +101,10 @@ export function createHttpService() {
     return request<MatchWithPlayerCount[]>(BACKEND_ENDPOINTS.GET_MATCHES);
   };
 
+  const getMatch = async (matchId: UUID): Promise<MatchWithPlayerCount> => {
+    return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
+  };
+
   const joinMatch = async (
     playerId: UUID,
     matchId: UUID,
@@ -107,14 +117,34 @@ export function createHttpService() {
     );
   };
 
-  const getMatch = async (matchId: UUID): Promise<MatchWithPlayerCount> => {
-    return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
-  };
-
   const startMatch = async (matchId: UUID): Promise<{ status: string }> => {
     return request<{ status: string }>(BACKEND_ENDPOINTS.START_MATCH(matchId), {
       method: "POST",
     });
+  };
+
+  const cancelMatch = async (
+    matchId: UUID,
+    ownerId: UUID,
+  ): Promise<{ status: string }> => {
+    return request<{ status: string }>(
+      BACKEND_ENDPOINTS.CANCEL_MATCH(matchId, ownerId),
+      {
+        method: "POST",
+      },
+    );
+  };
+
+  const quitMatch = async (
+    playerId: UUID,
+    matchId: UUID,
+  ): Promise<{ status: string }> => {
+    const options: RequestInit = { method: "PUT" };
+
+    return request<{ status: string }>(
+      BACKEND_ENDPOINTS.QUIT_MATCH(matchId, playerId),
+      options,
+    );
   };
 
   const getMatchPlayers = async (matchId: UUID): Promise<GamePlayer[]> => {
@@ -131,6 +161,10 @@ export function createHttpService() {
 
   const getMatchSets = async (matchId: UUID) => {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
+  };
+
+  const getMatchLogs = async (matchId: UUID): Promise<MatchLog[]> => {
+    return request<MatchLog[]>(BACKEND_ENDPOINTS.GET_MATCH_LOGS(matchId));
   };
 
   const putTakeCards = async (
@@ -201,6 +235,35 @@ export function createHttpService() {
     };
 
     return request(BACKEND_ENDPOINTS.CREATE_AND_PLAY_SET(matchId), options);
+  };
+
+  const addDetectiveCardToSetAndPlay = async (
+    matchId: UUID,
+    setId: UUID,
+    dataBody: SetUpdateData,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify(dataBody),
+    };
+
+    return request(
+      BACKEND_ENDPOINTS.DOWN_CARD_AND_PLAY_SET(matchId, setId),
+      options,
+    );
+  };
+
+  const playStolenSet = async (
+    matchId: UUID,
+    setId: UUID,
+    dataBody: SetStolenData,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify(dataBody),
+    };
+
+    return request(BACKEND_ENDPOINTS.PLAY_STOLEN_SET(matchId, setId), options);
   };
 
   const putSecret = async (
@@ -299,19 +362,24 @@ export function createHttpService() {
     createPlayer,
     createMatch,
     startMatch,
+    cancelMatch,
     getMatches,
-    joinMatch,
     getMatch,
+    joinMatch,
+    quitMatch,
     getMatchPlayers,
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
+    getMatchLogs,
     putTakeCards,
     putDiscardCards,
     putPassTurn,
     postEvent,
     putSecret,
     createAndPlaySet,
+    addDetectiveCardToSetAndPlay,
+    playStolenSet,
     postPlayNotSoFast,
     postCardTrade,
     postPointYourSuspicions,

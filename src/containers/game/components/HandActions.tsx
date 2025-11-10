@@ -11,12 +11,15 @@ interface HandActionsProps {
   onSelectSecret: () => void; // Callback que se ejecuta al clickear el botón seleccionar un secreto
   onPlayEvent: () => void; // Callback que se ejecuta al clickear el boton de jugar evento
   onSelectSet: () => void; // Callback que se ejecuta al clickear el boton de terminar evento
+  onAddDetectiveCardToSet: () => void; // Callback que se ejecuta para bajar un detective a un set
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
+  isSetEventSelectSetButtonDisabled: boolean; // Si se esta bajando un detective a un set, este es falso
   isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
   isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
   isSelectionSetEvent: boolean; // Indica si el boton para seleccionar un set esta habilitado
+  isAddingCardToSet: boolean; // Indica si se esta seleccionando un set para bajar un detective
   canSelectMeAsPlayer: boolean; // Indica si el jugador puede seleccionarse a si mismo.
 }
 
@@ -28,10 +31,13 @@ export default function HandActions({
   onSelectSecret,
   onPlayEvent,
   onSelectSet,
+  onAddDetectiveCardToSet,
   isDisabled,
   isSetButtonDisabled,
+  isSetEventSelectSetButtonDisabled,
   isSelectionPlayerEvent,
   isSelectionSecretEvent,
+  isAddingCardToSet,
   isSelectionSetEvent,
   isDisabledEvent,
   canSelectMeAsPlayer,
@@ -48,7 +54,8 @@ export default function HandActions({
     isDisabled ||
     isSelectionPlayerEvent ||
     isSelectionSecretEvent ||
-    isSelectionSetEvent;
+    isSelectionSetEvent ||
+    isAddingCardToSet;
 
   return (
     <div
@@ -79,6 +86,17 @@ export default function HandActions({
           <Button onClick={onPlayEvent} disabled={isDisabledEvent}>
             Play event
           </Button>
+
+          <Button
+            onClick={onAddDetectiveCardToSet}
+            disabled={
+              isDisabled ||
+              isSetEventSelectSetButtonDisabled ||
+              hasFinishedAction
+            }
+          >
+            Add detective
+          </Button>
         </div>
 
         <div className="flex flex-col gap-y-2">
@@ -92,8 +110,9 @@ export default function HandActions({
           <Button
             onClick={onSelectSecret}
             disabled={
-              (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
-              !playerSelectsOneOfHisSecrets.isCurrPlayer
+              ((isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
+                !playerSelectsOneOfHisSecrets.isCurrPlayer) ||
+              notSoFastEvent.isActivate
             }
           >
             Select secret
@@ -106,24 +125,25 @@ export default function HandActions({
               (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
               (hasFinishedAction && !pendingResponse.isPending) ||
               (pendingResponse.isPending &&
-                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE)
+                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE) ||
+              notSoFastEvent.isActivate
             }
           >
             {canSelectMeAsPlayer ? "Select me" : "Select player"}
           </Button>
+
+          <Button
+            onClick={onFinish}
+            disabled={
+              shouldDisableOption ||
+              playerSelectsOneOfHisSecrets.isSelecting ||
+              notSoFastEvent.isActivate
+            }
+          >
+            Finish turn
+          </Button>
         </div>
       </div>
-      <Button
-        onClick={onFinish}
-        disabled={
-          shouldDisableOption ||
-          playerSelectsOneOfHisSecrets.isSelecting ||
-          notSoFastEvent.isActivate ||
-          pendingResponse.isPending
-        }
-      >
-        Finish turn
-      </Button>
     </div>
   );
 }

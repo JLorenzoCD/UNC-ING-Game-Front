@@ -41,6 +41,7 @@ const {
   mockCards,
   mockSecrets,
   mockPlayers,
+  setPoirot,
   mockToastInfo,
   mockToastWarning,
   mockToastError,
@@ -53,6 +54,7 @@ const {
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
     getMatchSets: vi.fn(),
+    getMatchLogs: vi.fn(),
   };
   const mockUseHttpService = vi.fn((): any => ({
     httpService: mockHttpService,
@@ -193,6 +195,15 @@ const {
   const mainToastFunction = vi.fn();
   Object.assign(mainToastFunction, mockToast);
 
+  const setPoirot: MatchSet = {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    type: "HERCULE POIROT",
+    player_id: mockPlayerTwo.player_id,
+    match_id: mockMatchId,
+    quin_play: false,
+    quin_count: 0,
+  };
+
   return {
     mockOn,
     mockOff,
@@ -210,6 +221,7 @@ const {
     mockCards,
     mockSecrets,
     mockPlayers,
+    setPoirot,
     mockToastInfo,
     mockToastWarning,
     mockToastError,
@@ -549,6 +561,7 @@ describe("GameContext", () => {
         secrets: [],
         players: [],
         sets: [],
+        logs: [],
         isLoading: true,
         hasError: false,
         error: null,
@@ -767,6 +780,52 @@ describe("GameContext", () => {
       );
     });
 
+    it("handleUpdateSets: should update a set", async () => {
+      mockHttpService.getMatch.mockResolvedValue(mockMatch);
+      mockHttpService.getMatchCards.mockResolvedValue(mockCards);
+      mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
+      mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
+      mockHttpService.getMatchSets.mockResolvedValue([setPoirot]);
+
+      const playerInHook = { id: mockPlayerOne.id, name: mockPlayerOne.name };
+      mockUsePlayer.mockReturnValue({ player: playerInHook });
+
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => (
+          <GameContextProvider>{children}</GameContextProvider>
+        ),
+      });
+
+      // Esperar a que la carga inicial termine
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.cards.length).toBe(2);
+      expect(result.current.players.length).toBe(2);
+
+      const handler = getEventHandler(mockSocketsEvents.SET);
+
+      const newSetEvent = {
+        ...setPoirot,
+        player_id: playerInHook.id,
+      } as MatchSet & { deleted_cards: UUID[] };
+
+      expect(result.current.players.length).toBeGreaterThan(0);
+
+      // Act: Ejecutar el handler de WS
+      await act(() => handler(newSetEvent));
+
+      // Assert: Verificar el estado actualizado (ya no necesitamos waitFor)
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.sets[0].id).toBe(setPoirot.id);
+      expect(result.current.cards.length).toBe(2);
+      expect(mainToastFunction).toHaveBeenCalledWith(
+        `Player "${mockPlayerOne.name}" stolen a set.`,
+      );
+    });
+
     it("handleUpdateSecrets: should update a secret as revealed and set lastUpdatedSecretId", async () => {
       const result = await setupContextAndGetResult(mockPlayerOne);
       const handler = getEventHandler(mockSocketsEvents.SECRET);
@@ -838,6 +897,39 @@ describe("GameContext", () => {
         // El jugador objetivo es el ANTERIOR dueño (PlayerTwo)
         expect(mainToastFunction).toHaveBeenCalledWith(
           `A secret was stolen from player "${mockPlayerTwo.name}" and hidden.`,
+        );
+      });
+    });
+
+    it("handleUpdateSecrets: should update a secret as hidden", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.SECRET);
+
+      // Se usa el mockSecrets inicial
+      const secretToUpdate = mockSecrets[0]; // Innocent
+      secretToUpdate.is_revealed = true;
+      expect(
+        result.current.secrets.find((s) => s.id === secretToUpdate.id)
+          ?.is_revealed,
+      ).toBe(true);
+
+      const updatedSecret = {
+        ...secretToUpdate,
+        is_revealed: false, // Revelado
+      };
+
+      // Act: Ejecutar el handler de WS
+      handler(updatedSecret);
+
+      // Assert: Verificar el estado actualizado
+      await waitFor(() => {
+        const updated = result.current.secrets.find(
+          (s) => s.id === secretToUpdate.id,
+        );
+        expect(updated?.is_revealed).toBe(false);
+        expect(result.current.lastUpdatedSecretId).toBe(secretToUpdate.id);
+        expect(mainToastFunction).toHaveBeenCalledWith(
+          `A secret of player "${mockPlayerOne.name}" has been hidden.`,
         );
       });
     });

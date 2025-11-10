@@ -229,6 +229,7 @@ describe("Selection and Interaction", () => {
     );
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
+
     expect(imgContainer).toHaveClass(
       "rounded-lg overflow-hidden transition-all duration-200 w-15 h-22.5 border-2 border-red-400 shadow-lg shadow-red-400/50 animate-pulse cursor-pointer",
     );

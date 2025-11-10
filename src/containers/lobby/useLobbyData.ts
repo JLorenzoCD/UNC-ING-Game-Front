@@ -10,7 +10,7 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import type { UUID } from "@/types/common";
 import type { Player } from "@/types/player";
-import type { Match, MatchWithPlayerCount } from "@/types/match";
+import type { MatchWithPlayerCount } from "@/types/match";
 
 const initialState: LobbyState = {
   match: null,
@@ -42,19 +42,21 @@ export function useLobbyData(matchId: UUID | null) {
       dispatch({ type: "PLAYER_JOINED", payload: newPlayer });
     };
 
-    const handleMatchStart = async (
-      updateMatch: MatchWithPlayerCount | { status: Match },
-    ) => {
+    const handleLobbyQuit = (leftPlayer: Player) => {
+      dispatch({ type: "PLAYER_LEFT", payload: leftPlayer });
+    };
+
+    const handleMatchStart = async (updateMatch: MatchWithPlayerCount) => {
       // Manejo del inicio de la partida
-      let statusString = "";
-      if ("id" in updateMatch) {
-        statusString = updateMatch.status.toLocaleUpperCase();
-      } else {
-        statusString = updateMatch.status.status.toLocaleUpperCase();
+      const status = updateMatch.status.toLocaleUpperCase();
+
+      if (status === "IN_PROGRESS") {
+        navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+        return;
       }
 
-      if (statusString === "IN_PROGRESS") {
-        navigate(FRONTEND_PATHS.MATCH_GAME(matchId));
+      if (status === "COMPLETED") {
+        navigate(FRONTEND_PATHS.MATCH_LIST);
         return;
       }
 
@@ -93,6 +95,7 @@ export function useLobbyData(matchId: UUID | null) {
 
         if (isConnected) {
           wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
+          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
           wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
         }
       } catch (err) {
@@ -108,6 +111,7 @@ export function useLobbyData(matchId: UUID | null) {
     // Cleanup de WebSockets
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
+      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
     };
     // ! DUDAS: state.match

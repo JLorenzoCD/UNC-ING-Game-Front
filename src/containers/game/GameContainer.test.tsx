@@ -406,12 +406,11 @@ vi.mock("./components/HandActions", () => ({
       onFinish,
       onDiscard,
       onPlaySet,
+      onSelectSet,
       onSelectPlayer,
       onSelectSecret,
       onPlayEvent,
-      onSelectSet,
       isDisabledEvent,
-      isSelectionSetEvent,
       isDisabled,
       isSetButtonDisabled,
     }) => (
@@ -425,11 +424,26 @@ vi.mock("./components/HandActions", () => ({
         >
           Play set
         </button>
-        <button onClick={onSelectPlayer} disabled={isDisabled}>
+        <button
+          onClick={onSelectPlayer}
+          disabled={isDisabled}
+          data-testid="select-player-btn"
+        >
           Select player
         </button>
-        <button onClick={onSelectSecret} disabled={isDisabled}>
+        <button
+          onClick={onSelectSecret}
+          disabled={isDisabled}
+          data-testid="select-secret-btn"
+        >
           Select secret
+        </button>
+        <button
+          onClick={onSelectSet}
+          disabled={isDisabled || isSetButtonDisabled}
+          data-testid="select-set-btn"
+        >
+          Select set
         </button>
         <button onClick={onFinish} disabled={isDisabled}>
           Finish turn
@@ -440,13 +454,6 @@ vi.mock("./components/HandActions", () => ({
           data-testid="play-event-btn"
         >
           Play event
-        </button>
-        <button
-          onClick={onSelectSet}
-          disabled={isDisabled || !isSelectionSetEvent}
-          data-testid="select-set-btn"
-        >
-          Select set
         </button>
       </div>
     ),
@@ -487,6 +494,7 @@ describe("GameContainer", () => {
 
     vi.mocked(useGame).mockReturnValue({
       sets: [],
+      logs: [],
       secrets: [],
       cards: mockCards,
       match: mockMatch,
@@ -531,15 +539,28 @@ describe("GameContainer", () => {
 
     vi.mocked(useSetEvent).mockReturnValue({
       setEvent: {
-        isValidSet: true,
+        isInEvent: false,
+        isValidSet: false,
+
         isTargetPlayer: false,
         isTargetSecret: false,
+
+        isRevealSecret: false,
+        isHiddenSecret: false,
+        isStolenSecret: false,
+
+        isSelectingSet: false,
+
+        cards: [],
+        setType: null,
+        set: null,
+        target: null,
+
+        isRevealCurrPlayerSecret: false,
+        canDownTheCardToASet: false,
       } as any,
-      isSetEvent: false,
-      isTargetPlayerSetEvent: false,
-      isTargetSecretSetEvent: false,
-      isStolenSecretSetEvent: false,
       isSetEventButtonDisabled: false,
+      isSetEventSelectSetButtonDisabled: false,
       playSet: mockPlaySet,
       setTargetSet: mockSetTargetSet,
       executeSetActionToTarget: mockExecuteSetActionToTarget,
@@ -551,6 +572,11 @@ describe("GameContainer", () => {
       getTargetSetEvent: vi.fn(),
       getSetCards: vi.fn(),
       clearSetEvent: mockClearSetEvent,
+      addDetectiveCardToSet: vi.fn(),
+      setTargeSetToDown: vi.fn(),
+      isSetSelectableForSetEvent: vi.fn(),
+      setEventToggleDisableButtonSelectSet: vi.fn(),
+      playStolenSet: vi.fn(),
     });
   });
 
@@ -656,6 +682,7 @@ describe("GameContainer", () => {
     it("should open discard modal when clicking on discard pile with discarded cards", async () => {
       vi.mocked(useGame).mockReturnValue({
         sets: [],
+        logs: [],
         secrets: [],
         players: [],
         match: mockMatch,
@@ -717,6 +744,7 @@ describe("GameContainer", () => {
     it("should prevent hand actions when it's not the player's turn", () => {
       vi.mocked(useGame).mockReturnValue({
         sets: [],
+        logs: [],
         secrets: [],
         cards: mockCards,
         players: [mockMatchPlayer],
@@ -877,6 +905,7 @@ describe("GameContainer", () => {
     it("should not call API when finishing turn without match", async () => {
       vi.mocked(useGame).mockReturnValue({
         secrets: [],
+        logs: [],
         cards: mockCards,
         match: null,
         players: [],
@@ -1075,9 +1104,6 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("select-set-btn");
-      expect(applyButton).toBeDisabled();
-
       // 1. Seleccionar la carta de evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardLITA.id}`));
       // 2. Jugar el evento
@@ -1104,35 +1130,30 @@ describe("GameContainer", () => {
       );
     });
 
-    // TODO: Actualizar este test para reflejar el nuevo flujo de eventos (sin botón "Apply effect")
-    it.skip("handles 'CARDS OFF THE TABLE' flow", async () => {
+    it("handles 'CARDS OFF THE TABLE' flow", async () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardCOFT],
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("select-set-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardCOFT.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" debe estar deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar jugador
+      // 2. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 4. Botón "Apply" debe estar habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select Player" debe estar habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1141,8 +1162,7 @@ describe("GameContainer", () => {
       );
     });
 
-    // TODO: Actualizar este test para reflejar el nuevo flujo de eventos (sin botón "Apply effect")
-    it.skip("handles 'AND THEN THERE WAS ONE MORE' flow", async () => {
+    it("handles 'AND THEN THERE WAS ONE MORE' flow", async () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardATWOME],
@@ -1150,33 +1170,26 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("select-set-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardATWOME.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar secreto
+      // 2. Seleccionar secreto
       fireEvent.click(screen.getByTestId("mock-select-secret"));
 
-      // 4. Botón "Apply" sigue deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 5. Seleccionar jugador
+      // 3. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 6. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 4. Botón "Select Player" esta habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 7. Aplicar efecto
+      // 5. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 8. Verificar API
+      // 6. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1188,8 +1201,7 @@ describe("GameContainer", () => {
       );
     });
 
-    // TODO: Actualizar este test para reflejar el nuevo flujo de eventos (sin botón "Apply effect")
-    it.skip("handles 'ANOTHER VICTIM' flow", async () => {
+    it("handles 'ANOTHER VICTIM' flow", async () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardAV],
@@ -1197,27 +1209,23 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("select-set-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardAV.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar set
+      // 2. Seleccionar set
       fireEvent.click(screen.getByTestId("mock-select-set"));
 
-      // 4. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select set" habilitado
+      const selectSetButton = screen.getByTestId("select-set-btn");
+      expect(selectSetButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectSetButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
