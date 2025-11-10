@@ -9,7 +9,12 @@ import type {
   MatchCreateInput,
   MatchWithPlayerCount,
 } from "@/types/match";
-import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
+import type {
+  MatchSet,
+  SetCreationData,
+  SetStolenData,
+  SetUpdateData,
+} from "@/types/set";
 import type { MatchLog } from "@/types/log";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
@@ -248,6 +253,19 @@ export function createHttpService() {
     );
   };
 
+  const playStolenSet = async (
+    matchId: UUID,
+    setId: UUID,
+    dataBody: SetStolenData,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+      body: JSON.stringify(dataBody),
+    };
+
+    return request(BACKEND_ENDPOINTS.PLAY_STOLEN_SET(matchId, setId), options);
+  };
+
   const putSecret = async (
     matchId: UUID,
     secretId: UUID,
@@ -339,6 +357,7 @@ export function createHttpService() {
     putSecret,
     createAndPlaySet,
     addDetectiveCardToSetAndPlay,
+    playStolenSet,
     postPlayNotSoFast,
     postCardTrade,
   };
