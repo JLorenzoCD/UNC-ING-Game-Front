@@ -43,6 +43,9 @@ const BACKEND_ENDPOINTS = {
   PLAY_NOT_SO_FAST: (matchId: UUID) => `/matches/${matchId}/not_so_fast`,
 
   CARD_TRADE: (matchId: UUID) => `/matches/${matchId}/card_trade`,
+
+  TIMEOUT: (matchId: UUID, playerId: UUID) =>
+    `/matches/${matchId}/timeout/${playerId}`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {

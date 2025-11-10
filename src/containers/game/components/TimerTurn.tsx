@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import { twJoin } from "tailwind-merge";
+import { GAME_RULES } from "@/constants/game";
 
 import type { GamePlayer } from "@/types/player";
 import type { Match } from "@/types/match";
 import type { MatchLog } from "@/types/log";
-import { GAME_RULES } from "@/constants/game";
 
 export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   const defaultColor = "bg-[#535353] border-[#313030]";
@@ -49,6 +50,7 @@ export function isTimerExecuted(match: Match, logs: MatchLog[]) {
 export default function TimerTurn() {
   const { match, players, logs, hasFinishedAction } = useGame();
   const { player } = usePlayer();
+  const { httpService } = useHttpService();
 
   const [timer, setTimer] = useState<number>(-1);
   const [shouldTimerBeRun, setShouldTimerBeRun] = useState<boolean>(false);
@@ -57,13 +59,20 @@ export default function TimerTurn() {
     return players.find((p) => p.id === player?.id) as GamePlayer;
   }, [players, player]);
 
+  const currPlayerInTurn = useMemo(() => {
+    return players.find(
+      (p) => p.order === match?.current_player_order,
+    ) as GamePlayer;
+  }, [players, match]);
+
   useEffect(() => {
     if (
       match === null ||
       match.timer_turn === null ||
       match.status.toUpperCase() !== "IN_PROGRESS" ||
       logs.length === 0 ||
-      !isTimerExecuted(match, logs)
+      !isTimerExecuted(match, logs) ||
+      httpService === null
     ) {
       setShouldTimerBeRun(false);
       return;
@@ -85,7 +94,12 @@ export default function TimerTurn() {
         clearInterval(timerInterval); // Detenemos el temporizador
 
         // TIMEOUT
-        console.log("timeout");
+        try {
+          httpService.timeOutPlayerTurn(match.id, currPlayerInTurn.id);
+        } catch (err) {
+          // Posiblemente por condición de carrera. Te tire un error
+          console.error(err);
+        }
       } else {
         // Calcular los segundos restantes y actualizar el estado
         const seconds = Math.ceil(timeRemainingMs / 1000);
@@ -94,7 +108,7 @@ export default function TimerTurn() {
     }, 1000); // Actualizar cada 1 segundo
 
     return () => clearInterval(timerInterval);
-  }, [match, logs]);
+  }, [match, logs, httpService, currPlayerInTurn]);
 
   // Si cambia el match, es porque se cambio de turno o el status paso a "COMPLETE"
   // Si cambio el hasFinishedAction, entonces ya se ejecuto una acción.
