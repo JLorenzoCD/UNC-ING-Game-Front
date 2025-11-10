@@ -1462,4 +1462,68 @@ describe("GameContainer", () => {
       );
     });
   });
+
+  describe("POINT_YOUR_SUSPICIONS PENDING_RESPONSE flow", () => {
+    const mockClearPendingResponse = vi.fn();
+    const mockPostPointYourSuspicions = vi.fn();
+
+    beforeEach(() => {
+      // Asegurarse de que el mock de httpService tenga la función
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          ...vi.mocked(useHttpService)(),
+          postPointYourSuspicions: mockPostPointYourSuspicions,
+        } as any,
+      });
+
+      mockClearPendingResponse.mockClear();
+      mockPostPointYourSuspicions.mockResolvedValue({ success: true });
+
+      // 1. Configurar el mock de useGame con PENDING_RESPONSE activo
+      const eventId = crypto.randomUUID();
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        pendingResponse: {
+          isPending: true,
+          eventId: eventId,
+          eventType: "POINT YOUR SUSPICIONS",
+        },
+        clearPendingResponse: mockClearPendingResponse,
+      });
+    });
+
+    it("Target Flow: should enable player selection and call postPointYourSuspicions", async () => {
+      render(<GameContainer />);
+
+      // 2. Verificar que los botones correctos están deshabilitados/habilitados
+      // El mock de HandActions debe replicar la lógica
+      // de HandActions.tsx para que esto pase.
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+      expect(screen.getByText("Select player")).not.toBeDisabled();
+
+      // 3. Simular selección de jugador (desde el mock de Table)
+      fireEvent.click(screen.getByTestId("mock-select-player"));
+
+      // 4. Simular clic en "Select player"
+      await act(async () => {
+        fireEvent.click(screen.getByText("Select player"));
+      });
+
+      // 5. Verificar que se llamó a la API correcta
+      expect(mockPostPointYourSuspicions).toHaveBeenCalledTimes(1);
+      expect(mockPostPointYourSuspicions).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        expect.any(String), // eventId
+        "player-target-id", // ID del mock de <Table>
+      );
+
+      // 6. Verificar que el estado se limpió
+      expect(mockClearPendingResponse).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        "Your suspicion has been recorded.",
+      );
+    });
+  });
 });

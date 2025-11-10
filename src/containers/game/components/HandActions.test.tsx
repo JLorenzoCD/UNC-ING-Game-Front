@@ -322,5 +322,27 @@ describe("HandActions", () => {
       expect(screen.getByText("Select secret")).not.toBeDisabled();
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
     });
+
+    it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
+      // 1. Simular el estado de PENDING_RESPONSE para PYS
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(), // Obtiene el mock base
+        pendingResponse: {
+          isPending: true,
+          eventType: "POINT YOUR SUSPICIONS",
+        },
+      });
+
+      // 2. Renderizar (isSelectionPlayerEvent es true, que viene de GameContainer)
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // 3. Verificar
+      // El botón está HABILITADO porque la lógica de 'disabled'
+      expect(screen.getByText("Select player")).not.toBeDisabled();
+
+      // Los otros botones sí están deshabilitados
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+    });
   });
 });

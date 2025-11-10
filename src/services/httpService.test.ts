@@ -881,4 +881,40 @@ describe("httpService", () => {
 
     expect(result).toEqual(expectedResponse);
   });
+
+  it("postPointYourSuspicions sends correct request and returns response", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const targetPlayerId = crypto.randomUUID();
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse); // Usa tu helper
+
+    const result = await httpService.postPointYourSuspicions(
+      matchId,
+      playerId,
+      eventId,
+      targetPlayerId,
+    );
+
+    // Construir la URL y el body esperados
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("event_id", eventId);
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/point_your_suspicions?${expectedParams.toString()}`; //
+    const expectedBody = {
+      target_player_id: targetPlayerId, //
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
 });
