@@ -384,32 +384,6 @@ describe("httpService", () => {
       expect(result).toEqual(mockMatches);
     });
 
-    it("joinMatch sends correct request and returns match_id", async () => {
-      const matchId = crypto.randomUUID();
-      const playerId = crypto.randomUUID();
-      const expectedResponse = { match_id: matchId };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(expectedResponse),
-      });
-
-      const result = await httpService.joinMatch(playerId, matchId);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      expect(result).toEqual(expectedResponse);
-      expect(result.match_id).toBe(matchId);
-    });
-
     it("getMatch fetches and returns a single match with player count", async () => {
       const matchId = crypto.randomUUID();
       const mockMatch: MatchWithPlayerCount = {
@@ -440,6 +414,54 @@ describe("httpService", () => {
       );
 
       expect(result).toEqual(mockMatch);
+    });
+
+    it("joinMatch sends correct request and returns match_id", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+      const expectedResponse = { match_id: matchId };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(expectedResponse),
+      });
+
+      const result = await httpService.joinMatch(playerId, matchId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      expect(result).toEqual(expectedResponse);
+      expect(result.match_id).toBe(matchId);
+    });
+
+    it("quitMatch sends correct request", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.quitMatch(playerId, matchId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/quit?player_id=${playerId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
     });
 
     it("startMatch sends correct request and returns status", async () => {
