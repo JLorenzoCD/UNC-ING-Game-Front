@@ -5,6 +5,9 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { twJoin } from "tailwind-merge";
 
 import type { GamePlayer } from "@/types/player";
+import type { Match } from "@/types/match";
+import type { MatchLog } from "@/types/log";
+import { GAME_RULES } from "@/constants/game";
 
 export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   const defaultColor = "bg-[#535353] border-[#313030]";
@@ -23,33 +26,84 @@ export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   }
 }
 
+export function isTimerExecuted(match: Match, logs: MatchLog[]) {
+  const logsCopy = [...logs];
+  logsCopy.sort((a, b) => {
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+
+  if (logsCopy.length === 0) return false;
+
+  const lastLog = logsCopy[0];
+
+  if (lastLog.event_type !== "Turn") return false;
+
+  const turnTime = new Date(match.timer_turn as Date);
+  turnTime.setSeconds(turnTime.getSeconds() + GAME_RULES.TIME_TURN);
+
+  if (turnTime.getTime() > Date.now()) return true;
+
+  return false;
+}
+
 export default function TimerTurn() {
-  const { match, players } = useGame();
+  const { match, players, logs } = useGame();
   const { player } = usePlayer();
 
-  const [timer, setTimer] = useState(60);
+  const [timer, setTimer] = useState<number>(GAME_RULES.TIME_TURN);
+  const [shouldTimerBeRun, setShouldTimerBeRun] = useState<boolean>(false);
 
   const currPlayerMatch = useMemo(() => {
     return players.find((p) => p.id === player?.id) as GamePlayer;
   }, [players, player]);
 
   useEffect(() => {
-    if (timer === 0 && match?.status !== "COMPLETED") {
+    if (
+      match === null ||
+      match.timer_turn === null ||
+      match.status.toUpperCase() !== "IN_PROGRESS" ||
+      logs.length === 0 ||
+      !isTimerExecuted(match, logs)
+    ) {
+      setShouldTimerBeRun(false);
       return;
     }
+    setShouldTimerBeRun(true);
 
-    const intervalId = setInterval(() => {
-      setTimer((prevTime) => prevTime - 1);
-    }, 1000);
+    const turn_time = new Date(match.timer_turn);
+    const logStartTime = turn_time.getTime();
 
-    return () => clearInterval(intervalId);
-  }, [timer, match]);
+    // Calcular el momento final: logStartTime + 60 segundos (en ms)
+    const endTime = logStartTime + GAME_RULES.TIME_TURN * 1000;
 
-  useEffect(() => {
-    setTimer(60);
-  }, [match]);
+    const timerInterval = setInterval(() => {
+      const now = Date.now();
+      const timeRemainingMs = endTime - now;
 
-  if (match === null || player === null) return;
+      if (timeRemainingMs <= 0) {
+        setTimer(0);
+        clearInterval(timerInterval); // Detenemos el temporizador
+
+        // TIMEOUT
+        console.log("timeout");
+      } else {
+        // Calcular los segundos restantes y actualizar el estado
+        const seconds = Math.ceil(timeRemainingMs / 1000);
+        setTimer(seconds);
+      }
+    }, 1000); // Actualizar cada 1 segundo
+
+    return () => clearInterval(timerInterval);
+  }, [match, logs, timer]);
+
+  if (
+    match === null ||
+    player === null ||
+    match.timer_turn === null ||
+    match.timer_turn === undefined ||
+    !shouldTimerBeRun
+  )
+    return null;
 
   const isCurrPlayerTurn = match.current_player_order === currPlayerMatch.order;
 

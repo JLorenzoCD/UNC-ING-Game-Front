@@ -45,6 +45,11 @@ export interface Match {
    * @example 4
    */
   current_player_order: number;
+
+  /**
+   * Fecha de inicio de turno del jugador actual. Es null si esa en el lobby
+   */
+  timer_turn: Date | null;
 }
 
 export type MatchCreateInput = Pick<
