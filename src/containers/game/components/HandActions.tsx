@@ -126,7 +126,8 @@ export default function HandActions({
               (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
               (hasFinishedAction && !pendingResponse.isPending) ||
               (pendingResponse.isPending &&
-                pendingResponse.eventType === GAME_EVENTS.CARD_TRADE)
+                (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
+                  pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY))
             }
           >
             {canSelectMeAsPlayer ? "Select me" : "Select player"}

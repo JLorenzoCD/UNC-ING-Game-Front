@@ -349,7 +349,10 @@ export default function GameContextProvider({
         (card) => card.player_id === player?.id && card.name === "NOT SO FAST",
       );
       if (payload.discarded_card) {
-        if (payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON) {
+        if (
+          payload.event_type === GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON ||
+          payload.event_type === GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE
+        ) {
           handleRemoveCards([payload.discarded_card]);
         } else {
           handleEventCards([payload.discarded_card]);
