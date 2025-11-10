@@ -32,6 +32,7 @@ import type {
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
+import type { MatchLog } from "@/types/log";
 
 export interface GameContextType {
   match: Match | null;
@@ -40,6 +41,7 @@ export interface GameContextType {
   secrets: GameSecret[];
   players: GamePlayer[];
   sets: MatchSet[];
+  logs: MatchLog[];
 
   isLoading: boolean;
   hasError: boolean;
@@ -73,6 +75,7 @@ const GameContext = createContext<GameContextType>({
   secrets: [],
   players: [],
   sets: [],
+  logs: [],
 
   isLoading: false,
   hasError: false,
@@ -160,6 +163,7 @@ export default function GameContextProvider({
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [sets, setSets] = useState<MatchSet[]>([]);
+  const [logs, setLogs] = useState<MatchLog[]>([]);
 
   const nsfTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -178,12 +182,13 @@ export default function GameContextProvider({
     setIsLoading(true);
 
     try {
-      const [match, cards, secrets, players, sets] = await Promise.all([
+      const [match, cards, secrets, players, sets, logs] = await Promise.all([
         httpService.getMatch(matchId),
         httpService.getMatchCards(matchId),
         httpService.getMatchSecrets(matchId),
         httpService.getMatchPlayers(matchId),
         httpService.getMatchSets(matchId),
+        httpService.getMatchLogs(matchId),
       ]);
 
       setMatch(match);
@@ -191,6 +196,7 @@ export default function GameContextProvider({
       setSecrets(secrets);
       setPlayers(players);
       setSets(sets);
+      setLogs(logs);
     } catch (error) {
       console.error("Error fetching match data:", error);
 
@@ -473,32 +479,42 @@ export default function GameContextProvider({
         const index = prevSets.findIndex((prevSet) => prevSet.id === set.id);
         let updateSet = [...prevSets];
 
-        // Creación de un set.
-        if (index === -1 && set.deleted_cards !== undefined) {
-          const playerOwnerSet = players.find((p) => p.id === set.player_id);
-          if (!playerOwnerSet) return prevSets;
+        const playerOwnerSet = players.find((p) => p.id === set.player_id);
+        if (!playerOwnerSet) return prevSets;
 
+        // Creación de un set.
+        if (index === -1) {
           const newSet = {
             ...set,
             cards_to_delete: undefined,
-          } as MatchSet;
+          };
+
+          delete newSet.cards_to_delete;
 
           toast(`Player "${playerOwnerSet.name}" played a set.`);
           updateSet = [...prevSets, newSet];
+        } else if (
+          // Robar un set
+          index !== -1 &&
+          set.deleted_cards === undefined &&
+          prevSets[index].player_id !== set.player_id
+        ) {
+          updateSet[index] = set;
+          toast(`Player "${playerOwnerSet.name}" stolen a set.`);
+        } else if (
+          // Modificación de un set
+          index !== -1
+        ) {
+          updateSet[index] = set;
+        }
 
+        if (set.deleted_cards !== undefined) {
           setCards((prevCards) => {
             // Se eliminan las cartas cuyos ids estén en el arreglo de set.deleted_cards
             return prevCards.filter(
               (card) => !(set.deleted_cards as UUID[]).includes(card.id),
             );
           });
-        } else if (
-          // Modificación de un set
-          index !== -1 &&
-          set.deleted_cards === undefined &&
-          prevSets[index].player_id !== set.player_id
-        ) {
-          updateSet[index] = set;
         }
 
         return updateSet;
@@ -525,7 +541,7 @@ export default function GameContextProvider({
         const isSecretStolen =
           currSecret.player_id !== secret.player_id && isSecretHidden;
 
-        let msg = "";
+        let msg = "Something strange has happened with a secret.";
         if (isDetectivesWin) {
           // Los detectives ganaron.
           msg = "The murderer has been discovered.";
@@ -538,8 +554,6 @@ export default function GameContextProvider({
         } else if (isSecretHidden) {
           // Notificar que se oculto un secreto
           msg = `A secret of player "${playerTarget.name}" has been hidden.`;
-        } else {
-          msg = "Something strange has happened with a secret.";
         }
         toast(msg);
 
@@ -615,48 +629,74 @@ export default function GameContextProvider({
       }
     };
 
+    const handleEventLog = (log: MatchLog) => {
+      setLogs((currentLogs) => [...currentLogs, log]);
+    };
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
       handleEventMatchCompleted,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
       handleCurrPlayerSelectItsSecret,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
       handleNotSoFastEvent,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
       handlePendingResponse,
     );
 
+    wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
         handleEventMatchCompleted,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
         handleCurrPlayerSelectItsSecret,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
         handleNotSoFastEvent,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
+      wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
         handlePendingResponse,
@@ -674,6 +714,7 @@ export default function GameContextProvider({
       secrets,
       players,
       sets,
+      logs,
 
       isLoading,
       hasError,
@@ -695,6 +736,7 @@ export default function GameContextProvider({
       secrets,
       players,
       sets,
+      logs,
       isLoading,
       hasError,
       error,

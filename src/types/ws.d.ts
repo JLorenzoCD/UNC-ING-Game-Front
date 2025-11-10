@@ -5,6 +5,7 @@ import type { MatchSecret } from "./secret";
 import type { MatchSet } from "./set";
 import type { Player } from "./player";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
+import type { MatchLog } from "./log";
 
 type MatchCompletedReason = "deck_finished" | "murderer_revealed";
 
@@ -18,10 +19,13 @@ export type EventTurnPayload = Match;
 export type EventCardsPayload = GameCard[];
 
 /** Payload del evento de actualización de partida */
-export type EventMatchPayload = MatchWithPlayerCount | { status: Match };
+export type EventMatchPayload = MatchWithPlayerCount;
 
 /** Payload del evento de jugador uniéndose al lobby */
 export type EventLobbyJoinPayload = Player;
+
+/** Payload del evento de jugador saliendo del lobby */
+export type EventLobbyQuitPayload = Player;
 
 /** Payload del evento de carta de evento jugada */
 export interface EventCardEventPayload {
@@ -172,6 +176,9 @@ export interface EventPendingResponsePayload {
    */
   players_ids: UUID[];
 }
+
+type EventLogPayload = MatchLog;
+
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -182,6 +189,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CARDS]: EventCardsPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH]: EventMatchPayload;
   [BACKEND_SOCKETS_EVENTS.LOBBY_JOIN]: EventLobbyJoinPayload;
+  [BACKEND_SOCKETS_EVENTS.LOBBY_QUIT]: EventLobbyQuitPayload;
   [BACKEND_SOCKETS_EVENTS.CARD_EVENT]: EventCardEventPayload;
   [BACKEND_SOCKETS_EVENTS.SET]: EventSetPayload;
   [BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL]: EventPlayerSecretRevealPayload;
@@ -190,6 +198,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
+  [BACKEND_SOCKETS_EVENTS.LOG]: EventLogPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

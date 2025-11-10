@@ -17,6 +17,7 @@ const {
   mockOnSelectSet,
   mockUseGame,
   mockOnSelectDirection,
+  mockOnAddDetectiveCardToSet,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
@@ -24,15 +25,17 @@ const {
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
-  const mockOnSelectSet = vi.fn();
   const mockUseGame = vi.fn();
   const mockOnSelectDirection = vi.fn();
+  const mockOnAddDetectiveCardToSet = vi.fn();
+  const mockOnSelectSet = vi.fn();
 
   return {
     mockOnFinish,
     mockOnDiscard,
     mockOnPlaySet,
     mockUseGame,
+    mockOnAddDetectiveCardToSet,
     mockOnSelectPlayer,
     mockOnSelectSecret,
     mockOnPlayEvent,
@@ -74,15 +77,18 @@ const baseProps = {
   onSelectPlayer: mockOnSelectPlayer,
   onSelectSecret: mockOnSelectSecret,
   onPlayEvent: mockOnPlayEvent,
+  onAddDetectiveCardToSet: mockOnAddDetectiveCardToSet,
   onSelectSet: mockOnSelectSet,
   onSelectDirection: mockOnSelectDirection,
+  isSetEventSelectSetButtonDisabled: true,
+  isAddingCardToSet: false,
+  canSelectMeAsPlayer: false,
   isSelectionPlayerEvent: false,
   isSelectionSecretEvent: false,
   isSetButtonDisabled: true,
   isDisabled: false,
   isSelectionSetEvent: false,
   isDisabledEvent: true,
-  canSelectMeAsPlayer: false,
   isSelectDirectionEvent: false,
 };
 
@@ -112,22 +118,16 @@ describe("HandActions", () => {
     it("renders correctly with default props", () => {
       render(
         <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          onPlayEvent={mockOnPlayEvent}
-          onSelectSet={mockOnSelectSet}
-          onSelectDirection={mockOnSelectDirection}
+          {...baseProps}
+          isSetEventSelectSetButtonDisabled={false}
+          isAddingCardToSet={false}
+          canSelectMeAsPlayer={false}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={false}
           isSetButtonDisabled={false}
           isDisabledEvent={false}
           isDisabled={false}
-          canSelectMeAsPlayer={false}
-          isSelectDirectionEvent={false}
         />,
       );
 
@@ -135,14 +135,15 @@ describe("HandActions", () => {
       expect(handActions).toBeInTheDocument();
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(7);
+      expect(buttons.length).toBe(8);
       expect(buttons[0]).toHaveTextContent("Discard cards");
       expect(buttons[1]).toHaveTextContent("Play set");
       expect(buttons[2]).toHaveTextContent("Play event");
-      expect(buttons[3]).toHaveTextContent("Select set");
-      expect(buttons[4]).toHaveTextContent("Select secret");
-      expect(buttons[5]).toHaveTextContent("Select player");
-      expect(buttons[6]).toHaveTextContent("Finish turn");
+      expect(buttons[3]).toHaveTextContent("Add detective");
+      expect(buttons[4]).toHaveTextContent("Select set");
+      expect(buttons[5]).toHaveTextContent("Select secret");
+      expect(buttons[6]).toHaveTextContent("Select player");
+      expect(buttons[7]).toHaveTextContent("Finish turn");
     });
   });
 
@@ -151,7 +152,7 @@ describe("HandActions", () => {
       render(<HandActions {...baseProps} />);
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons).toHaveLength(7);
+      expect(buttons).toHaveLength(8);
 
       expect(screen.getByText("Discard cards")).toBeInTheDocument();
       expect(screen.getByText("Play set")).toBeInTheDocument();
@@ -159,6 +160,7 @@ describe("HandActions", () => {
       expect(screen.getByText("Select secret")).toBeInTheDocument();
       expect(screen.getByText("Finish turn")).toBeInTheDocument();
       expect(screen.getByText("Play event")).toBeInTheDocument();
+      expect(screen.getByText("Add detective")).toBeInTheDocument();
       expect(screen.getByText("Select set")).toBeInTheDocument();
 
       expect(buttons[0]).not.toBeDisabled();
@@ -167,7 +169,8 @@ describe("HandActions", () => {
       expect(buttons[3]).toBeDisabled();
       expect(buttons[4]).toBeDisabled();
       expect(buttons[5]).toBeDisabled();
-      expect(buttons[6]).not.toBeDisabled();
+      expect(buttons[6]).toBeDisabled();
+      expect(buttons[7]).not.toBeDisabled();
     });
 
     it("disables the 'Play set' button based on isSetButtonDisabled prop", () => {
@@ -229,7 +232,7 @@ describe("HandActions", () => {
       render(<HandActions {...baseProps} isDisabled={true} />);
 
       const buttons = screen.getAllByTestId("mock-button");
-      expect(buttons.length).toBe(7);
+      expect(buttons.length).toBe(8);
 
       fireEvent.click(buttons[0]);
       fireEvent.click(buttons[4]);
@@ -240,19 +243,14 @@ describe("HandActions", () => {
       expect(mockOnSelectPlayer).not.toHaveBeenCalled();
       expect(mockOnSelectSecret).not.toHaveBeenCalled();
       expect(mockOnFinish).not.toHaveBeenCalled();
+      expect(mockOnAddDetectiveCardToSet).not.toHaveBeenCalled();
+      expect(mockOnPlayEvent).not.toHaveBeenCalled();
     });
 
     it("disables Discard and Finish turn when 'isSelectionSetEvent' is true", () => {
       render(
         <HandActions
-          onFinish={mockOnFinish}
-          onDiscard={mockOnDiscard}
-          onPlaySet={mockOnPlaySet}
-          onSelectSecret={mockOnSelectSecret}
-          onSelectPlayer={mockOnSelectPlayer}
-          onPlayEvent={mockOnPlayEvent}
-          onSelectSet={mockOnSelectSet}
-          onSelectDirection={mockOnSelectDirection}
+          {...baseProps}
           isSelectionPlayerEvent={false}
           isSelectionSecretEvent={false}
           isSelectionSetEvent={true}
@@ -305,6 +303,7 @@ describe("HandActions", () => {
           isCurrPlayer: false,
         },
         pendingResponse: { isPending: false, eventType: null },
+        notSoFastEvent: { isActivate: false },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent />);
@@ -331,6 +330,28 @@ describe("HandActions", () => {
 
       expect(screen.getByText("Select secret")).not.toBeDisabled();
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
+    });
+
+    it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
+      // 1. Simular el estado de PENDING_RESPONSE para PYS
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(), // Obtiene el mock base
+        pendingResponse: {
+          isPending: true,
+          eventType: "POINT YOUR SUSPICIONS",
+        },
+      });
+
+      // 2. Renderizar (isSelectionPlayerEvent es true, que viene de GameContainer)
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // 3. Verificar
+      // El botón está HABILITADO porque la lógica de 'disabled'
+      expect(screen.getByText("Select player")).not.toBeDisabled();
+
+      // Los otros botones sí están deshabilitados
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
     });
   });
 
