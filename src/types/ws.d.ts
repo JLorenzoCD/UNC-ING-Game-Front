@@ -5,6 +5,7 @@ import type { MatchSecret } from "./secret";
 import type { MatchSet } from "./set";
 import type { Player } from "./player";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
+import type { MatchLog } from "./log";
 
 type MatchCompletedReason = "deck_finished" | "murderer_revealed";
 
@@ -172,6 +173,9 @@ export interface EventPendingResponsePayload {
    */
   players_ids: UUID[];
 }
+
+type EventLogPayload = MatchLog;
+
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -190,6 +194,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
+  [BACKEND_SOCKETS_EVENTS.LOG]: EventLogPayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }

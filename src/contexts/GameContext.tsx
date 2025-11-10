@@ -32,6 +32,7 @@ import type {
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
+import type { MatchLog } from "@/types/log";
 
 export interface GameContextType {
   match: Match | null;
@@ -40,6 +41,7 @@ export interface GameContextType {
   secrets: GameSecret[];
   players: GamePlayer[];
   sets: MatchSet[];
+  logs: MatchLog[];
 
   isLoading: boolean;
   hasError: boolean;
@@ -73,6 +75,7 @@ const GameContext = createContext<GameContextType>({
   secrets: [],
   players: [],
   sets: [],
+  logs: [],
 
   isLoading: false,
   hasError: false,
@@ -160,6 +163,7 @@ export default function GameContextProvider({
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [sets, setSets] = useState<MatchSet[]>([]);
+  const [logs, setLogs] = useState<MatchLog[]>([]);
 
   const nsfTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -178,12 +182,13 @@ export default function GameContextProvider({
     setIsLoading(true);
 
     try {
-      const [match, cards, secrets, players, sets] = await Promise.all([
+      const [match, cards, secrets, players, sets, logs] = await Promise.all([
         httpService.getMatch(matchId),
         httpService.getMatchCards(matchId),
         httpService.getMatchSecrets(matchId),
         httpService.getMatchPlayers(matchId),
         httpService.getMatchSets(matchId),
+        httpService.getMatchLogs(matchId),
       ]);
 
       setMatch(match);
@@ -191,6 +196,7 @@ export default function GameContextProvider({
       setSecrets(secrets);
       setPlayers(players);
       setSets(sets);
+      setLogs(logs);
     } catch (error) {
       console.error("Error fetching match data:", error);
 
@@ -598,48 +604,74 @@ export default function GameContextProvider({
       }
     };
 
+    const handleEventLog = (log: MatchLog) => {
+      setLogs((currentLogs) => [...currentLogs, log]);
+    };
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
       handleEventMatchCompleted,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
     wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
       handleCurrPlayerSelectItsSecret,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
       handleNotSoFastEvent,
     );
+
     wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
       handlePendingResponse,
     );
 
+    wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
         handleEventMatchCompleted,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+
       wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
         handleCurrPlayerSelectItsSecret,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
         handleNotSoFastEvent,
       );
+
       wsService.off(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+
+      wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
         handlePendingResponse,
@@ -657,6 +689,7 @@ export default function GameContextProvider({
       secrets,
       players,
       sets,
+      logs,
 
       isLoading,
       hasError,
@@ -678,6 +711,7 @@ export default function GameContextProvider({
       secrets,
       players,
       sets,
+      logs,
       isLoading,
       hasError,
       error,

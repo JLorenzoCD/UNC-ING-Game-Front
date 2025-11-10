@@ -10,6 +10,7 @@ import type {
   MatchWithPlayerCount,
 } from "@/types/match";
 import type { MatchSet, SetCreationData } from "@/types/set";
+import type { MatchLog } from "@/types/log";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -131,6 +132,10 @@ export function createHttpService() {
 
   const getMatchSets = async (matchId: UUID) => {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
+  };
+
+  const getMatchLogs = async (matchId: UUID): Promise<MatchLog[]> => {
+    return request<MatchLog[]>(BACKEND_ENDPOINTS.GET_MATCH_LOGS(matchId));
   };
 
   const putTakeCards = async (
@@ -284,6 +289,7 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
+    getMatchLogs,
     putTakeCards,
     putDiscardCards,
     putPassTurn,

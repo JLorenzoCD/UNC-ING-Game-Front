@@ -11,6 +11,7 @@ import type { GameSecret } from "@/types/secret";
 import type { MatchSet, SetCreationData } from "@/types/set";
 
 import { createHttpService, type HttpService } from "./httpService";
+import type { MatchLog } from "@/types/log";
 
 declare const global: any;
 
@@ -721,6 +722,47 @@ describe("httpService", () => {
     );
 
     expect(result).toEqual(mockSets);
+    expect(result).toHaveLength(2);
+  });
+
+  it("getMatchLogs fetches and returns match logs", async () => {
+    const matchId = crypto.randomUUID();
+    const mockLogs: MatchLog[] = [
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        created_at: new Date(),
+        event_type: "Hercule Poirot",
+        player_id: crypto.randomUUID(),
+        message: "Player 1 played a set",
+      },
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        created_at: new Date(),
+        event_type: "Discard Cards",
+        player_id: crypto.randomUUID(),
+        message: "Player 2 discarded cards",
+      },
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockLogs),
+    });
+
+    const result = await httpService.getMatchLogs(matchId);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/logs`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockLogs);
     expect(result).toHaveLength(2);
   });
 
