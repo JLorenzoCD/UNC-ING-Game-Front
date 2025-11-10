@@ -1,6 +1,11 @@
 import type { UUID } from "@/types/common";
 import type { CardName, GameCard } from "@/types/card";
-import type { SetCreationData, SetType } from "@/types/set";
+import type {
+  MatchSet,
+  SetCreationData,
+  SetType,
+  SetUpdateData,
+} from "@/types/set";
 
 const MIN_CARD_COUT_FOR_SET: Record<SetType, number> = {
   "HERCULE POIROT": 3,
@@ -19,7 +24,7 @@ const MAX_QUIN_COUNT = 2 as const;
 /*
  * pre: isCardsValidSet.
  */
-export function cardsToSetTypeDetective(cards: GameCard[]) {
+export function cardsToSetCreationDataTypeDetective(cards: GameCard[]) {
   let setType: SetType | null = null;
 
   if (isValidTwoBeresfordSetType(cards)) {
@@ -44,10 +49,6 @@ export function cardsToSetTypeDetective(cards: GameCard[]) {
     case "TOMMY BERESFORD":
     case "TUPPENCE BERESFORD":
       setType = detectiveName;
-      break;
-
-    default:
-      setType = null;
   }
 
   return setType;
@@ -108,7 +109,7 @@ export function isCardsValidSet(cards: GameCard[]) {
     ];
   }
 
-  const setType = cardsToSetTypeDetective(cards);
+  const setType = cardsToSetCreationDataTypeDetective(cards);
   if (setType === null || !cardsGroupByDetective[setType]) return false;
 
   if (
@@ -122,7 +123,7 @@ export function isCardsValidSet(cards: GameCard[]) {
   return true;
 }
 
-export function cardsToSet(
+export function cardsToSetCreationData(
   cards: GameCard[],
   targetPlayerId: UUID,
   targetSecretId?: UUID,
@@ -141,7 +142,7 @@ export function cardsToSet(
   const target_secret_id = targetSecretId;
 
   // Si o si por isCardsValidSet
-  const type = cardsToSetTypeDetective(cards) as SetType;
+  const type = cardsToSetCreationDataTypeDetective(cards) as SetType;
 
   const setData: SetCreationData = {
     type,
@@ -155,12 +156,28 @@ export function cardsToSet(
   return setData;
 }
 
-export function isSetTargetOneSecret(cards: GameCard[]) {
+export function cardsToSetUpdateData(
+  card: GameCard,
+  targetPlayerId: UUID,
+  targetSecretId?: UUID,
+): SetUpdateData {
+  const setData: SetUpdateData = {
+    player_id: card.player_id as UUID,
+    card_ids: [card.id],
+    target_player_id: targetPlayerId,
+  };
+
+  if (targetSecretId) setData.target_secret_id = targetSecretId;
+
+  return setData;
+}
+
+export function isSetCardsTargetOneSecret(cards: GameCard[]) {
   if (!isCardsValidSet(cards))
     throw new Error("The cards given are not a valid Set.");
 
   // Valido por isCardsValidSet
-  const setType = cardsToSetTypeDetective(cards) as SetType;
+  const setType = cardsToSetCreationDataTypeDetective(cards) as SetType;
 
   switch (setType) {
     case "HERCULE POIROT":
@@ -174,6 +191,29 @@ export function isSetTargetOneSecret(cards: GameCard[]) {
     case "TWO BERESFORD":
       return false;
   }
+}
+
+export function isSetCardsTargetOnePLayer(cards: GameCard[]) {
+  return !isSetCardsTargetOneSecret(cards);
+}
+
+export function isSetTargetOneSecret(set: MatchSet) {
+  switch (set.type) {
+    case "HERCULE POIROT":
+    case "MISS MARPLE":
+    case "PARKER PYNE":
+      return true;
+    case "MR SATTERTHWAITE":
+    case "LADY EILEEN":
+    case "TOMMY BERESFORD":
+    case "TUPPENCE BERESFORD":
+    case "TWO BERESFORD":
+      return false;
+  }
+}
+
+export function isSetTargetOnePlayer(set: MatchSet) {
+  return !isSetTargetOneSecret(set);
 }
 
 /*
@@ -191,7 +231,7 @@ export function isSetWithQuin(cards: GameCard[]) {
  * pre: isCardsValidSet.
  */
 export function isSetActionRevealSecret(cards: GameCard[]) {
-  const setType = cardsToSetTypeDetective(cards) as SetType;
+  const setType = cardsToSetCreationDataTypeDetective(cards) as SetType;
 
   return setType !== "PARKER PYNE";
 }
@@ -199,8 +239,56 @@ export function isSetActionRevealSecret(cards: GameCard[]) {
 /*
  * pre: isCardsValidSet.
  */
+export function isSetActionHiddenSecret(cards: GameCard[]) {
+  const setType = cardsToSetCreationDataTypeDetective(cards) as SetType;
+
+  return setType === "PARKER PYNE";
+}
+
+/*
+ * pre: isCardsValidSet.
+ */
 export function isSetActionStolenSecret(cards: GameCard[]) {
-  const setType = cardsToSetTypeDetective(cards) as SetType;
+  const setType = cardsToSetCreationDataTypeDetective(cards) as SetType;
 
   return setType === "MR SATTERTHWAITE" && isSetWithQuin(cards);
+}
+
+export function canDownTheCardToASet(
+  card: GameCard,
+  sets: MatchSet[],
+  currPlayerId: UUID,
+) {
+  if (card.type !== "DETECTIVE") return false;
+  if (sets.length === 0) return false;
+
+  if (card.name === "HARLEY QUIN WILDCARD") return false;
+  if (card.name === "ARIADNE OLIVER") return true;
+
+  const currPlayerSetsType = Object.keys(
+    Object.groupBy(
+      sets.filter((s) => s.player_id === currPlayerId),
+      (set) => set.type,
+    ),
+  ) as SetType[];
+  if (currPlayerSetsType.length === 0) return false; // El jugador no tiene sets
+
+  for (const setType of currPlayerSetsType) {
+    if (card.name === setType) return true;
+
+    if (
+      setType === "TWO BERESFORD" &&
+      (card.name === "TOMMY BERESFORD" || card.name === "TUPPENCE BERESFORD")
+    )
+      return true;
+
+    if (
+      (setType === "TOMMY BERESFORD" && card.name === "TUPPENCE BERESFORD") ||
+      (setType === "TUPPENCE BERESFORD" && card.name === "TOMMY BERESFORD")
+    )
+      return true;
+  }
+
+  // El jugador actual no tiene ningún set valido al cual bajar la carta
+  return false;
 }
