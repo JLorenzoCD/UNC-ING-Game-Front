@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
+import { useHand } from "./hooks/useHand";
+import { useSetEvent } from "./hooks/useSetEvent";
+
+import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 import type { MatchSet } from "@/types/set";
-import { useGame } from "@/contexts/GameContext";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { useHttpService } from "@/contexts/HttpServiceContext";
-
 import type {
   RegularAndDiscardEventPayload,
   LookIntoTheAshesEventPayload,
@@ -18,6 +21,7 @@ import type {
   CardTradeEventPayload,
 } from "@/types/event";
 import type { EventPayload } from "@/types/event";
+
 import Hand from "./components/Hand";
 import Sets from "./components/Sets";
 import Table from "./components/Table";
@@ -28,17 +32,16 @@ import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
+import Logs from "./components/Logs";
 
-import { useHand } from "./hooks/useHand";
-import { useSetEvent } from "./hooks/useSetEvent";
 import {
   GAME_EVENTS,
   EVENT_STEPS,
   GAME_RULES,
   type EventStep,
 } from "@/constants/game";
+
 import { handleApiError } from "@/utils/errorHandler";
-import Logs from "./components/Logs";
 
 export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
@@ -108,6 +111,7 @@ export default function GameContainer() {
   const {
     playSet,
     addDetectiveCardToSet,
+    playStolenSet,
     setEvent,
     isSetEventButtonDisabled,
     isSetEventSelectSetButtonDisabled,
@@ -245,7 +249,7 @@ export default function GameContainer() {
     if (
       (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
         currentEventCard?.name === GAME_EVENTS.CARD_TRADE) &&
-      currentEventStep === "select_player"
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
     ) {
       if (selectedTargetPlayer) {
         await handleEndEvent();
@@ -297,8 +301,8 @@ export default function GameContainer() {
     }
 
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_player"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
     ) {
       if (
         (selectedTargetPlayer || canSelectMeAsPlayer) &&
@@ -314,12 +318,12 @@ export default function GameContainer() {
 
   const handleSelectedSecret = async () => {
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       if (selectedTargetSecret) {
         // ¡Avanzamos al siguiente paso!
-        setCurrentEventStep("select_player");
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         toast.info("Now select a player.");
       } else {
         toast.error("You must select a secret first.");
@@ -550,8 +554,8 @@ export default function GameContainer() {
 
   const handleSelectSet = async () => {
     if (
-      currentEventCard?.name === "ANOTHER VICTIM" &&
-      currentEventStep === "select_set"
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      currentEventStep === EVENT_STEPS.SELECT_SET
     ) {
       // Comprobamos si el objetivo está seleccionado (handleEndEvent lo necesita)
       if (selectedTargetSet) {
@@ -955,9 +959,6 @@ export default function GameContainer() {
         eventPayload = {
           target_set_id: selectedTargetSet?.id,
         } as AnotherVictimEventPayload;
-
-        setSelectedTargetSet(null);
-        setCurrentEventStep(null);
         break;
       }
 
@@ -987,9 +988,20 @@ export default function GameContainer() {
         eventPayload,
       );
 
-      clearSelectedCards();
-      playerFinishActionTurn();
-      setCurrentEventCard(null);
+      if (nameEvent === GAME_EVENTS.ANOTHER_VICTIM) {
+        // Se establece los valores del setEvent
+        const setId = selectedTargetSet?.id as UUID;
+        playStolenSet(setId);
+
+        // Se limpia el evento Another_victim
+        setSelectedTargetSet(null);
+        setCurrentEventStep(null);
+      } else {
+        // Se limpia los otros eventos y se bloquea los botones
+        clearSelectedCards();
+        setCurrentEventCard(null);
+        playerFinishActionTurn();
+      }
     } catch (error) {
       handleApiError(error, "Error al ejecutar el evento");
     }
