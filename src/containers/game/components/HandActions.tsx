@@ -141,9 +141,8 @@ export default function HandActions({
           <Button
             onClick={onSelectPlayer}
             disabled={
-              (isDisabled && !pendingResponse.isPending) ||
-              (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
-              (hasFinishedAction && !pendingResponse.isPending) ||
+              ((isDisabled || !isSelectionPlayerEvent || hasFinishedAction) &&
+                !pendingResponse.isPending) ||
               (pendingResponse.isPending &&
                 (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
                   pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY)) ||

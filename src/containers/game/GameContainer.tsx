@@ -475,22 +475,22 @@ export default function GameContainer() {
     if (notSoFastEvent.isActivate) return false;
 
     if (setEvent.isTargetPlayer) return true;
-    // Other events
+
     if (
       pendingResponse.isPending &&
       pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
-    ) {
+    )
       return true;
-    }
+
     if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
       (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
         currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
       (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
         currentEventStep === EVENT_STEPS.SELECT_PLAYER)
-    ) {
+    )
       return true;
-    }
+
     return false;
   };
 
@@ -499,7 +499,7 @@ export default function GameContainer() {
 
     if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
-    // Other events
+
     if (
       currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
       currentEventStep === EVENT_STEPS.SELECT_SECRET

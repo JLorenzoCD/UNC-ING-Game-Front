@@ -27,6 +27,8 @@ const MOCK_CARD_ID_10 = crypto.randomUUID(); // Carta disponible para robar
 const MOCK_PLAYER_ID = crypto.randomUUID();
 const MOCK_MATCH_ID = crypto.randomUUID();
 
+const MOCK_TIMER_TURN = new Date().toISOString as any;
+
 const mockPlayer: Player = {
   id: MOCK_PLAYER_ID,
   name: "Test Player",
@@ -50,6 +52,7 @@ const mockMatch: Match = {
   status: "IN_PROGRESS",
   owner_id: crypto.randomUUID(),
   current_player_order: 1,
+  timer_turn: MOCK_TIMER_TURN,
 };
 
 const mockCards: GameCard[] = [
@@ -162,6 +165,36 @@ const mockCards: GameCard[] = [
     type: "DETECTIVE",
     is_discarded: false,
     discarded_at: null,
+  },
+];
+
+const mockSecrets: GameSecret[] = [
+  {
+    type: "INNOCENT",
+    content: "You are innocent",
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: false,
+  },
+  {
+    type: "INNOCENT",
+    id: crypto.randomUUID(),
+    content: "You are the innocent",
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: false,
+  },
+  {
+    type: "MURDERER",
+    id: crypto.randomUUID(),
+    content: "You are the murderer",
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: true,
   },
 ];
 
@@ -465,6 +498,7 @@ vi.mock("./components/HandActions", () => ({
           <button
             onClick={onPlaySet}
             disabled={isDisabled || isSetButtonDisabled || hasFinishedAction}
+            data-testid="play-set-btn"
           >
             Play set
           </button>
@@ -505,9 +539,8 @@ vi.mock("./components/HandActions", () => ({
             onClick={onSelectPlayer}
             data-testid="select-player-btn"
             disabled={
-              (isDisabled && !pendingResponse.isPending) ||
-              (!isSelectionPlayerEvent && !pendingResponse.isPending) ||
-              (hasFinishedAction && !pendingResponse.isPending) ||
+              ((isDisabled || !isSelectionPlayerEvent || hasFinishedAction) &&
+                !pendingResponse.isPending) ||
               (pendingResponse.isPending &&
                 (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
                   pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY))
@@ -544,6 +577,7 @@ vi.mock("./components/Result", () => ({
 }));
 
 import GameContainer from "./GameContainer";
+import type { GameSecret } from "@/types/secret";
 
 describe("GameContainer", () => {
   // mocks del useSetEvent
@@ -568,7 +602,7 @@ describe("GameContainer", () => {
     vi.mocked(useGame).mockReturnValue({
       sets: [],
       logs: [],
-      secrets: [],
+      secrets: mockSecrets,
       cards: mockCards,
       match: mockMatch,
       players: [mockMatchPlayer],
@@ -652,7 +686,6 @@ describe("GameContainer", () => {
       setTargeSetToDown: vi.fn(),
       isSetSelectableForSetEvent: vi.fn(),
       setEventToggleDisableButtonSelectSet: vi.fn(),
-      playStolenSet: vi.fn(),
     });
   });
 
@@ -1069,7 +1102,7 @@ describe("GameContainer", () => {
     it("calls playSet when 'Play set' is clicked", async () => {
       render(<GameContainer />);
 
-      const playSetButton = screen.getByText("Play set");
+      const playSetButton = screen.getByTestId("play-set-btn");
       await act(async () => {
         fireEvent.click(playSetButton);
       });
@@ -1242,7 +1275,6 @@ describe("GameContainer", () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardATWOME],
-        secrets: [{ id: "secret-target-id", is_revealed: true } as any], // Secreto revelado
       });
       render(<GameContainer />);
 
