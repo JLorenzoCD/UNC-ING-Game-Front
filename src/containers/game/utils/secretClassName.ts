@@ -7,14 +7,12 @@ export function getBoderClass(
 ) {
   let borderClass = "";
   if (isSelfRevealed) {
-    borderClass =
-      "border-4 border-red-500 shadow-lg shadow-red-500/50 w-21 h-31";
+    borderClass = "border-4 border-red-500 shadow-lg shadow-red-500/50";
 
     if (isSelectable && isSelectingTarget) {
       borderClass += " animate-pulse cursor-pointer";
     } else if (isSelectable && isTarget) {
-      borderClass =
-        "border-4 border-blue-500 shadow-lg shadow-blue-500/50 w-21 h-31";
+      borderClass = "border-4 border-blue-500 shadow-lg shadow-blue-500/50";
     }
   } else if (isSelectionMode) {
     if (isSelectable) {

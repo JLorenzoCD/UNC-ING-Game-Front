@@ -8,9 +8,10 @@ import type {
 } from "@/types/match";
 import type { GameCard } from "@/types/card";
 import type { GameSecret } from "@/types/secret";
-import type { MatchSet, SetCreationData } from "@/types/set";
+import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
 
 import { createHttpService, type HttpService } from "./httpService";
+import type { MatchLog } from "@/types/log";
 
 declare const global: any;
 
@@ -383,32 +384,6 @@ describe("httpService", () => {
       expect(result).toEqual(mockMatches);
     });
 
-    it("joinMatch sends correct request and returns match_id", async () => {
-      const matchId = crypto.randomUUID();
-      const playerId = crypto.randomUUID();
-      const expectedResponse = { match_id: matchId };
-
-      mockFetch.mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValueOnce(expectedResponse),
-      });
-
-      const result = await httpService.joinMatch(playerId, matchId);
-
-      expect(mockFetch).toHaveBeenCalledWith(
-        `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        },
-      );
-
-      expect(result).toEqual(expectedResponse);
-      expect(result.match_id).toBe(matchId);
-    });
-
     it("getMatch fetches and returns a single match with player count", async () => {
       const matchId = crypto.randomUUID();
       const mockMatch: MatchWithPlayerCount = {
@@ -439,6 +414,54 @@ describe("httpService", () => {
       );
 
       expect(result).toEqual(mockMatch);
+    });
+
+    it("joinMatch sends correct request and returns match_id", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+      const expectedResponse = { match_id: matchId };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(expectedResponse),
+      });
+
+      const result = await httpService.joinMatch(playerId, matchId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      expect(result).toEqual(expectedResponse);
+      expect(result.match_id).toBe(matchId);
+    });
+
+    it("quitMatch sends correct request", async () => {
+      const matchId = crypto.randomUUID();
+      const playerId = crypto.randomUUID();
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValueOnce(undefined),
+      });
+
+      await httpService.quitMatch(playerId, matchId);
+
+      expect(mockFetch).toHaveBeenCalledWith(
+        `http://localhost:8000/matches/${matchId}/quit?player_id=${playerId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      );
     });
 
     it("startMatch sends correct request and returns status", async () => {
@@ -724,6 +747,47 @@ describe("httpService", () => {
     expect(result).toHaveLength(2);
   });
 
+  it("getMatchLogs fetches and returns match logs", async () => {
+    const matchId = crypto.randomUUID();
+    const mockLogs: MatchLog[] = [
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        created_at: new Date(),
+        event_type: "Hercule Poirot",
+        player_id: crypto.randomUUID(),
+        message: "Player 1 played a set",
+      },
+      {
+        id: crypto.randomUUID(),
+        match_id: matchId,
+        created_at: new Date(),
+        event_type: "Discard Cards",
+        player_id: crypto.randomUUID(),
+        message: "Player 2 discarded cards",
+      },
+    ];
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: vi.fn().mockResolvedValueOnce(mockLogs),
+    });
+
+    const result = await httpService.getMatchLogs(matchId);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      `http://localhost:8000/matches/${matchId}/logs`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    expect(result).toEqual(mockLogs);
+    expect(result).toHaveLength(2);
+  });
+
   it("createAndPlaySet sends correct request to play one set", async () => {
     const matchId = crypto.randomUUID();
     const playerId = crypto.randomUUID();
@@ -801,27 +865,196 @@ describe("httpService", () => {
     );
   });
 
-  it("putMatchCards (take) sends correct request to take cards", async () => {
+  it("addDetectiveCardToSetAndPlay sends correct PUT request to update a set", async () => {
     const matchId = crypto.randomUUID();
+    const setId = crypto.randomUUID();
     const playerId = crypto.randomUUID();
-    const cardIds = [crypto.randomUUID(), crypto.randomUUID()];
+    const cardId = crypto.randomUUID();
+    const targetPlayerId = crypto.randomUUID();
+    const targetSecretId = crypto.randomUUID();
 
+    const mockDataBody: SetUpdateData = {
+      player_id: playerId,
+      card_ids: [cardId],
+      target_player_id: targetPlayerId,
+      target_secret_id: targetSecretId, // Opcional, lo incluimos para testearlo
+    };
+
+    // Mockeamos una respuesta exitosa, ya que el método retorna Promise<void>
     mockFetch.mockResolvedValueOnce({
       ok: true,
       json: vi.fn().mockResolvedValueOnce(undefined),
     });
 
-    await httpService.putMatchCards(matchId, playerId, cardIds);
+    await httpService.addDetectiveCardToSetAndPlay(
+      matchId,
+      setId,
+      mockDataBody,
+    );
 
+    // Verificamos que se haya llamado a fetch con los parámetros correctos
     expect(mockFetch).toHaveBeenCalledWith(
-      `http://localhost:8000/matches/${matchId}/cards/take`,
+      `http://localhost:8000/matches/${matchId}/sets/${setId}`,
       {
         method: "PUT",
-        body: JSON.stringify({ player_id: playerId, card_ids: cardIds }),
+        body: JSON.stringify(mockDataBody),
         headers: {
           "Content-Type": "application/json",
         },
       },
     );
+  });
+
+  it("postPlayNotSoFast sends correct request with all parameters", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const nsfCount = 1;
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse); // Usa el helper existente
+
+    const result = await httpService.postPlayNotSoFast(
+      matchId,
+      playerId,
+      cardId,
+      eventId,
+      nsfCount,
+    );
+
+    // Construir la URL esperada
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("match_card_id", cardId);
+    expectedParams.append("event_id", eventId);
+    expectedParams.append("nsf_count", nsfCount.toString());
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/not_so_fast?${expectedParams.toString()}`;
+
+    // Construir el body esperado
+    const expectedBody = {
+      player_id: playerId,
+      match_card_id: cardId,
+      event_id: eventId,
+      nsf_count: nsfCount,
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
+
+  it("postCardTrade sends correct request and returns response", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse);
+
+    const result = await httpService.postCardTrade(
+      matchId,
+      playerId,
+      eventId,
+      cardId,
+    );
+
+    // Construir la URL y el body esperados
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("event_id", eventId);
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/card_trade?${expectedParams.toString()}`;
+    const expectedBody = {
+      target_card_id: cardId,
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
+
+  it("postPointYourSuspicions sends correct request and returns response", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const targetPlayerId = crypto.randomUUID();
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse); // Usa tu helper
+
+    const result = await httpService.postPointYourSuspicions(
+      matchId,
+      playerId,
+      eventId,
+      targetPlayerId,
+    );
+
+    // Construir la URL y el body esperados
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("event_id", eventId);
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/point_your_suspicions?${expectedParams.toString()}`; //
+    const expectedBody = {
+      target_player_id: targetPlayerId, //
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
+  });
+
+  it("postDeadCardFolly sends correct request and returns response", async () => {
+    const matchId = crypto.randomUUID();
+    const playerId = crypto.randomUUID();
+    const eventId = crypto.randomUUID();
+    const cardId = crypto.randomUUID();
+    const expectedResponse = { success: true };
+
+    mockSuccessResponse(expectedResponse);
+
+    const result = await httpService.postDeadCardFolly(
+      matchId,
+      playerId,
+      eventId,
+      cardId,
+    );
+
+    // Construir la URL y el body esperados
+    const expectedParams = new URLSearchParams();
+    expectedParams.append("player_id", playerId);
+    expectedParams.append("event_id", eventId);
+    const expectedUrl = `http://localhost:8000/matches/${matchId}/dead_card_folly?${expectedParams.toString()}`;
+    const expectedBody = {
+      target_card_id: cardId,
+    };
+
+    expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
+      method: "POST",
+      body: JSON.stringify(expectedBody),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    expect(result).toEqual(expectedResponse);
   });
 });

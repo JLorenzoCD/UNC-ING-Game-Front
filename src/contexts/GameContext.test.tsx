@@ -10,6 +10,13 @@ import {
 
 import GameContextProvider, { useGame } from "./GameContext";
 
+import type {
+  EventNotSoFastPayload,
+  EventPendingResponsePayload,
+} from "@/types/ws";
+
+import { GAME_EVENTS } from "@/constants/game";
+
 import type { UUID } from "@/types/common";
 import type { Match } from "@/types/match";
 import type { GameCard } from "@/types/card";
@@ -34,6 +41,12 @@ const {
   mockCards,
   mockSecrets,
   mockPlayers,
+  setPoirot,
+  mockToastInfo,
+  mockToastWarning,
+  mockToastError,
+  mockToastSuccess,
+  mockToastDismiss,
 } = vi.hoisted(() => {
   const mockHttpService = {
     getMatch: vi.fn(),
@@ -41,6 +54,7 @@ const {
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
     getMatchSets: vi.fn(),
+    getMatchLogs: vi.fn(),
   };
   const mockUseHttpService = vi.fn((): any => ({
     httpService: mockHttpService,
@@ -145,6 +159,9 @@ const {
     SET: "sets_WS_event",
     SECRET: "secret_WS_event",
     PLAYER_SECRET_REVEAL: "player_secret_reveal_WS_event",
+    CANCELLATION_WINDOW_OPEN: "cancellation_window_WS_open",
+    CANCELED: "event_WS_cancelled",
+    PENDING_RESPONSE: "pending_WS_target_response",
   };
 
   const mockUseParams = vi.fn((): any => ({
@@ -161,15 +178,31 @@ const {
     player: MOCKED_CURRENT_PLAYER,
   }));
 
+  const mockToastInfo = vi.fn();
+  const mockToastWarning = vi.fn();
+  const mockToastError = vi.fn();
+  const mockToastSuccess = vi.fn();
+  const mockToastDismiss = vi.fn();
+
   const mockToast = {
     warning: vi.fn(),
     error: vi.fn(),
     success: vi.fn(),
     info: vi.fn(),
     custom: vi.fn(),
+    dismiss: vi.fn(),
   };
   const mainToastFunction = vi.fn();
   Object.assign(mainToastFunction, mockToast);
+
+  const setPoirot: MatchSet = {
+    id: "550e8400-e29b-41d4-a716-446655440001",
+    type: "HERCULE POIROT",
+    player_id: mockPlayerTwo.player_id,
+    match_id: mockMatchId,
+    quin_play: false,
+    quin_count: 0,
+  };
 
   return {
     mockOn,
@@ -188,6 +221,12 @@ const {
     mockCards,
     mockSecrets,
     mockPlayers,
+    setPoirot,
+    mockToastInfo,
+    mockToastWarning,
+    mockToastError,
+    mockToastSuccess,
+    mockToastDismiss,
   };
 });
 
@@ -208,7 +247,15 @@ vi.mock("react-router", () => ({
   useParams: mockUseParams,
 }));
 vi.mock("sonner", () => {
-  return { toast: mainToastFunction };
+  return {
+    toast: Object.assign(mainToastFunction, {
+      info: mockToastInfo,
+      warning: mockToastWarning,
+      error: mockToastError,
+      success: mockToastSuccess,
+      dismiss: mockToastDismiss,
+    }),
+  };
 });
 
 // Mock console.error to avoid noise in tests
@@ -227,13 +274,6 @@ const getEventHandler = (eventName: string) => {
 
 // Helper para montar el hook y ejecutar la carga inicial de datos
 const setupContextAndGetResult = async (currentPlayer: GamePlayer | null) => {
-  // Mockear la carga inicial para que el estado de players esté disponible
-  mockHttpService.getMatch.mockResolvedValue(mockMatch);
-  mockHttpService.getMatchCards.mockResolvedValue(mockCards);
-  mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
-  mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
-  mockHttpService.getMatchSets.mockResolvedValue([]);
-
   const playerInHook = currentPlayer
     ? { id: currentPlayer.id, name: currentPlayer.name }
     : null;
@@ -256,6 +296,12 @@ const setupContextAndGetResult = async (currentPlayer: GamePlayer | null) => {
 describe("GameContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockHttpService.getMatch.mockResolvedValue(mockMatch);
+    mockHttpService.getMatchCards.mockResolvedValue(mockCards);
+    mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
+    mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
+    mockHttpService.getMatchSets.mockResolvedValue([]);
 
     mockUseHttpService.mockReturnValue({ httpService: mockHttpService });
 
@@ -515,16 +561,32 @@ describe("GameContext", () => {
         secrets: [],
         players: [],
         sets: [],
+        logs: [],
         isLoading: true,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: expect.any(Function),
         playerSelectsOneOfHisSecrets: {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: expect.any(Function),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: expect.any(Function),
       });
     });
   });
@@ -662,9 +724,7 @@ describe("GameContext", () => {
 
       // Simular que el jugador actual terminó su acción
       result.current.playerFinishActionTurn();
-      await waitFor(() =>
-        expect(result.current.isPlayerFinishAction).toBe(true),
-      );
+      await waitFor(() => expect(result.current.hasFinishedAction).toBe(true));
 
       const newMatch: Match = {
         ...mockMatch,
@@ -677,7 +737,7 @@ describe("GameContext", () => {
       // Assert: Verificar el estado actualizado
       await waitFor(() => {
         expect(result.current.match?.current_player_order).toBe(1);
-        expect(result.current.isPlayerFinishAction).toBe(false); // Debe resetearse
+        expect(result.current.hasFinishedAction).toBe(false); // Debe resetearse
       });
     });
 
@@ -717,6 +777,52 @@ describe("GameContext", () => {
       );
       expect(mainToastFunction).toHaveBeenCalledWith(
         `Player "${mockPlayerOne.name}" played a set.`,
+      );
+    });
+
+    it("handleUpdateSets: should update a set", async () => {
+      mockHttpService.getMatch.mockResolvedValue(mockMatch);
+      mockHttpService.getMatchCards.mockResolvedValue(mockCards);
+      mockHttpService.getMatchSecrets.mockResolvedValue(mockSecrets);
+      mockHttpService.getMatchPlayers.mockResolvedValue(mockPlayers);
+      mockHttpService.getMatchSets.mockResolvedValue([setPoirot]);
+
+      const playerInHook = { id: mockPlayerOne.id, name: mockPlayerOne.name };
+      mockUsePlayer.mockReturnValue({ player: playerInHook });
+
+      const { result } = renderHook(() => useGame(), {
+        wrapper: ({ children }) => (
+          <GameContextProvider>{children}</GameContextProvider>
+        ),
+      });
+
+      // Esperar a que la carga inicial termine
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.cards.length).toBe(2);
+      expect(result.current.players.length).toBe(2);
+
+      const handler = getEventHandler(mockSocketsEvents.SET);
+
+      const newSetEvent = {
+        ...setPoirot,
+        player_id: playerInHook.id,
+      } as MatchSet & { deleted_cards: UUID[] };
+
+      expect(result.current.players.length).toBeGreaterThan(0);
+
+      // Act: Ejecutar el handler de WS
+      await act(() => handler(newSetEvent));
+
+      // Assert: Verificar el estado actualizado (ya no necesitamos waitFor)
+      expect(result.current.sets.length).toBe(1);
+      expect(result.current.sets[0].id).toBe(setPoirot.id);
+      expect(result.current.cards.length).toBe(2);
+      expect(mainToastFunction).toHaveBeenCalledWith(
+        `Player "${mockPlayerOne.name}" stolen a set.`,
       );
     });
 
@@ -795,6 +901,39 @@ describe("GameContext", () => {
       });
     });
 
+    it("handleUpdateSecrets: should update a secret as hidden", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.SECRET);
+
+      // Se usa el mockSecrets inicial
+      const secretToUpdate = mockSecrets[0]; // Innocent
+      secretToUpdate.is_revealed = true;
+      expect(
+        result.current.secrets.find((s) => s.id === secretToUpdate.id)
+          ?.is_revealed,
+      ).toBe(true);
+
+      const updatedSecret = {
+        ...secretToUpdate,
+        is_revealed: false, // Revelado
+      };
+
+      // Act: Ejecutar el handler de WS
+      handler(updatedSecret);
+
+      // Assert: Verificar el estado actualizado
+      await waitFor(() => {
+        const updated = result.current.secrets.find(
+          (s) => s.id === secretToUpdate.id,
+        );
+        expect(updated?.is_revealed).toBe(false);
+        expect(result.current.lastUpdatedSecretId).toBe(secretToUpdate.id);
+        expect(mainToastFunction).toHaveBeenCalledWith(
+          `A secret of player "${mockPlayerOne.name}" has been hidden.`,
+        );
+      });
+    });
+
     it("handleCurrPlayerSelectItsSecret: should set selecting state for CURRENT player and show a specific toast", async () => {
       // Configurar el mockPlayerOne como el jugador actual
       const result = await setupContextAndGetResult(mockPlayerOne);
@@ -839,6 +978,260 @@ describe("GameContext", () => {
           "A player was selected to reveal one of his secrets.",
         );
       });
+    });
+  });
+
+  describe("WebSocket Handlers - NOT SO FAST", () => {
+    let notSoFastCard: GameCard;
+    let nsfPayload: EventNotSoFastPayload;
+
+    beforeEach(() => {
+      // Configurar una carta NSF en la mano del mockPlayerOne
+      notSoFastCard = {
+        id: crypto.randomUUID(),
+        card_id: crypto.randomUUID(),
+        match_id: mockMatchId,
+        player_id: mockPlayerOne.player_id, // Pertenece al jugador
+        name: "NOT SO FAST",
+        type: "INSTANT",
+        description: "Not so fast!",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      // Payload de ejemplo
+      nsfPayload = {
+        player_id: mockPlayerTwo.id,
+        event_id: crypto.randomUUID(),
+        event_type: "PLAY_SET",
+        nsf_count: 0,
+        resolve_at_utc: new Date(
+          Date.now() + 10000, // 10 segundos en el futuro
+        ).toISOString(),
+        discarded_card: null,
+      };
+
+      // Añadir la carta NSF a las cartas mockeadas
+      mockHttpService.getMatchCards.mockResolvedValue([
+        ...mockCards,
+        notSoFastCard,
+      ]);
+
+      mockToastInfo.mockReturnValue("fake-toast-id");
+    });
+
+    it("handleNotSoFastEvent: should not activate if player has no NOT SO FAST card", async () => {
+      // Sobrescribir el mock para que NO tenga la carta NSF
+      mockHttpService.getMatchCards.mockResolvedValue(mockCards);
+      const result = await setupContextAndGetResult(mockPlayerOne);
+
+      const handler = getEventHandler(
+        mockSocketsEvents.CANCELLATION_WINDOW_OPEN,
+      );
+
+      await act(() => handler(nsfPayload));
+
+      expect(result.current.notSoFastEvent.isActivate).toBe(false);
+      expect(mainToastFunction).not.toHaveBeenCalled();
+    });
+
+    it("handleNotSoFastEvent: should activate, set state, and show toast if player has card", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(
+        mockSocketsEvents.CANCELLATION_WINDOW_OPEN,
+      );
+      await act(() => handler(nsfPayload));
+
+      // Verificar estado
+      expect(result.current.notSoFastEvent.isActivate).toBe(true);
+      expect(result.current.notSoFastEvent.eventId).toBe(nsfPayload.event_id);
+      expect(result.current.notSoFastEvent.nsfCount).toBe(0);
+
+      // Verificar toast (y que el tiempo se calculó)
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        expect.stringContaining(
+          `Do you want to cancel the event PLAY_SET played by ${mockPlayerTwo.name}? Double-click on a not so fast (9 s.)`,
+        ),
+      );
+    });
+
+    it("Timer useEffect: should clear event when timer expires", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      vi.useFakeTimers();
+      const handler = getEventHandler(
+        mockSocketsEvents.CANCELLATION_WINDOW_OPEN,
+      );
+      await act(() => handler(nsfPayload));
+
+      // Verificar que está activo
+      expect(result.current.notSoFastEvent.isActivate).toBe(true);
+
+      // Avanzar el tiempo
+      act(() => {
+        vi.advanceTimersByTime(11000); // 11 segundos, más que el timeout
+      });
+
+      // Verificar que se limpió
+      expect(result.current.notSoFastEvent.isActivate).toBe(false);
+      expect(mockToastWarning).toHaveBeenCalledWith(
+        "Se acabó el tiempo para jugar NOT SO FAST.",
+      );
+      vi.useRealTimers();
+    });
+
+    it("clearNotSoFastEvent: should clear active timer and dismiss toast", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+
+      vi.useFakeTimers();
+
+      const handler = getEventHandler(
+        mockSocketsEvents.CANCELLATION_WINDOW_OPEN,
+      );
+      // Activar el evento y el timer
+      await act(() => handler(nsfPayload));
+      const toastId = result.current.notSoFastEvent.toastId;
+      expect(toastId).toBeDefined();
+      expect(result.current.notSoFastEvent.isActivate).toBe(true);
+
+      // Limpiar manualmente (como haría el jugador al jugar la carta)
+      act(() => {
+        result.current.clearNotSoFastEvent();
+      });
+
+      // Verificar que se limpió
+      expect(result.current.notSoFastEvent.isActivate).toBe(false);
+      expect(mockToastDismiss).toHaveBeenCalledWith(toastId);
+
+      // Avanzar el tiempo para asegurarse de que el timer no se dispare
+      mockToastDismiss.mockClear();
+      act(() => {
+        vi.advanceTimersByTime(11000);
+      });
+
+      // El toast de "tiempo acabado" NO debe llamarse
+      expect(mainToastFunction).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+  });
+
+  describe("WebSocket Handlers - PENDING_RESPONSE", () => {
+    let pendingPayload: EventPendingResponsePayload;
+
+    beforeEach(() => {
+      // Un payload de ejemplo donde ambos jugadores deben responder
+      pendingPayload = {
+        event_type: GAME_EVENTS.CARD_TRADE, //
+        event_id: crypto.randomUUID(),
+        players_ids: [mockPlayerOne.id, mockPlayerTwo.id], //
+      };
+
+      // Limpiamos los mocks de toast
+      mockToastInfo.mockClear();
+    });
+
+    it("handlePendingResponse: should activate if player is in the players_ids list", async () => {
+      // El jugador actual (mockPlayerOne) ESTÁ en la lista
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(pendingPayload));
+
+      // Verificar que el estado se activó
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventId).toBe(
+        pendingPayload.event_id,
+      );
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.CARD_TRADE,
+      );
+      // Verificar que se mostró el toast
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "CARD TRADE: You must select a card to exchange.",
+      );
+    });
+
+    it("handlePendingResponse: should NOT activate if player is NOT in the list", async () => {
+      // El jugador actual (mockPlayerOne) NO ESTÁ en esta lista
+      const otherPayload = {
+        ...pendingPayload,
+        players_ids: [mockPlayerTwo.id, crypto.randomUUID()],
+      };
+
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      await act(() => handler(otherPayload));
+
+      // Verificar que el estado NO cambió
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(mockToastInfo).not.toHaveBeenCalled();
+    });
+
+    it("clearPendingResponse: should reset the pending state", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      // 1. Activar el estado
+      await act(() => handler(pendingPayload));
+      expect(result.current.pendingResponse.isPending).toBe(true);
+
+      // 2. Limpiar el estado
+      act(() => {
+        result.current.clearPendingResponse(); //
+      });
+
+      // 3. Verificar que se reseteó
+      expect(result.current.pendingResponse.isPending).toBe(false);
+      expect(result.current.pendingResponse.eventId).toBe(null);
+    });
+
+    it("handlePendingResponse: should activate for DEAD_CARD_FOLLY", async () => {
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(mockSocketsEvents.PENDING_RESPONSE);
+
+      const dcfPayload = {
+        ...pendingPayload,
+        event_type: GAME_EVENTS.DEAD_CARD_FOLLY, //
+      };
+
+      await act(() => handler(dcfPayload));
+
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.DEAD_CARD_FOLLY,
+      );
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "DEAD CARD FOLLY: You must select a card to exchange.",
+      );
+    });
+
+    it("handlePendingResponse: should activate for POINT_YOUR_SUSPICIONS", async () => {
+      // 1. Configurar el mock de jugador y el payload
+      const result = await setupContextAndGetResult(mockPlayerOne);
+      const handler = getEventHandler(
+        mockSocketsEvents.PENDING_RESPONSE, //
+      );
+
+      const pysPayload: EventPendingResponsePayload = {
+        event_type: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
+        event_id: crypto.randomUUID(),
+        players_ids: [mockPlayerOne.id, mockPlayerTwo.id], //
+      };
+
+      // 2. Ejecutar el handler
+      await act(() => handler(pysPayload));
+
+      // 3. Verificar que el estado se activó
+      expect(result.current.pendingResponse.isPending).toBe(true);
+      expect(result.current.pendingResponse.eventId).toBe(pysPayload.event_id);
+      expect(result.current.pendingResponse.eventType).toBe(
+        GAME_EVENTS.POINT_YOUR_SUSPICIONS,
+      );
+
+      // 4. Verificar que se mostró el toast correcto
+      expect(mockToastInfo).toHaveBeenCalledWith(
+        "POINT YOUR SUSPICIONS: Indicate who you suspect.", //
+      );
     });
   });
 });

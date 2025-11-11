@@ -15,6 +15,9 @@ vi.mock("@/contexts/GameContext", () => ({
     <div data-testid="mock-game-context-provider">{children}</div>
   )),
 }));
+vi.mock("./components/TimerTurn", () => ({
+  default: vi.fn(() => <div data-testid="mock-timerTurn">Timer</div>),
+}));
 
 // Mock image assets
 vi.mock("@/assets/logo.png", () => ({
@@ -50,5 +53,21 @@ describe("GameLayout", () => {
     const outlet = screen.getByTestId("mock-outlet");
     expect(outlet).toBeInTheDocument();
     expect(outlet).toHaveTextContent("Outlet Content");
+  });
+
+  it("should render the TimerTurn component", () => {
+    render(<GameLayout />);
+
+    const timer = screen.getByTestId("mock-timerTurn");
+    expect(timer).toBeInTheDocument();
+    expect(timer).toHaveTextContent("Timer");
+  });
+
+  it("should render the TimerTurn component in parten component with position relative in className", () => {
+    render(<GameLayout />);
+
+    const main = screen.getByTestId("mock-timerTurn").parentElement;
+    expect(main).toBeInTheDocument();
+    expect(main).toHaveClass("relative");
   });
 });

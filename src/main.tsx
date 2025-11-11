@@ -26,7 +26,7 @@ createRoot(document.getElementById("root")!).render(
       <PlayerProvider>
         <HttpServiceProvider>
           <WebSocketServiceProvider>
-            <Toaster position="top-center" />
+            <Toaster position="top-left" richColors />
 
             <Routes>
               <Route element={<MainLayout />}>

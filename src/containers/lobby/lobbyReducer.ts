@@ -16,6 +16,7 @@ export type LobbyAction =
     }
   | { type: "FETCH_ERROR" }
   | { type: "PLAYER_JOINED"; payload: Player }
+  | { type: "PLAYER_LEFT"; payload: Player }
   | { type: "PLAYERS_UPDATED"; payload: Player[] }
   | { type: "UPDATE_MATCH"; payload: MatchWithPlayerCount };
 
@@ -49,6 +50,25 @@ export function lobbyReducer(
         return state;
       }
       const playersUpdate = [...state.players, action.payload];
+
+      const matchWithNewCount = state.match
+        ? {
+            ...state.match,
+            current_player_count: playersUpdate.length,
+          }
+        : null;
+
+      return {
+        ...state,
+        match: matchWithNewCount,
+        players: playersUpdate,
+      };
+    }
+
+    case "PLAYER_LEFT": {
+      const playersUpdate = state.players.filter(
+        (p) => p.id !== action.payload.id,
+      );
 
       const matchWithNewCount = state.match
         ? {

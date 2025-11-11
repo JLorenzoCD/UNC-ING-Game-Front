@@ -11,6 +11,7 @@ import type { GameCard } from "@/types/card";
 import type { GamePlayer, Player } from "@/types/player";
 import type { Match } from "@/types/match";
 
+import { GAME_EVENTS } from "@/constants/game";
 import { useSetEvent } from "./hooks/useSetEvent";
 
 const MOCK_CARD_ID_1 = crypto.randomUUID();
@@ -20,8 +21,13 @@ const MOCK_CARD_ID_4 = crypto.randomUUID();
 const MOCK_CARD_ID_5 = crypto.randomUUID();
 const MOCK_CARD_ID_6 = crypto.randomUUID();
 const MOCK_CARD_ID_7 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_8 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_9 = crypto.randomUUID(); // Carta disponible para robar
+const MOCK_CARD_ID_10 = crypto.randomUUID(); // Carta disponible para robar
 const MOCK_PLAYER_ID = crypto.randomUUID();
 const MOCK_MATCH_ID = crypto.randomUUID();
+
+const MOCK_TIMER_TURN = new Date().toISOString as any;
 
 const mockPlayer: Player = {
   id: MOCK_PLAYER_ID,
@@ -46,6 +52,7 @@ const mockMatch: Match = {
   status: "IN_PROGRESS",
   owner_id: crypto.randomUUID(),
   current_player_order: 1,
+  timer_turn: MOCK_TIMER_TURN,
 };
 
 const mockCards: GameCard[] = [
@@ -127,7 +134,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_8,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -138,7 +145,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_9,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -149,7 +156,7 @@ const mockCards: GameCard[] = [
     discarded_at: null,
   },
   {
-    id: MOCK_CARD_ID_7,
+    id: MOCK_CARD_ID_10,
     match_id: MOCK_MATCH_ID,
     player_id: null,
     card_id: crypto.randomUUID(),
@@ -158,6 +165,36 @@ const mockCards: GameCard[] = [
     type: "DETECTIVE",
     is_discarded: false,
     discarded_at: null,
+  },
+];
+
+const mockSecrets: GameSecret[] = [
+  {
+    type: "INNOCENT",
+    content: "You are innocent",
+    id: crypto.randomUUID(),
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: false,
+  },
+  {
+    type: "INNOCENT",
+    id: crypto.randomUUID(),
+    content: "You are the innocent",
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: false,
+  },
+  {
+    type: "MURDERER",
+    id: crypto.randomUUID(),
+    content: "You are the murderer",
+    match_id: MOCK_MATCH_ID,
+    secret_id: crypto.randomUUID(),
+    player_id: MOCK_PLAYER_ID,
+    is_revealed: true,
   },
 ];
 
@@ -170,6 +207,12 @@ const {
   mockPostEvent,
   mockUseNavigate,
   mockUseSetEvent,
+  mockToastSuccess,
+  mockToastError,
+  mockToastInfo,
+  mockPostCardTrade,
+  mockPostPointYourSuspicions,
+  mockPostDeadCardFolly,
 } = vi.hoisted(() => {
   const mockPutTakeCards = vi.fn();
   const mockPutDiscardCards = vi.fn();
@@ -177,6 +220,12 @@ const {
   const mockUseNavigate = vi.fn();
   const mockPostEvent = vi.fn();
   const mockUseSetEvent = vi.fn();
+  const mockToastSuccess = vi.fn();
+  const mockToastError = vi.fn();
+  const mockToastInfo = vi.fn();
+  const mockPostCardTrade = vi.fn();
+  const mockPostPointYourSuspicions = vi.fn();
+  const mockPostDeadCardFolly = vi.fn();
 
   return {
     mockPutTakeCards,
@@ -185,8 +234,22 @@ const {
     mockPostEvent,
     mockUseNavigate,
     mockUseSetEvent,
+    mockToastSuccess,
+    mockToastError,
+    mockToastInfo,
+    mockPostCardTrade,
+    mockPostPointYourSuspicions,
+    mockPostDeadCardFolly,
   };
 });
+
+vi.mock("sonner", () => ({
+  toast: {
+    success: mockToastSuccess,
+    error: mockToastError,
+    info: mockToastInfo,
+  },
+}));
 
 /* Componentes mockeados por Vitest */
 
@@ -247,11 +310,17 @@ vi.mock("./components/Hand", () => ({
     onSelect,
     isSelected,
     isDisabled,
+    isActivateNSF,
+    isPendingResponse,
+    onDoubleClickCard,
   }: {
     cards: (GameCard | null)[];
     onSelect: (card: GameCard) => void;
     isSelected: (card: GameCard) => boolean;
     isDisabled?: boolean;
+    isActivateNSF?: boolean;
+    isPendingResponse?: boolean;
+    onDoubleClickCard?: (card: GameCard) => void;
   }) => (
     <div data-testid="mock-hand">
       {cards.map((card, index) =>
@@ -261,6 +330,14 @@ vi.mock("./components/Hand", () => ({
             data-testid={`hand-card-${card.id}`}
             aria-selected={isSelected(card)}
             onClick={() => onSelect(card)}
+            onDoubleClick={() => {
+              if (!onDoubleClickCard) return;
+              if (isActivateNSF && card.name === "NOT SO FAST") {
+                onDoubleClickCard(card);
+              } else if (isPendingResponse) {
+                onDoubleClickCard(card);
+              }
+            }}
             disabled={isDisabled}
           >
             {card.name}
@@ -369,50 +446,123 @@ vi.mock("./components/HandActions", () => ({
       onFinish,
       onDiscard,
       onPlaySet,
+      onSelectSet,
       onSelectPlayer,
       onSelectSecret,
       onPlayEvent,
-      onEndEvent,
+      onSelectDirection,
       isDisabledEvent,
-      isDisabledEndEvent,
       isDisabled,
       isSetButtonDisabled,
-    }) => (
-      <div data-testid="mock-hand-actions">
-        <button onClick={onDiscard} disabled={isDisabled}>
-          Discard cards
-        </button>
-        <button
-          onClick={onPlaySet}
-          disabled={isDisabled || isSetButtonDisabled}
-        >
-          Play set
-        </button>
-        <button onClick={onSelectPlayer} disabled={isDisabled}>
-          Select player
-        </button>
-        <button onClick={onSelectSecret} disabled={isDisabled}>
-          Select secret
-        </button>
-        <button onClick={onFinish} disabled={isDisabled}>
-          Finish turn
-        </button>
-        <button
-          onClick={onPlayEvent}
-          disabled={isDisabledEvent}
-          data-testid="play-event-btn"
-        >
-          Play event
-        </button>
-        <button
-          onClick={onEndEvent}
-          disabled={isDisabledEndEvent}
-          data-testid="apply-effect-btn"
-        >
-          Apply effect
-        </button>
-      </div>
-    ),
+      isSelectionPlayerEvent,
+      isSelectionSecretEvent,
+      canSelectMeAsPlayer,
+      isSelectDirectionEvent,
+      isSelectionSetEvent,
+    }) => {
+      const {
+        hasFinishedAction,
+        playerSelectsOneOfHisSecrets,
+        notSoFastEvent,
+        pendingResponse,
+      } = useGame(); //
+
+      const shouldDisableOption =
+        isDisabled ||
+        isSelectionPlayerEvent ||
+        isSelectionSecretEvent ||
+        isSelectionSetEvent;
+
+      return (
+        <div data-testid="mock-hand-actions">
+          {isSelectDirectionEvent ? (
+            <button
+              onClick={() => onSelectDirection && onSelectDirection("LEFT")}
+            >
+              Left
+            </button>
+          ) : (
+            <button
+              onClick={onDiscard}
+              disabled={
+                shouldDisableOption ||
+                hasFinishedAction ||
+                notSoFastEvent.isActivate ||
+                pendingResponse.isPending
+              }
+            >
+              Discard cards
+            </button>
+          )}
+
+          <button
+            onClick={onPlaySet}
+            disabled={isDisabled || isSetButtonDisabled || hasFinishedAction}
+            data-testid="play-set-btn"
+          >
+            Play set
+          </button>
+          <button
+            onClick={onPlayEvent}
+            disabled={isDisabledEvent}
+            data-testid="play-event-btn"
+          >
+            Play event
+          </button>
+
+          {isSelectDirectionEvent ? (
+            <button
+              onClick={() => onSelectDirection && onSelectDirection("RIGHT")}
+            >
+              Right
+            </button>
+          ) : (
+            <button
+              onClick={onSelectSet}
+              disabled={isDisabled || !isSelectionSetEvent}
+              data-testid="select-set-btn"
+            >
+              Select set
+            </button>
+          )}
+
+          <button
+            onClick={onSelectSecret}
+            disabled={
+              (isDisabled || !isSelectionSecretEvent || hasFinishedAction) &&
+              !playerSelectsOneOfHisSecrets.isCurrPlayer
+            }
+          >
+            Select secret
+          </button>
+          <button
+            onClick={onSelectPlayer}
+            data-testid="select-player-btn"
+            disabled={
+              ((isDisabled || !isSelectionPlayerEvent || hasFinishedAction) &&
+                !pendingResponse.isPending) ||
+              (pendingResponse.isPending &&
+                (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
+                  pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY))
+            }
+          >
+            {canSelectMeAsPlayer ? "Select me" : "Select player"}
+          </button>
+
+          <button
+            onClick={onFinish}
+            disabled={
+              shouldDisableOption ||
+              playerSelectsOneOfHisSecrets.isSelecting ||
+              notSoFastEvent.isActivate ||
+              pendingResponse.isPending
+            }
+          >
+            Finish turn
+          </button>
+        </div>
+      );
+    },
   ),
 }));
 
@@ -427,6 +577,7 @@ vi.mock("./components/Result", () => ({
 }));
 
 import GameContainer from "./GameContainer";
+import type { GameSecret } from "@/types/secret";
 
 describe("GameContainer", () => {
   // mocks del useSetEvent
@@ -450,7 +601,8 @@ describe("GameContainer", () => {
 
     vi.mocked(useGame).mockReturnValue({
       sets: [],
-      secrets: [],
+      logs: [],
+      secrets: mockSecrets,
       cards: mockCards,
       match: mockMatch,
       players: [mockMatchPlayer],
@@ -458,13 +610,28 @@ describe("GameContainer", () => {
       isLoading: false,
       hasError: false,
       error: null,
-      isPlayerFinishAction: false,
+      hasFinishedAction: false,
       lastUpdatedSecretId: null,
       playerFinishActionTurn: () => undefined,
       playerSelectsOneOfHisSecrets: {
         isCurrPlayer: false,
         isSelecting: false,
       },
+      notSoFastEvent: {
+        isActivate: false,
+        eventId: null,
+        nsfCount: 0,
+        resolvedAtUtc: null,
+        toastId: null,
+        discardedCard: null,
+      },
+      clearNotSoFastEvent: vi.fn(),
+      pendingResponse: {
+        isPending: false,
+        eventId: null,
+        eventType: null,
+      },
+      clearPendingResponse: vi.fn(),
     });
 
     vi.mocked(useHttpService).mockReturnValue({
@@ -473,22 +640,39 @@ describe("GameContainer", () => {
         putTakeCards: mockPutTakeCards,
         putDiscardCards: mockPutDiscardCards,
         postEvent: mockPostEvent,
+        postCardTrade: mockPostCardTrade,
+        postPointYourSuspicions: mockPostPointYourSuspicions,
+        postDeadCardFolly: mockPostDeadCardFolly,
       } as any,
     });
 
     vi.mocked(useSetEvent).mockReturnValue({
       setEvent: {
-        isValidSet: true,
+        isInEvent: false,
+        isValidSet: false,
+
         isTargetPlayer: false,
         isTargetSecret: false,
+
+        isRevealSecret: false,
+        isHiddenSecret: false,
+        isStolenSecret: false,
+
+        isSelectingSet: false,
+
+        cards: [],
+        setType: null,
+        set: null,
+        target: null,
+
+        isRevealCurrPlayerSecret: false,
+        canDownTheCardToASet: false,
       } as any,
-      isSetEvent: false,
-      isTargetPlayerSetEvent: false,
-      isTargetSecretSetEvent: false,
-      isStolenSecretSetEvent: false,
       isSetEventButtonDisabled: false,
+      isSetEventSelectSetButtonDisabled: false,
       playSet: mockPlaySet,
       setTargetSet: mockSetTargetSet,
+      playStolenSet: vi.fn(),
       executeSetActionToTarget: mockExecuteSetActionToTarget,
       executeFinishTurnSetEvent: mockExecuteFinishTurnSetEvent,
       isPlayerSelectableForSetEvent: vi.fn(),
@@ -498,6 +682,10 @@ describe("GameContainer", () => {
       getTargetSetEvent: vi.fn(),
       getSetCards: vi.fn(),
       clearSetEvent: mockClearSetEvent,
+      addDetectiveCardToSet: vi.fn(),
+      setTargeSetToDown: vi.fn(),
+      isSetSelectableForSetEvent: vi.fn(),
+      setEventToggleDisableButtonSelectSet: vi.fn(),
     });
   });
 
@@ -603,6 +791,7 @@ describe("GameContainer", () => {
     it("should open discard modal when clicking on discard pile with discarded cards", async () => {
       vi.mocked(useGame).mockReturnValue({
         sets: [],
+        logs: [],
         secrets: [],
         players: [],
         match: mockMatch,
@@ -624,13 +813,28 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: vi.fn(),
       });
 
       render(<GameContainer />);
@@ -649,6 +853,7 @@ describe("GameContainer", () => {
     it("should prevent hand actions when it's not the player's turn", () => {
       vi.mocked(useGame).mockReturnValue({
         sets: [],
+        logs: [],
         secrets: [],
         cards: mockCards,
         players: [mockMatchPlayer],
@@ -657,13 +862,28 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: vi.fn(),
       });
 
       mockPutDiscardCards.mockResolvedValue(undefined);
@@ -738,8 +958,12 @@ describe("GameContainer", () => {
       });
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Failed to perform mandatory discard:",
-        expect.any(Error),
+        "[API Error]",
+        "Failed to perform mandatory discard",
+        expect.objectContaining({
+          error: expect.any(Error),
+          timestamp: expect.any(String),
+        }),
       );
 
       expect(mockPutDiscardCards).toHaveBeenCalledTimes(1);
@@ -790,6 +1014,7 @@ describe("GameContainer", () => {
     it("should not call API when finishing turn without match", async () => {
       vi.mocked(useGame).mockReturnValue({
         secrets: [],
+        logs: [],
         cards: mockCards,
         match: null,
         players: [],
@@ -798,13 +1023,28 @@ describe("GameContainer", () => {
         isLoading: false,
         hasError: false,
         error: null,
-        isPlayerFinishAction: false,
+        hasFinishedAction: false,
         lastUpdatedSecretId: null,
         playerFinishActionTurn: () => undefined,
         playerSelectsOneOfHisSecrets: {
           isCurrPlayer: false,
           isSelecting: false,
         },
+        notSoFastEvent: {
+          isActivate: false,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: vi.fn(),
+        pendingResponse: {
+          isPending: false,
+          eventId: null,
+          eventType: null,
+        },
+        clearPendingResponse: vi.fn(),
       });
 
       render(<GameContainer />);
@@ -844,7 +1084,7 @@ describe("GameContainer", () => {
       expect(mockPutTakeCards).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
-        [MOCK_CARD_ID_7],
+        [MOCK_CARD_ID_10],
       );
 
       // Pasamos el turno
@@ -862,7 +1102,7 @@ describe("GameContainer", () => {
     it("calls playSet when 'Play set' is clicked", async () => {
       render(<GameContainer />);
 
-      const playSetButton = screen.getByText("Play set");
+      const playSetButton = screen.getByTestId("play-set-btn");
       await act(async () => {
         fireEvent.click(playSetButton);
       });
@@ -973,9 +1213,6 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-      expect(applyButton).toBeDisabled();
-
       // 1. Seleccionar la carta de evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardLITA.id}`));
       // 2. Jugar el evento
@@ -1009,27 +1246,23 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardCOFT.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" debe estar deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar jugador
+      // 2. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 4. Botón "Apply" debe estar habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select Player" debe estar habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1042,37 +1275,29 @@ describe("GameContainer", () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardATWOME],
-        secrets: [{ id: "secret-target-id", is_revealed: true } as any], // Secreto revelado
       });
       render(<GameContainer />);
-
-      const applyButton = screen.getByTestId("apply-effect-btn");
 
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardATWOME.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar secreto
+      // 2. Seleccionar secreto
       fireEvent.click(screen.getByTestId("mock-select-secret"));
 
-      // 4. Botón "Apply" sigue deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 5. Seleccionar jugador
+      // 3. Seleccionar jugador
       fireEvent.click(screen.getByTestId("mock-select-player"));
 
-      // 6. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 4. Botón "Select Player" esta habilitado
+      const selectPlayerButton = screen.getByTestId("select-player-btn");
+      expect(selectPlayerButton).not.toBeDisabled();
 
-      // 7. Aplicar efecto
+      // 5. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectPlayerButton);
       });
 
-      // 8. Verificar API
+      // 6. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1092,27 +1317,23 @@ describe("GameContainer", () => {
       });
       render(<GameContainer />);
 
-      const applyButton = screen.getByTestId("apply-effect-btn");
-
       // 1. Seleccionar y jugar evento
       fireEvent.click(screen.getByTestId(`hand-card-${cardAV.id}`));
       fireEvent.click(screen.getByTestId("play-event-btn"));
 
-      // 2. Botón "Apply" deshabilitado
-      expect(applyButton).toBeDisabled();
-
-      // 3. Seleccionar set
+      // 2. Seleccionar set
       fireEvent.click(screen.getByTestId("mock-select-set"));
 
-      // 4. Botón "Apply" habilitado
-      expect(applyButton).not.toBeDisabled();
+      // 3. Botón "Select set" habilitado
+      const selectSetButton = screen.getByTestId("select-set-btn");
+      expect(selectSetButton).not.toBeDisabled();
 
-      // 5. Aplicar efecto
+      // 4. Aplicar efecto
       await act(async () => {
-        fireEvent.click(applyButton);
+        fireEvent.click(selectSetButton);
       });
 
-      // 6. Verificar API
+      // 5. Verificar API
       expect(mockPostEvent).toHaveBeenCalledWith(
         MOCK_MATCH_ID,
         MOCK_PLAYER_ID,
@@ -1141,6 +1362,410 @@ describe("GameContainer", () => {
         MOCK_PLAYER_ID,
         cardDELAY.id,
         { cards_ids: [discardedCard.id] }, // Asume que es la única en descarte
+      );
+    });
+  });
+  describe("NOT SO FAST flow", () => {
+    let notSoFastCard: GameCard;
+    const mockClearNotSoFastEvent = vi.fn();
+    const mockPostPlayNotSoFast = vi.fn();
+
+    beforeEach(() => {
+      notSoFastCard = {
+        id: crypto.randomUUID(),
+        match_id: MOCK_MATCH_ID,
+        player_id: MOCK_PLAYER_ID,
+        card_id: crypto.randomUUID(),
+        name: "NOT SO FAST",
+        description: "Stop!",
+        type: "INSTANT",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      // Configurar httpService para este test
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          putPassTurn: mockPutPassTurn,
+          putTakeCards: mockPutTakeCards,
+          putDiscardCards: mockPutDiscardCards,
+          postEvent: mockPostEvent,
+          postPlayNotSoFast: mockPostPlayNotSoFast,
+          postCardTrade: mockPostCardTrade,
+          postPointYourSuspicions: mockPostPointYourSuspicions,
+          postDeadCardFolly: mockPostDeadCardFolly,
+        } as any,
+      });
+
+      mockPostPlayNotSoFast.mockResolvedValue({ success: true });
+      mockClearNotSoFastEvent.mockClear();
+    });
+
+    it("handlePlayNotSoFast: should call httpService and clear event on success", async () => {
+      const eventId = crypto.randomUUID();
+      // Mockear el contexto con el evento NSF activo
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(), // Obtener el mock base
+        cards: [notSoFastCard, ...mockCards.slice(1)], // Asegurarse de que el jugador tiene la carta
+        notSoFastEvent: {
+          isActivate: true,
+          eventId: eventId,
+          nsfCount: 1,
+          resolvedAtUtc: "2025-01-01T00:00:00Z",
+          toastId: "toast-123",
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: mockClearNotSoFastEvent, // Usar el mock local
+      });
+
+      render(<GameContainer />);
+
+      // Encontrar la carta NSF en la mano y simular doble clic
+      const nsfCardButton = screen.getByTestId(`hand-card-${notSoFastCard.id}`);
+
+      await act(async () => {
+        fireEvent.doubleClick(nsfCardButton);
+      });
+
+      // Verificar que se llamó a la API
+      expect(mockPostPlayNotSoFast).toHaveBeenCalledTimes(1);
+      expect(mockPostPlayNotSoFast).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        notSoFastCard.id,
+        eventId,
+        1,
+      );
+
+      // Verificar que el evento se limpió
+      expect(mockClearNotSoFastEvent).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith("¡NOT SO FAST played!");
+    });
+
+    it("HandActions: should disable all buttons when notSoFastEvent is active", () => {
+      // Mockear el contexto con el evento NSF activo
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        notSoFastEvent: {
+          isActivate: true,
+          eventId: null,
+          nsfCount: 0,
+          resolvedAtUtc: null,
+          toastId: null,
+          discardedCard: null,
+        },
+        clearNotSoFastEvent: mockClearNotSoFastEvent,
+      });
+
+      render(<GameContainer />);
+
+      // Verificar que los botones de acción están deshabilitados
+      // El mock de HandActions ahora recibe `isDisabled={true}`
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Play set")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+      expect(screen.getByTestId("play-event-btn")).toBeDisabled();
+    });
+  });
+
+  describe("CARD_TRADE and PENDING_RESPONSE flow", () => {
+    let cardTradeCard: GameCard;
+    let cardToGive: GameCard;
+    const mockClearPendingResponse = vi.fn();
+
+    beforeEach(() => {
+      // Carta de evento "CARD_TRADE"
+      cardTradeCard = {
+        id: crypto.randomUUID(),
+        match_id: MOCK_MATCH_ID,
+        player_id: MOCK_PLAYER_ID,
+        card_id: crypto.randomUUID(),
+        name: "CARD TRADE",
+        description: "...",
+        type: "EVENT",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      // Carta que el jugador 2 (el objetivo) dará
+      cardToGive = {
+        id: crypto.randomUUID(),
+        match_id: MOCK_MATCH_ID,
+        player_id: MOCK_PLAYER_ID, // Pertenece al jugador actual
+        card_id: crypto.randomUUID(),
+        name: "HERCULE POIROT",
+        description: "...",
+        type: "DETECTIVE",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      mockClearPendingResponse.mockClear();
+      mockPostEvent.mockClear();
+      mockPostCardTrade.mockClear();
+
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          ...vi.mocked(useHttpService)(),
+          postEvent: mockPostEvent,
+          postCardTrade: mockPostCardTrade,
+        } as any,
+      });
+      mockPostCardTrade.mockResolvedValue({ success: true });
+    });
+
+    it("Initiator Flow: should correctly play CARD_TRADE", async () => {
+      // 1. Configurar el mock de useGame
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(), // Obtener el mock base
+        cards: [cardTradeCard, ...mockCards.slice(1)], // El jugador tiene la carta
+      });
+
+      render(<GameContainer />);
+
+      // 2. Seleccionar la carta de evento
+      fireEvent.click(screen.getByTestId(`hand-card-${cardTradeCard.id}`));
+
+      // 3. Jugar el evento
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 4. Seleccionar un jugador objetivo (simulado por mock-table)
+      fireEvent.click(screen.getByTestId("mock-select-player"));
+
+      // 5. Click en el botón "Select player" de HandActions
+      await act(async () => {
+        fireEvent.click(screen.getByText("Select player"));
+      });
+
+      // 6. Verificar que se llamó a la API (postEvent)
+      expect(mockPostEvent).toHaveBeenCalledTimes(1);
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        cardTradeCard.id,
+        { target_player_id: "player-target-id" }, // ID del mock de <Table>
+      );
+    });
+
+    it("Target Flow: should handle PENDING_RESPONSE and call postCardTrade", async () => {
+      const eventId = crypto.randomUUID();
+
+      // 1. Configurar el mock de useGame con PENDING_RESPONSE activo
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardToGive, ...mockCards.slice(1)], // El jugador tiene la carta para dar
+        pendingResponse: {
+          isPending: true,
+          eventId: eventId,
+          eventType: "CARD TRADE",
+        },
+        clearPendingResponse: mockClearPendingResponse,
+      });
+
+      render(<GameContainer />);
+
+      // 2. Verificar que los botones de acción están deshabilitados
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+
+      // 3. Simular doble clic en la carta a intercambiar
+      const cardButton = screen.getByTestId(`hand-card-${cardToGive.id}`);
+      await act(async () => {
+        fireEvent.doubleClick(cardButton);
+      });
+
+      // 4. Verificar que se llamó a la API correcta (postCardTrade)
+      expect(mockPostCardTrade).toHaveBeenCalledTimes(1);
+      expect(mockPostCardTrade).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        eventId,
+        cardToGive.id,
+      );
+
+      // 5. Verificar que el estado pendiente se limpió
+      expect(mockClearPendingResponse).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        "Waiting for the other player to select one.",
+      );
+    });
+  });
+
+  describe("DEAD_CARD_FOLLY flow", () => {
+    let deadCardFollyCard: GameCard;
+    const mockClearPendingResponse = vi.fn();
+    const mockPostDeadCardFolly = vi.fn();
+
+    beforeEach(() => {
+      deadCardFollyCard = {
+        id: crypto.randomUUID(),
+        match_id: MOCK_MATCH_ID,
+        player_id: MOCK_PLAYER_ID,
+        card_id: crypto.randomUUID(),
+        name: "DEAD CARD FOLLY",
+        description: "...",
+        type: "EVENT",
+        is_discarded: false,
+        discarded_at: null,
+      };
+
+      // Mockear httpService para este test
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          ...vi.mocked(useHttpService)().httpService,
+          postEvent: mockPostEvent,
+          postDeadCardFolly: mockPostDeadCardFolly,
+        } as any,
+      });
+
+      mockPostEvent.mockClear();
+      mockPostDeadCardFolly.mockClear();
+      mockClearPendingResponse.mockClear();
+      mockPostEvent.mockResolvedValue({ success: true });
+      mockPostDeadCardFolly.mockResolvedValue({ success: true });
+    });
+
+    it("Initiator Flow: should show direction buttons and call postEvent", async () => {
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [deadCardFollyCard, ...mockCards.slice(1)],
+      });
+
+      render(<GameContainer />);
+
+      // 1. Seleccionar y jugar la carta
+      fireEvent.click(screen.getByTestId(`hand-card-${deadCardFollyCard.id}`));
+      fireEvent.click(screen.getByTestId("play-event-btn"));
+
+      // 2. Verificar que los botones "Left" y "Right" aparecen
+      // (El mock de HandActions debe ser actualizado para esto)
+      // Asumiremos que el mock de HandActions falla si no se actualiza,
+      // pero por ahora testeamos el resultado del clic.
+      // Simulemos que "Left" reemplaza "Discard cards"
+      const leftButton = screen.getByText("Left");
+      expect(leftButton).toBeInTheDocument();
+
+      // 3. Hacer clic en "Left"
+      await act(async () => {
+        fireEvent.click(leftButton);
+      });
+
+      // 4. Verificar que se llamó a postEvent con la dirección
+      expect(mockPostEvent).toHaveBeenCalledTimes(1);
+      expect(mockPostEvent).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        deadCardFollyCard.id,
+        { direction: "LEFT" }, // El payload
+      );
+    });
+
+    it("Target Flow: should handle PENDING_RESPONSE and call postDeadCardFolly", async () => {
+      const eventId = crypto.randomUUID();
+      const cardToGive = mockCards[0]; // Cualquier carta de la mano
+
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        cards: [cardToGive, ...mockCards.slice(1)],
+        pendingResponse: {
+          isPending: true,
+          eventId: eventId,
+          eventType: "DEAD CARD FOLLY",
+        },
+        clearPendingResponse: mockClearPendingResponse,
+      });
+
+      render(<GameContainer />);
+
+      // 1. Verificar que los botones de acción están deshabilitados
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+      // El botón "Select player" también debe estar deshabilitado
+      expect(screen.getByText("Select player")).toBeDisabled();
+
+      // 2. Simular doble clic en la carta
+      const cardButton = screen.getByTestId(`hand-card-${cardToGive.id}`);
+      await act(async () => {
+        fireEvent.doubleClick(cardButton);
+      });
+
+      // 3. Verificar que se llamó a la API (postDeadCardFolly)
+      expect(mockPostDeadCardFolly).toHaveBeenCalledTimes(1);
+      expect(mockPostDeadCardFolly).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        eventId,
+        cardToGive.id, // El target_card_id
+      );
+
+      // 4. Verificar que el estado se limpió
+      expect(mockClearPendingResponse).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        "Waiting for the others players to select one.",
+      );
+    });
+  });
+
+  describe("POINT_YOUR_SUSPICIONS PENDING_RESPONSE flow", () => {
+    const mockClearPendingResponse = vi.fn();
+    const mockPostPointYourSuspicions = vi.fn();
+
+    beforeEach(() => {
+      // Asegurarse de que el mock de httpService tenga la función
+      vi.mocked(useHttpService).mockReturnValue({
+        httpService: {
+          ...vi.mocked(useHttpService)(),
+          postPointYourSuspicions: mockPostPointYourSuspicions,
+        } as any,
+      });
+
+      mockClearPendingResponse.mockClear();
+      mockPostPointYourSuspicions.mockResolvedValue({ success: true });
+
+      // 1. Configurar el mock de useGame con PENDING_RESPONSE activo
+      const eventId = crypto.randomUUID();
+      vi.mocked(useGame).mockReturnValue({
+        ...vi.mocked(useGame)(),
+        pendingResponse: {
+          isPending: true,
+          eventId: eventId,
+          eventType: "POINT YOUR SUSPICIONS",
+        },
+        clearPendingResponse: mockClearPendingResponse,
+      });
+    });
+
+    it("Target Flow: should enable player selection and call postPointYourSuspicions", async () => {
+      render(<GameContainer />);
+
+      // 2. Verificar que los botones correctos están deshabilitados/habilitados
+      // El mock de HandActions debe replicar la lógica
+      // de HandActions.tsx para que esto pase.
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+      expect(screen.getByText("Select player")).not.toBeDisabled();
+
+      // 3. Simular selección de jugador (desde el mock de Table)
+      fireEvent.click(screen.getByTestId("mock-select-player"));
+
+      // 4. Simular clic en "Select player"
+      await act(async () => {
+        fireEvent.click(screen.getByText("Select player"));
+      });
+
+      // 5. Verificar que se llamó a la API correcta
+      expect(mockPostPointYourSuspicions).toHaveBeenCalledTimes(1);
+      expect(mockPostPointYourSuspicions).toHaveBeenCalledWith(
+        MOCK_MATCH_ID,
+        MOCK_PLAYER_ID,
+        expect.any(String), // eventId
+        "player-target-id", // ID del mock de <Table>
+      );
+
+      // 6. Verificar que el estado se limpió
+      expect(mockClearPendingResponse).toHaveBeenCalledTimes(1);
+      expect(mockToastSuccess).toHaveBeenCalledWith(
+        "Your suspicion has been recorded.",
       );
     });
   });

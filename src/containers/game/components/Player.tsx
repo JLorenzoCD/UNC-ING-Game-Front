@@ -1,9 +1,10 @@
 import { twJoin } from "tailwind-merge";
+import { RiGhostLine, RiSliceLine } from "@remixicon/react";
 
 import Secrets from "./Secrets";
 import Sets from "./Sets";
 
-import { getBoderPlayer, truncateName } from "../utils/player";
+import { getPlayerBorderClass, truncateName } from "../utils/player";
 
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
@@ -24,6 +25,13 @@ interface PlayerProps {
   isTargetSecret: boolean;
   isTargetSet: boolean;
   target: GamePlayer | GameSecret | MatchSet | null;
+
+  /**
+   * Indica si se debe resaltar el rol del jugador (por ejemplo, el Asesino).
+   * Esto aplica solo para el asesino y el cómplice, por lo que otros roles
+   * no podrán saber quienes son los jugadores con roles especiales.
+   */
+  shouldHighlightRole?: boolean;
 }
 
 export default function Player({
@@ -41,26 +49,33 @@ export default function Player({
   isTargetSecret,
   isTargetSet,
   target,
+
+  shouldHighlightRole = false,
 }: PlayerProps) {
   const handleClickPlayer = () => {
     onSelectTargetEvent(player);
   };
 
-  const isTarget = player.id === target?.id;
-  const isSelectingTarget = target === null;
+  const isTargetPlayer = target !== null && "avatar" in target;
+  const isTarget = isTargetPlayer && player.id === target?.id;
+  const isSelectingTarget = target === null || !isTargetPlayer;
   const isSelectable = isSelectablePlayer(player);
 
-  const isActivePlayerSelection = isPlayerEvent && !hasCurrentTurn;
+  const isActivePlayerSelection = isPlayerEvent;
 
   const baseClasses =
     "w-20 h-20 rounded-full border-4 transition-all duration-200";
-  const borderClass = getBoderPlayer(
-    hasCurrentTurn,
-    isActivePlayerSelection,
-    isSelectable,
+
+  const borderClass = getPlayerBorderClass(
     isTarget,
+    isSelectable,
     isSelectingTarget,
+    hasCurrentTurn,
+    shouldHighlightRole,
+    isActivePlayerSelection,
   );
+
+  const shouldShowRoleIcon = shouldHighlightRole && player.role !== "INNOCENT";
 
   return (
     <div className="flex items-center gap-2">
@@ -82,9 +97,12 @@ export default function Player({
 
         <div
           title={player.name}
-          className="px-3 py-1 rounded-full text-white font-semibold bg-black/80 shadow-lg border border-white/30 backdrop-blur-sm cursor-default"
+          className="px-3 py-1 flex items-center gap-x-1 rounded-full text-white font-semibold bg-black/80 shadow-lg border border-white/30 backdrop-blur-sm cursor-default"
         >
           {truncateName(player.name, 10)}
+
+          {shouldShowRoleIcon &&
+            (player.role === "MURDERER" ? <RiSliceLine /> : <RiGhostLine />)}
         </div>
       </div>
 

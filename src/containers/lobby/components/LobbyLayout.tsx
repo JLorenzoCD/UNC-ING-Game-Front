@@ -10,32 +10,24 @@ import backgroundGame from "@/assets/background.png";
 interface Props {
   match: MatchWithPlayerCount;
   isOwner: boolean;
+
   startGame: () => Promise<void>;
+  cancelGame: () => Promise<void>;
+  quitGame: () => Promise<void>;
 
   children: ReactNode;
 }
 
 export default function LobbyLayout({
-  children,
-  startGame,
-  isOwner,
   match,
+  isOwner,
+  startGame,
+  cancelGame,
+  quitGame,
+  children,
 }: Props) {
-  const handleClick = () => {
-    if (
-      match.current_player_count < match.min_players ||
-      match.status.toUpperCase() !== "WAITING" ||
-      !isOwner
-    ) {
-      alert(
-        "The game cannot be started if the minimum number of players desired is not reached.",
-      );
-
-      return;
-    }
-
-    startGame();
-  };
+  const shouldShowQuitGameButton =
+    !isOwner && match.status.toLocaleUpperCase() === "WAITING";
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -46,15 +38,25 @@ export default function LobbyLayout({
             alt="AGATHA CHRISTIE'S - DEATH ON THE CARDS"
             className="w-[210px]"
           />
+
           {isOwner && (
-            <Button
-              onClick={handleClick}
-              disabled={match.current_player_count < match.min_players}
-            >
-              Start game
-            </Button>
+            <div className="flex items-center gap-x-4">
+              <Button
+                onClick={startGame}
+                disabled={match.current_player_count < match.min_players}
+              >
+                Start game
+              </Button>
+
+              <Button onClick={cancelGame}>Cancel game</Button>
+            </div>
           )}
+
+          {shouldShowQuitGameButton ? (
+            <Button onClick={quitGame}>Quit game</Button>
+          ) : null}
         </Container>
+        ``
       </header>
 
       <main

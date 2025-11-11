@@ -1,22 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { useGame } from "@/contexts/GameContext";
+import { usePlayer } from "@/contexts/PlayerContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
+import { useHand } from "./hooks/useHand";
+import { useSetEvent } from "./hooks/useSetEvent";
+
+import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 import type { MatchSet } from "@/types/set";
-import { useGame } from "@/contexts/GameContext";
-import { usePlayer } from "@/contexts/PlayerContext";
-import { useHttpService } from "@/contexts/HttpServiceContext";
-
 import type {
   RegularAndDiscardEventPayload,
   LookIntoTheAshesEventPayload,
   AndThenThereWasOneMoreEventPayload,
   CardsOffTheTableEventPayload,
   AnotherVictimEventPayload,
+  CardTradeEventPayload,
+  DeadCardFollyEventPayload,
 } from "@/types/event";
 import type { EventPayload } from "@/types/event";
+
 import Hand from "./components/Hand";
 import Sets from "./components/Sets";
 import Table from "./components/Table";
@@ -27,13 +33,18 @@ import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
+import Logs from "./components/Logs";
 
-import { useHand } from "./hooks/useHand";
-import { useSetEvent } from "./hooks/useSetEvent";
+import {
+  GAME_EVENTS,
+  EVENT_STEPS,
+  GAME_RULES,
+  type EventStep,
+} from "@/constants/game";
 
-type EventStep = "select_secret" | "select_player" | "select_set" | null;
+import { handleApiError } from "@/utils/errorHandler";
 
-export const DRAFT_SIZE = 3;
+export const DRAFT_SIZE = GAME_RULES.DRAFT_SIZE;
 
 export default function GameContainer() {
   const { player } = usePlayer();
@@ -47,9 +58,14 @@ export default function GameContainer() {
     cards,
     result,
     sets,
-    isPlayerFinishAction,
+    logs,
+    hasFinishedAction,
     playerFinishActionTurn,
     playerSelectsOneOfHisSecrets,
+    notSoFastEvent,
+    clearNotSoFastEvent,
+    pendingResponse,
+    clearPendingResponse,
   } = useGame();
 
   const {
@@ -89,63 +105,119 @@ export default function GameContainer() {
   });
 
   const canSelectMeAsPlayer =
-    currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-    currentEventStep === "select_player" &&
+    currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+    currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
     selectedTargetPlayer === null;
 
   const {
     playSet,
-    isSetEvent,
-    isTargetPlayerSetEvent,
-    isTargetSecretSetEvent,
+    addDetectiveCardToSet,
+    playStolenSet,
+    setEvent,
     isSetEventButtonDisabled,
-    isStolenSecretSetEvent,
+    isSetEventSelectSetButtonDisabled,
     setTargetSet,
+    setTargeSetToDown,
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
     isPlayerSelectableForSetEvent,
     isOtherPlayerSecretSelectableForSetEvent,
     isCurrPlayerSecretSelectableForSetEvent,
+    isSetSelectableForSetEvent,
     setEventToggleDisableButtonPlaySet,
+    setEventToggleDisableButtonSelectSet,
     getTargetSetEvent,
     clearSetEvent,
   } = useSetEvent();
 
-  const isEndEventDisabled = useMemo(() => {
-    if (!currentEventCard) return true;
-
-    switch (currentEventCard.name) {
-      case "CARDS OFF THE TABLE":
-        return selectedTargetPlayer === null;
-
-      case "LOOK INTO THE ASHES":
-        // Deshabilitar el botón porque se usa el botón del modal
-        return true;
-
-      case "DELAY THE MURDERER ESCAPE":
-        return true;
-
-      case "EARLY TRAIN TO PADDINGTON":
-        return true;
-
-      case "AND THEN THERE WAS ONE MORE":
-        return selectedTargetSecret === null || selectedTargetPlayer === null;
-
-      case "ANOTHER VICTIM":
-        return selectedTargetSet === null;
-
-      default:
-        return false;
-    }
-  }, [
-    currentEventCard,
-    selectedTargetPlayer,
-    selectedTargetSecret,
-    selectedTargetSet,
-  ]);
-
   // -- Utilidades --
+
+  const handleSelectDirection = (direction: "LEFT" | "RIGHT") => {
+    handleEndEvent(undefined, direction);
+  };
+
+  const handlePendingResponseSelectCard = async (card: GameCard) => {
+    if (
+      !pendingResponse.isPending ||
+      !pendingResponse.eventId ||
+      !httpService ||
+      !player ||
+      !match
+    ) {
+      return;
+    }
+    if (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE) {
+      try {
+        await httpService.postCardTrade(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          card.id,
+        );
+
+        toast.success("Waiting for the other player to select one.");
+        clearPendingResponse();
+      } catch (error) {
+        handleApiError(error, "Error responding to the event");
+      }
+    } else if (pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY) {
+      try {
+        await httpService.postDeadCardFolly(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          card.id,
+        );
+
+        toast.success("Waiting for the others players to select one.");
+        clearPendingResponse();
+      } catch (error) {
+        handleApiError(error, "Error responding to the event");
+      }
+    }
+  };
+
+  const handlePlayNotSoFast = async (card: GameCard) => {
+    if (!notSoFastEvent.isActivate) return;
+    if (card.name !== "NOT SO FAST") return;
+    if (!httpService || !player || !match || !notSoFastEvent.eventId) {
+      return;
+    }
+    try {
+      // que recibe el ID de la acción que está desafiando.
+      await httpService.postPlayNotSoFast(
+        match.id,
+        player.id,
+        card.id,
+        notSoFastEvent.eventId,
+        notSoFastEvent.nsfCount,
+      );
+
+      // Si tiene éxito, limpiamos el estado de desafío
+      clearNotSoFastEvent();
+      clearSelectedCards();
+      toast.success("¡NOT SO FAST played!");
+    } catch (error) {
+      console.error("Failed to play NOT SO FAST:", error);
+      toast.error("Failed to play NOT SO FAST.");
+    }
+  };
+
+  const handleCardDoubleClick = async (card: GameCard) => {
+    if (notSoFastEvent.isActivate) {
+      await handlePlayNotSoFast(card);
+    } else if (pendingResponse.isPending) {
+      await handlePendingResponseSelectCard(card);
+    }
+  };
+
   const handleClickSetEvent = () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't play set cards while in social disgrace.");
+
+      return;
+    }
+
     playSet(Object.values(selectedCards));
   };
 
@@ -153,34 +225,109 @@ export default function GameContainer() {
     target: GamePlayer | GameSecret | MatchSet,
   ) => {
     // Eventos de cartas
-    if (currentEventCard?.name === "AND THEN THERE WAS ONE MORE") {
-      if (currentEventStep === "select_secret" && "secret_id" in target) {
+    if (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE) {
+      if (
+        currentEventStep === EVENT_STEPS.SELECT_SECRET &&
+        "secret_id" in target
+      ) {
         setSelectedTargetSecret(target as GameSecret);
-        setCurrentEventStep("select_player");
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         return;
-      } else if (currentEventStep === "select_player" && "avatar" in target) {
+      } else if (
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
+        "avatar" in target
+      ) {
         setSelectedTargetPlayer(target as GamePlayer);
         return;
       }
     }
 
     if (
-      currentEventCard?.name === "CARDS OFF THE TABLE" &&
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS &&
       "avatar" in target
     ) {
       setSelectedTargetPlayer(target as GamePlayer);
       return;
     }
 
-    if (currentEventCard?.name === "ANOTHER VICTIM" && "quin_play" in target) {
+    if (
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE &&
+      "avatar" in target
+    ) {
+      setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    if (
+      currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
+      "avatar" in target
+    ) {
+      setSelectedTargetPlayer(target as GamePlayer);
+      return;
+    }
+
+    if (
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      "quin_play" in target
+    ) {
       setSelectedTargetSet(target as MatchSet);
       return;
     }
-    if (isSetEvent) setTargetSet(target as GamePlayer | GameSecret);
+
+    if (setEvent.isSelectingSet) setTargeSetToDown(target);
+
+    if (setEvent.isInEvent) setTargetSet(target);
   };
 
   const handleSelectedPlayer = async () => {
-    if (isSetEvent) {
+    if (
+      (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+        currentEventCard?.name === GAME_EVENTS.CARD_TRADE) &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
+    ) {
+      if (selectedTargetPlayer) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a player first.");
+      }
+      return; // Importante: Salir después de manejar el evento de carta
+    }
+
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    ) {
+      if (
+        !selectedTargetPlayer ||
+        !httpService ||
+        !player ||
+        !match ||
+        !pendingResponse.eventId
+      ) {
+        toast.error("You must select a player first.");
+        return;
+      }
+
+      try {
+        await httpService.postPointYourSuspicions(
+          match.id,
+          player.id,
+          pendingResponse.eventId,
+          selectedTargetPlayer.id,
+        );
+
+        toast.success("Your suspicion has been recorded.");
+        clearPendingResponse();
+        setSelectedTargetPlayer(null);
+      } catch (error) {
+        handleApiError(error, "Error registering suspicion");
+      }
+      return;
+    }
+
+    if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
@@ -217,13 +364,42 @@ export default function GameContainer() {
 
         clearSelectedCards();
       } catch (error) {
-        console.error("Error al ejecutar el evento", error);
+        handleApiError(error, "Error al ejecutar el evento");
       }
+    }
+
+    if (
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
+    ) {
+      if (
+        (selectedTargetPlayer || canSelectMeAsPlayer) &&
+        selectedTargetSecret
+      ) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a secret and a player first.");
+      }
+      return;
     }
   };
 
   const handleSelectedSecret = async () => {
-    if (isSetEvent) {
+    if (
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
+    ) {
+      if (selectedTargetSecret) {
+        // ¡Avanzamos al siguiente paso!
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
+        toast.info("Now select a player.");
+      } else {
+        toast.error("You must select a secret first.");
+      }
+      return; // Salir para no ejecutar la lógica de set event
+    }
+
+    if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
@@ -233,30 +409,41 @@ export default function GameContainer() {
 
   const isSelectablePlayer = (checkPlayer: GamePlayer) => {
     //* Validacion por eventos
-    if (currentEventCard?.name === "CARDS OFF THE TABLE") {
+    if (
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+    ) {
       return checkPlayer.id !== player?.id;
     }
 
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_player"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER
     ) {
       return true;
     }
 
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    ) {
+      return checkPlayer.id !== player?.id;
+    }
+
     // Se deben de poner todos los posibles eventos validos
-    if (isSetEvent) return isPlayerSelectableForSetEvent(checkPlayer);
+    if (setEvent.isInEvent) return isPlayerSelectableForSetEvent(checkPlayer);
 
     return false;
   };
 
   const isSelectableSecret = (secret: GameSecret) => {
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       return secret.is_revealed;
-    } else if (isSetEvent) {
+    } else if (setEvent.isInEvent) {
       return isOtherPlayersSecretSelectable(secret);
     }
 
@@ -264,38 +451,58 @@ export default function GameContainer() {
   };
 
   const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent) return isOtherPlayerSecretSelectableForSetEvent(secret);
+    if (setEvent.isInEvent)
+      return isOtherPlayerSecretSelectableForSetEvent(secret);
 
     return false;
   };
 
   const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
-    if (isSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+    if (setEvent.isInEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return isCurrPlayerSecretSelectableForSetEvent(secret);
+
+    if (
+      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
+      currentEventStep === "select_secret"
+    ) {
+      return secret.is_revealed;
+    }
 
     return false;
   };
 
   const isTargetPlayerEvent = () => {
-    if (isTargetPlayerSetEvent) return true;
-    // Other events
+    if (notSoFastEvent.isActivate) return false;
+
+    if (setEvent.isTargetPlayer) return true;
+
     if (
-      currentEventCard?.name === "CARDS OFF THE TABLE" ||
-      (currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-        currentEventStep === "select_player")
-    ) {
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    )
       return true;
-    }
+
+    if (
+      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+      (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
+      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+    )
+      return true;
+
     return false;
   };
 
   const isTargetSecretEvent = () => {
-    if (isTargetSecretSetEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
+    if (notSoFastEvent.isActivate) return false;
+
+    if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
-    // Other events
+
     if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       return true;
     }
@@ -305,14 +512,22 @@ export default function GameContainer() {
 
   const isSelectableSet = (set: MatchSet) => {
     if (
-      currentEventCard?.name === "ANOTHER VICTIM" &&
-      currentEventStep === "select_set"
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      currentEventStep === EVENT_STEPS.SELECT_SET
     ) {
       // No puedes seleccionar tus propios sets
       if (set.player_id === player?.id) return false;
 
       // Aquí puedes añadir más lógica si es necesario (ej. no seleccionar sets de HARLEY QUIN)
       return true;
+    } else if (
+      !setEvent.isInEvent &&
+      !setEvent.isValidSet &&
+      setEvent.canDownTheCardToASet &&
+      setEvent.cards.length === 1 &&
+      setEvent.isSelectingSet
+    ) {
+      return isSetSelectableForSetEvent(set);
     }
 
     return false;
@@ -345,6 +560,10 @@ export default function GameContainer() {
 
     return secrets.filter((secret) => secret.player_id === player.id);
   }, [secrets, player]);
+
+  const isInSocialDisgrace = useMemo(() => {
+    return playerSecrets.every((secret) => secret.is_revealed);
+  }, [playerSecrets]);
 
   const playerSets = useMemo(() => {
     if (!player) return [];
@@ -383,29 +602,32 @@ export default function GameContainer() {
     if (selectedCardsArray.length !== 1) return false;
     const nameCard = selectedCardsArray[0].name;
     const permittedCards = [
-      "CARDS OFF THE TABLE",
-      "ANOTHER VICTIM",
-      "LOOK INTO THE ASHES",
-      "AND THEN THERE WAS ONE MORE",
-      "DELAY THE MURDERER ESCAPE",
-      "EARLY TRAIN TO PADDINGTON",
+      GAME_EVENTS.CARDS_OFF_THE_TABLE,
+      GAME_EVENTS.ANOTHER_VICTIM,
+      GAME_EVENTS.LOOK_INTO_THE_ASHES,
+      GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE,
+      GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE,
+      GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON,
+      GAME_EVENTS.CARD_TRADE,
+      GAME_EVENTS.POINT_YOUR_SUSPICIONS,
+      GAME_EVENTS.DEAD_CARD_FOLLY,
     ];
-    if (hasDiscardedCards) return false;
-    if (isPlayerFinishAction == true) return false;
-    if (currentEventCard !== null) return false;
-    if (nameCard === "ANOTHER VICTIM") {
+    if (hasDiscardedCards || hasFinishedAction || currentEventCard !== null)
+      return false;
+
+    if (nameCard === GAME_EVENTS.ANOTHER_VICTIM) {
       const hasOtherPlayerSets = sets.some(
         (set) => set.player_id !== player?.id,
       );
       if (!hasOtherPlayerSets) return false;
     }
     if (
-      (nameCard === "LOOK INTO THE ASHES" ||
-        nameCard === "DELAY THE MURDERER ESCAPE") &&
+      (nameCard === GAME_EVENTS.LOOK_INTO_THE_ASHES ||
+        nameCard === GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE) &&
       cardsInDiscardPile.length === 0
     )
       return false;
-    if (nameCard === "AND THEN THERE WAS ONE MORE") {
+    if (nameCard === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE) {
       const hasRevealedSecret = secrets.some((secret) => secret.is_revealed);
       if (!hasRevealedSecret) return false;
     }
@@ -418,8 +640,48 @@ export default function GameContainer() {
     secrets,
     sets,
     player,
-    isPlayerFinishAction,
+    hasFinishedAction,
   ]);
+
+  const handleSelectSet = async () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't select a set as you're in social disgrace.");
+
+      return;
+    }
+
+    if (
+      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+      currentEventStep === EVENT_STEPS.SELECT_SET
+    ) {
+      // Comprobamos si el objetivo está seleccionado (handleEndEvent lo necesita)
+      if (selectedTargetSet) {
+        await handleEndEvent();
+      } else {
+        toast.error("You must select a set first.");
+      }
+    }
+  };
+
+  const handleAddDetectiveCardToSet = () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't add cards to sets as you're in social disgrace.");
+
+      return;
+    }
+
+    const card = Object.values(selectedCards).at(0);
+
+    if (
+      !setEvent.isInEvent &&
+      !setEvent.isValidSet &&
+      setEvent.canDownTheCardToASet &&
+      card !== undefined &&
+      !setEvent.isSelectingSet
+    ) {
+      addDetectiveCardToSet(card);
+    }
+  };
 
   // -- Utilidades --
 
@@ -449,7 +711,7 @@ export default function GameContainer() {
   // -- Manejadores --
 
   const handleClickDiscardPile = () => {
-    if (isSetEvent) return;
+    if (setEvent.isInEvent) return;
 
     if (cardsInDiscardPile.length === 0) return;
 
@@ -484,17 +746,22 @@ export default function GameContainer() {
 
       const emptySlots = handCards.filter((c) => c === null).length;
 
-      // Si tomar una carta del draft llena la mano,
-      // marcamos que el jugador ha tomado cartas.
-      // Esto es relevante para permitirle
-      // tomar cartas del draft sin impedir tomar de
-      // la pila regular.
-      if (emptySlots === 1) {
+      if (
+        // Si tomar una carta del draft llena la mano,
+        // marcamos que el jugador ha tomado cartas.
+        // Esto es relevante para permitirle
+        // tomar cartas del draft sin impedir tomar de
+        // la pila regular.
+        emptySlots === 1 ||
+        // Tomar una carta del draft
+        // estando en desgracia social cuenta al lìmite
+        // de tomar solo una carta por turno.
+        isInSocialDisgrace
+      ) {
         setHasTakenCards(true);
       }
     } catch (error) {
-      console.error("Failed to take card from draft:", error);
-      toast.error("Failed to take card from draft.");
+      handleApiError(error, "Failed to take card from draft");
     }
   };
 
@@ -511,11 +778,16 @@ export default function GameContainer() {
 
     if (emptyHandPositions.length === 0) return;
 
+    // En desgracia social, tomamos exactamente una carta.
+    const cardsToTake = isInSocialDisgrace
+      ? 1
+      : Math.min(emptyHandPositions.length, drawableCards.length);
+
     // Tenemos que tomar los índices por detrás
     // de las cartas del draft (las que están en la pila).
     const cardsTaken = drawableCards.slice(
       DRAFT_SIZE,
-      DRAFT_SIZE + Math.min(emptyHandPositions.length, drawableCards.length),
+      DRAFT_SIZE + cardsToTake,
     );
 
     try {
@@ -523,16 +795,14 @@ export default function GameContainer() {
 
       setHasTakenCards(true);
     } catch (error) {
-      console.error("Failed to take cards from draw pile:", error);
-
-      toast.error("Failed to take cards from draw pile.");
+      handleApiError(error, "Failed to take cards from draw pile");
     }
   };
 
   const handleSelectCard = (card: GameCard) => {
     if (discardModal.isOpen && !discardModal.isEventDiscard) return;
 
-    if (isSetEvent) return;
+    if (setEvent.isInEvent || setEvent.isSelectingSet) return;
 
     selectCard(card);
   };
@@ -550,6 +820,13 @@ export default function GameContainer() {
 
     if (cardIds.length === 0) {
       toast.error("No cards selected to discard.");
+
+      return;
+    }
+
+    if (isInSocialDisgrace && cardIds.length > 1) {
+      toast.error("You can only discard one card while in social disgrace.");
+
       return;
     }
 
@@ -561,10 +838,7 @@ export default function GameContainer() {
       clearSelectedCards();
       playerFinishActionTurn();
     } catch (error) {
-      console.error("Failed to discard selected cards:", error);
-
-      toast.error("Failed to discard selected cards.");
-
+      handleApiError(error, "Failed to discard selected cards");
       throw error;
     }
   };
@@ -603,10 +877,7 @@ export default function GameContainer() {
       setHasTakenCards(true);
       setHasDiscardedCards(true);
     } catch (error) {
-      console.error("Failed to perform mandatory discard:", error);
-
-      toast.error("Failed to perform mandatory discard.");
-
+      handleApiError(error, "Failed to perform mandatory discard");
       // Lanzamos el error de nuevo para que no pueda pasar el turno
       // si el descarte falló.
       throw error;
@@ -632,13 +903,13 @@ export default function GameContainer() {
       // Si el jugador no ha descartado cartas o jugado un evento, se fuerza
       // el descarte obligatorio de una carta.
       if (
-        !(hasDiscardedCards || isPlayerFinishAction) &&
+        !(hasDiscardedCards || hasFinishedAction) &&
         currentEventCard === null
       ) {
         await mandatoryDiscard();
       }
 
-      if (isStolenSecretSetEvent) await executeFinishTurnSetEvent();
+      if (setEvent.isStolenSecret) await executeFinishTurnSetEvent();
 
       await httpService.putPassTurn(match.id);
 
@@ -649,13 +920,19 @@ export default function GameContainer() {
 
       clearSelectedCards();
     } catch (error) {
-      console.error("Failed to finish turn:", error);
+      handleApiError(error, "Failed to finish turn");
     }
 
     clearSetEvent();
   };
 
   const handlePlayEvent = async () => {
+    if (isInSocialDisgrace) {
+      toast.error("You can't play event cards while in social disgrace.");
+
+      return;
+    }
+
     // OBTENER LA CARTA SELECCIONADA
     const selectedCardsArray = Object.values(selectedCards);
 
@@ -670,45 +947,66 @@ export default function GameContainer() {
     const nameEvent = cardEvent.name;
 
     switch (nameEvent) {
-      case "DELAY THE MURDERER ESCAPE": {
+      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
         setCurrentEventCard(cardEvent);
         handleEndEvent(cardEvent);
         break;
       }
 
-      case "LOOK INTO THE ASHES": {
+      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
         setCurrentEventCard(cardEvent);
         handleEventDiscard();
         break;
       }
 
-      case "CARDS OFF THE TABLE": {
+      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_player");
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         break;
       }
 
-      case "AND THEN THERE WAS ONE MORE": {
+      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_secret");
+        setCurrentEventStep(EVENT_STEPS.SELECT_SECRET);
         break;
       }
 
-      case "EARLY TRAIN TO PADDINGTON": {
+      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
         setCurrentEventCard(cardEvent);
         handleEndEvent(cardEvent);
         break;
       }
 
-      case "ANOTHER VICTIM": {
+      case GAME_EVENTS.ANOTHER_VICTIM: {
         setCurrentEventCard(cardEvent);
-        setCurrentEventStep("select_set");
+        setCurrentEventStep(EVENT_STEPS.SELECT_SET);
+        break;
+      }
+
+      case GAME_EVENTS.CARD_TRADE: {
+        setCurrentEventCard(cardEvent);
+        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
+        break;
+      }
+
+      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
+        setCurrentEventCard(cardEvent);
+        handleEndEvent(cardEvent);
+        break;
+      }
+
+      case GAME_EVENTS.DEAD_CARD_FOLLY: {
+        setCurrentEventCard(cardEvent);
+        setCurrentEventStep(EVENT_STEPS.SELECT_DIRECTION);
         break;
       }
     }
   };
 
-  const handleEndEvent = async (eventCard?: GameCard) => {
+  const handleEndEvent = async (
+    eventCard?: GameCard,
+    direction?: "LEFT" | "RIGHT",
+  ) => {
     const cardToUse = currentEventCard || eventCard;
     if (!httpService || !player || !match || !cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
@@ -719,7 +1017,7 @@ export default function GameContainer() {
     let eventPayload: EventPayload | undefined;
 
     switch (nameEvent) {
-      case "LOOK INTO THE ASHES": {
+      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
         // Validamos que haya una carta seleccionada del descarte
         const selectedDiscardedCardsArray = Object.values(selectedCards);
 
@@ -744,7 +1042,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "DELAY THE MURDERER ESCAPE": {
+      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
         const idsInDiscardPile = cardsInDiscardPile.map((card) => card.id);
         const latestFive = idsInDiscardPile.slice(0, 5);
 
@@ -754,7 +1052,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "CARDS OFF THE TABLE": {
+      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
         if (!selectedTargetPlayer) {
           console.warn("Debe seleccionar un jugador objetivo");
           return;
@@ -769,7 +1067,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "AND THEN THERE WAS ONE MORE": {
+      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
         if (!selectedTargetPlayer || !selectedTargetSecret) {
           console.warn("Debe seleccionar un jugador objetivo y un secreto");
           return;
@@ -785,7 +1083,7 @@ export default function GameContainer() {
         break;
       }
 
-      case "EARLY TRAIN TO PADDINGTON": {
+      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
         // Saltar las primeras 3 cartas y tomar las siguientes 6
         const cardsToReveal = drawableCards.slice(3, 9);
 
@@ -796,14 +1094,43 @@ export default function GameContainer() {
         break;
       }
 
-      case "ANOTHER VICTIM": {
+      case GAME_EVENTS.ANOTHER_VICTIM: {
         if (!selectedTargetSet) {
           console.warn("Set no seleccionado");
         }
         eventPayload = {
           target_set_id: selectedTargetSet?.id,
         } as AnotherVictimEventPayload;
-        setSelectedTargetSet(null);
+        break;
+      }
+
+      case GAME_EVENTS.CARD_TRADE: {
+        if (!selectedTargetPlayer) {
+          toast.error("Player not selected");
+        }
+        eventPayload = {
+          target_player_id: selectedTargetPlayer?.id,
+        } as CardTradeEventPayload;
+        setSelectedTargetPlayer(null);
+        setCurrentEventStep(null);
+        break;
+      }
+
+      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
+        eventPayload = {
+          cards_ids: [],
+        } as RegularAndDiscardEventPayload;
+        break;
+      }
+
+      case GAME_EVENTS.DEAD_CARD_FOLLY: {
+        if (!direction) {
+          toast.error("You must select a direction first.");
+          return;
+        }
+        eventPayload = {
+          direction: direction,
+        } as DeadCardFollyEventPayload;
         setCurrentEventStep(null);
         break;
       }
@@ -822,11 +1149,23 @@ export default function GameContainer() {
         eventPayload,
       );
 
-      clearSelectedCards();
-      playerFinishActionTurn();
+      if (nameEvent === GAME_EVENTS.ANOTHER_VICTIM) {
+        // Se establece los valores del setEvent
+        const setId = selectedTargetSet?.id as UUID;
+        playStolenSet(setId);
+
+        // Se limpia el evento Another_victim
+        setSelectedTargetSet(null);
+        setCurrentEventStep(null);
+      } else {
+        // Los otros eventos ya terminaron y no se puede continuar.
+        playerFinishActionTurn();
+      }
+
       setCurrentEventCard(null);
+      clearSelectedCards();
     } catch (error) {
-      console.error("Error al ejecutar el evento", error);
+      handleApiError(error, "Error al ejecutar el evento");
     }
   };
 
@@ -836,7 +1175,21 @@ export default function GameContainer() {
     if (discardModal.isOpen || discardModal.isEventDiscard) return;
 
     setEventToggleDisableButtonPlaySet(Object.values(selectedCards));
-  }, [discardModal, selectedCards, setEventToggleDisableButtonPlaySet]);
+    setEventToggleDisableButtonSelectSet(Object.values(selectedCards));
+  }, [
+    discardModal,
+    selectedCards,
+    setEventToggleDisableButtonPlaySet,
+    setEventToggleDisableButtonSelectSet,
+  ]);
+
+  const isSelectPlayerButtonEnabled = isTargetPlayerEvent();
+
+  const isSelectSecretButtonEnabled = isTargetSecretEvent();
+
+  const isSelectDirectionEvent =
+    currentEventCard?.name === GAME_EVENTS.DEAD_CARD_FOLLY &&
+    currentEventStep === EVENT_STEPS.SELECT_DIRECTION;
 
   return (
     <>
@@ -844,6 +1197,8 @@ export default function GameContainer() {
         data-testid="game-container"
         className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
+        <Logs logs={logs} />
+
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">
           {/* Las primeras 6 casillas ubican a los jugadores, sus elementos y las pilas del juego. */}
@@ -871,31 +1226,52 @@ export default function GameContainer() {
             isSelectablePlayer={isSelectablePlayer}
             isSelectableSecret={isSelectableSecret}
             isSelectableSet={isSelectableSet}
-            isEvent={isSetEvent || currentEventCard !== null}
+            isEvent={
+              setEvent.isInEvent ||
+              currentEventCard !== null ||
+              setEvent.isSelectingSet ||
+              (pendingResponse.isPending &&
+                pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS)
+            }
             isTargetPlayer={isTargetPlayerEvent()}
             isTargetSecret={isTargetSecretEvent()}
             isTargetSet={
-              currentEventCard?.name === "ANOTHER VICTIM" &&
-              currentEventStep === "select_set"
+              (currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+                currentEventStep === EVENT_STEPS.SELECT_SET) ||
+              setEvent.isSelectingSet
             }
             target={
               getTargetSetEvent() ||
               selectedTargetPlayer ||
               selectedTargetSecret ||
-              selectedTargetSet
+              selectedTargetSet ||
+              setEvent.set
             }
           />
 
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
-            <div className="flex flex-col gap-y-3">
+            <div className="flex flex-col items-center gap-y-3">
+              {isInSocialDisgrace && (
+                <p className="text-center text-white">
+                  You are in Social Disgrace!
+                </p>
+              )}
+
               <Secrets
                 secrets={playerSecrets}
                 isSelectableSecret={isCurrPlayersSecretSelectable}
                 isTargetSecret={isTargetSecretEvent()}
                 onSelectTargetEvent={handleSelectTargetEvent}
-                target={getTargetSetEvent()}
+                target={getTargetSetEvent() || selectedTargetSecret}
               />
-              <Sets sets={playerSets} />
+
+              <Sets
+                sets={playerSets}
+                onSelectTargetEvent={handleSelectTargetEvent}
+                isSelectableSet={isSelectableSet}
+                isTargetSet={setEvent.isSelectingSet}
+                target={setEvent.set}
+              />
             </div>
 
             <Hand
@@ -904,6 +1280,13 @@ export default function GameContainer() {
               isSelected={isCardSelected}
               isSelecting={isSelectingCards}
               isDisabled={!isPlayerTurn}
+              isActivateNSF={notSoFastEvent.isActivate}
+              onDoubleClickCard={handleCardDoubleClick}
+              isPendingResponse={
+                pendingResponse.isPending &&
+                (pendingResponse.eventType === GAME_EVENTS.CARD_TRADE ||
+                  pendingResponse.eventType === GAME_EVENTS.DEAD_CARD_FOLLY)
+              }
             />
 
             <HandActions
@@ -913,18 +1296,27 @@ export default function GameContainer() {
               onPlaySet={handleClickSetEvent}
               onSelectPlayer={handleSelectedPlayer}
               onSelectSecret={handleSelectedSecret}
-              onEndEvent={handleEndEvent}
+              onSelectSet={handleSelectSet}
               canSelectMeAsPlayer={canSelectMeAsPlayer}
-              isDisabled={!isPlayerTurn}
-              isDisabledEvent={!isPlayable}
-              isDisabledEndEvent={isEndEventDisabled}
-              isSelectionSetEvent={
-                currentEventCard?.name === "ANOTHER VICTIM" &&
-                currentEventStep === "select_set"
+              isDisabled={
+                !isPlayerTurn ||
+                (notSoFastEvent.isActivate && !isSelectDirectionEvent)
               }
+              onAddDetectiveCardToSet={handleAddDetectiveCardToSet}
+              isDisabledEvent={!isPlayable}
+              isSelectionSetEvent={
+                currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+                currentEventStep === EVENT_STEPS.SELECT_SET
+              }
+              isAddingCardToSet={setEvent.isSelectingSet}
               isSetButtonDisabled={isSetEventButtonDisabled}
-              isSelectionPlayerEvent={isTargetPlayerEvent()}
-              isSelectionSecretEvent={isTargetSecretEvent()}
+              isSetEventSelectSetButtonDisabled={
+                isSetEventSelectSetButtonDisabled
+              }
+              isSelectionPlayerEvent={isSelectPlayerButtonEnabled}
+              isSelectionSecretEvent={isSelectSecretButtonEnabled}
+              isSelectDirectionEvent={isSelectDirectionEvent}
+              onSelectDirection={handleSelectDirection}
             />
           </div>
         </div>

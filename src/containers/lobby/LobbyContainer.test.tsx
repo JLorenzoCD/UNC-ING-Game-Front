@@ -1,14 +1,6 @@
 import "@testing-library/jest-dom";
 import { act, render, screen } from "@testing-library/react";
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-  beforeAll,
-} from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import userEvent from "@testing-library/user-event";
 
 import type { UUID } from "@/types/common";
@@ -32,6 +24,7 @@ const {
   mockUsePlayer,
   FRONTEND_PATHS,
   mockFillAndShufflePlayers,
+  mockToastError,
 } = vi.hoisted(() => {
   const MOCK_MATCH_ID = "match-id" as UUID;
   const MOCK_OWNER_ID = "owner-id" as UUID;
@@ -81,6 +74,8 @@ const {
     return playersToView;
   });
 
+  const mockToastError = vi.fn();
+
   return {
     MOCK_MATCH_ID,
     MOCK_OWNER_ID,
@@ -96,10 +91,17 @@ const {
     mockUsePlayer,
     FRONTEND_PATHS,
     mockFillAndShufflePlayers,
+    mockToastError,
   };
 });
 
 // --- Mocks de módulos ---
+vi.mock("sonner", () => ({
+  toast: {
+    error: mockToastError,
+  },
+}));
+
 vi.mock("./useLobbyData", () => ({
   useLobbyData: mockUseLobbyData,
 }));
@@ -180,8 +182,6 @@ const defaultLobbyState = {
 };
 
 describe("LobbyContainer", () => {
-  const originalAlert = window.alert;
-
   beforeAll(async () => {
     const module = await import("./LobbyContainer");
     LobbyContainer = module.default;
@@ -190,18 +190,12 @@ describe("LobbyContainer", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    window.alert = vi.fn();
-
     mockUseLobbyData.mockReturnValue(defaultLobbyState);
     mockStartMatch.mockResolvedValue({ status: true });
     mockUsePlayer.mockReturnValue({
       player: { id: MOCK_PLAYER_ID, name: "Current Player" },
     });
     mockUseParams.mockReturnValue({ matchId: MOCK_MATCH_ID });
-  });
-
-  afterEach(() => {
-    window.alert = originalAlert;
   });
 
   it("should render loading state when useLobbyData is loading", () => {
@@ -274,6 +268,7 @@ describe("LobbyContainer", () => {
     mockUsePlayer.mockReturnValue({
       player: { id: MOCK_OWNER_ID, name: "Owner Player" },
     });
+
     mockUseLobbyData.mockReturnValue({
       ...defaultLobbyState,
       match: { ...mockMatch, min_players: 3, current_player_count: 2 },
@@ -290,7 +285,7 @@ describe("LobbyContainer", () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it("should show an alert if startMatch fails", async () => {
+  it("should show a toast error if startMatch fails", async () => {
     const mockConsoleError = vi
       .spyOn(console, "error")
       .mockImplementation(() => {});
@@ -308,7 +303,9 @@ describe("LobbyContainer", () => {
     });
 
     expect(mockStartMatch).toHaveBeenCalled();
-    expect(window.alert).toHaveBeenCalledWith("The game could not be started.");
+    expect(mockToastError).toHaveBeenCalledWith(
+      "The game could not be started",
+    );
     expect(mockNavigate).not.toHaveBeenCalled();
 
     mockConsoleError.mockRestore();
