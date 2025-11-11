@@ -41,4 +41,10 @@ export const GAME_RULES = {
    * Número de cartas visibles en el área de draft
    */
   DRAFT_SIZE: 3,
+
+  /**
+   * Tiempo en segundos que tiene un turno para realizar una acción antes de
+   * ser considerado un timeout. Se mide en segundos.
+   */
+  TIME_TURN: 60,
 } as const;

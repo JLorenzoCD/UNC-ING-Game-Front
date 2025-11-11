@@ -44,6 +44,9 @@ const BACKEND_ENDPOINTS = {
 
   CARD_TRADE: (matchId: UUID) => `/matches/${matchId}/card_trade`,
 
+  TIMEOUT: (matchId: UUID, playerId: UUID) =>
+    `/matches/${matchId}/timeout/${playerId}`,
+
   POINT_YOUR_SUSPICIONS: (matchId: UUID) =>
     `/matches/${matchId}/point_your_suspicions`,
 

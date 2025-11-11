@@ -335,6 +335,17 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const timeOutPlayerTurn = async (
+    matchId: UUID,
+    playerId: UUID,
+  ): Promise<void> => {
+    const options: RequestInit = {
+      method: "PUT",
+    };
+
+    return request(BACKEND_ENDPOINTS.TIMEOUT(matchId, playerId), options);
+  };
+
   const postPointYourSuspicions = async (
     matchId: UUID,
     playerId: UUID,
@@ -405,6 +416,7 @@ export function createHttpService() {
     playStolenSet,
     postPlayNotSoFast,
     postCardTrade,
+    timeOutPlayerTurn,
     postPointYourSuspicions,
     postDeadCardFolly,
   };

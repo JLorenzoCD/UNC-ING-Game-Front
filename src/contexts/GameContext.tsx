@@ -333,6 +333,7 @@ export default function GameContextProvider({
         return {
           ...current,
           current_player_order: match.current_player_order,
+          timer_turn: match.timer_turn,
         };
       });
     };
