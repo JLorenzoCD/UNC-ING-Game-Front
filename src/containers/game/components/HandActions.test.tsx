@@ -425,4 +425,176 @@ describe("HandActions", () => {
       expect(screen.getByText("Select player")).not.toBeDisabled();
     });
   });
+
+  describe("Button: Discard cards logic", () => {
+    it("should disable Discard cards when hasFinishedAction is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        hasFinishedAction: true,
+      });
+
+      render(<HandActions {...baseProps} />);
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+    });
+
+    it("should disable Discard cards when notSoFastEvent.isActivate is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        notSoFastEvent: { isActivate: true },
+      });
+
+      render(<HandActions {...baseProps} />);
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+    });
+
+    it("should disable Discard cards when pendingResponse.isPending is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: { isPending: true, eventType: null },
+      });
+
+      render(<HandActions {...baseProps} />);
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+    });
+  });
+
+  describe("Button: Select player logic (Extended coverage)", () => {
+    it("should disable Select player when isDisabled is true and no pending response", () => {
+      render(
+        <HandActions
+          {...baseProps}
+          isDisabled={true}
+          isSelectionPlayerEvent={true}
+        />,
+      );
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should disable Select player when hasFinishedAction is true and no pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        hasFinishedAction: true,
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should disable Select player when notSoFastEvent.isActivate is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        notSoFastEvent: { isActivate: true },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should change text to 'Select me' when canSelectMeAsPlayer is true", () => {
+      render(
+        <HandActions
+          {...baseProps}
+          isSelectionPlayerEvent={true}
+          canSelectMeAsPlayer={true}
+        />,
+      );
+      expect(screen.getByText("Select me")).toBeInTheDocument();
+    });
+  });
+
+  describe("Button: Select secret logic (Extended coverage)", () => {
+    it("should disable Select secret when notSoFastEvent.isActivate is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        notSoFastEvent: { isActivate: true },
+      });
+
+      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+      expect(screen.getByText("Select secret")).toBeDisabled();
+    });
+
+    it("should disable Select secret when isSelectionSecretEvent is false and isCurrPlayer is false", () => {
+      render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
+      expect(screen.getByText("Select secret")).toBeDisabled();
+    });
+
+    it("should ENABLE Select secret when isSelectionSecretEvent is true", () => {
+      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+      expect(screen.getByText("Select secret")).not.toBeDisabled();
+    });
+  });
+
+  describe("Button: Finish turn logic (Extended coverage)", () => {
+    it("should disable Finish turn when shouldDisableOption is true (e.g., isSelectionPlayerEvent=true)", () => {
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+    });
+
+    it("should disable Finish turn when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        playerSelectsOneOfHisSecrets: {
+          isSelecting: true,
+          isCurrPlayer: false,
+        },
+      });
+      render(<HandActions {...baseProps} />);
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+    });
+
+    it("should disable Finish turn when notSoFastEvent.isActivate is true", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        notSoFastEvent: { isActivate: true },
+      });
+      render(<HandActions {...baseProps} />);
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+    });
+  });
+
+  describe("Direction buttons", () => {
+    beforeEach(() => {
+      baseProps.isSelectDirectionEvent = true;
+    });
+
+    it("should call onSelectDirection('LEFT') when Left button is clicked", () => {
+      render(<HandActions {...baseProps} />);
+      fireEvent.click(screen.getByText("Left"));
+      expect(mockOnSelectDirection).toHaveBeenCalledWith("LEFT");
+      expect(mockOnSelectDirection).toHaveBeenCalledTimes(1);
+    });
+
+    it("should call onSelectDirection('RIGHT') when Right button is clicked", () => {
+      render(<HandActions {...baseProps} />);
+      fireEvent.click(screen.getByText("Right"));
+      expect(mockOnSelectDirection).toHaveBeenCalledWith("RIGHT");
+      expect(mockOnSelectDirection).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe("Button: Add detective (Extended coverage)", () => {
+    it("calls onAddDetectiveCardToSet when button is clicked", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        hasFinishedAction: false,
+      });
+
+      render(
+        <HandActions
+          {...baseProps}
+          isSetEventSelectSetButtonDisabled={false}
+          isDisabled={false}
+        />,
+      );
+      fireEvent.click(screen.getByText("Add detective"));
+      expect(mockOnAddDetectiveCardToSet).toHaveBeenCalledTimes(1);
+    });
+
+    it("disables 'Add detective' when isSetEventSelectSetButtonDisabled is true", () => {
+      render(
+        <HandActions {...baseProps} isSetEventSelectSetButtonDisabled={true} />,
+      );
+      expect(screen.getByText("Add detective")).toBeDisabled();
+    });
+  });
 });
