@@ -4,6 +4,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 
 import type { ReactNode } from "react";
 
+import { GAME_EVENTS } from "@/constants/game";
 import HandActions from "./HandActions";
 
 const {
@@ -15,6 +16,7 @@ const {
   mockOnPlayEvent,
   mockOnSelectSet,
   mockUseGame,
+  mockOnSelectDirection,
   mockOnAddDetectiveCardToSet,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
@@ -24,6 +26,7 @@ const {
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
   const mockUseGame = vi.fn();
+  const mockOnSelectDirection = vi.fn();
   const mockOnAddDetectiveCardToSet = vi.fn();
   const mockOnSelectSet = vi.fn();
 
@@ -37,6 +40,7 @@ const {
     mockOnSelectSecret,
     mockOnPlayEvent,
     mockOnSelectSet,
+    mockOnSelectDirection,
   };
 });
 
@@ -75,6 +79,7 @@ const baseProps = {
   onPlayEvent: mockOnPlayEvent,
   onAddDetectiveCardToSet: mockOnAddDetectiveCardToSet,
   onSelectSet: mockOnSelectSet,
+  onSelectDirection: mockOnSelectDirection,
   isSetEventSelectSetButtonDisabled: true,
   isAddingCardToSet: false,
   canSelectMeAsPlayer: false,
@@ -84,6 +89,7 @@ const baseProps = {
   isDisabled: false,
   isSelectionSetEvent: false,
   isDisabledEvent: true,
+  isSelectDirectionEvent: false,
 };
 
 describe("HandActions", () => {
@@ -104,6 +110,7 @@ describe("HandActions", () => {
         discardedCard: null,
       },
       clearNotSoFastEvent: vi.fn(),
+      pendingResponse: { isPending: false, eventType: null },
     });
   });
 
@@ -251,6 +258,7 @@ describe("HandActions", () => {
           isDisabledEvent={false}
           isDisabled={false}
           canSelectMeAsPlayer={false}
+          isSelectDirectionEvent={false}
         />,
       );
 
@@ -274,6 +282,7 @@ describe("HandActions", () => {
           isCurrPlayer: false,
         },
         notSoFastEvent: { isActivate: false },
+        pendingResponse: { isPending: false, eventType: null },
       });
 
       render(<HandActions {...baseProps} />);
@@ -293,6 +302,7 @@ describe("HandActions", () => {
           isSelecting: true,
           isCurrPlayer: false,
         },
+        pendingResponse: { isPending: false, eventType: null },
         notSoFastEvent: { isActivate: false },
       });
 
@@ -313,12 +323,106 @@ describe("HandActions", () => {
           isCurrPlayer: true,
         },
         notSoFastEvent: { isActivate: false },
+        pendingResponse: { isPending: false, eventType: null },
       });
 
       render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
 
       expect(screen.getByText("Select secret")).not.toBeDisabled();
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
+    });
+
+    it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
+      // 1. Simular el estado de PENDING_RESPONSE para PYS
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(), // Obtiene el mock base
+        pendingResponse: {
+          isPending: true,
+          eventType: "POINT YOUR SUSPICIONS",
+        },
+      });
+
+      // 2. Renderizar (isSelectionPlayerEvent es true, que viene de GameContainer)
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // 3. Verificar
+      // El botón está HABILITADO porque la lógica de 'disabled'
+      expect(screen.getByText("Select player")).not.toBeDisabled();
+
+      // Los otros botones sí están deshabilitados
+      expect(screen.getByText("Discard cards")).toBeDisabled();
+      expect(screen.getByText("Finish turn")).toBeDisabled();
+    });
+  });
+
+  describe("Conditional Event Rendering", () => {
+    // Importa GAME_EVENTS al principio de este archivo de test
+    // import { GAME_EVENTS } from "@/constants/game";
+
+    it("should show Left and Right buttons for DEAD_CARD_FOLLY initiator", () => {
+      render(
+        <HandActions
+          {...baseProps}
+          isSelectDirectionEvent={true} //
+        />,
+      );
+
+      // Los botones "Discard" y "Select set" desaparecen
+      expect(screen.queryByText("Discard cards")).not.toBeInTheDocument();
+      expect(screen.queryByText("Select set")).not.toBeInTheDocument();
+
+      // Los botones "Left" y "Right" aparecen
+      expect(screen.getByText("Left")).toBeInTheDocument();
+      expect(screen.getByText("Right")).toBeInTheDocument();
+
+      // Los otros botones siguen ahí
+      expect(screen.getByText("Play set")).toBeInTheDocument();
+      expect(screen.getByText("Select player")).toBeInTheDocument();
+    });
+
+    it("should disable Select player button for CARD_TRADE pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.CARD_TRADE, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está deshabilitado por la lógica de CARD_TRADE
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should disable Select player button for DEAD_CARD_FOLLY pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.DEAD_CARD_FOLLY, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está deshabilitado por la lógica de DEAD_CARD_FOLLY
+      expect(screen.getByText("Select player")).toBeDisabled();
+    });
+
+    it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
+      mockUseGame.mockReturnValue({
+        ...mockUseGame(),
+        pendingResponse: {
+          isPending: true,
+          eventType: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
+        },
+      });
+
+      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+
+      // El botón está habilitado
+      expect(screen.getByText("Select player")).not.toBeDisabled();
     });
   });
 });

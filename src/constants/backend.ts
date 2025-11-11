@@ -46,6 +46,11 @@ const BACKEND_ENDPOINTS = {
 
   TIMEOUT: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/timeout/${playerId}`,
+
+  POINT_YOUR_SUSPICIONS: (matchId: UUID) =>
+    `/matches/${matchId}/point_your_suspicions`,
+
+  DEAD_CARD_FOLLY: (matchId: UUID) => `/matches/${matchId}/dead_card_folly`,
 } as const;
 
 const BACKEND_SOCKETS_EVENTS = {
