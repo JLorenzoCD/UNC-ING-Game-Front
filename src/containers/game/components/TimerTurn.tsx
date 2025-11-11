@@ -85,7 +85,7 @@ export default function TimerTurn() {
     // Calcular el momento final: logStartTime + 60 segundos (en ms)
     const endTime = logStartTime + GAME_RULES.TIME_TURN * 1000;
 
-    const timerInterval = setInterval(() => {
+    const timerInterval = setInterval(async () => {
       const now = Date.now();
       const timeRemainingMs = endTime - now;
 
@@ -95,7 +95,7 @@ export default function TimerTurn() {
 
         // TIMEOUT
         try {
-          httpService.timeOutPlayerTurn(match.id, currPlayerInTurn.id);
+          await httpService.timeOutPlayerTurn(match.id, currPlayerInTurn.id);
         } catch (err) {
           // Posiblemente por condición de carrera. Te tire un error
           console.error(err);
