@@ -194,7 +194,7 @@ const mockSecrets: GameSecret[] = [
     match_id: MOCK_MATCH_ID,
     secret_id: crypto.randomUUID(),
     player_id: MOCK_PLAYER_ID,
-    is_revealed: false,
+    is_revealed: true,
   },
 ];
 
@@ -466,8 +466,6 @@ vi.mock("./components/HandActions", () => ({
         notSoFastEvent,
         pendingResponse,
       } = useGame(); //
-
-      // console.log(isDisabled, isSelectionPlayerEvent, hasFinishedAction, pendingResponse.isPending, pendingResponse.eventType)
 
       const shouldDisableOption =
         isDisabled ||
@@ -1277,7 +1275,6 @@ describe("GameContainer", () => {
       vi.mocked(useGame).mockReturnValue({
         ...vi.mocked(useGame)(),
         cards: [cardATWOME],
-        secrets: [{ id: "secret-target-id", is_revealed: true } as any], // Secreto revelado
       });
       render(<GameContainer />);
 

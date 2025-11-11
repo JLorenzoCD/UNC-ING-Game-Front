@@ -230,6 +230,7 @@ export default function GameContainer() {
         currentEventStep === EVENT_STEPS.SELECT_SECRET &&
         "secret_id" in target
       ) {
+        console.log("Paso por aca");
         setSelectedTargetSecret(target as GameSecret);
         setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         return;
@@ -237,6 +238,7 @@ export default function GameContainer() {
         currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
         "avatar" in target
       ) {
+        console.log("Paso por aca");
         setSelectedTargetPlayer(target as GamePlayer);
         return;
       }
@@ -475,22 +477,22 @@ export default function GameContainer() {
     if (notSoFastEvent.isActivate) return false;
 
     if (setEvent.isTargetPlayer) return true;
-    // Other events
+
     if (
       pendingResponse.isPending &&
       pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
-    ) {
+    )
       return true;
-    }
+
     if (
       currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
       (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
         currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
       (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
         currentEventStep === EVENT_STEPS.SELECT_PLAYER)
-    ) {
+    )
       return true;
-    }
+
     return false;
   };
 
@@ -499,7 +501,7 @@ export default function GameContainer() {
 
     if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
       return true;
-    // Other events
+
     if (
       currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
       currentEventStep === EVENT_STEPS.SELECT_SECRET
@@ -927,11 +929,13 @@ export default function GameContainer() {
   };
 
   const handlePlayEvent = async () => {
+    console.log("Paso-handlePlayEvent", secrets, isInSocialDisgrace);
     if (isInSocialDisgrace) {
       toast.error("You can't play event cards while in social disgrace.");
 
       return;
     }
+    console.log("Paso-handlePlayEvent");
 
     // OBTENER LA CARTA SELECCIONADA
     const selectedCardsArray = Object.values(selectedCards);
