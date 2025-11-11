@@ -230,7 +230,6 @@ export default function GameContainer() {
         currentEventStep === EVENT_STEPS.SELECT_SECRET &&
         "secret_id" in target
       ) {
-        console.log("Paso por aca");
         setSelectedTargetSecret(target as GameSecret);
         setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         return;
@@ -238,7 +237,6 @@ export default function GameContainer() {
         currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
         "avatar" in target
       ) {
-        console.log("Paso por aca");
         setSelectedTargetPlayer(target as GamePlayer);
         return;
       }
@@ -929,13 +927,11 @@ export default function GameContainer() {
   };
 
   const handlePlayEvent = async () => {
-    console.log("Paso-handlePlayEvent", secrets, isInSocialDisgrace);
     if (isInSocialDisgrace) {
       toast.error("You can't play event cards while in social disgrace.");
 
       return;
     }
-    console.log("Paso-handlePlayEvent");
 
     // OBTENER LA CARTA SELECCIONADA
     const selectedCardsArray = Object.values(selectedCards);
