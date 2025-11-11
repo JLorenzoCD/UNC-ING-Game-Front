@@ -638,6 +638,7 @@ describe("GameContainer", () => {
       isSetEventSelectSetButtonDisabled: false,
       playSet: mockPlaySet,
       setTargetSet: mockSetTargetSet,
+      playStolenSet: vi.fn(),
       executeSetActionToTarget: mockExecuteSetActionToTarget,
       executeFinishTurnSetEvent: mockExecuteFinishTurnSetEvent,
       isPlayerSelectableForSetEvent: vi.fn(),
