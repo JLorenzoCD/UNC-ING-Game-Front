@@ -2,7 +2,7 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 import type { GamePlayer, Player as PlayerSchema } from "@/types/player";
@@ -13,7 +13,7 @@ import type { Match } from "@/types/match";
 
 import Table from "./Table";
 
-vi.mock("@/contexts/GameContext");
+vi.mock("@/contexts/BasicGameContext");
 vi.mock("@/contexts/PlayerContext");
 vi.mock("../utils/tablePositions.ts", () => ({
   getVisiblePlayersWithGridPositions: vi.fn(),
@@ -55,7 +55,7 @@ import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
 const mockGetVisiblePlayersWithGridPositions = vi.mocked(
   getVisiblePlayersWithGridPositions,
 );
-const mockUseGame = vi.mocked(useGame);
+const mockuseBasicGame = vi.mocked(useBasicGame);
 const mockUsePlayer = vi.mocked(usePlayer);
 
 // Datos Mock (Se mantienen)
@@ -218,7 +218,7 @@ describe("Table Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseGame.mockReturnValue({
+    mockuseBasicGame.mockReturnValue({
       secrets: mockSecrets,
       cards: [],
       match: mockMatch,
@@ -344,8 +344,8 @@ describe("Table Component", () => {
       // Caso 1: Turno del Player 2 (Order 2)
       const mockMatchP2 = { ...mockMatch, current_player_order: 2 };
 
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         match: mockMatchP2,
       });
 
@@ -376,8 +376,8 @@ describe("Table Component", () => {
       // Caso 2: Turno del Player 3 (Order 3)
       const mockMatchP3 = { ...mockMatch, current_player_order: 3 };
 
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         match: mockMatchP3,
       });
 
@@ -437,8 +437,8 @@ describe("Table Component", () => {
         (s) => s.player_id === MOCK_PLAYER_ID_2,
       );
 
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         players: mockGamePlayers2, // 1 solo "otro" jugador
         secrets: mockSecretsP2,
         sets: mockSetsP2,

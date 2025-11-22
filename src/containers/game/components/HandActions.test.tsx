@@ -15,7 +15,7 @@ const {
   mockOnSelectSecret,
   mockOnPlayEvent,
   mockOnSelectSet,
-  mockUseGame,
+  mockuseBasicGame,
   mockOnSelectDirection,
   mockOnAddDetectiveCardToSet,
 } = vi.hoisted(() => {
@@ -25,7 +25,7 @@ const {
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
-  const mockUseGame = vi.fn();
+  const mockuseBasicGame = vi.fn();
   const mockOnSelectDirection = vi.fn();
   const mockOnAddDetectiveCardToSet = vi.fn();
   const mockOnSelectSet = vi.fn();
@@ -34,7 +34,7 @@ const {
     mockOnFinish,
     mockOnDiscard,
     mockOnPlaySet,
-    mockUseGame,
+    mockuseBasicGame,
     mockOnAddDetectiveCardToSet,
     mockOnSelectPlayer,
     mockOnSelectSecret,
@@ -44,10 +44,10 @@ const {
   };
 });
 
-// 1. Mock de useGame
+// 1. Mock de useBasicGame
 
-vi.mock("@/contexts/GameContext", () => ({
-  useGame: mockUseGame,
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: mockuseBasicGame,
 }));
 
 vi.mock("@/components/Button", () => ({
@@ -95,7 +95,7 @@ const baseProps = {
 describe("HandActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseGame.mockReturnValue({
+    mockuseBasicGame.mockReturnValue({
       hasFinishedAction: false,
       playerSelectsOneOfHisSecrets: {
         isSelecting: false,
@@ -273,9 +273,9 @@ describe("HandActions", () => {
     });
   });
 
-  describe("useGame logic", () => {
+  describe("useBasicGame logic", () => {
     it("disables all main action buttons when hasFinishedAction is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: true,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
@@ -296,7 +296,7 @@ describe("HandActions", () => {
     });
 
     it("disables 'Finish turn' when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: true,
@@ -316,7 +316,7 @@ describe("HandActions", () => {
     });
 
     it("ENABLES 'Select secret' even if event conditions fail, when isCurrPlayer is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
@@ -334,8 +334,8 @@ describe("HandActions", () => {
 
     it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
       // 1. Simular el estado de PENDING_RESPONSE para PYS
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(), // Obtiene el mock base
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(), // Obtiene el mock base
         pendingResponse: {
           isPending: true,
           eventType: "POINT YOUR SUSPICIONS",
@@ -381,8 +381,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Select player button for CARD_TRADE pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.CARD_TRADE, //
@@ -396,8 +396,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Select player button for DEAD_CARD_FOLLY pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.DEAD_CARD_FOLLY, //
@@ -411,8 +411,8 @@ describe("HandActions", () => {
     });
 
     it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
@@ -428,8 +428,8 @@ describe("HandActions", () => {
 
   describe("Button: Discard cards logic", () => {
     it("should disable Discard cards when hasFinishedAction is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: true,
       });
 
@@ -438,8 +438,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Discard cards when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
 
@@ -448,8 +448,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Discard cards when pendingResponse.isPending is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: { isPending: true, eventType: null },
       });
 
@@ -471,8 +471,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Select player when hasFinishedAction is true and no pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: true,
       });
 
@@ -481,8 +481,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Select player when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
 
@@ -504,8 +504,8 @@ describe("HandActions", () => {
 
   describe("Button: Select secret logic (Extended coverage)", () => {
     it("should disable Select secret when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
 
@@ -531,8 +531,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Finish turn when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         playerSelectsOneOfHisSecrets: {
           isSelecting: true,
           isCurrPlayer: false,
@@ -543,8 +543,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Finish turn when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
       render(<HandActions {...baseProps} />);
@@ -574,8 +574,8 @@ describe("HandActions", () => {
 
   describe("Button: Add detective (Extended coverage)", () => {
     it("calls onAddDetectiveCardToSet when button is clicked", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: false,
       });
 

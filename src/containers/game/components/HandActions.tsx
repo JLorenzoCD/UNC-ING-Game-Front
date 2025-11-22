@@ -1,4 +1,4 @@
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { GAME_EVENTS } from "@/constants/game";
 
 import Button from "@/components/Button";
@@ -53,7 +53,7 @@ export default function HandActions({
     playerSelectsOneOfHisSecrets,
     notSoFastEvent,
     pendingResponse,
-  } = useGame();
+  } = useBasicGame();
   const shouldDisableOption =
     isDisabled ||
     isSelectionPlayerEvent ||

@@ -10,7 +10,7 @@ vi.mock("react-router", () => ({
 }));
 
 // Mock the GameContextProvider
-vi.mock("@/contexts/GameContext", () => ({
+vi.mock("@/contexts/BasicGameContext", () => ({
   default: vi.fn(({ children }) => (
     <div data-testid="mock-game-context-provider">{children}</div>
   )),

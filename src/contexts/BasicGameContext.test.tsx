@@ -8,7 +8,7 @@ import {
   act,
 } from "@testing-library/react";
 
-import GameContextProvider, { useGame } from "./GameContext";
+import BasicGameContextProvider, { useBasicGame } from "./BasicGameContext";
 
 import type {
   EventNotSoFastPayload,
@@ -279,9 +279,9 @@ const setupContextAndGetResult = async (currentPlayer: GamePlayer | null) => {
     : null;
   mockUsePlayer.mockReturnValue({ player: playerInHook });
 
-  const { result } = renderHook(() => useGame(), {
+  const { result } = renderHook(() => useBasicGame(), {
     wrapper: ({ children }) => (
-      <GameContextProvider>{children}</GameContextProvider>
+      <BasicGameContextProvider>{children}</BasicGameContextProvider>
     ),
   });
 
@@ -293,7 +293,7 @@ const setupContextAndGetResult = async (currentPlayer: GamePlayer | null) => {
   return result;
 };
 
-describe("GameContext", () => {
+describe("BasicGameContext", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
@@ -315,12 +315,12 @@ describe("GameContext", () => {
     consoleSpy.mockClear();
   });
 
-  describe("GameContextProvider", () => {
+  describe("BasicGameContextProvider", () => {
     it("renders children correctly", () => {
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <div data-testid="test-child">Test Child</div>
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       expect(screen.getByTestId("test-child")).toBeInTheDocument();
@@ -328,7 +328,7 @@ describe("GameContext", () => {
 
     it("provides initial context values", () => {
       const TestComponent = () => {
-        const context = useGame();
+        const context = useBasicGame();
         return (
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
@@ -342,9 +342,9 @@ describe("GameContext", () => {
       };
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       expect(screen.getByTestId("loading")).toHaveTextContent("true");
@@ -361,7 +361,7 @@ describe("GameContext", () => {
       mockHttpService.getMatchSets.mockResolvedValue([]);
 
       const TestComponent = () => {
-        const context = useGame();
+        const context = useBasicGame();
         return (
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
@@ -378,9 +378,9 @@ describe("GameContext", () => {
       };
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       await waitFor(() => {
@@ -409,7 +409,7 @@ describe("GameContext", () => {
       mockHttpService.getMatchPlayers.mockRejectedValue(testError);
 
       const TestComponent = () => {
-        const context = useGame();
+        const context = useBasicGame();
         return (
           <div>
             <span data-testid="loading">{context.isLoading.toString()}</span>
@@ -422,9 +422,9 @@ describe("GameContext", () => {
       };
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       await waitFor(() => {
@@ -445,9 +445,9 @@ describe("GameContext", () => {
       mockUseParams.mockReturnValue({ matchId: undefined });
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <div>Test</div>
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
@@ -461,9 +461,9 @@ describe("GameContext", () => {
       mockUseHttpService.mockReturnValue({ httpService: null });
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <div>Test</div>
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
@@ -473,9 +473,9 @@ describe("GameContext", () => {
       mockUseParams.mockReturnValue({ matchId: "invalid-uuid" });
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <div>Test</div>
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       expect(mockHttpService.getMatch).not.toHaveBeenCalled();
@@ -505,7 +505,7 @@ describe("GameContext", () => {
       mockUseParams.mockReturnValue({ matchId: firstMatchId });
 
       const TestComponent = () => {
-        const context = useGame();
+        const context = useBasicGame();
         return (
           <div>
             <span data-testid="has-error">{context.hasError.toString()}</span>
@@ -517,9 +517,9 @@ describe("GameContext", () => {
       };
 
       const { unmount } = render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       await waitFor(() => {
@@ -533,9 +533,9 @@ describe("GameContext", () => {
       mockUseParams.mockReturnValue({ matchId: secondMatchId });
 
       render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       await waitFor(() => {
@@ -546,11 +546,11 @@ describe("GameContext", () => {
     });
   });
 
-  describe("useGame hook", () => {
+  describe("useBasicGame hook", () => {
     it("returns context value when used within provider", () => {
-      const { result } = renderHook(() => useGame(), {
+      const { result } = renderHook(() => useBasicGame(), {
         wrapper: ({ children }) => (
-          <GameContextProvider>{children}</GameContextProvider>
+          <BasicGameContextProvider>{children}</BasicGameContextProvider>
         ),
       });
 
@@ -596,15 +596,15 @@ describe("GameContext", () => {
       let renderCount = 0;
 
       const TestComponent = () => {
-        useGame();
+        useBasicGame();
         renderCount++;
         return <div data-testid="render-count">{renderCount}</div>;
       };
 
       const { rerender } = render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       // Wait for initial fetch to complete
@@ -617,9 +617,9 @@ describe("GameContext", () => {
       // Force a re-render of the same provider instance
       // Parent re-render will cause child re-render in React
       rerender(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <TestComponent />
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       // Verify child re-rendered due to parent re-render
@@ -632,9 +632,9 @@ describe("GameContext", () => {
   describe("WebSocket Handlers", () => {
     it("should register and cleanup WebSocket handlers", async () => {
       const { unmount } = render(
-        <GameContextProvider>
+        <BasicGameContextProvider>
           <div>Children</div>
-        </GameContextProvider>,
+        </BasicGameContextProvider>,
       );
 
       await waitFor(() => {
@@ -790,9 +790,9 @@ describe("GameContext", () => {
       const playerInHook = { id: mockPlayerOne.id, name: mockPlayerOne.name };
       mockUsePlayer.mockReturnValue({ player: playerInHook });
 
-      const { result } = renderHook(() => useGame(), {
+      const { result } = renderHook(() => useBasicGame(), {
         wrapper: ({ children }) => (
-          <GameContextProvider>{children}</GameContextProvider>
+          <BasicGameContextProvider>{children}</BasicGameContextProvider>
         ),
       });
 

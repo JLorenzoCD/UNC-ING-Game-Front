@@ -1,16 +1,16 @@
 import { Outlet } from "react-router";
 
-import GameContextProvider from "@/contexts/GameContext";
+import BasicGameContextProvider from "@/contexts/BasicGameContext";
 
 import TimerTurn from "./components/TimerTurn";
 
 export default function GameLayout() {
   return (
-    <GameContextProvider>
+    <BasicGameContextProvider>
       <main className="relative">
         <TimerTurn />
         <Outlet />
       </main>
-    </GameContextProvider>
+    </BasicGameContextProvider>
   );
 }

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
 import Player from "./Player";
@@ -43,7 +43,7 @@ export default function Table({
   target,
 }: TableProps) {
   const { player } = usePlayer();
-  const { players, match, secrets, sets } = useGame();
+  const { players, match, secrets, sets } = useBasicGame();
 
   const visiblePlayers = getVisiblePlayersWithGridPositions(
     player,

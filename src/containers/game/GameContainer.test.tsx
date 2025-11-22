@@ -3,7 +3,7 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -261,7 +261,7 @@ vi.mock("react-router", async (importOriginal) => {
   };
 });
 
-vi.mock("@/contexts/GameContext");
+vi.mock("@/contexts/BasicGameContext");
 
 vi.mock("@/contexts/PlayerContext");
 
@@ -465,7 +465,7 @@ vi.mock("./components/HandActions", () => ({
         playerSelectsOneOfHisSecrets,
         notSoFastEvent,
         pendingResponse,
-      } = useGame(); //
+      } = useBasicGame(); //
 
       const shouldDisableOption =
         isDisabled ||
@@ -599,7 +599,7 @@ describe("GameContainer", () => {
       setPlayer: vi.fn(),
     });
 
-    vi.mocked(useGame).mockReturnValue({
+    vi.mocked(useBasicGame).mockReturnValue({
       sets: [],
       logs: [],
       secrets: mockSecrets,
@@ -789,7 +789,7 @@ describe("GameContainer", () => {
     });
 
     it("should open discard modal when clicking on discard pile with discarded cards", async () => {
-      vi.mocked(useGame).mockReturnValue({
+      vi.mocked(useBasicGame).mockReturnValue({
         sets: [],
         logs: [],
         secrets: [],
@@ -851,7 +851,7 @@ describe("GameContainer", () => {
 
   describe("Turn", () => {
     it("should prevent hand actions when it's not the player's turn", () => {
-      vi.mocked(useGame).mockReturnValue({
+      vi.mocked(useBasicGame).mockReturnValue({
         sets: [],
         logs: [],
         secrets: [],
@@ -1012,7 +1012,7 @@ describe("GameContainer", () => {
     });
 
     it("should not call API when finishing turn without match", async () => {
-      vi.mocked(useGame).mockReturnValue({
+      vi.mocked(useBasicGame).mockReturnValue({
         secrets: [],
         logs: [],
         cards: mockCards,
@@ -1207,8 +1207,8 @@ describe("GameContainer", () => {
     });
 
     it("handles 'LOOK INTO THE ASHES' flow", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardLITA, discardedCard], // Carta en mano y carta en descarte
       });
       render(<GameContainer />);
@@ -1240,8 +1240,8 @@ describe("GameContainer", () => {
     });
 
     it("handles 'CARDS OFF THE TABLE' flow", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardCOFT],
       });
       render(<GameContainer />);
@@ -1272,8 +1272,8 @@ describe("GameContainer", () => {
     });
 
     it("handles 'AND THEN THERE WAS ONE MORE' flow", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardATWOME],
       });
       render(<GameContainer />);
@@ -1310,8 +1310,8 @@ describe("GameContainer", () => {
     });
 
     it("handles 'ANOTHER VICTIM' flow", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardAV],
         sets: [{ id: "set-target-id", player_id: "other" } as any], // Set de otro jugador
       });
@@ -1343,8 +1343,8 @@ describe("GameContainer", () => {
     });
 
     it("handles simple events like 'DELAY THE MURDERER ESCAPE'", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardDELAY, discardedCard], // Carta en mano y carta en descarte
       });
       render(<GameContainer />);
@@ -1404,8 +1404,8 @@ describe("GameContainer", () => {
     it("handlePlayNotSoFast: should call httpService and clear event on success", async () => {
       const eventId = crypto.randomUUID();
       // Mockear el contexto con el evento NSF activo
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(), // Obtener el mock base
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(), // Obtener el mock base
         cards: [notSoFastCard, ...mockCards.slice(1)], // Asegurarse de que el jugador tiene la carta
         notSoFastEvent: {
           isActivate: true,
@@ -1444,8 +1444,8 @@ describe("GameContainer", () => {
 
     it("HandActions: should disable all buttons when notSoFastEvent is active", () => {
       // Mockear el contexto con el evento NSF activo
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         notSoFastEvent: {
           isActivate: true,
           eventId: null,
@@ -1515,9 +1515,9 @@ describe("GameContainer", () => {
     });
 
     it("Initiator Flow: should correctly play CARD_TRADE", async () => {
-      // 1. Configurar el mock de useGame
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(), // Obtener el mock base
+      // 1. Configurar el mock de useBasicGame
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(), // Obtener el mock base
         cards: [cardTradeCard, ...mockCards.slice(1)], // El jugador tiene la carta
       });
 
@@ -1550,9 +1550,9 @@ describe("GameContainer", () => {
     it("Target Flow: should handle PENDING_RESPONSE and call postCardTrade", async () => {
       const eventId = crypto.randomUUID();
 
-      // 1. Configurar el mock de useGame con PENDING_RESPONSE activo
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      // 1. Configurar el mock de useBasicGame con PENDING_RESPONSE activo
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardToGive, ...mockCards.slice(1)], // El jugador tiene la carta para dar
         pendingResponse: {
           isPending: true,
@@ -1626,8 +1626,8 @@ describe("GameContainer", () => {
     });
 
     it("Initiator Flow: should show direction buttons and call postEvent", async () => {
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [deadCardFollyCard, ...mockCards.slice(1)],
       });
 
@@ -1664,8 +1664,8 @@ describe("GameContainer", () => {
       const eventId = crypto.randomUUID();
       const cardToGive = mockCards[0]; // Cualquier carta de la mano
 
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         cards: [cardToGive, ...mockCards.slice(1)],
         pendingResponse: {
           isPending: true,
@@ -1722,10 +1722,10 @@ describe("GameContainer", () => {
       mockClearPendingResponse.mockClear();
       mockPostPointYourSuspicions.mockResolvedValue({ success: true });
 
-      // 1. Configurar el mock de useGame con PENDING_RESPONSE activo
+      // 1. Configurar el mock de useBasicGame con PENDING_RESPONSE activo
       const eventId = crypto.randomUUID();
-      vi.mocked(useGame).mockReturnValue({
-        ...vi.mocked(useGame)(),
+      vi.mocked(useBasicGame).mockReturnValue({
+        ...vi.mocked(useBasicGame)(),
         pendingResponse: {
           isPending: true,
           eventId: eventId,

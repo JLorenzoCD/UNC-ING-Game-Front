@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useHand } from "./hooks/useHand";
@@ -66,7 +66,7 @@ export default function GameContainer() {
     clearNotSoFastEvent,
     pendingResponse,
     clearPendingResponse,
-  } = useGame();
+  } = useBasicGame();
 
   const {
     clearSelectedCards,
