@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { useBasicGame } from "@/contexts/BasicGameContext";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useHand } from "./hooks/useHand";
@@ -54,19 +55,31 @@ export default function GameContainer() {
   const {
     match,
     secrets,
-    players,
-    cards,
     result,
     sets,
-    logs,
+
     hasFinishedAction,
     playerFinishActionTurn,
+
     playerSelectsOneOfHisSecrets,
+
     notSoFastEvent,
     clearNotSoFastEvent,
     pendingResponse,
     clearPendingResponse,
   } = useBasicGame();
+
+  const {
+    isPlayerTurn,
+
+    cardsInDiscardPile,
+    cardsInDraft,
+    drawableCards,
+
+    playerSets,
+    playerSecrets,
+    isInSocialDisgrace,
+  } = useLogicGame();
 
   const {
     clearSelectedCards,
@@ -534,16 +547,6 @@ export default function GameContainer() {
   };
   // -- Valores memoizados --
 
-  const isPlayerTurn = useMemo(() => {
-    if (!match || !player) return false;
-
-    const matchPlayer = players.find((p) => p.id === player.id);
-
-    if (!matchPlayer) return false;
-
-    return match.current_player_order === matchPlayer.order;
-  }, [match, player, players]);
-
   const canTakeCards = useMemo(() => {
     // El jugador puede tomar cartas si está en su turno.
     // y su mano no está llena.
@@ -554,48 +557,6 @@ export default function GameContainer() {
     // El jugador puede descartar cartas si está en su turno.
     return !hasDiscardedCards && isPlayerTurn;
   }, [hasDiscardedCards, isPlayerTurn]);
-
-  const playerSecrets = useMemo(() => {
-    if (!player) return [];
-
-    return secrets.filter((secret) => secret.player_id === player.id);
-  }, [secrets, player]);
-
-  const isInSocialDisgrace = useMemo(() => {
-    return playerSecrets.every((secret) => secret.is_revealed);
-  }, [playerSecrets]);
-
-  const playerSets = useMemo(() => {
-    if (!player) return [];
-
-    return sets.filter((set) => set.player_id === player.id);
-  }, [sets, player]);
-
-  const cardsInDiscardPile = useMemo(() => {
-    return cards
-      .filter((card) => card.is_discarded)
-      .sort((a, b) => {
-        if (a.discarded_at && b.discarded_at) {
-          return b.discarded_at < a.discarded_at ? -1 : 1;
-        } else if (a.discarded_at) {
-          return -1;
-        } else return 1;
-      });
-  }, [cards]);
-
-  const cardsInDraft = useMemo(() => {
-    return cards
-      .filter((card) => card.player_id === null && !card.is_discarded)
-      .slice(0, DRAFT_SIZE);
-  }, [cards]);
-
-  const drawableCards = useMemo(() => {
-    return cards.filter((card) => {
-      // Una carta es tomable si no pertenece a ningún jugador
-      // y no está descartada.
-      return card.player_id === null && !card.is_discarded;
-    });
-  }, [cards]);
 
   const isPlayable = useMemo(() => {
     const selectedCardsArray = Object.values(selectedCards);
