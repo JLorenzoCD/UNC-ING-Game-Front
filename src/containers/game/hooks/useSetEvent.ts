@@ -91,7 +91,7 @@ export function useSetEvent() {
 
   const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
-  const isSetEventButtonDisabled = useMemo(() => {
+  const isSetEventPlaySetButtonDisabled = useMemo(() => {
     if (hasFinishedAction) return true;
 
     if (setEvent.canDownTheCardToASet && setEvent.isSelectingSet) return false;
@@ -690,23 +690,29 @@ export function useSetEvent() {
 
   return {
     setEvent,
-    isSetEventButtonDisabled,
-    isSetEventSelectSetButtonDisabled,
+    getSetCards,
+    clearSetEvent,
+    getTargetSetEvent,
+
     playSet,
     addDetectiveCardToSet,
     playStolenSet,
-    setTargetSet,
-    setTargeSetToDown,
+
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
+
     isPlayerSelectableForSetEvent,
-    isOtherPlayerSecretSelectableForSetEvent,
-    isCurrPlayerSecretSelectableForSetEvent,
     isSetSelectableForSetEvent,
+    isCurrPlayerSecretSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
+
+    setTargetSet,
+    setTargeSetToDown,
+
     setEventToggleDisableButtonPlaySet,
     setEventToggleDisableButtonSelectSet,
-    getTargetSetEvent,
-    getSetCards,
-    clearSetEvent,
+
+    isSetEventPlaySetButtonDisabled,
+    isSetEventSelectSetButtonDisabled,
   };
 }

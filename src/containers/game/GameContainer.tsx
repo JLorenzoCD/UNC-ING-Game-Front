@@ -1270,7 +1270,7 @@ export default function GameContainer() {
                 currentEventStep === EVENT_STEPS.SELECT_SET
               }
               isAddingCardToSet={setEvent.isSelectingSet}
-              isSetButtonDisabled={isSetEventButtonDisabled}
+              isSetButtonDisabled={isSetEventPlaySetButtonDisabled}
               isSetEventSelectSetButtonDisabled={
                 isSetEventSelectSetButtonDisabled
               }
