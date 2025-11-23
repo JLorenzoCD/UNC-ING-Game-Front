@@ -6,7 +6,6 @@ import { useLogicGame } from "@/contexts/LogicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useHand } from "./hooks/useHand";
-import { useSetEvent } from "./hooks/useSetEvent";
 
 import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
@@ -36,12 +35,7 @@ import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
 import Logs from "./components/Logs";
 
-import {
-  GAME_EVENTS,
-  EVENT_STEPS,
-  GAME_RULES,
-  type EventStep,
-} from "@/constants/game";
+import { GAME_EVENTS, EVENT_STEPS, GAME_RULES } from "@/constants/game";
 
 import { handleApiError } from "@/utils/errorHandler";
 
@@ -79,6 +73,47 @@ export default function GameContainer() {
     playerSets,
     playerSecrets,
     isInSocialDisgrace,
+
+    hookSetEvent: {
+      setEvent,
+      clearSetEvent,
+      getTargetSetEvent,
+
+      playSet,
+      addDetectiveCardToSet,
+      playStolenSet,
+
+      executeSetActionToTarget,
+      executeFinishTurnSetEvent,
+
+      isPlayerSelectableForSetEvent,
+      isSetSelectableForSetEvent,
+      isCurrPlayerSecretSelectableForSetEvent,
+      isOtherPlayerSecretSelectableForSetEvent,
+
+      setTargetSet,
+      setTargeSetToDown,
+
+      setEventToggleDisableButtonPlaySet,
+      setEventToggleDisableButtonSelectSet,
+
+      isSetEventPlaySetButtonDisabled,
+      isSetEventSelectSetButtonDisabled,
+    },
+
+    hookCardEvent: {
+      currentEventCard,
+      setCurrentEventCard,
+      selectedTargetPlayer,
+      setSelectedTargetPlayer,
+      selectedTargetSecret,
+      setSelectedTargetSecret,
+      selectedTargetSet,
+      setSelectedTargetSet,
+      currentEventStep,
+      setCurrentEventStep,
+      canSelectMeAsPlayer,
+    },
   } = useLogicGame();
 
   const {
@@ -99,52 +134,12 @@ export default function GameContainer() {
     takeCards,
   } = useHand();
 
-  // Estados para eventos de cartas
-  const [currentEventCard, setCurrentEventCard] = useState<GameCard | null>(
-    null,
-  );
-  const [selectedTargetPlayer, setSelectedTargetPlayer] =
-    useState<GamePlayer | null>(null);
-  const [selectedTargetSecret, setSelectedTargetSecret] =
-    useState<GameSecret | null>(null);
-  const [selectedTargetSet, setSelectedTargetSet] = useState<MatchSet | null>(
-    null,
-  );
-  const [currentEventStep, setCurrentEventStep] = useState<EventStep>(null);
-
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
   });
 
-  const canSelectMeAsPlayer =
-    currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-    currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
-    selectedTargetPlayer === null;
-
-  const {
-    playSet,
-    addDetectiveCardToSet,
-    playStolenSet,
-    setEvent,
-    isSetEventButtonDisabled,
-    isSetEventSelectSetButtonDisabled,
-    setTargetSet,
-    setTargeSetToDown,
-    executeSetActionToTarget,
-    executeFinishTurnSetEvent,
-    isPlayerSelectableForSetEvent,
-    isOtherPlayerSecretSelectableForSetEvent,
-    isCurrPlayerSecretSelectableForSetEvent,
-    isSetSelectableForSetEvent,
-    setEventToggleDisableButtonPlaySet,
-    setEventToggleDisableButtonSelectSet,
-    getTargetSetEvent,
-    clearSetEvent,
-  } = useSetEvent();
-
   // -- Utilidades --
-
   const handleSelectDirection = (direction: "LEFT" | "RIGHT") => {
     handleEndEvent(undefined, direction);
   };

@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from "react";
 
 import { usePlayer } from "./PlayerContext";
 import { useBasicGame } from "./BasicGameContext";
+import { useSetEvent } from "@/containers/game/hooks/useSetEvent";
 
 import { GAME_RULES } from "@/constants/game";
 
@@ -9,6 +10,7 @@ import type { GameSecret } from "@/types/secret";
 import type { UUID } from "@/types/common";
 import type { MatchSet } from "@/types/set";
 import type { GameCard } from "@/types/card";
+import { useCardEvent } from "@/containers/game/hooks/useCardEvent";
 
 export type CardsGroupByType = UUID | "DISCARD" | "DRAWABLE";
 export const CARDS_GROUP_TYPES: Record<
@@ -33,6 +35,9 @@ export interface LogicGameContextType {
   playerSets: MatchSet[];
   playerSecrets: GameSecret[];
   isInSocialDisgrace: boolean;
+
+  hookSetEvent: ReturnType<typeof useSetEvent>;
+  hookCardEvent: ReturnType<typeof useCardEvent>;
 }
 
 const LogicGameContext = createContext<LogicGameContextType>({
@@ -49,6 +54,9 @@ const LogicGameContext = createContext<LogicGameContextType>({
 
   playerSecrets: [],
   playerSets: [],
+
+  hookSetEvent: (() => {}) as any,
+  hookCardEvent: (() => {}) as any,
 });
 
 export interface LogicGameContextProviderProps {
@@ -60,6 +68,8 @@ export default function GameContextProvider({
 }: LogicGameContextProviderProps) {
   const { player } = usePlayer();
   const { match, players, secrets, cards, sets } = useBasicGame();
+  const hookSetEvent = useSetEvent();
+  const hookCardEvent = useCardEvent();
 
   const isPlayerTurn = useMemo(() => {
     if (!match || !player) return false;
@@ -163,6 +173,9 @@ export default function GameContextProvider({
       playerSets,
       playerSecrets,
       isInSocialDisgrace,
+
+      hookSetEvent,
+      hookCardEvent,
     }),
     [
       isPlayerTurn,
@@ -178,6 +191,9 @@ export default function GameContextProvider({
       playerSets,
       playerSecrets,
       isInSocialDisgrace,
+
+      hookSetEvent,
+      hookCardEvent,
     ],
   );
 
