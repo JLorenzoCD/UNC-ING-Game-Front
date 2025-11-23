@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { EVENT_STEPS, GAME_EVENTS, type EventStep } from "@/constants/game";
 
@@ -21,10 +21,18 @@ export function useCardEvent() {
   );
   const [currentEventStep, setCurrentEventStep] = useState<EventStep>(null);
 
-  const canSelectMeAsPlayer =
-    currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-    currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
-    selectedTargetPlayer === null;
+  const canSelectMeAsPlayer = useMemo(() => {
+    return (
+      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
+      selectedTargetPlayer === null
+    );
+  }, [currentEventCard, currentEventStep, selectedTargetPlayer]);
+
+  const isInEvent = useMemo(
+    () => currentEventCard !== null,
+    [currentEventCard],
+  );
 
   return {
     currentEventCard,
@@ -38,5 +46,7 @@ export function useCardEvent() {
     currentEventStep,
     setCurrentEventStep,
     canSelectMeAsPlayer,
+
+    isInEvent,
   };
 }

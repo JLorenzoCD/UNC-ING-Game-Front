@@ -13,34 +13,18 @@ import type { MatchSet } from "@/types/set";
 
 interface TableProps {
   onSelectTargetEvent: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectablePlayer: (player: GamePlayer) => boolean;
-  isSelectableSecret: (secret: GameSecret) => boolean;
-  isSelectableSet: (set: MatchSet) => boolean;
 
   draft: ReactNode;
   drawPile: ReactNode;
   discardPile: ReactNode;
-  isEvent: boolean;
-  isTargetPlayer: boolean;
-  isTargetSecret: boolean;
-  isTargetSet: boolean;
-  target: GamePlayer | GameSecret | MatchSet | null;
 }
 
 export default function Table({
   onSelectTargetEvent,
-  isSelectablePlayer,
-  isSelectableSecret,
-  isSelectableSet,
 
   draft,
   drawPile,
   discardPile,
-  isEvent,
-  isTargetPlayer,
-  isTargetSecret,
-  isTargetSet,
-  target,
 }: TableProps) {
   const { player } = usePlayer();
   const { players, match, secrets, sets } = useBasicGame();
@@ -73,18 +57,11 @@ export default function Table({
               className={`${position} flex items-center justify-center`}
             >
               <Player
-                isSelectablePlayer={isSelectablePlayer}
                 onSelectTargetEvent={onSelectTargetEvent}
-                isSelectableSecret={isSelectableSecret}
-                isSelectableSet={isSelectableSet}
                 sets={playerSets}
                 player={playerData}
                 hasCurrentTurn={turn}
                 secrets={playerSecrets}
-                isPlayerEvent={isEvent && isTargetPlayer}
-                isTargetSecret={isEvent && isTargetSecret}
-                isTargetSet={isEvent && isTargetSet}
-                target={target}
                 shouldHighlightRole={shouldHighlightRole}
               />
             </div>

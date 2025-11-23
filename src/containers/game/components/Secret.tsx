@@ -13,6 +13,7 @@ import type { GamePlayer } from "@/types/player";
 import type { MatchSet } from "@/types/set";
 
 import { getBoderClass } from "../utils/secretClassName";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 
 const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
   INNOCENT: secretFront,
@@ -22,24 +23,21 @@ const SECRET_IMAGE_PATHS: Record<SecretType, string> = {
 
 interface SecretProps {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectableSecret: (secret: GameSecret) => boolean;
 
   secret: GameSecret | null;
 
-  isTargetSecret: boolean;
   target: GamePlayer | GameSecret | MatchSet | null;
 }
 
 export default function Secret({
   onSelectTargetEvent,
-  isSelectableSecret,
 
   secret,
 
-  isTargetSecret,
   target,
 }: SecretProps) {
   const { player } = usePlayer();
+  const { isSelectableSecret, isTargetSecretEvent } = useLogicGame();
 
   if (!secret) {
     return <EmptySecret />;
@@ -72,7 +70,7 @@ export default function Secret({
   const isSelfRevealed = isRevealed && isSessionPlayer;
 
   // Cartas que NO son la propia y NO están reveladas
-  const isSelectionMode = !isSelfRevealed && isTargetSecret;
+  const isSelectionMode = !isSelfRevealed && isTargetSecretEvent();
 
   // ClassNames
   const baseClasses =

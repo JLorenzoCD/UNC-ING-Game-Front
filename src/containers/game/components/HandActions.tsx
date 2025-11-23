@@ -2,6 +2,7 @@ import { useBasicGame } from "@/contexts/BasicGameContext";
 import { GAME_EVENTS } from "@/constants/game";
 
 import Button from "@/components/Button";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 
 interface HandActionsProps {
   onFinish: () => void; // Callback que se ejecuta al terminar el turno
@@ -16,8 +17,6 @@ interface HandActionsProps {
   isDisabled: boolean; // Indica si las acciones están deshabilitadas (no se pueden ejecutar)
   isSetButtonDisabled: boolean; // Indica si el botón para jugar un set de detectives esta habilitado o no
   isSetEventSelectSetButtonDisabled: boolean; // Si se esta bajando un detective a un set, este es falso
-  isSelectionPlayerEvent: boolean; // Indica si el botón para seleccionar un jugador esta habilitado o no
-  isSelectionSecretEvent: boolean; // Indica si el botón para seleccionar un secreto esta habilitado o no
   isDisabledEvent: boolean; // Indica si el boton para jugar evento esta habilitado
   isSelectionSetEvent: boolean; // Indica si el boton para seleccionar un set esta habilitado
   isAddingCardToSet: boolean; // Indica si se esta seleccionando un set para bajar un detective
@@ -38,8 +37,6 @@ export default function HandActions({
   isDisabled,
   isSetButtonDisabled,
   isSetEventSelectSetButtonDisabled,
-  isSelectionPlayerEvent,
-  isSelectionSecretEvent,
   isAddingCardToSet,
   isSelectionSetEvent,
   isDisabledEvent,
@@ -54,6 +51,12 @@ export default function HandActions({
     notSoFastEvent,
     pendingResponse,
   } = useBasicGame();
+
+  const { isTargetPlayerEvent, isTargetSecretEvent } = useLogicGame();
+
+  const isSelectionPlayerEvent = isTargetPlayerEvent();
+  const isSelectionSecretEvent = isTargetSecretEvent();
+
   const shouldDisableOption =
     isDisabled ||
     isSelectionPlayerEvent ||

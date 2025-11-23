@@ -1,16 +1,23 @@
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  type ReactNode,
+} from "react";
 
 import { usePlayer } from "./PlayerContext";
 import { useBasicGame } from "./BasicGameContext";
 import { useSetEvent } from "@/containers/game/hooks/useSetEvent";
+import { useCardEvent } from "@/containers/game/hooks/useCardEvent";
 
-import { GAME_RULES } from "@/constants/game";
+import { EVENT_STEPS, GAME_EVENTS, GAME_RULES } from "@/constants/game";
 
 import type { GameSecret } from "@/types/secret";
 import type { UUID } from "@/types/common";
 import type { MatchSet } from "@/types/set";
 import type { GameCard } from "@/types/card";
-import { useCardEvent } from "@/containers/game/hooks/useCardEvent";
+import type { GamePlayer } from "@/types/player";
 
 export type CardsGroupByType = UUID | "DISCARD" | "DRAWABLE";
 export const CARDS_GROUP_TYPES: Record<
@@ -23,6 +30,7 @@ export const CARDS_GROUP_TYPES: Record<
 
 export interface LogicGameContextType {
   isPlayerTurn: boolean;
+  isEvent: boolean;
 
   secretsGroupByPlayerId: Record<UUID, GameSecret[]>;
   setsGroupByPlayerId: Record<UUID, MatchSet[]>;
@@ -38,11 +46,24 @@ export interface LogicGameContextType {
 
   hookSetEvent: ReturnType<typeof useSetEvent>;
   hookCardEvent: ReturnType<typeof useCardEvent>;
+
+  getTarget: () => GameSecret | MatchSet | GamePlayer | null;
+
+  isTargetSecretEvent: () => boolean;
+  isTargetPlayerEvent: () => boolean;
+  isTargetSetEvent: () => boolean;
+
+  isSelectableSet: (set: MatchSet) => boolean;
+  isSelectablePlayer: (checkPlayer: GamePlayer) => boolean;
+  isSelectableSecret: (secret: GameSecret) => boolean;
+  isOtherPlayersSecretSelectable: (secret: GameSecret) => boolean;
+  isCurrPlayersSecretSelectable: (secret: GameSecret) => boolean;
 }
 
 const LogicGameContext = createContext<LogicGameContextType>({
   isPlayerTurn: false,
   isInSocialDisgrace: false,
+  isEvent: false,
 
   secretsGroupByPlayerId: {},
   setsGroupByPlayerId: {},
@@ -57,6 +78,16 @@ const LogicGameContext = createContext<LogicGameContextType>({
 
   hookSetEvent: (() => {}) as any,
   hookCardEvent: (() => {}) as any,
+
+  getTarget: (() => null) as any,
+  isSelectablePlayer: (() => false) as any,
+  isSelectableSecret: (() => false) as any,
+  isOtherPlayersSecretSelectable: (() => false) as any,
+  isCurrPlayersSecretSelectable: (() => false) as any,
+  isTargetPlayerEvent: (() => false) as any,
+  isTargetSecretEvent: (() => false) as any,
+  isTargetSetEvent: (() => false) as any,
+  isSelectableSet: (() => false) as any,
 });
 
 export interface LogicGameContextProviderProps {
@@ -67,7 +98,16 @@ export default function GameContextProvider({
   children,
 }: LogicGameContextProviderProps) {
   const { player } = usePlayer();
-  const { match, players, secrets, cards, sets } = useBasicGame();
+  const {
+    match,
+    players,
+    secrets,
+    cards,
+    sets,
+    playerSelectsOneOfHisSecrets,
+    notSoFastEvent,
+    pendingResponse,
+  } = useBasicGame();
   const hookSetEvent = useSetEvent();
   const hookCardEvent = useCardEvent();
 
@@ -156,11 +196,245 @@ export default function GameContextProvider({
     return playerSecrets.every((secret) => secret.is_revealed);
   }, [playerSecrets]);
 
+  const getTarget = useCallback(() => {
+    return (
+      hookSetEvent.getTargetSetEvent() ||
+      hookCardEvent.selectedTargetPlayer ||
+      hookCardEvent.selectedTargetSecret ||
+      hookCardEvent.selectedTargetSet ||
+      hookSetEvent.setEvent.set
+    );
+  }, [
+    hookSetEvent,
+    hookCardEvent.selectedTargetPlayer,
+    hookCardEvent.selectedTargetSecret,
+    hookCardEvent.selectedTargetSet,
+  ]);
+
+  const isOtherPlayersSecretSelectable = useCallback(
+    (secret: GameSecret) => {
+      if (hookSetEvent.setEvent.isInEvent)
+        return hookSetEvent.isOtherPlayerSecretSelectableForSetEvent(secret);
+
+      return false;
+    },
+    [hookSetEvent],
+  );
+
+  const isSelectablePlayer = useCallback(
+    (checkPlayer: GamePlayer) => {
+      //* Validacion por eventos
+      if (
+        hookCardEvent.currentEventCard?.name ===
+          GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+        (hookCardEvent.currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+          hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+      ) {
+        return checkPlayer.id !== player?.id;
+      }
+
+      if (
+        hookCardEvent.currentEventCard?.name ===
+          GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER
+      ) {
+        return true;
+      }
+
+      if (
+        pendingResponse.isPending &&
+        pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+      ) {
+        return checkPlayer.id !== player?.id;
+      }
+
+      // Se deben de poner todos los posibles eventos validos
+      if (hookSetEvent.setEvent.isInEvent)
+        return hookSetEvent.isPlayerSelectableForSetEvent(checkPlayer);
+
+      return false;
+    },
+    [
+      hookCardEvent.currentEventCard,
+      hookCardEvent.currentEventStep,
+      hookSetEvent,
+      pendingResponse.eventType,
+      pendingResponse.isPending,
+      player?.id,
+    ],
+  );
+
+  const isSelectableSecret = useCallback(
+    (secret: GameSecret) => {
+      if (
+        hookCardEvent.currentEventCard?.name ===
+          GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SECRET
+      ) {
+        return secret.is_revealed;
+      } else if (hookSetEvent.setEvent.isInEvent) {
+        return isOtherPlayersSecretSelectable(secret);
+      }
+
+      return false;
+    },
+    [
+      hookCardEvent.currentEventCard,
+      hookCardEvent.currentEventStep,
+      hookSetEvent.setEvent.isInEvent,
+      isOtherPlayersSecretSelectable,
+    ],
+  );
+
+  const isCurrPlayersSecretSelectable = useCallback(
+    (secret: GameSecret) => {
+      if (
+        hookSetEvent.setEvent.isInEvent ||
+        playerSelectsOneOfHisSecrets.isCurrPlayer
+      )
+        return hookSetEvent.isCurrPlayerSecretSelectableForSetEvent(secret);
+
+      if (
+        hookCardEvent.currentEventCard?.name ===
+          "AND THEN THERE WAS ONE MORE" &&
+        hookCardEvent.currentEventStep === "select_secret"
+      ) {
+        return secret.is_revealed;
+      }
+
+      return false;
+    },
+    [
+      hookCardEvent.currentEventCard,
+      hookCardEvent.currentEventStep,
+      hookSetEvent,
+      playerSelectsOneOfHisSecrets.isCurrPlayer,
+    ],
+  );
+
+  const isTargetPlayerEvent = useCallback(() => {
+    if (notSoFastEvent.isActivate) return false;
+
+    if (hookSetEvent.setEvent.isTargetPlayer) return true;
+
+    if (
+      pendingResponse.isPending &&
+      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+    )
+      return true;
+
+    if (
+      hookCardEvent.currentEventCard?.name ===
+        GAME_EVENTS.CARDS_OFF_THE_TABLE ||
+      (hookCardEvent.currentEventCard?.name ===
+        GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
+      (hookCardEvent.currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+    )
+      return true;
+
+    return false;
+  }, [
+    hookCardEvent.currentEventCard,
+    hookCardEvent.currentEventStep,
+    hookSetEvent.setEvent.isTargetPlayer,
+    notSoFastEvent.isActivate,
+    pendingResponse.eventType,
+    pendingResponse.isPending,
+  ]);
+
+  const isTargetSecretEvent = useCallback(() => {
+    if (notSoFastEvent.isActivate) return false;
+
+    if (
+      hookSetEvent.setEvent.isTargetSecret ||
+      playerSelectsOneOfHisSecrets.isCurrPlayer
+    )
+      return true;
+
+    if (
+      hookCardEvent.currentEventCard?.name ===
+        GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+      hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SECRET
+    ) {
+      return true;
+    }
+
+    return false;
+  }, [
+    hookCardEvent.currentEventCard,
+    hookCardEvent.currentEventStep,
+    hookSetEvent.setEvent.isTargetSecret,
+    notSoFastEvent.isActivate,
+    playerSelectsOneOfHisSecrets.isCurrPlayer,
+  ]);
+
+  const isSelectableSet = useCallback(
+    (set: MatchSet) => {
+      if (
+        hookCardEvent.currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SET
+      ) {
+        // No puedes seleccionar tus propios sets
+        if (set.player_id === player?.id) return false;
+
+        // Aquí puedes añadir más lógica si es necesario (ej. no seleccionar sets de HARLEY QUIN)
+        return true;
+      } else if (
+        !hookSetEvent.setEvent.isInEvent &&
+        !hookSetEvent.setEvent.isValidSet &&
+        hookSetEvent.setEvent.canDownTheCardToASet &&
+        hookSetEvent.setEvent.cards.length === 1 &&
+        hookSetEvent.setEvent.isSelectingSet
+      ) {
+        return hookSetEvent.isSetSelectableForSetEvent(set);
+      }
+
+      return false;
+    },
+    [
+      hookCardEvent.currentEventCard,
+      hookCardEvent.currentEventStep,
+      hookSetEvent,
+      player,
+    ],
+  );
+
+  const isTargetSetEvent = useCallback(() => {
+    return (
+      (hookCardEvent.currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SET) ||
+      hookSetEvent.setEvent.isSelectingSet
+    );
+  }, [
+    hookCardEvent.currentEventCard,
+    hookCardEvent.currentEventStep,
+    hookSetEvent.setEvent.isSelectingSet,
+  ]);
+
+  const isEvent = useMemo(() => {
+    return (
+      hookSetEvent.setEvent.isInEvent ||
+      hookSetEvent.setEvent.isSelectingSet ||
+      hookCardEvent.isInEvent ||
+      (pendingResponse.isPending &&
+        pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS)
+    );
+  }, [
+    hookCardEvent.isInEvent,
+    hookSetEvent.setEvent.isInEvent,
+    hookSetEvent.setEvent.isSelectingSet,
+    pendingResponse.eventType,
+    pendingResponse.isPending,
+  ]);
+
   // Memoizamos el valor del contexto para evitar renders innecesarios.
   // @see https://react.dev/reference/react/useContext#optimizing-re-renders-when-passing-objects-and-functions
   const contextValue: LogicGameContextType = useMemo(
     () => ({
       isPlayerTurn,
+      isEvent,
 
       secretsGroupByPlayerId,
       setsGroupByPlayerId,
@@ -176,9 +450,22 @@ export default function GameContextProvider({
 
       hookSetEvent,
       hookCardEvent,
+
+      getTarget,
+      isSelectablePlayer,
+      isSelectableSecret,
+      isSelectableSet,
+
+      isTargetPlayerEvent,
+      isTargetSecretEvent,
+      isTargetSetEvent,
+
+      isOtherPlayersSecretSelectable,
+      isCurrPlayersSecretSelectable,
     }),
     [
       isPlayerTurn,
+      isEvent,
 
       secretsGroupByPlayerId,
       setsGroupByPlayerId,
@@ -194,6 +481,18 @@ export default function GameContextProvider({
 
       hookSetEvent,
       hookCardEvent,
+
+      getTarget,
+      isSelectablePlayer,
+      isSelectableSecret,
+      isSelectableSet,
+
+      isTargetPlayerEvent,
+      isTargetSecretEvent,
+      isTargetSetEvent,
+
+      isOtherPlayersSecretSelectable,
+      isCurrPlayersSecretSelectable,
     ],
   );
 
