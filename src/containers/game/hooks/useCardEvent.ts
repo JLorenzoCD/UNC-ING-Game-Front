@@ -267,7 +267,6 @@ export function useCardEvent() {
         playerFinishActionTurn();
       }
 
-      // TODO: Ver esto, aveces no anda bien
       setCurrentEventCard(null);
       clearSelectedCards();
     } catch (error) {
@@ -324,7 +323,7 @@ export function useCardEvent() {
       return;
     }
 
-    if (canSelectMeAsPlayer) {
+    if (canSelectMeAsPlayer && selectedTargetPlayer === null) {
       const cardToUse = currentEventCard;
 
       if (
@@ -355,6 +354,8 @@ export function useCardEvent() {
         );
 
         clearSelectedCards();
+        setCurrentEventCard(null);
+        playerFinishActionTurn();
       } catch (error) {
         handleApiError(error, "Error al ejecutar el evento");
       }
