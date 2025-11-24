@@ -1,8 +1,9 @@
 import { useBasicGame } from "@/contexts/BasicGameContext";
+import { useLogicGame } from "@/contexts/LogicGameContext";
+
 import { GAME_EVENTS } from "@/constants/game";
 
 import Button from "@/components/Button";
-import { useLogicGame } from "@/contexts/LogicGameContext";
 
 interface HandActionsProps {
   onFinish: () => void; // Callback que se ejecuta al terminar el turno
@@ -84,7 +85,8 @@ export default function HandActions({
                 shouldDisableOption ||
                 hasFinishedAction ||
                 notSoFastEvent.isActivate ||
-                pendingResponse.isPending
+                pendingResponse.isPending ||
+                playerSelectsOneOfHisSecrets.isSelecting
               }
             >
               Discard cards
