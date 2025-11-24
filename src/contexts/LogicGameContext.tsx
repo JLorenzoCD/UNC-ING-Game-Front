@@ -94,7 +94,7 @@ export interface LogicGameContextProviderProps {
   children: ReactNode;
 }
 
-export default function GameContextProvider({
+export default function LogicGameContextProvider({
   children,
 }: LogicGameContextProviderProps) {
   const { player } = usePlayer();
@@ -264,28 +264,6 @@ export default function GameContextProvider({
     ],
   );
 
-  const isSelectableSecret = useCallback(
-    (secret: GameSecret) => {
-      if (
-        hookCardEvent.currentEventCard?.name ===
-          GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SECRET
-      ) {
-        return secret.is_revealed;
-      } else if (hookSetEvent.setEvent.isInEvent) {
-        return isOtherPlayersSecretSelectable(secret);
-      }
-
-      return false;
-    },
-    [
-      hookCardEvent.currentEventCard,
-      hookCardEvent.currentEventStep,
-      hookSetEvent.setEvent.isInEvent,
-      isOtherPlayersSecretSelectable,
-    ],
-  );
-
   const isCurrPlayersSecretSelectable = useCallback(
     (secret: GameSecret) => {
       if (
@@ -309,6 +287,35 @@ export default function GameContextProvider({
       hookCardEvent.currentEventStep,
       hookSetEvent,
       playerSelectsOneOfHisSecrets.isCurrPlayer,
+    ],
+  );
+
+  const isSelectableSecret = useCallback(
+    (secret: GameSecret) => {
+      if (player?.id === secret.player_id)
+        return isCurrPlayersSecretSelectable(secret);
+
+      if (
+        hookCardEvent.currentEventCard?.name ===
+          GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_SECRET
+      ) {
+        return secret.is_revealed;
+      }
+
+      if (hookSetEvent.setEvent.isInEvent) {
+        return isOtherPlayersSecretSelectable(secret);
+      }
+
+      return false;
+    },
+    [
+      player,
+      hookCardEvent.currentEventCard,
+      hookCardEvent.currentEventStep,
+      hookSetEvent.setEvent.isInEvent,
+      isOtherPlayersSecretSelectable,
+      isCurrPlayersSecretSelectable,
     ],
   );
 
