@@ -6,14 +6,32 @@ import Set from "./Set"; // Componente a testear
 import type { MatchSet, SetType } from "@/types/set";
 
 // Mocking Components and Assets
-const { mockCardPoirot, mockCardMarple, mockCardTommy, mockCardTuppence } =
-  vi.hoisted(() => {
-    const mockCardPoirot = "/assets/07-detective_poirot.png";
-    const mockCardMarple = "/assets/08-detective_marple.png";
-    const mockCardTommy = "/assets/12-detective_tommyberesford.png";
-    const mockCardTuppence = "/assets/13-detective_tuppenceberesford.png";
-    return { mockCardPoirot, mockCardMarple, mockCardTommy, mockCardTuppence };
-  });
+const {
+  mockCardPoirot,
+  mockCardMarple,
+  mockCardTommy,
+  mockCardTuppence,
+  mockuseLogicGame,
+} = vi.hoisted(() => {
+  const mockCardPoirot = "/assets/07-detective_poirot.png";
+  const mockCardMarple = "/assets/08-detective_marple.png";
+  const mockCardTommy = "/assets/12-detective_tommyberesford.png";
+  const mockCardTuppence = "/assets/13-detective_tuppenceberesford.png";
+
+  const mockuseLogicGame = vi.fn();
+
+  return {
+    mockCardPoirot,
+    mockCardMarple,
+    mockCardTommy,
+    mockCardTuppence,
+    mockuseLogicGame,
+  };
+});
+
+vi.mock("@/contexts/LogicGameContext", () => ({
+  useLogicGame: mockuseLogicGame,
+}));
 
 vi.mock("@/assets/07-detective_poirot.png", () => ({
   default: mockCardPoirot,
@@ -71,6 +89,15 @@ const mockSetObjectBeresford: MatchSet = {
 };
 
 describe("Set Component", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => false,
+      isTargetSetEvent: () => false,
+    });
+  });
+
   it("should render a standard set type with correct image and without the crown icon", () => {
     render(<Set set={mockSetObjectStandard} />);
 
@@ -151,19 +178,26 @@ describe("Set Component", () => {
 
 describe("Selection and Interaction", () => {
   const mockOnSelectTargetEvent = vi.fn();
-  const mockIsSelectableSet = vi.fn(() => true);
 
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => false,
+      isTargetSetEvent: () => false,
+    });
   });
 
   it("should call onSelectTargetEvent when clicked and is selectable", () => {
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => true,
+      isTargetSetEvent: () => false,
+    });
+
     render(
       <Set
         set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectableSet={mockIsSelectableSet}
-        isTargetSet={true}
         target={null}
       />,
     );
@@ -173,19 +207,19 @@ describe("Selection and Interaction", () => {
       fireEvent.click(container);
     }
 
-    expect(mockIsSelectableSet).toHaveBeenCalledWith(mockSetObjectStandard);
     expect(mockOnSelectTargetEvent).toHaveBeenCalledWith(mockSetObjectStandard);
   });
 
   it("should NOT call onSelectTargetEvent when clicked and is NOT selectable", () => {
-    mockIsSelectableSet.mockReturnValue(false);
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => false,
+      isTargetSetEvent: () => true,
+    });
 
     render(
       <Set
         set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectableSet={mockIsSelectableSet}
-        isTargetSet={true}
         target={null}
       />,
     );
@@ -195,7 +229,6 @@ describe("Selection and Interaction", () => {
       fireEvent.click(container);
     }
 
-    expect(mockIsSelectableSet).toHaveBeenCalledWith(mockSetObjectStandard);
     expect(mockOnSelectTargetEvent).not.toHaveBeenCalled();
   });
 
@@ -204,8 +237,6 @@ describe("Selection and Interaction", () => {
       <Set
         set={mockSetObjectStandard}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectableSet={mockIsSelectableSet}
-        isTargetSet={false} // Modo selección apagado
         target={null}
       />,
     );
@@ -219,14 +250,12 @@ describe("Selection and Interaction", () => {
   });
 
   it("should apply pulsing border when selectable and no target is selected", () => {
-    render(
-      <Set
-        set={mockSetObjectStandard}
-        isSelectableSet={() => true}
-        isTargetSet={true}
-        target={null}
-      />,
-    );
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => true,
+      isTargetSetEvent: () => true,
+    });
+
+    render(<Set set={mockSetObjectStandard} target={null} />);
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
 
@@ -236,14 +265,12 @@ describe("Selection and Interaction", () => {
   });
 
   it("should apply selected border when it is the target", () => {
-    render(
-      <Set
-        set={mockSetObjectStandard}
-        isSelectableSet={() => true}
-        isTargetSet={true}
-        target={mockSetObjectStandard}
-      />,
-    );
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSet: () => true,
+      isTargetSetEvent: () => true,
+    });
+
+    render(<Set set={mockSetObjectStandard} target={mockSetObjectStandard} />);
 
     const imgContainer = screen.getByRole("img").closest(".rounded-lg");
     expect(imgContainer).toHaveClass(

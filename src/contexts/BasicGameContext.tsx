@@ -68,7 +68,7 @@ export interface GameContextType {
   clearPendingResponse: () => void;
 }
 
-const GameContext = createContext<GameContextType>({
+const BasicGameContext = createContext<GameContextType>({
   match: null,
   result: null,
   cards: [],
@@ -102,13 +102,13 @@ const GameContext = createContext<GameContextType>({
   clearPendingResponse: () => undefined,
 });
 
-export interface GameContextProviderProps {
+export interface BasicGameContextProviderProps {
   children: ReactNode;
 }
 
-export default function GameContextProvider({
+export default function BasicGameContextProvider({
   children,
-}: GameContextProviderProps) {
+}: BasicGameContextProviderProps) {
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
 
@@ -753,10 +753,12 @@ export default function GameContextProvider({
   );
 
   return (
-    <GameContext.Provider value={contextValue}>{children}</GameContext.Provider>
+    <BasicGameContext.Provider value={contextValue}>
+      {children}
+    </BasicGameContext.Provider>
   );
 }
 
-export function useGame() {
-  return useContext(GameContext);
+export function useBasicGame() {
+  return useContext(BasicGameContext);
 }

@@ -11,18 +11,10 @@ const MAX_SETS_DISPLAYED = 3;
 interface Props {
   sets: MatchSet[];
   onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectableSet?: (set: MatchSet) => boolean;
-  isTargetSet?: boolean;
   target?: GamePlayer | GameSecret | MatchSet | null;
 }
 
-export default function Sets({
-  sets,
-  onSelectTargetEvent,
-  isSelectableSet,
-  isTargetSet,
-  target,
-}: Props) {
+export default function Sets({ sets, onSelectTargetEvent, target }: Props) {
   const {
     canGoNextPage,
     canGoPrevPage,
@@ -56,8 +48,6 @@ export default function Sets({
               key={set ? set.id : crypto.randomUUID()}
               set={set}
               target={target}
-              isTargetSet={isTargetSet}
-              isSelectableSet={isSelectableSet}
               onSelectTargetEvent={onSelectTargetEvent}
             />
           );

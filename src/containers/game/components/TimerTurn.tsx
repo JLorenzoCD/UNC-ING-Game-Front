@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -48,7 +48,7 @@ export function isTimerExecuted(match: Match, logs: MatchLog[]) {
 }
 
 export default function TimerTurn() {
-  const { match, players, logs, hasFinishedAction } = useGame();
+  const { match, players, logs, hasFinishedAction } = useBasicGame();
   const { player } = usePlayer();
   const { httpService } = useHttpService();
 

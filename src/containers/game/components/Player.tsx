@@ -1,9 +1,11 @@
-import { twJoin } from "tailwind-merge";
-import { RiGhostLine, RiSliceLine } from "@remixicon/react";
+import { useMemo } from "react";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 
+import { RiGhostLine, RiSliceLine } from "@remixicon/react";
 import Secrets from "./Secrets";
 import Sets from "./Sets";
 
+import { twJoin } from "tailwind-merge";
 import { getPlayerBorderClass, truncateName } from "../utils/player";
 
 import type { GamePlayer } from "@/types/player";
@@ -12,19 +14,11 @@ import type { MatchSet } from "@/types/set";
 
 interface PlayerProps {
   onSelectTargetEvent: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectablePlayer: (player: GamePlayer) => boolean;
-  isSelectableSecret: (secret: GameSecret) => boolean;
-  isSelectableSet: (set: MatchSet) => boolean;
 
   player: GamePlayer;
   secrets: GameSecret[];
   sets: MatchSet[];
   hasCurrentTurn: boolean;
-
-  isPlayerEvent: boolean;
-  isTargetSecret: boolean;
-  isTargetSet: boolean;
-  target: GamePlayer | GameSecret | MatchSet | null;
 
   /**
    * Indica si se debe resaltar el rol del jugador (por ejemplo, el Asesino).
@@ -36,32 +30,29 @@ interface PlayerProps {
 
 export default function Player({
   onSelectTargetEvent,
-  isSelectablePlayer,
-  isSelectableSecret,
-  isSelectableSet,
 
   player,
   secrets,
   sets,
   hasCurrentTurn,
 
-  isPlayerEvent,
-  isTargetSecret,
-  isTargetSet,
-  target,
-
   shouldHighlightRole = false,
 }: PlayerProps) {
+  const { getTarget, isSelectablePlayer, isEvent, isTargetPlayerEvent } =
+    useLogicGame();
+
   const handleClickPlayer = () => {
     onSelectTargetEvent(player);
   };
+
+  const target = useMemo(() => getTarget(), [getTarget]);
 
   const isTargetPlayer = target !== null && "avatar" in target;
   const isTarget = isTargetPlayer && player.id === target?.id;
   const isSelectingTarget = target === null || !isTargetPlayer;
   const isSelectable = isSelectablePlayer(player);
 
-  const isActivePlayerSelection = isPlayerEvent;
+  const isActivePlayerSelection = isEvent && isTargetPlayerEvent();
 
   const baseClasses =
     "w-20 h-20 rounded-full border-4 transition-all duration-200";
@@ -110,15 +101,11 @@ export default function Player({
         <Secrets
           secrets={secrets}
           onSelectTargetEvent={onSelectTargetEvent}
-          isSelectableSecret={isSelectableSecret}
-          isTargetSecret={isTargetSecret}
           target={target}
         />
         <Sets
           sets={sets}
           onSelectTargetEvent={onSelectTargetEvent}
-          isSelectableSet={isSelectableSet}
-          isTargetSet={isTargetSet}
           target={target}
         />
       </div>

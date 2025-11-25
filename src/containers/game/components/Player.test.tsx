@@ -11,6 +11,16 @@ import { getPlayerBorderClass, truncateName } from "../utils/player";
 
 import Player from "./Player";
 
+const { mockuseLogicGame } = vi.hoisted(() => {
+  const mockuseLogicGame = vi.fn();
+
+  return { mockuseLogicGame };
+});
+
+vi.mock("@/contexts/LogicGameContext", () => ({
+  useLogicGame: mockuseLogicGame,
+}));
+
 vi.mock("../utils/player", () => ({
   getPlayerBorderClass: vi.fn(() => "mock-border-class"),
   truncateName: vi.fn((name, maxLength = 10) => {
@@ -75,6 +85,13 @@ describe("Players Component", () => {
     mockIsSelectableSecret.mockClear();
 
     mockIsSelectablePlayer.mockReturnValue(false);
+
+    mockuseLogicGame.mockReturnValue({
+      isEvent: false,
+      getTarget: () => null,
+      isSelectablePlayer: () => false,
+      isTargetPlayerEvent: () => false,
+    });
   });
 
   it("should render player with avatar and apply the mocked border class", () => {
@@ -85,14 +102,7 @@ describe("Players Component", () => {
         secrets={[]}
         sets={[]}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectablePlayer={mockIsSelectablePlayer}
-        isSelectableSecret={mockIsSelectableSecret}
-        isSelectableSet={mockIsSelectableSet}
-        isTargetSet={false}
-        isPlayerEvent={false}
-        isTargetSecret={false}
         shouldHighlightRole={false}
-        target={null}
       />,
     );
 
@@ -116,13 +126,6 @@ describe("Players Component", () => {
         secrets={[]}
         sets={[]}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectablePlayer={mockIsSelectablePlayer}
-        isSelectableSecret={mockIsSelectableSecret}
-        isSelectableSet={mockIsSelectableSet}
-        isPlayerEvent={false}
-        isTargetSecret={false}
-        isTargetSet={false}
-        target={null}
       />,
     );
 
@@ -143,13 +146,6 @@ describe("Players Component", () => {
         secrets={[]}
         sets={[]}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectablePlayer={mockIsSelectablePlayer}
-        isSelectableSecret={mockIsSelectableSecret}
-        isSelectableSet={mockIsSelectableSet}
-        isPlayerEvent={false}
-        isTargetSecret={false}
-        isTargetSet={false}
-        target={null}
       />,
     );
     const avatarContainer = container.querySelector(
@@ -170,13 +166,6 @@ describe("Players Component", () => {
         secrets={[]}
         sets={[]}
         onSelectTargetEvent={mockOnSelectTargetEvent}
-        isSelectablePlayer={mockIsSelectablePlayer}
-        isSelectableSecret={mockIsSelectableSecret}
-        isSelectableSet={mockIsSelectableSet}
-        isPlayerEvent={false}
-        isTargetSecret={false}
-        isTargetSet={false}
-        target={null}
       />,
     );
 
@@ -192,7 +181,12 @@ describe("Players Component", () => {
   describe("Utility Function Integration", () => {
     it("should call getBoderPlayer with correct arguments in player selection mode (isSelectingTarget branch)", () => {
       // isActivePlayerSelection = TRUE, isSelectable = TRUE, isSelectingTarget = TRUE
-      mockIsSelectablePlayer.mockReturnValue(true);
+      mockuseLogicGame.mockReturnValue({
+        isEvent: true,
+        getTarget: () => null,
+        isSelectablePlayer: () => true,
+        isTargetPlayerEvent: () => true,
+      });
 
       render(
         <Player
@@ -201,13 +195,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={true}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
         />,
       );
 
@@ -239,13 +226,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
         />,
       );
 
@@ -268,13 +248,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
         />,
       );
 
@@ -297,13 +270,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={true}
         />,
       );
@@ -328,13 +294,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
         />,
       );
 
@@ -375,13 +334,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={true}
         />,
       );
@@ -399,13 +351,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={true}
         />,
       );
@@ -423,13 +368,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={true}
         />,
       );
@@ -447,13 +385,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={false}
         />,
       );
@@ -471,13 +402,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
           shouldHighlightRole={false}
         />,
       );
@@ -495,13 +419,6 @@ describe("Players Component", () => {
           secrets={[]}
           sets={[]}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectablePlayer={mockIsSelectablePlayer}
-          isSelectableSecret={mockIsSelectableSecret}
-          isSelectableSet={mockIsSelectableSet}
-          isPlayerEvent={false}
-          isTargetSecret={false}
-          isTargetSet={false}
-          target={null}
         />,
       );
 

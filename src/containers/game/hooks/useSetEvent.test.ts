@@ -32,8 +32,8 @@ const {
   mockOtherPlayerPoirotSet,
   mockUseParams,
   mockUsePlayer,
-  mockUseGame,
-  defaultMockUseGame,
+  mockuseBasicGame,
+  defaultMockuseBasicGame,
   mockCurrentGamePlayer,
   mockCreateAndPlaySet,
   mockPutSecret,
@@ -219,7 +219,7 @@ const {
     addDetectiveCardToSetAndPlay: mockAddDetectiveCardToSetAndPlay,
   };
 
-  const defaultMockUseGame: {
+  const defaultMockuseBasicGame: {
     secrets: GameSecret[];
     players: GamePlayer[];
     playerSelectsOneOfHisSecrets: {
@@ -233,7 +233,7 @@ const {
     playerSelectsOneOfHisSecrets: { isCurrPlayer: false, isSelecting: false },
     lastUpdatedSecretId: null,
   };
-  const mockUseGame = vi.fn(() => ({ ...defaultMockUseGame }));
+  const mockuseBasicGame = vi.fn(() => ({ ...defaultMockuseBasicGame }));
 
   // Mocks para funciones de utilidad
   const isCardsValidSet = vi.fn(() => false);
@@ -273,8 +273,8 @@ const {
     mockOtherPlayerPoirotSet,
     mockUseParams,
     mockUsePlayer,
-    mockUseGame,
-    defaultMockUseGame,
+    mockuseBasicGame,
+    defaultMockuseBasicGame,
     mockCreateAndPlaySet,
     mockPutSecret,
     mockAddDetectiveCardToSetAndPlay,
@@ -312,7 +312,9 @@ vi.mock("../utils/setEvent", () => ({
 
 // Mocks de Hooks de Contexto y Router
 vi.mock("react-router", () => ({ useParams: mockUseParams }));
-vi.mock("@/contexts/GameContext", () => ({ useGame: mockUseGame }));
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: mockuseBasicGame,
+}));
 vi.mock("@/contexts/PlayerContext", () => ({ usePlayer: mockUsePlayer }));
 vi.mock("@/contexts/HttpServiceContext", () => ({
   useHttpService: vi.fn(() => ({ httpService: mockHttpService })),
@@ -338,7 +340,7 @@ describe("useSetEvent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockUseGame.mockReturnValue({ ...defaultMockUseGame });
+    mockuseBasicGame.mockReturnValue({ ...defaultMockuseBasicGame });
   });
 
   afterEach(() => {
@@ -753,8 +755,8 @@ describe("useSetEvent", () => {
 
     it("should successfully execute current player secret reveal action (via useEffect) and reset state", async () => {
       // Estado inicial por useEffect
-      mockUseGame.mockReturnValue({
-        ...defaultMockUseGame,
+      mockuseBasicGame.mockReturnValue({
+        ...defaultMockuseBasicGame,
         playerSelectsOneOfHisSecrets: { isCurrPlayer: true, isSelecting: true },
       });
 
@@ -817,8 +819,8 @@ describe("useSetEvent", () => {
       isSetCardsTargetOneSecret.mockReturnValue(true);
       isSetActionRevealSecret.mockReturnValue(true);
 
-      mockUseGame.mockReturnValue({
-        ...defaultMockUseGame,
+      mockuseBasicGame.mockReturnValue({
+        ...defaultMockuseBasicGame,
         players: [mockCurrentGamePlayer], // Sólo el jugador actual
       });
 
@@ -996,8 +998,8 @@ describe("useSetEvent", () => {
       });
 
       it("should return false if in TargetPlayer event but player has ALL secrets revealed", () => {
-        mockUseGame.mockReturnValue({
-          ...defaultMockUseGame,
+        mockuseBasicGame.mockReturnValue({
+          ...defaultMockuseBasicGame,
           secrets: [
             mockRevealedSecret, // Secreto revelado del otro jugador
             mockCurrentPlayerSecret,
@@ -1025,8 +1027,8 @@ describe("useSetEvent", () => {
     describe("isCurrPlayerSecretSelectableForSetEvent", () => {
       it("should return true for unrevealed current player secret when playerSelectsOneOfHisSecrets is true (via useEffect)", () => {
         // Simula el estado post-useEffect cuando el jugador debe revelar uno de sus secretos
-        mockUseGame.mockReturnValue({
-          ...defaultMockUseGame,
+        mockuseBasicGame.mockReturnValue({
+          ...defaultMockuseBasicGame,
           playerSelectsOneOfHisSecrets: {
             isCurrPlayer: true,
             isSelecting: true,
@@ -1256,8 +1258,8 @@ describe("useSetEvent", () => {
 
   describe("Finish Turn (Stolen Secret)", () => {
     it("should call putSecret with steal_secret if isStolenSecret is true", async () => {
-      mockUseGame.mockReturnValue({
-        ...defaultMockUseGame,
+      mockuseBasicGame.mockReturnValue({
+        ...defaultMockuseBasicGame,
         lastUpdatedSecretId: MOCK_SECRET_ID as UUID,
       });
 

@@ -10,22 +10,18 @@ const MAX_SECRETS_DISPLAYED = 3;
 
 type SecretsProps = {
   onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
-  isSelectableSecret: (secret: GameSecret) => boolean;
 
   secrets: GameSecret[];
 
-  isTargetSecret?: boolean;
   target?: GamePlayer | GameSecret | MatchSet | null;
 };
 
 export default function Secrets({
   onSelectTargetEvent,
-  isSelectableSecret,
 
   secrets,
 
   target = null,
-  isTargetSecret = false,
 }: SecretsProps) {
   const {
     canGoNextPage,
@@ -56,8 +52,6 @@ export default function Secrets({
             key={secret !== null ? secret.id : crypto.randomUUID()}
             secret={secret}
             target={target}
-            isTargetSecret={isTargetSecret}
-            isSelectableSecret={isSelectableSecret}
             onSelectTargetEvent={onSelectTargetEvent}
           />
         ))}

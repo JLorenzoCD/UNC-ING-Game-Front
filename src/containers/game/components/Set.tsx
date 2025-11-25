@@ -12,6 +12,7 @@ import cardTuppence from "@/assets/13-detective_tuppenceberesford.png";
 import type { MatchSet, SetType } from "@/types/set";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 
 const SET_IMAGE_PATHS: Record<SetType, string> = {
   "HERCULE POIROT": cardPoirot,
@@ -23,14 +24,6 @@ const SET_IMAGE_PATHS: Record<SetType, string> = {
   "TUPPENCE BERESFORD": cardTuppence,
   "TWO BERESFORD": cardTommy,
 };
-
-interface Props {
-  set: MatchSet | null;
-  target?: GamePlayer | GameSecret | MatchSet | null;
-  isTargetSet?: boolean;
-  isSelectableSet?: (set: MatchSet) => boolean;
-  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
-}
 
 function getBoderClass(
   isSelectionMode: boolean,
@@ -61,13 +54,19 @@ function getBoderClass(
   return borderClass;
 }
 
+interface Props {
+  set: MatchSet | null;
+  target?: GamePlayer | GameSecret | MatchSet | null;
+  onSelectTargetEvent?: (target: GamePlayer | GameSecret | MatchSet) => void;
+}
+
 export default function Set({
   set = null,
   target = null,
-  isTargetSet = false,
-  isSelectableSet,
   onSelectTargetEvent,
 }: Props) {
+  const { isSelectableSet, isTargetSetEvent } = useLogicGame();
+
   const cardSize = "w-15 h-22.5";
 
   if (!set) {
@@ -87,7 +86,7 @@ export default function Set({
   const isSelectingTarget = target === null;
   const isSelectable = isSelectableSet ? isSelectableSet(set) : false;
 
-  const isSelectionMode = isTargetSet;
+  const isSelectionMode = isTargetSetEvent();
 
   const baseClasses = "rounded-lg overflow-hidden transition-all duration-200";
   const boderClass = getBoderClass(

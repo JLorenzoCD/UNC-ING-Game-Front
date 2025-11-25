@@ -9,12 +9,18 @@ vi.mock("react-router", () => ({
   Outlet: vi.fn(() => <div data-testid="mock-outlet">Outlet Content</div>),
 }));
 
-// Mock the GameContextProvider
-vi.mock("@/contexts/GameContext", () => ({
+// Mock the BasicGameContext and LogicGameContext
+vi.mock("@/contexts/BasicGameContext", () => ({
   default: vi.fn(({ children }) => (
-    <div data-testid="mock-game-context-provider">{children}</div>
+    <div data-testid="mock-basic-game-context-provider">{children}</div>
   )),
 }));
+vi.mock("@/contexts/LogicGameContext", () => ({
+  default: vi.fn(({ children }) => (
+    <div data-testid="mock-logic-game-context-provider">{children}</div>
+  )),
+}));
+
 vi.mock("./components/TimerTurn", () => ({
   default: vi.fn(() => <div data-testid="mock-timerTurn">Timer</div>),
 }));
@@ -36,14 +42,24 @@ describe("GameLayout", () => {
   it("should render without crashing", () => {
     render(<GameLayout />);
     expect(
-      screen.getByTestId("mock-game-context-provider"),
+      screen.getByTestId("mock-basic-game-context-provider"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByTestId("mock-logic-game-context-provider"),
     ).toBeInTheDocument();
   });
 
-  it("should wrap content with GameContextProvider", () => {
+  it("should wrap content with BasicGameContextProvider", () => {
     render(<GameLayout />);
 
-    const provider = screen.getByTestId("mock-game-context-provider");
+    const provider = screen.getByTestId("mock-basic-game-context-provider");
+    expect(provider).toBeInTheDocument();
+  });
+
+  it("should wrap content with LogicGameContext", () => {
+    render(<GameLayout />);
+
+    const provider = screen.getByTestId("mock-logic-game-context-provider");
     expect(provider).toBeInTheDocument();
   });
 

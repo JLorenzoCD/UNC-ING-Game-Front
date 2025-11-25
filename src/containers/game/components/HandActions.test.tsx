@@ -15,9 +15,10 @@ const {
   mockOnSelectSecret,
   mockOnPlayEvent,
   mockOnSelectSet,
-  mockUseGame,
+  mockuseBasicGame,
   mockOnSelectDirection,
   mockOnAddDetectiveCardToSet,
+  mockuseLogicGame,
 } = vi.hoisted(() => {
   const mockOnFinish = vi.fn();
   const mockOnDiscard = vi.fn();
@@ -25,29 +26,33 @@ const {
   const mockOnSelectPlayer = vi.fn();
   const mockOnSelectSecret = vi.fn();
   const mockOnPlayEvent = vi.fn();
-  const mockUseGame = vi.fn();
+  const mockuseBasicGame = vi.fn();
   const mockOnSelectDirection = vi.fn();
   const mockOnAddDetectiveCardToSet = vi.fn();
   const mockOnSelectSet = vi.fn();
+  const mockuseLogicGame = vi.fn();
 
   return {
     mockOnFinish,
     mockOnDiscard,
     mockOnPlaySet,
-    mockUseGame,
+    mockuseBasicGame,
     mockOnAddDetectiveCardToSet,
     mockOnSelectPlayer,
     mockOnSelectSecret,
     mockOnPlayEvent,
     mockOnSelectSet,
     mockOnSelectDirection,
+    mockuseLogicGame,
   };
 });
 
-// 1. Mock de useGame
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: mockuseBasicGame,
+}));
 
-vi.mock("@/contexts/GameContext", () => ({
-  useGame: mockUseGame,
+vi.mock("@/contexts/LogicGameContext", () => ({
+  useLogicGame: mockuseLogicGame,
 }));
 
 vi.mock("@/components/Button", () => ({
@@ -83,8 +88,6 @@ const baseProps = {
   isSetEventSelectSetButtonDisabled: true,
   isAddingCardToSet: false,
   canSelectMeAsPlayer: false,
-  isSelectionPlayerEvent: false,
-  isSelectionSecretEvent: false,
   isSetButtonDisabled: true,
   isDisabled: false,
   isSelectionSetEvent: false,
@@ -95,7 +98,8 @@ const baseProps = {
 describe("HandActions", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseGame.mockReturnValue({
+
+    mockuseBasicGame.mockReturnValue({
       hasFinishedAction: false,
       playerSelectsOneOfHisSecrets: {
         isSelecting: false,
@@ -112,6 +116,11 @@ describe("HandActions", () => {
       clearNotSoFastEvent: vi.fn(),
       pendingResponse: { isPending: false, eventType: null },
     });
+
+    mockuseLogicGame.mockReturnValue({
+      isTargetPlayerEvent: () => false,
+      isTargetSecretEvent: () => false,
+    });
   });
 
   describe("Rendering", () => {
@@ -122,8 +131,6 @@ describe("HandActions", () => {
           isSetEventSelectSetButtonDisabled={false}
           isAddingCardToSet={false}
           canSelectMeAsPlayer={false}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
           isSelectionSetEvent={false}
           isSetButtonDisabled={false}
           isDisabledEvent={false}
@@ -181,7 +188,7 @@ describe("HandActions", () => {
     });
 
     it("disables the 'Select player' button based on isSelectionPlayerEvent prop (inverted logic)", async () => {
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={false} />);
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select player")).toBeDisabled();
 
       const discardCardsButton = screen.getAllByTestId("mock-button")[0];
@@ -208,14 +215,22 @@ describe("HandActions", () => {
     });
 
     it("calls onSelectPlayer when 'Select player' button is clicked", () => {
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
+      render(<HandActions {...baseProps} />);
 
       fireEvent.click(screen.getByText("Select player"));
       expect(mockOnSelectPlayer).toHaveBeenCalledTimes(1);
     });
 
     it("calls onSelectSecret when 'Select secret' button is clicked", () => {
-      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => false,
+        isTargetSecretEvent: () => true,
+      });
+      render(<HandActions {...baseProps} />);
 
       fireEvent.click(screen.getByText("Select secret"));
       expect(mockOnSelectSecret).toHaveBeenCalledTimes(1);
@@ -251,8 +266,6 @@ describe("HandActions", () => {
       render(
         <HandActions
           {...baseProps}
-          isSelectionPlayerEvent={false}
-          isSelectionSecretEvent={false}
           isSelectionSetEvent={true}
           isSetButtonDisabled={false}
           isDisabledEvent={false}
@@ -273,9 +286,9 @@ describe("HandActions", () => {
     });
   });
 
-  describe("useGame logic", () => {
+  describe("useBasicGame logic", () => {
     it("disables all main action buttons when hasFinishedAction is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: true,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
@@ -296,7 +309,7 @@ describe("HandActions", () => {
     });
 
     it("disables 'Finish turn' when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: true,
@@ -305,8 +318,7 @@ describe("HandActions", () => {
         pendingResponse: { isPending: false, eventType: null },
         notSoFastEvent: { isActivate: false },
       });
-
-      render(<HandActions {...baseProps} isSelectionSecretEvent />);
+      render(<HandActions {...baseProps} />);
 
       // Botón Finish turn se deshabilita
       expect(screen.getByText("Finish turn")).toBeDisabled();
@@ -316,7 +328,7 @@ describe("HandActions", () => {
     });
 
     it("ENABLES 'Select secret' even if event conditions fail, when isCurrPlayer is true", () => {
-      mockUseGame.mockReturnValue({
+      mockuseBasicGame.mockReturnValue({
         hasFinishedAction: false,
         playerSelectsOneOfHisSecrets: {
           isSelecting: false,
@@ -326,7 +338,7 @@ describe("HandActions", () => {
         pendingResponse: { isPending: false, eventType: null },
       });
 
-      render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
+      render(<HandActions {...baseProps} />);
 
       expect(screen.getByText("Select secret")).not.toBeDisabled();
       expect(screen.getByText("Discard cards")).not.toBeDisabled();
@@ -334,16 +346,20 @@ describe("HandActions", () => {
 
     it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
       // 1. Simular el estado de PENDING_RESPONSE para PYS
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(), // Obtiene el mock base
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(), // Obtiene el mock base
         pendingResponse: {
           isPending: true,
           eventType: "POINT YOUR SUSPICIONS",
         },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
       // 2. Renderizar (isSelectionPlayerEvent es true, que viene de GameContainer)
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
 
       // 3. Verificar
       // El botón está HABILITADO porque la lógica de 'disabled'
@@ -381,45 +397,57 @@ describe("HandActions", () => {
     });
 
     it("should disable Select player button for CARD_TRADE pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.CARD_TRADE, //
         },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
 
       // El botón está deshabilitado por la lógica de CARD_TRADE
       expect(screen.getByText("Select player")).toBeDisabled();
     });
 
     it("should disable Select player button for DEAD_CARD_FOLLY pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.DEAD_CARD_FOLLY, //
         },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
 
       // El botón está deshabilitado por la lógica de DEAD_CARD_FOLLY
       expect(screen.getByText("Select player")).toBeDisabled();
     });
 
     it("should ENABLE Select player button for POINT_YOUR_SUSPICIONS pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: {
           isPending: true,
           eventType: GAME_EVENTS.POINT_YOUR_SUSPICIONS, //
         },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
 
       // El botón está habilitado
       expect(screen.getByText("Select player")).not.toBeDisabled();
@@ -428,8 +456,8 @@ describe("HandActions", () => {
 
   describe("Button: Discard cards logic", () => {
     it("should disable Discard cards when hasFinishedAction is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: true,
       });
 
@@ -438,8 +466,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Discard cards when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
 
@@ -448,8 +476,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Discard cards when pendingResponse.isPending is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         pendingResponse: { isPending: true, eventType: null },
       });
 
@@ -460,79 +488,98 @@ describe("HandActions", () => {
 
   describe("Button: Select player logic (Extended coverage)", () => {
     it("should disable Select player when isDisabled is true and no pending response", () => {
-      render(
-        <HandActions
-          {...baseProps}
-          isDisabled={true}
-          isSelectionPlayerEvent={true}
-        />,
-      );
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
+
+      render(<HandActions {...baseProps} isDisabled={true} />);
       expect(screen.getByText("Select player")).toBeDisabled();
     });
 
     it("should disable Select player when hasFinishedAction is true and no pending response", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: true,
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select player")).toBeDisabled();
     });
 
     it("should disable Select player when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select player")).toBeDisabled();
     });
 
     it("should change text to 'Select me' when canSelectMeAsPlayer is true", () => {
-      render(
-        <HandActions
-          {...baseProps}
-          isSelectionPlayerEvent={true}
-          canSelectMeAsPlayer={true}
-        />,
-      );
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
+
+      render(<HandActions {...baseProps} canSelectMeAsPlayer={true} />);
       expect(screen.getByText("Select me")).toBeInTheDocument();
     });
   });
 
   describe("Button: Select secret logic (Extended coverage)", () => {
     it("should disable Select secret when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
+      mockuseLogicGame.mockReturnValue({
+        isTargetSecretEvent: () => true,
+        isTargetPlayerEvent: () => false,
+      });
 
-      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select secret")).toBeDisabled();
     });
 
     it("should disable Select secret when isSelectionSecretEvent is false and isCurrPlayer is false", () => {
-      render(<HandActions {...baseProps} isSelectionSecretEvent={false} />);
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select secret")).toBeDisabled();
     });
 
     it("should ENABLE Select secret when isSelectionSecretEvent is true", () => {
-      render(<HandActions {...baseProps} isSelectionSecretEvent={true} />);
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => false,
+        isTargetSecretEvent: () => true,
+      });
+      render(<HandActions {...baseProps} />);
       expect(screen.getByText("Select secret")).not.toBeDisabled();
     });
   });
 
   describe("Button: Finish turn logic (Extended coverage)", () => {
     it("should disable Finish turn when shouldDisableOption is true (e.g., isSelectionPlayerEvent=true)", () => {
-      render(<HandActions {...baseProps} isSelectionPlayerEvent={true} />);
+      mockuseLogicGame.mockReturnValue({
+        isTargetPlayerEvent: () => true,
+        isTargetSecretEvent: () => false,
+      });
+      render(<HandActions {...baseProps} />);
+
       expect(screen.getByText("Finish turn")).toBeDisabled();
     });
 
     it("should disable Finish turn when playerSelectsOneOfHisSecrets.isSelecting is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         playerSelectsOneOfHisSecrets: {
           isSelecting: true,
           isCurrPlayer: false,
@@ -543,8 +590,8 @@ describe("HandActions", () => {
     });
 
     it("should disable Finish turn when notSoFastEvent.isActivate is true", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         notSoFastEvent: { isActivate: true },
       });
       render(<HandActions {...baseProps} />);
@@ -574,8 +621,8 @@ describe("HandActions", () => {
 
   describe("Button: Add detective (Extended coverage)", () => {
     it("calls onAddDetectiveCardToSet when button is clicked", () => {
-      mockUseGame.mockReturnValue({
-        ...mockUseGame(),
+      mockuseBasicGame.mockReturnValue({
+        ...mockuseBasicGame(),
         hasFinishedAction: false,
       });
 

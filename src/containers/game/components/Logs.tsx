@@ -1,15 +1,16 @@
-import type { MatchLog } from "@/types/log";
-import { RiCloseLine } from "@remixicon/react";
-import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
+import { useBasicGame } from "@/contexts/BasicGameContext";
+
 import { twMerge } from "tailwind-merge";
+import { AnimatePresence, motion } from "motion/react";
+import { formatDistanceToNow } from "date-fns";
 
-interface LogsProps {
-  logs: MatchLog[];
-}
+import { RiCloseLine } from "@remixicon/react";
 
-export default function Logs({ logs }: LogsProps) {
+import type { MatchLog } from "@/types/log";
+
+export default function Logs() {
+  const { logs } = useBasicGame();
   const [isOpen, setIsOpen] = useState(false);
 
   const sortedLogs = [...logs].sort(

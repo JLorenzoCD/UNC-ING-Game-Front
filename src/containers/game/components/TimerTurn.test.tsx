@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -80,7 +80,7 @@ const mockMatch: Match = {
   timer_turn: new Date().toISOString() as any,
 };
 
-const baseUseGameMock = {
+const baseuseBasicGameMock = {
   sets: [],
   logs: [],
   secrets: [],
@@ -117,8 +117,8 @@ const baseUseGameMock = {
 
 // --- Mocking Hooks ---
 
-vi.mock("@/contexts/GameContext", () => ({
-  useGame: vi.fn(),
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: vi.fn(),
 }));
 
 vi.mock("@/contexts/PlayerContext", () => ({
@@ -151,13 +151,13 @@ beforeEach(() => {
   });
 
   // El match time debe ser dinámico para simular el inicio del turno
-  baseUseGameMock.match = {
+  baseuseBasicGameMock.match = {
     ...mockMatch,
     timer_turn: new Date().toISOString() as any,
   };
 
-  vi.mocked(useGame).mockReturnValue({
-    ...baseUseGameMock,
+  vi.mocked(useBasicGame).mockReturnValue({
+    ...baseuseBasicGameMock,
     logs: [
       {
         event_type: "Turn",
@@ -231,8 +231,8 @@ describe("Utility Functions", () => {
 
 describe("TimerTurn Component", () => {
   it("should return null if match is null", () => {
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       match: null,
     });
 
@@ -382,8 +382,8 @@ describe("TimerTurn Component", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
 
     // Sucede alguna acción
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       hasFinishedAction: true,
     });
 
@@ -408,8 +408,8 @@ describe("TimerTurn Component", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
 
     // Cambia match
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       match: {
         ...mockMatch,
         current_player_order: 2, // New turn
