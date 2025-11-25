@@ -4,48 +4,70 @@ import {
   screen,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { userEvent } from "@testing-library/user-event";
-import { describe, it, expect } from "vitest";
-import Logs from "./Logs";
+
 import type { MatchLog } from "@/types/log";
 
-const mockLogs: MatchLog[] = [
-  {
-    id: "1",
-    match_id: "match-1",
-    message: "[EVENT] Player 1 has played a card",
-    created_at: new Date("2025-11-09T10:00:00Z"),
-    event_type: "Early Train To Paddington",
-    player_id: crypto.randomUUID(),
-  },
-  {
-    id: "2",
-    match_id: "match-1",
-    message: "[TURN] Player 2 has now the turn",
-    created_at: new Date("2025-11-09T10:05:00Z"),
-    event_type: "Turn",
-    player_id: crypto.randomUUID(),
-  },
-  {
-    id: "3",
-    match_id: "match-1",
-    message: "[SET ] Player 1 has completed a detective set",
-    created_at: new Date("2025-11-09T10:10:00Z"),
-    event_type: "Mr Satterthwaite",
-    player_id: crypto.randomUUID(),
-  },
-];
+import Logs from "./Logs";
+
+const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
+  const mockLogs: MatchLog[] = [
+    {
+      id: "1",
+      match_id: "match-1",
+      message: "[EVENT] Player 1 has played a card",
+      created_at: new Date("2025-11-09T10:00:00Z"),
+      event_type: "Early Train To Paddington",
+      player_id: crypto.randomUUID(),
+    },
+    {
+      id: "2",
+      match_id: "match-1",
+      message: "[TURN] Player 2 has now the turn",
+      created_at: new Date("2025-11-09T10:05:00Z"),
+      event_type: "Turn",
+      player_id: crypto.randomUUID(),
+    },
+    {
+      id: "3",
+      match_id: "match-1",
+      message: "[SET ] Player 1 has completed a detective set",
+      created_at: new Date("2025-11-09T10:10:00Z"),
+      event_type: "Mr Satterthwaite",
+      player_id: crypto.randomUUID(),
+    },
+  ];
+
+  const mockuseBasicGame = vi.fn();
+
+  return {
+    mockuseBasicGame,
+    mockLogs,
+  };
+});
+
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: mockuseBasicGame,
+}));
 
 describe("Logs", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    mockuseBasicGame.mockReturnValue({ logs: mockLogs });
+  });
+
   it("renders empty state when no logs available", () => {
-    render(<Logs logs={[]} />);
+    mockuseBasicGame.mockReturnValue({ logs: [] });
+    render(<Logs />);
 
     expect(screen.getByText("No logs available yet.")).toBeInTheDocument();
     expect(screen.getByTestId("logs-container")).toHaveClass("opacity-50");
   });
 
   it("displays most recent log in preview", () => {
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     expect(
       screen.getByText(/has completed a detective set/),
@@ -56,7 +78,7 @@ describe("Logs", () => {
 
   it("opens drawer on button click", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
 
@@ -68,7 +90,7 @@ describe("Logs", () => {
 
   it("displays all logs in drawer sorted by most recent first", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
 
@@ -89,7 +111,7 @@ describe("Logs", () => {
 
   it("shows timestamps in drawer logs", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
 
@@ -98,7 +120,7 @@ describe("Logs", () => {
 
   it("closes drawer when clicking backdrop", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
     const drawer = screen.getByTestId("logs-drawer");
@@ -106,13 +128,12 @@ describe("Logs", () => {
 
     await user.click(drawer);
 
-    // A veces no me andaba la linea comentada.
-    await waitForElementToBeRemoved(() => screen.queryByTestId("logs-drawer"));
+    expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
   });
 
   it("closes drawer when clicking close button", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
 
@@ -126,7 +147,7 @@ describe("Logs", () => {
 
   it("does not close drawer when clicking inside drawer content", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
 
@@ -139,7 +160,7 @@ describe("Logs", () => {
 
   it("uses fixed positioning for modal overlay", async () => {
     const user = userEvent.setup();
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     await user.click(screen.getByRole("button"));
 
@@ -148,7 +169,7 @@ describe("Logs", () => {
   });
 
   it("positions container absolutely in top-right corner", () => {
-    render(<Logs logs={mockLogs} />);
+    render(<Logs />);
 
     const container = screen.getByTestId("logs-container");
     expect(container).toHaveClass("absolute", "top-2", "right-2");
