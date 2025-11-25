@@ -20,34 +20,18 @@ vi.mock("../utils/tablePositions.ts", () => ({
 }));
 vi.mock("./Player", () => ({
   __esModule: true,
-  default: vi.fn(
-    ({
-      player,
-      secrets,
-      sets,
-      hasCurrentTurn,
-      isSelectablePlayer,
-      isSelectableSecret,
-      isPlayerEvent,
-      isTargetSecret,
-    }) => (
-      <div
-        data-testid={`mock-player-${player.id}`}
-        data-player-name={player.name}
-        data-player-order={player.order}
-        data-secrets-count={secrets.length}
-        data-sets-count={sets.length}
-        data-current-turn={hasCurrentTurn ? "true" : "false"}
-        // NUEVOS ATRIBUTOS PARA PROPS BOOLEANAS
-        data-is-selectable-player={isSelectablePlayer ? "true" : "false"}
-        data-is-selectable-secret={isSelectableSecret ? "true" : "false"}
-        data-is-player-event={isPlayerEvent ? "true" : "false"}
-        data-is-target-secret={isTargetSecret ? "true" : "false"}
-      >
-        Player: {player.name}
-      </div>
-    ),
-  ),
+  default: vi.fn(({ player, secrets, sets, hasCurrentTurn }) => (
+    <div
+      data-testid={`mock-player-${player.id}`}
+      data-player-name={player.name}
+      data-player-order={player.order}
+      data-secrets-count={secrets.length}
+      data-sets-count={sets.length}
+      data-current-turn={hasCurrentTurn ? "true" : "false"}
+    >
+      Player: {player.name}
+    </div>
+  )),
 }));
 
 import { getVisiblePlayersWithGridPositions } from "../utils/tablePositions";
@@ -203,15 +187,7 @@ const defaultTableProps = {
   draft: <div>Draft Area</div>,
   drawPile: <div>Draw Pile</div>,
   discardPile: <div>Discard Pile</div>,
-  isEvent: false,
-  isTargetPlayer: false,
-  isTargetSecret: false,
-  isTargetSet: false,
-  target: null,
   onSelectTargetEvent: () => {},
-  isSelectablePlayer: () => false,
-  isSelectableSecret: () => false,
-  isSelectableSet: () => false,
 };
 
 describe("Table Component", () => {
@@ -466,33 +442,5 @@ describe("Table Component", () => {
       // Debería usar la posición 0 del mock (col-start-2 row-start-1)
       expect(player2Div).toHaveClass("col-start-2 row-start-1");
     });
-  });
-
-  it("should correctly pass isSelectable, isPlayerEvent, and isTargetSecret props to Player", () => {
-    const MOCK_TARGET = { id: "some-target-id" };
-
-    const customProps = {
-      ...defaultTableProps,
-      isEvent: true,
-      isTargetPlayer: true,
-      isTargetSecret: false,
-      target: MOCK_TARGET,
-
-      isSelectablePlayer: (player: GamePlayer) => player.order === 2,
-      isSelectableSecret: () => true,
-    } as any;
-
-    render(<Table {...customProps} />);
-
-    // Obtenemos las referencias a los elementos mockeados
-    const player2 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_2}`);
-    const player3 = screen.getByTestId(`mock-player-${MOCK_PLAYER_ID_3}`);
-
-    expect(player2).toHaveAttribute("data-is-selectable-player", "true");
-
-    // Verificaciones adicionales de las otras props
-    expect(player3).toHaveAttribute("data-is-selectable-secret", "true");
-    expect(player3).toHaveAttribute("data-is-player-event", "true");
-    expect(player3).toHaveAttribute("data-is-target-secret", "false");
   });
 });
