@@ -393,7 +393,6 @@ export default function GameContainer() {
   };
 
   const handleEventDiscard = () => {
-    // Se realiza en otro ticket
     setDiscardModal({
       isOpen: true,
       isEventDiscard: true,

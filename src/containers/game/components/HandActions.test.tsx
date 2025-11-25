@@ -221,8 +221,6 @@ describe("HandActions", () => {
       });
       render(<HandActions {...baseProps} />);
 
-      screen.debug();
-
       fireEvent.click(screen.getByText("Select player"));
       expect(mockOnSelectPlayer).toHaveBeenCalledTimes(1);
     });
@@ -576,7 +574,6 @@ describe("HandActions", () => {
       });
       render(<HandActions {...baseProps} />);
 
-      screen.debug();
       expect(screen.getByText("Finish turn")).toBeDisabled();
     });
 
