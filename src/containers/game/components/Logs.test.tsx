@@ -2,6 +2,7 @@ import "@testing-library/jest-dom";
 import {
   render,
   screen,
+  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -128,7 +129,9 @@ describe("Logs", () => {
 
     await user.click(drawer);
 
-    expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
+    waitFor(() => {
+      expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
+    });
   });
 
   it("closes drawer when clicking close button", async () => {

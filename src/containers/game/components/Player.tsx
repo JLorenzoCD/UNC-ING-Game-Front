@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import { twJoin } from "tailwind-merge";
-import { RiGhostLine, RiSliceLine } from "@remixicon/react";
 import { useLogicGame } from "@/contexts/LogicGameContext";
 
+import { RiGhostLine, RiSliceLine } from "@remixicon/react";
 import Secrets from "./Secrets";
 import Sets from "./Sets";
 
+import { twJoin } from "tailwind-merge";
 import { getPlayerBorderClass, truncateName } from "../utils/player";
 
 import type { GamePlayer } from "@/types/player";
