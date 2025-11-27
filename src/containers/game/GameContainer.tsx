@@ -91,8 +91,8 @@ export default function GameContainer() {
       playEvent,
       setTargetCardEvent,
       executeCardEventActionToTarget,
-      executeSetActionToPlayerTarget,
-      executeSetActionToSecretTarget,
+      executeCardEventActionToPlayerTarget,
+      cardEventSelectSecret,
       clearCardEventStep,
 
       ...cardEvent
@@ -233,7 +233,10 @@ export default function GameContainer() {
       return;
     }
 
-    await executeSetActionToPlayerTarget(handleEndEvent, clearSelectedCards);
+    await executeCardEventActionToPlayerTarget(
+      handleEndEvent,
+      clearSelectedCards,
+    );
   };
 
   const handleSelectedSecret = async () => {
@@ -245,7 +248,7 @@ export default function GameContainer() {
       return;
     }
 
-    executeSetActionToSecretTarget();
+    cardEventSelectSecret();
   };
 
   // -- Valores memoizados --

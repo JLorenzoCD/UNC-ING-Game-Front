@@ -274,7 +274,7 @@ export function useCardEvent() {
     }
   };
 
-  const executeSetActionToPlayerTarget = async (
+  const executeCardEventActionToPlayerTarget = async (
     handleEndEvent: () => Promise<void>,
     clearSelectedCards: () => void,
   ) => {
@@ -377,19 +377,18 @@ export function useCardEvent() {
     }
   };
 
-  const executeSetActionToSecretTarget = () => {
+  const cardEventSelectSecret = () => {
     if (
       currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
       currentEventStep === EVENT_STEPS.SELECT_SECRET
     ) {
       if (selectedTargetSecret) {
-        // ¡Avanzamos al siguiente paso!
         setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
         toast.info("Now select a player.");
       } else {
         toast.error("You must select a secret first.");
       }
-      return; // Salir para no ejecutar la lógica de set event
+      return;
     }
   };
 
@@ -463,8 +462,8 @@ export function useCardEvent() {
     playEvent,
     setTargetCardEvent,
     executeCardEventActionToTarget,
-    executeSetActionToPlayerTarget,
-    executeSetActionToSecretTarget,
+    executeCardEventActionToPlayerTarget,
+    cardEventSelectSecret,
     clearCardEventStep,
   };
 }
