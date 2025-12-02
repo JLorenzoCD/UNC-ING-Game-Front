@@ -23,8 +23,8 @@ import LobbyContainer from "./containers/lobby/LobbyContainer";
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <BrowserRouter>
-      <PlayerProvider>
-        <HttpServiceProvider>
+      <HttpServiceProvider>
+        <PlayerProvider>
           <WebSocketServiceProvider>
             <Toaster position="top-left" richColors />
 
@@ -60,8 +60,8 @@ createRoot(document.getElementById("root")!).render(
               </Route>
             </Routes>
           </WebSocketServiceProvider>
-        </HttpServiceProvider>
-      </PlayerProvider>
+        </PlayerProvider>
+      </HttpServiceProvider>
     </BrowserRouter>
   </StrictMode>,
 );
