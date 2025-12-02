@@ -1,14 +1,26 @@
 import "@testing-library/jest-dom";
-import { render, screen, renderHook } from "@testing-library/react";
+import { render, screen, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { Player } from "@/types/player";
 import { PlayerProvider, usePlayer } from "./PlayerContext";
 
-const { mockUseNavigate, mockUseLocation } = vi.hoisted(() => ({
-  mockUseNavigate: vi.fn(),
-  mockUseLocation: vi.fn(),
-}));
+const { mockUseNavigate, mockUseLocation, mockUseHttpService } = vi.hoisted(
+  () => {
+    const mockHttpService = {
+      validatePlayer: vi.fn(),
+    };
+    const mockUseHttpService = vi.fn((): any => ({
+      httpService: mockHttpService,
+    }));
+
+    return {
+      mockUseNavigate: vi.fn(),
+      mockUseLocation: vi.fn(),
+      mockUseHttpService,
+    };
+  },
+);
 
 const renderTestChildWithProvider = () => {
   return render(
@@ -25,6 +37,11 @@ const reRenderTestChildWithProvider = (rerender: any) => {
     </PlayerProvider>,
   );
 };
+
+// Mock dependencies
+vi.mock("./HttpServiceContext", () => ({
+  useHttpService: mockUseHttpService,
+}));
 
 vi.mock("react-router", async (importActual) => {
   const mod = await importActual<typeof import("react-router")>();
@@ -74,12 +91,14 @@ describe("PlayerContext", () => {
 
       localStorage.setItem(
         "player",
-        JSON.stringify({ id: "1", name: "Test Player" }),
+        JSON.stringify({ id: crypto.randomUUID(), name: "Test Player" }),
       );
 
       renderTestChildWithProvider();
 
-      expect(mockUseNavigate).toHaveBeenCalledWith("/");
+      waitFor(() => {
+        expect(mockUseNavigate).toHaveBeenCalledWith("/");
+      });
     });
 
     it("does not redirect if player exists", () => {
