@@ -2,6 +2,7 @@ import type { UUID } from "@/types/common";
 
 const BACKEND_ENDPOINTS = {
   CREATE_PLAYER: "/players",
+  VALIDATE_PLAYER: (playerId: UUID) => `/players/${playerId}/validate`,
 
   GET_MATCHES: "/matches",
   CREATE_MATCHES: "/matches",

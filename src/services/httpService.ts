@@ -91,6 +91,17 @@ export function createHttpService() {
     return request<Player>(BACKEND_ENDPOINTS.CREATE_PLAYER, options);
   };
 
+  const validatePlayer = async (playerId: UUID) => {
+    const options: RequestInit = {
+      method: "GET",
+    };
+
+    return request<{ player_id: UUID }>(
+      BACKEND_ENDPOINTS.VALIDATE_PLAYER(playerId),
+      options,
+    );
+  };
+
   const createMatch = async (matchInput: MatchCreateInput): Promise<Match> => {
     const options = { method: "POST", body: JSON.stringify(matchInput) };
 
@@ -394,6 +405,7 @@ export function createHttpService() {
   return {
     request,
     createPlayer,
+    validatePlayer,
     createMatch,
     startMatch,
     cancelMatch,
