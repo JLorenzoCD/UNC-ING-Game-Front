@@ -8,7 +8,7 @@ import { PlayerProvider, usePlayer } from "./PlayerContext";
 const { mockUseNavigate, mockUseLocation, mockUseHttpService } = vi.hoisted(
   () => {
     const mockHttpService = {
-      validatePlayer: vi.fn(),
+      getPlayer: vi.fn(),
     };
     const mockUseHttpService = vi.fn((): any => ({
       httpService: mockHttpService,
