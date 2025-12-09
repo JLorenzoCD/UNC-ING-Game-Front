@@ -55,8 +55,8 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
             "La entidad Player almacenada en el localStorage es invalida",
           );
 
-        await httpService?.validatePlayer(player.id);
-        setPlayer(player);
+        const validatePlayer = await httpService?.validatePlayer(player.id);
+        setPlayer(validatePlayer);
       } catch (error) {
         console.error(
           "Error al cargar datos del jugador desde localStorage:",

@@ -96,7 +96,7 @@ export function createHttpService() {
       method: "GET",
     };
 
-    return request<{ player_id: UUID }>(
+    return request<Player>(
       BACKEND_ENDPOINTS.VALIDATE_PLAYER(playerId),
       options,
     );
