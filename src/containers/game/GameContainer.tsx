@@ -217,7 +217,8 @@ export default function GameContainer() {
   const handleSelectTargetEvent = (
     target: GamePlayer | GameSecret | MatchSet,
   ) => {
-    if (cardEvent.isInEvent) setTargetCardEvent(target);
+    if (cardEvent.isInEvent || pendingResponse.isPending)
+      setTargetCardEvent(target);
 
     if (setEvent.isSelectingSet) setTargeSetToDown(target);
 
