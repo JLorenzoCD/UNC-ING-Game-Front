@@ -250,9 +250,14 @@ export default function LogicGameContextProvider({
 
       if (
         pendingResponse.isPending &&
-        pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
+        pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS &&
+        checkPlayer.id !== player?.id
       ) {
-        return checkPlayer.id !== player?.id;
+        const isTargetPlayerAllSecretsReveled = secretsGroupByPlayerId[
+          checkPlayer.id
+        ].every((s) => s.is_revealed);
+
+        return !isTargetPlayerAllSecretsReveled;
       }
 
       // Se deben de poner todos los posibles eventos validos
@@ -262,6 +267,7 @@ export default function LogicGameContextProvider({
       return false;
     },
     [
+      secretsGroupByPlayerId,
       cardsGroupByPlayerId,
       hookCardEvent.currentEventCard,
       hookCardEvent.currentEventStep,
