@@ -224,13 +224,20 @@ export default function LogicGameContextProvider({
   const isSelectablePlayer = useCallback(
     (checkPlayer: GamePlayer) => {
       //* Validacion por eventos
+
       if (
-        hookCardEvent.currentEventCard?.name ===
-          GAME_EVENTS.CARDS_OFF_THE_TABLE ||
-        (hookCardEvent.currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
-          hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER)
+        checkPlayer.id !== player?.id &&
+        hookCardEvent.currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE
       ) {
-        return checkPlayer.id !== player?.id;
+        return true;
+      }
+
+      if (
+        checkPlayer.id !== player?.id &&
+        hookCardEvent.currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
+        hookCardEvent.currentEventStep === EVENT_STEPS.SELECT_PLAYER
+      ) {
+        return cardsGroupByPlayerId[checkPlayer.id].length !== 0;
       }
 
       if (
@@ -255,6 +262,7 @@ export default function LogicGameContextProvider({
       return false;
     },
     [
+      cardsGroupByPlayerId,
       hookCardEvent.currentEventCard,
       hookCardEvent.currentEventStep,
       hookSetEvent,
