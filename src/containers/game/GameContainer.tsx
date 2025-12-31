@@ -423,11 +423,7 @@ export default function GameContainer() {
         // Esto es relevante para permitirle
         // tomar cartas del draft sin impedir tomar de
         // la pila regular.
-        emptySlots === 1 ||
-        // Tomar una carta del draft
-        // estando en desgracia social cuenta al lìmite
-        // de tomar solo una carta por turno.
-        isInSocialDisgrace
+        emptySlots === 1
       ) {
         setHasTakenCards(true);
       }
@@ -449,10 +445,10 @@ export default function GameContainer() {
 
     if (emptyHandPositions.length === 0) return;
 
-    // En desgracia social, tomamos exactamente una carta.
-    const cardsToTake = isInSocialDisgrace
-      ? 1
-      : Math.min(emptyHandPositions.length, drawableCards.length);
+    const cardsToTake = Math.min(
+      emptyHandPositions.length,
+      drawableCards.length,
+    );
 
     // Tenemos que tomar los índices por detrás
     // de las cartas del draft (las que están en la pila).
