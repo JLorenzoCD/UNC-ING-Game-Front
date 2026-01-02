@@ -255,10 +255,24 @@ export default function GameContainer() {
   // -- Valores memoizados --
 
   const canTakeCards = useMemo(() => {
-    // El jugador puede tomar cartas si está en su turno.
-    // y su mano no está llena.
-    return !hasTakenCards && !isHandFull && isPlayerTurn;
-  }, [hasTakenCards, isHandFull, isPlayerTurn]);
+    // El jugador puede tomar cartas si está en su turno, su mano no está llena
+    // y no esta en medio de un evento.
+    const currPlayerInEvent =
+      setEvent.isInEvent ||
+      cardEvent.isInEvent ||
+      pendingResponse.isPending ||
+      notSoFastEvent.isActivate;
+
+    return !hasTakenCards && !isHandFull && isPlayerTurn && !currPlayerInEvent;
+  }, [
+    hasTakenCards,
+    isHandFull,
+    isPlayerTurn,
+    setEvent.isInEvent,
+    cardEvent.isInEvent,
+    pendingResponse.isPending,
+    notSoFastEvent.isActivate,
+  ]);
 
   const canDiscardCards = useMemo(() => {
     // El jugador puede descartar cartas si está en su turno.
@@ -363,6 +377,15 @@ export default function GameContainer() {
 
     if (isHandFull) {
       return "Your hand is full.";
+    }
+
+    if (
+      setEvent.isInEvent ||
+      cardEvent.isInEvent ||
+      pendingResponse.isPending ||
+      notSoFastEvent.isActivate
+    ) {
+      return "You cannot pick up a card while in the event.";
     }
 
     return "There was an error taking cards.";
