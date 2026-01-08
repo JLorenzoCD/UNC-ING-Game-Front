@@ -259,7 +259,7 @@ vi.mock("sonner", () => {
 });
 
 // Mock console.error to avoid noise in tests
-const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
 
 // Función auxiliar para obtener el handler por el nombre del evento
 const getEventHandler = (eventName: string) => {
@@ -571,6 +571,7 @@ describe("BasicGameContext", () => {
         playerSelectsOneOfHisSecrets: {
           isCurrPlayer: false,
           isSelecting: false,
+          players_id: [],
         },
         notSoFastEvent: {
           isActivate: false,

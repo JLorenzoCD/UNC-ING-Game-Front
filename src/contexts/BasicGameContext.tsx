@@ -124,9 +124,10 @@ export default function BasicGameContextProvider({
     null,
   );
   const [playerSelectsOneOfHisSecrets, setPlayerSelectsOneOfHisSecrets] =
-    useState<{ isCurrPlayer: boolean; isSelecting: boolean }>({
+    useState<{ isCurrPlayer: boolean; isSelecting: boolean; players_id: UUID[] }>({
       isCurrPlayer: false,
       isSelecting: false,
+      players_id: [],
     });
   const [hasFinishedAction, setPlayerFinishAction] = useState<boolean>(false);
 
@@ -566,9 +567,19 @@ export default function BasicGameContextProvider({
           player_id: secret.player_id,
         };
 
-        setPlayerSelectsOneOfHisSecrets({
-          isCurrPlayer: false,
-          isSelecting: false,
+        setPlayerSelectsOneOfHisSecrets((prev) => {
+          const newState = { ...prev }
+
+          if (secret.player_id == player?.id) {
+            newState.isCurrPlayer = false;
+            newState.isSelecting = false;
+
+            newState.players_id = newState.players_id.filter(player_id => player_id === player.id)
+          } else {
+            newState.players_id = newState.players_id.filter(player_id => player_id === secret.player_id)
+          }
+
+          return newState;
         });
 
         return updatedCards;
@@ -576,11 +587,11 @@ export default function BasicGameContextProvider({
     };
 
     const handleCurrPlayerSelectItsSecret = (targetPlayerId: {
-      target_player_id: UUID;
+      target_player_id: UUID[];
     }) => {
-      const isCurrPlayer = player?.id === targetPlayerId.target_player_id;
+      const isCurrPlayer = targetPlayerId.target_player_id.includes(player?.id as UUID);
 
-      setPlayerSelectsOneOfHisSecrets({ isCurrPlayer, isSelecting: true });
+      setPlayerSelectsOneOfHisSecrets({ isCurrPlayer, isSelecting: true, players_id: targetPlayerId.target_player_id });
 
       if (isCurrPlayer)
         toast(
