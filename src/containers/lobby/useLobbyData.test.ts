@@ -194,10 +194,12 @@ describe("useLobbyData", () => {
       expect(mockOn).toHaveBeenCalledWith(
         mockSocketsEvents.LOBBY_JOIN,
         expect.any(Function),
+        MOCK_MATCH_ID,
       );
       expect(mockOn).toHaveBeenCalledWith(
         mockSocketsEvents.MATCH,
         expect.any(Function),
+        MOCK_MATCH_ID,
       );
     });
 
@@ -206,10 +208,12 @@ describe("useLobbyData", () => {
     expect(mockOff).toHaveBeenCalledWith(
       mockSocketsEvents.LOBBY_JOIN,
       expect.any(Function),
+      MOCK_MATCH_ID,
     );
     expect(mockOff).toHaveBeenCalledWith(
       mockSocketsEvents.MATCH,
       expect.any(Function),
+      MOCK_MATCH_ID,
     );
   });
 

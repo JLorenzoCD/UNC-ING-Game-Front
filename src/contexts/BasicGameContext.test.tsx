@@ -259,7 +259,7 @@ vi.mock("sonner", () => {
 });
 
 // Mock console.error to avoid noise in tests
-const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => { });
+const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 // Función auxiliar para obtener el handler por el nombre del evento
 const getEventHandler = (eventName: string) => {
@@ -643,22 +643,27 @@ describe("BasicGameContext", () => {
         expect(mockOn).toHaveBeenCalledWith(
           mockSocketsEvents.CARDS,
           expect.any(Function),
+          expect.any(String),
         );
         expect(mockOn).toHaveBeenCalledWith(
           mockSocketsEvents.TURN,
           expect.any(Function),
+          expect.any(String),
         );
         expect(mockOn).toHaveBeenCalledWith(
           mockSocketsEvents.SET,
           expect.any(Function),
+          expect.any(String),
         );
         expect(mockOn).toHaveBeenCalledWith(
           mockSocketsEvents.SECRET,
           expect.any(Function),
+          expect.any(String),
         );
         expect(mockOn).toHaveBeenCalledWith(
           mockSocketsEvents.PLAYER_SECRET_REVEAL,
           expect.any(Function),
+          expect.any(String),
         );
       });
 
@@ -667,22 +672,27 @@ describe("BasicGameContext", () => {
       expect(mockOff).toHaveBeenCalledWith(
         mockSocketsEvents.CARDS,
         expect.any(Function),
+        expect.any(String),
       );
       expect(mockOff).toHaveBeenCalledWith(
         mockSocketsEvents.TURN,
         expect.any(Function),
+        expect.any(String),
       );
       expect(mockOff).toHaveBeenCalledWith(
         mockSocketsEvents.SET,
         expect.any(Function),
+        expect.any(String),
       );
       expect(mockOff).toHaveBeenCalledWith(
         mockSocketsEvents.SECRET,
         expect.any(Function),
+        expect.any(String),
       );
       expect(mockOff).toHaveBeenCalledWith(
         mockSocketsEvents.PLAYER_SECRET_REVEAL,
         expect.any(Function),
+        expect.any(String),
       );
     });
 
