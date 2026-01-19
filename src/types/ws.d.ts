@@ -65,7 +65,7 @@ export type EventSetPayload = MatchSet & { deleted_cards?: UUID[] };
 
 /** Payload del evento de revelación de secreto de jugador */
 export interface EventPlayerSecretRevealPayload {
-  target_player_id: UUID[]
+  target_player_id: UUID[];
 }
 
 /** Payload del evento de actualización de secreto */

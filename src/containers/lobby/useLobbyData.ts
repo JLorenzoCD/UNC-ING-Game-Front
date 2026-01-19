@@ -94,9 +94,17 @@ export function useLobbyData(matchId: UUID | null) {
         dispatch({ type: "FETCH_SUCCESS", payload: { match, players } });
 
         if (isConnected) {
-          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
-          wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
+          wsService.on(
+            BACKEND_SOCKETS_EVENTS.LOBBY_JOIN,
+            handleLobbyJoin,
+            matchId,
+          );
+          wsService.on(
+            BACKEND_SOCKETS_EVENTS.LOBBY_QUIT,
+            handleLobbyQuit,
+            matchId,
+          );
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
         }
       } catch (err) {
         console.error(err);
@@ -110,9 +118,17 @@ export function useLobbyData(matchId: UUID | null) {
 
     // Cleanup de WebSockets
     return () => {
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
-      wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.LOBBY_JOIN,
+        handleLobbyJoin,
+        matchId,
+      );
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.LOBBY_QUIT,
+        handleLobbyQuit,
+        matchId,
+      );
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
     };
     // ! DUDAS: state.match
   }, [httpService, wsService, isConnected, navigate, matchId]);

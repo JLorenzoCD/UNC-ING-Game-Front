@@ -124,7 +124,11 @@ export default function BasicGameContextProvider({
     null,
   );
   const [playerSelectsOneOfHisSecrets, setPlayerSelectsOneOfHisSecrets] =
-    useState<{ isCurrPlayer: boolean; isSelecting: boolean; players_id: UUID[] }>({
+    useState<{
+      isCurrPlayer: boolean;
+      isSelecting: boolean;
+      players_id: UUID[];
+    }>({
       isCurrPlayer: false,
       isSelecting: false,
       players_id: [],
@@ -568,15 +572,19 @@ export default function BasicGameContextProvider({
         };
 
         setPlayerSelectsOneOfHisSecrets((prev) => {
-          const newState = { ...prev }
+          const newState = { ...prev };
 
           if (secret.player_id == player?.id) {
             newState.isCurrPlayer = false;
             newState.isSelecting = false;
 
-            newState.players_id = newState.players_id.filter(player_id => player_id === player.id)
+            newState.players_id = newState.players_id.filter(
+              (player_id) => player_id === player.id,
+            );
           } else {
-            newState.players_id = newState.players_id.filter(player_id => player_id === secret.player_id)
+            newState.players_id = newState.players_id.filter(
+              (player_id) => player_id === secret.player_id,
+            );
           }
 
           return newState;
@@ -589,9 +597,15 @@ export default function BasicGameContextProvider({
     const handleCurrPlayerSelectItsSecret = (targetPlayerId: {
       target_player_id: UUID[];
     }) => {
-      const isCurrPlayer = targetPlayerId.target_player_id.includes(player?.id as UUID);
+      const isCurrPlayer = targetPlayerId.target_player_id.includes(
+        player?.id as UUID,
+      );
 
-      setPlayerSelectsOneOfHisSecrets({ isCurrPlayer, isSelecting: true, players_id: targetPlayerId.target_player_id });
+      setPlayerSelectsOneOfHisSecrets({
+        isCurrPlayer,
+        isSelecting: true,
+        players_id: targetPlayerId.target_player_id,
+      });
 
       if (isCurrPlayer)
         toast(
@@ -645,73 +659,93 @@ export default function BasicGameContextProvider({
       setLogs((currentLogs) => [...currentLogs, log]);
     };
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards, matchId);
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+    wsService.on(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn, matchId);
 
     wsService.on(
       BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
       handleEventMatchCompleted,
+      matchId,
     );
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+    wsService.on(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets, matchId);
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+    wsService.on(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets, matchId);
 
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
       handleCurrPlayerSelectItsSecret,
+      matchId,
     );
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+    wsService.on(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent, matchId);
 
     wsService.on(
       BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
       handleNotSoFastEvent,
+      matchId,
     );
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+    wsService.on(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent, matchId);
 
     wsService.on(
       BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
       handlePendingResponse,
+      matchId,
     );
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+    wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog, matchId);
 
     return () => {
-      wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards);
+      wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards, matchId);
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn);
+      wsService.off(BACKEND_SOCKETS_EVENTS.TURN, handleEventTurn, matchId);
 
       wsService.off(
         BACKEND_SOCKETS_EVENTS.MATCH_COMPLETED,
         handleEventMatchCompleted,
+        matchId,
       );
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets);
+      wsService.off(BACKEND_SOCKETS_EVENTS.SET, handleUpdateSets, matchId);
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.SECRET, handleUpdateSecrets);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.SECRET,
+        handleUpdateSecrets,
+        matchId,
+      );
 
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PLAYER_SECRET_REVEAL,
         handleCurrPlayerSelectItsSecret,
+        matchId,
       );
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.CARD_EVENT, handleCardEvent);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.CARD_EVENT,
+        handleCardEvent,
+        matchId,
+      );
 
       wsService.off(
         BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN,
         handleNotSoFastEvent,
+        matchId,
       );
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.CANCELED, handleCanceledEvent);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.CANCELED,
+        handleCanceledEvent,
+        matchId,
+      );
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog);
+      wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog, matchId);
 
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
         handlePendingResponse,
+        matchId,
       );
     };
   }, [matchId, wsService, isConnected, players, player, cards]);
