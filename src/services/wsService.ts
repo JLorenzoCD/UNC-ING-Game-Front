@@ -152,7 +152,7 @@ export function createWsService(playerId: string | null = null) {
   ) => {
     let eventToListen: string = event;
     if (match_id !== undefined) {
-      eventToListen = `${match_id}/${eventToListen}`;
+      eventToListen = `${eventToListen}/${match_id}`;
     }
 
     if (!listeners.has(eventToListen as keyof WebSocketEventMap)) {
@@ -185,7 +185,7 @@ export function createWsService(playerId: string | null = null) {
   ) => {
     let eventToListen: string = event;
     if (match_id !== undefined) {
-      eventToListen = `${match_id}/${eventToListen}`;
+      eventToListen = `${eventToListen}/${match_id}`;
     }
 
     const eventListeners = listeners.get(
