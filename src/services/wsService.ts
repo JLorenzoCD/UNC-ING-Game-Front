@@ -1,3 +1,4 @@
+import type { UUID } from "@/types/common";
 import type { WebSocketEventMap, WebSocketEventCallback } from "@/types/ws";
 
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -147,23 +148,31 @@ export function createWsService(playerId: string | null = null) {
   const on = <K extends keyof WebSocketEventMap>(
     event: K,
     callback: WebSocketEventCallback<K>,
+    match_id?: UUID,
   ) => {
-    if (!listeners.has(event)) {
-      listeners.set(event, []);
+    let eventToListen: string = event;
+    if (match_id !== undefined) {
+      eventToListen = `${match_id}/${eventToListen}`;
+    }
+
+    if (!listeners.has(eventToListen as keyof WebSocketEventMap)) {
+      listeners.set(eventToListen as keyof WebSocketEventMap, []);
     }
 
     // Forzamos no nulidad puesto que acabamos de inicializar el array si no existía.
-    const listener = listeners.get(event)!;
+    const listener = listeners.get(eventToListen as keyof WebSocketEventMap)!;
 
     // Procesar mensajes pendientes para este evento si es el primer listener
     if (listener.length === 0) {
-      const pending = messages.filter((message) => message.event === event);
+      const pending = messages.filter(
+        (message) => message.event === eventToListen,
+      );
 
       pending.forEach((message) => {
         callback(message.data as WebSocketEventMap[K]);
       });
 
-      messages = messages.filter((msg) => msg.event !== event);
+      messages = messages.filter((msg) => msg.event !== eventToListen);
     }
 
     listener.push(callback as WebSocketEventCallback<any>);
@@ -172,8 +181,16 @@ export function createWsService(playerId: string | null = null) {
   const off = <K extends keyof WebSocketEventMap>(
     event: K,
     callback: WebSocketEventCallback<K>,
+    match_id?: UUID,
   ) => {
-    const eventListeners = listeners.get(event);
+    let eventToListen: string = event;
+    if (match_id !== undefined) {
+      eventToListen = `${match_id}/${eventToListen}`;
+    }
+
+    const eventListeners = listeners.get(
+      eventToListen as keyof WebSocketEventMap,
+    );
     if (!eventListeners) return;
 
     const index = eventListeners.indexOf(
