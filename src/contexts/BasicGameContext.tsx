@@ -697,6 +697,8 @@ export default function BasicGameContextProvider({
 
     wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog, matchId);
 
+    wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
+
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards, matchId);
 
@@ -747,6 +749,8 @@ export default function BasicGameContextProvider({
         handlePendingResponse,
         matchId,
       );
+
+      wsService.send(BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
     };
   }, [matchId, wsService, isConnected, players, player, cards]);
 

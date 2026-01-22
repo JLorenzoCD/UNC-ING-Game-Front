@@ -69,6 +69,9 @@ const BACKEND_SOCKETS_EVENTS = {
   CANCELED: "event_cancelled",
   PENDING_RESPONSE: "pending_target_response",
   LOG: "new_log",
+
+  SUBSCRIBE_TO_MATCH_EVENTS: "subscribe_match",
+  UNSUBSCRIBE_TO_MATCH_EVENTS: "unsubscribe_match",
 } as const;
 
 export { BACKEND_ENDPOINTS, BACKEND_SOCKETS_EVENTS };

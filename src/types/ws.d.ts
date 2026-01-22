@@ -179,6 +179,13 @@ export interface EventPendingResponsePayload {
 
 type EventLogPayload = MatchLog;
 
+export interface EventSubscribeOrUnsubscribePayload {
+  /**
+ * La ID del match.
+ */
+  match_id: UUID;
+};
+
 /**
  * Mapa de tipos para eventos de WebSocket.
  * Asocia cada nombre de evento con el tipo de su payload correspondiente.
@@ -199,6 +206,8 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
   [BACKEND_SOCKETS_EVENTS.LOG]: EventLogPayload;
+  [BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS]: EventSubscribeOrUnsubscribePayload;
+  [BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS]: EventSubscribeOrUnsubscribePayload;
   connection: EventConnectionPayload;
   error: EventErrorPayload;
 }
