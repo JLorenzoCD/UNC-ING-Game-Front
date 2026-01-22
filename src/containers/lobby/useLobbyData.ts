@@ -104,6 +104,7 @@ export function useLobbyData(matchId: UUID | null) {
             handleLobbyQuit,
             matchId,
           );
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
           wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
 
           wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
@@ -130,6 +131,7 @@ export function useLobbyData(matchId: UUID | null) {
         handleLobbyQuit,
         matchId,
       );
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
 
       wsService.send(BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
