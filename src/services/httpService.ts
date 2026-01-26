@@ -109,6 +109,14 @@ export function createHttpService() {
     return request<MatchWithPlayerCount[]>(BACKEND_ENDPOINTS.GET_MATCHES);
   };
 
+  const getOngoingMatchesFromPlayer = async (
+    playerId: UUID,
+  ): Promise<MatchWithPlayerCount[]> => {
+    return request<MatchWithPlayerCount[]>(
+      BACKEND_ENDPOINTS.GET_MATCHES_FROM_PLAYER(playerId),
+    );
+  };
+
   const getMatch = async (matchId: UUID): Promise<MatchWithPlayerCount> => {
     return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
   };
@@ -407,6 +415,7 @@ export function createHttpService() {
     startMatch,
     cancelMatch,
     getMatches,
+    getOngoingMatchesFromPlayer,
     getMatch,
     joinMatch,
     quitMatch,

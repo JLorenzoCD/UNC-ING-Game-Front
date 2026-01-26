@@ -42,6 +42,10 @@ export function useMatchesData(): MatchesState {
 
       try {
         const matches = await httpService.getMatches();
+        const ongointMatches = await httpService.getOngoingMatchesFromPlayer(
+          player.id,
+        );
+
         const filteredMatches = matches.filter(
           (match) => match.status.toLocaleUpperCase() === "WAITING",
         );
