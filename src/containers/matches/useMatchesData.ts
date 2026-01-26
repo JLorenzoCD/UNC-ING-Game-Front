@@ -5,6 +5,7 @@ import {
   type MatchesState,
 } from "./matchesReducer";
 
+import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useWebSocketService } from "@/contexts/WebSocketServiceContext";
 
@@ -15,14 +16,25 @@ import type { MatchWithPlayerCount } from "@/types/match";
 export function useMatchesData(): MatchesState {
   const { httpService } = useHttpService();
   const { wsService, isConnected } = useWebSocketService();
+  const { player } = usePlayer();
 
   const [state, dispatch] = useReducer(matchesReducer, initialMatchesState);
 
   useEffect(() => {
-    if (httpService === null || wsService === null || !isConnected) return;
+    if (
+      httpService === null ||
+      wsService === null ||
+      !isConnected ||
+      player == null
+    )
+      return;
 
     const handleMatchEvents = (eventMatch: MatchWithPlayerCount) => {
       dispatch({ type: "AVAILABLE_MATCH_UPDATE", payload: eventMatch });
+    };
+
+    const handleOngoingMatchEvents = (eventMatch: MatchWithPlayerCount) => {
+      dispatch({ type: "AVAILABLE_ONGOING_MATCH_UPDATE", payload: eventMatch });
     };
 
     const init = async () => {
@@ -34,9 +46,16 @@ export function useMatchesData(): MatchesState {
           (match) => match.status.toLocaleUpperCase() === "WAITING",
         );
 
-        dispatch({ type: "FETCH_SUCCESS", payload: filteredMatches });
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { matches: filteredMatches, ongointMatches },
+        });
 
         wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchEvents);
+        wsService.on(
+          BACKEND_SOCKETS_EVENTS.ONGOING_MATCH,
+          handleOngoingMatchEvents,
+        );
       } catch (err) {
         console.error(err);
         dispatch({ type: "FETCH_ERROR" });
@@ -49,8 +68,12 @@ export function useMatchesData(): MatchesState {
     // Cleanup de WebSockets
     return () => {
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchEvents);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.ONGOING_MATCH,
+        handleOngoingMatchEvents,
+      );
     };
-  }, [httpService, wsService, isConnected]);
+  }, [httpService, wsService, isConnected, player]);
 
   return state;
 }

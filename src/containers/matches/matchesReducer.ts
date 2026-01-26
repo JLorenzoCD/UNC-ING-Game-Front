@@ -2,18 +2,27 @@ import type { MatchWithPlayerCount } from "@/types/match";
 
 export interface MatchesState {
   matches: MatchWithPlayerCount[];
+  ongointMatches: MatchWithPlayerCount[];
   loading: boolean;
   error: boolean;
 }
 
 export type MatchesAction =
   | { type: "FETCH_START" }
-  | { type: "FETCH_SUCCESS"; payload: MatchWithPlayerCount[] }
+  | {
+      type: "FETCH_SUCCESS";
+      payload: {
+        matches: MatchWithPlayerCount[];
+        ongointMatches: MatchWithPlayerCount[];
+      };
+    }
   | { type: "FETCH_ERROR" }
-  | { type: "AVAILABLE_MATCH_UPDATE"; payload: MatchWithPlayerCount };
+  | { type: "AVAILABLE_MATCH_UPDATE"; payload: MatchWithPlayerCount }
+  | { type: "AVAILABLE_ONGOING_MATCH_UPDATE"; payload: MatchWithPlayerCount };
 
 export const initialMatchesState: MatchesState = {
   matches: [],
+  ongointMatches: [],
   loading: true,
   error: false,
 };
@@ -29,7 +38,8 @@ export function matchesReducer(
     case "FETCH_SUCCESS":
       return {
         ...state,
-        matches: action.payload,
+        matches: action.payload.matches,
+        ongointMatches: action.payload.ongointMatches,
         loading: false,
         error: false,
       };
@@ -67,6 +77,45 @@ export function matchesReducer(
       } else if (matchStatus === "WAITING") {
         // Si no existe y su estado es 'WAITING', se añade a la lista
         return { ...state, matches: [...state.matches, eventMatch] };
+      }
+
+      return state;
+    }
+
+    case "AVAILABLE_ONGOING_MATCH_UPDATE": {
+      const eventMatch = action.payload;
+
+      const exists = state.ongointMatches.find(
+        (match) => match.id === eventMatch.id,
+      );
+      const matchStatus = eventMatch.status.toLocaleUpperCase();
+
+      if (exists) {
+        if (matchStatus === "COMPLETED") {
+          // Si el match existe y se cancelo o termino (status === 'COMPLETED'),
+          // se lo elimina de la lista de ongointMatches
+          return {
+            ...state,
+            ongointMatches: state.ongointMatches.filter(
+              (match) => match.id !== eventMatch.id,
+            ),
+          };
+        } else {
+          // Si el match existe y su estatus es diferente de 'COMPLETED', entonces
+          // se lo actualiza
+          return {
+            ...state,
+            ongointMatches: state.ongointMatches.map((match) =>
+              match.id === eventMatch.id ? eventMatch : match,
+            ),
+          };
+        }
+      } else if (matchStatus !== "COMPLETED") {
+        // Si no existe y su estado es deferente de 'COMPLETED', se añade a la lista
+        return {
+          ...state,
+          ongointMatches: [...state.ongointMatches, eventMatch],
+        };
       }
 
       return state;

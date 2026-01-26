@@ -107,7 +107,9 @@ export function useLobbyData(matchId: UUID | null) {
           wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
           wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
 
-          wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
+          wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, {
+            match_id: matchId,
+          });
         }
       } catch (err) {
         console.error(err);
@@ -134,8 +136,9 @@ export function useLobbyData(matchId: UUID | null) {
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
 
-      wsService.send(BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS, { match_id: matchId })
-
+      wsService.send(BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS, {
+        match_id: matchId,
+      });
     };
     // ! DUDAS: state.match
   }, [httpService, wsService, isConnected, navigate, matchId]);

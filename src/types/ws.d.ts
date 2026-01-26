@@ -181,10 +181,10 @@ type EventLogPayload = MatchLog;
 
 export interface EventSubscribeOrUnsubscribePayload {
   /**
- * La ID del match.
- */
+   * La ID del match.
+   */
   match_id: UUID;
-};
+}
 
 /**
  * Mapa de tipos para eventos de WebSocket.
@@ -195,6 +195,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.TURN]: EventTurnPayload;
   [BACKEND_SOCKETS_EVENTS.CARDS]: EventCardsPayload;
   [BACKEND_SOCKETS_EVENTS.MATCH]: EventMatchPayload;
+  [BACKEND_SOCKETS_EVENTS.ONGOING_MATCH]: EventMatchPayload;
   [BACKEND_SOCKETS_EVENTS.LOBBY_JOIN]: EventLobbyJoinPayload;
   [BACKEND_SOCKETS_EVENTS.LOBBY_QUIT]: EventLobbyQuitPayload;
   [BACKEND_SOCKETS_EVENTS.CARD_EVENT]: EventCardEventPayload;
