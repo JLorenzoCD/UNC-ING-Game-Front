@@ -27,6 +27,7 @@ import type { MatchSet } from "@/types/set";
 const {
   mockOn,
   mockOff,
+  mockSend,
   mockUseWebSocketService,
   mainToastFunction,
   mockSocketsEvents,
@@ -147,8 +148,9 @@ const {
   // Mock de WebSocket
   const mockOn = vi.fn();
   const mockOff = vi.fn();
+  const mockSend = vi.fn();
   const mockUseWebSocketService = vi.fn(() => ({
-    wsService: { on: mockOn, off: mockOff },
+    wsService: { on: mockOn, off: mockOff, send: mockSend },
     isConnected: true,
   }));
 
@@ -207,6 +209,7 @@ const {
   return {
     mockOn,
     mockOff,
+    mockSend,
     mockUseWebSocketService,
     mockUseHttpService,
     mockSocketsEvents,
@@ -306,7 +309,7 @@ describe("BasicGameContext", () => {
     mockUseHttpService.mockReturnValue({ httpService: mockHttpService });
 
     mockUseWebSocketService.mockReturnValue({
-      wsService: { on: mockOn, off: mockOff },
+      wsService: { on: mockOn, off: mockOff, send: mockSend },
       isConnected: true,
     });
   });

@@ -15,6 +15,7 @@ const {
   mockHttpService,
   mockOn,
   mockOff,
+  mockSend,
   mockUseWebSocketService,
   mockNavigate,
   mockSocketsEvents,
@@ -52,8 +53,9 @@ const {
   // Mock de WebSocket
   const mockOn = vi.fn();
   const mockOff = vi.fn();
+  const mockSend = vi.fn();
   const mockUseWebSocketService = vi.fn(() => ({
-    wsService: { on: mockOn, off: mockOff },
+    wsService: { on: mockOn, off: mockOff, send: mockSend },
     isConnected: true,
   }));
 
@@ -80,6 +82,7 @@ const {
     mockHttpService,
     mockOn,
     mockOff,
+    mockSend,
     mockUseWebSocketService,
     mockNavigate,
     mockSocketsEvents,
@@ -132,7 +135,7 @@ describe("useLobbyData", () => {
     mockGetMatchPlayers.mockResolvedValue(mockPlayers);
 
     mockUseWebSocketService.mockReturnValue({
-      wsService: { on: mockOn, off: mockOff },
+      wsService: { on: mockOn, off: mockOff, send: mockSend },
       isConnected: true,
     });
   });

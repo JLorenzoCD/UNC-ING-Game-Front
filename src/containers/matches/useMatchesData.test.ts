@@ -6,18 +6,24 @@ import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
 
 import { type MatchWithPlayerCount } from "@/types/match";
 import type { UUID } from "@/types/common";
+import type { Player } from "@/types/player";
 
 import { useMatchesData } from "./useMatchesData";
 
-const { mockUseHttpService, mockUseWebSocketService } = vi.hoisted(() => {
-  const mockUseHttpService = { useHttpService: vi.fn() };
-  const mockUseWebSocketService = { useWebSocketService: vi.fn() };
+const { mockUseHttpService, mockUseWebSocketService, mockUsePlayer } =
+  vi.hoisted(() => {
+    const mockUseHttpService = { useHttpService: vi.fn() };
+    const mockUseWebSocketService = { useWebSocketService: vi.fn() };
+    const mockUsePlayer = { usePlayer: vi.fn() };
 
-  return {
-    mockUseHttpService,
-    mockUseWebSocketService,
-  };
-});
+    return {
+      mockUseHttpService,
+      mockUseWebSocketService,
+      mockUsePlayer,
+    };
+  });
+
+vi.mock("@/contexts/PlayerContext", () => mockUsePlayer);
 
 vi.mock("@/contexts/HttpServiceContext", () => mockUseHttpService);
 
@@ -46,9 +52,17 @@ const mockMatches = [
   },
 ] as MatchWithPlayerCount[];
 
+const mockPlayer: Player = {
+  id: "123-uuid" as UUID,
+  name: "Hercule Poirot",
+  avatar: "poirot.png",
+  birthday: new Date("2000-01-01"),
+};
+
 const mockHttpService = {
   getMatches: vi.fn(),
   joinMatch: vi.fn(),
+  getOngoingMatchesFromPlayer: vi.fn(),
 };
 
 const mockWsService = {
@@ -61,12 +75,14 @@ const setUpMocks = (
   httpService: typeof mockHttpService | null = mockHttpService,
   wsService: typeof mockWsService | null = mockWsService,
   isConnected: boolean = true,
+  player: typeof mockPlayer | null = mockPlayer,
 ) => {
   mockUseHttpService.useHttpService.mockReturnValue({ httpService });
   mockUseWebSocketService.useWebSocketService.mockReturnValue({
     wsService,
     isConnected,
   });
+  mockUsePlayer.usePlayer.mockReturnValue({ player });
 };
 
 describe("useMatchesData", () => {
@@ -152,7 +168,7 @@ describe("useMatchesData", () => {
     const { unmount } = renderHook(() => useMatchesData());
 
     // Se realizó la suscripción inicial en los WebSocket
-    await waitFor(() => expect(mockWsService.on).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockWsService.on).toHaveBeenCalledTimes(2));
 
     unmount();
 

@@ -44,7 +44,7 @@ describe("matchesReducer", () => {
   it("handles FETCH_SUCCESS: sets matches and loading to false", () => {
     const action: MatchesAction = {
       type: "FETCH_SUCCESS",
-      payload: existingMatches,
+      payload: { matches: existingMatches, ongointMatches: [] },
     };
     const newState = matchesReducer(initialMatchesState, action);
 
