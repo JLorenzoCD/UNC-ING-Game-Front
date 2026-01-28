@@ -1,8 +1,11 @@
 import { RANGE_PLAYERS } from "./constants";
 
-import type { MatchWithPlayerCount } from "@/types/match";
+import type { MatchStatus, MatchWithPlayerCount } from "@/types/match";
 
-export function isValidMatch(match: MatchWithPlayerCount): boolean {
+export function isValidMatch(
+  match: MatchWithPlayerCount,
+  matchStatusValid: MatchStatus[],
+): boolean {
   const isValidName = !!match.name.trim();
 
   const isValidPlayerCount = match.min_players <= match.max_players;
@@ -20,7 +23,9 @@ export function isValidMatch(match: MatchWithPlayerCount): boolean {
 
   const isValidPlayerOrder = match.current_player_order < match.max_players;
 
-  const isWaiting = match.status.toUpperCase() === "WAITING";
+  const isValidStatus = matchStatusValid.includes(
+    match.status.toUpperCase() as MatchStatus,
+  );
 
   return (
     isValidName &&
@@ -29,6 +34,6 @@ export function isValidMatch(match: MatchWithPlayerCount): boolean {
     isValidMaxPlayersInRange &&
     isValidCurrentPlayerCount &&
     isValidPlayerOrder &&
-    isWaiting
+    isValidStatus
   );
 }

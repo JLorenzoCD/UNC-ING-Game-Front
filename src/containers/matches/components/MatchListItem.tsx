@@ -8,11 +8,12 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 import { isValidMatch } from "../utils";
 
 import type { UUID } from "@/types/common";
-import type { MatchWithPlayerCount } from "@/types/match";
+import type { MatchStatus, MatchWithPlayerCount } from "@/types/match";
 import { isUUID } from "@/utils";
 
 interface MatchListItemProps {
   match: MatchWithPlayerCount;
+  matchStatusValid?: MatchStatus[];
   joinMatch: (
     playerId: UUID,
     matchId: UUID,
@@ -24,15 +25,20 @@ interface MatchListItemProps {
 export default function MatchListItem({
   match,
   joinMatch,
+  matchStatusValid = ["WAITING"],
 }: MatchListItemProps) {
   const navigate = useNavigate();
 
   const { player } = usePlayer();
 
-  if (!isValidMatch(match)) return null;
+  if (!isValidMatch(match, matchStatusValid)) return null;
 
   const name =
     match.name.length < 35 ? match.name : match.name.substring(0, 32) + "...";
+
+  let matchStatus =
+    match.current_player_count >= match.min_players ? "🟢" : "🟡";
+  if (match.status.toUpperCase() === "IN_PROGRESS") matchStatus = "🔴";
 
   const handleClick = async () => {
     if (!player) {
@@ -44,10 +50,21 @@ export default function MatchListItem({
     try {
       const result = await joinMatch(player.id, match.id);
 
-      if (result && isUUID(result.match_id)) {
+      if (
+        result &&
+        isUUID(result.match_id) &&
+        match.status.toUpperCase() !== "COMPLETED"
+      ) {
         toast.info("You successfully joined the match.");
 
-        navigate(FRONTEND_PATHS.MATCH_LOBBY(result.match_id));
+        switch (match.status.toUpperCase()) {
+          case "WAITING":
+            navigate(FRONTEND_PATHS.MATCH_LOBBY(result.match_id));
+            break;
+          case "IN_PROGRESS":
+            navigate(FRONTEND_PATHS.MATCH_GAME(match.id));
+            break;
+        }
       } else {
         toast.error("Couldn't join the match, try another one.");
       }
@@ -73,8 +90,7 @@ export default function MatchListItem({
         </p>
         <p>-</p>
         <p>
-          {match.current_player_count >= match.min_players ? "🟢" : "🟡"}{" "}
-          {match.current_player_count}
+          {matchStatus} {match.current_player_count}
         </p>
 
         <Button className="ml-5" onClick={handleClick}>
