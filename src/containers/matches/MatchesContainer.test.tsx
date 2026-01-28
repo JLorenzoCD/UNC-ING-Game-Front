@@ -113,6 +113,7 @@ describe("MatchesContainer", () => {
   it("should render the match list and the create match button when loading is successful", async () => {
     mockUseMatchesData.useMatchesData.mockReturnValue({
       matches: mockMatches,
+      ongoingMatches: [],
       loading: false,
       error: false,
     });
