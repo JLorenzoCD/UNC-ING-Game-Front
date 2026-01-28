@@ -42,7 +42,7 @@ export function useMatchesData(): MatchesState {
 
       try {
         const matches = await httpService.getMatches();
-        const ongointMatches = await httpService.getOngoingMatchesFromPlayer(
+        const ongoingMatches = await httpService.getOngoingMatchesFromPlayer(
           player.id,
         );
 
@@ -52,7 +52,7 @@ export function useMatchesData(): MatchesState {
 
         dispatch({
           type: "FETCH_SUCCESS",
-          payload: { matches: filteredMatches, ongointMatches },
+          payload: { matches: filteredMatches, ongoingMatches },
         });
 
         wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchEvents);

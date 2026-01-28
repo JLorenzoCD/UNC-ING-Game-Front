@@ -2,7 +2,7 @@ import type { MatchWithPlayerCount } from "@/types/match";
 
 export interface MatchesState {
   matches: MatchWithPlayerCount[];
-  ongointMatches: MatchWithPlayerCount[];
+  ongoingMatches: MatchWithPlayerCount[];
   loading: boolean;
   error: boolean;
 }
@@ -13,7 +13,7 @@ export type MatchesAction =
       type: "FETCH_SUCCESS";
       payload: {
         matches: MatchWithPlayerCount[];
-        ongointMatches: MatchWithPlayerCount[];
+        ongoingMatches: MatchWithPlayerCount[];
       };
     }
   | { type: "FETCH_ERROR" }
@@ -22,7 +22,7 @@ export type MatchesAction =
 
 export const initialMatchesState: MatchesState = {
   matches: [],
-  ongointMatches: [],
+  ongoingMatches: [],
   loading: true,
   error: false,
 };
@@ -39,7 +39,7 @@ export function matchesReducer(
       return {
         ...state,
         matches: action.payload.matches,
-        ongointMatches: action.payload.ongointMatches,
+        ongoingMatches: action.payload.ongoingMatches,
         loading: false,
         error: false,
       };
@@ -85,7 +85,7 @@ export function matchesReducer(
     case "AVAILABLE_ONGOING_MATCH_UPDATE": {
       const eventMatch = action.payload;
 
-      const exists = state.ongointMatches.find(
+      const exists = state.ongoingMatches.find(
         (match) => match.id === eventMatch.id,
       );
       const matchStatus = eventMatch.status.toLocaleUpperCase();
@@ -93,10 +93,10 @@ export function matchesReducer(
       if (exists) {
         if (matchStatus === "COMPLETED") {
           // Si el match existe y se cancelo o termino (status === 'COMPLETED'),
-          // se lo elimina de la lista de ongointMatches
+          // se lo elimina de la lista de ongoingMatches
           return {
             ...state,
-            ongointMatches: state.ongointMatches.filter(
+            ongoingMatches: state.ongoingMatches.filter(
               (match) => match.id !== eventMatch.id,
             ),
           };
@@ -105,7 +105,7 @@ export function matchesReducer(
           // se lo actualiza
           return {
             ...state,
-            ongointMatches: state.ongointMatches.map((match) =>
+            ongoingMatches: state.ongoingMatches.map((match) =>
               match.id === eventMatch.id ? eventMatch : match,
             ),
           };
@@ -114,7 +114,7 @@ export function matchesReducer(
         // Si no existe y su estado es deferente de 'COMPLETED', se añade a la lista
         return {
           ...state,
-          ongointMatches: [...state.ongointMatches, eventMatch],
+          ongoingMatches: [...state.ongoingMatches, eventMatch],
         };
       }
 
