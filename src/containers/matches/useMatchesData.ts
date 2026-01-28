@@ -54,12 +54,6 @@ export function useMatchesData(): MatchesState {
           type: "FETCH_SUCCESS",
           payload: { matches: filteredMatches, ongoingMatches },
         });
-
-        wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchEvents);
-        wsService.on(
-          BACKEND_SOCKETS_EVENTS.ONGOING_MATCH,
-          handleOngoingMatchEvents,
-        );
       } catch (err) {
         console.error(err);
         dispatch({ type: "FETCH_ERROR" });
@@ -68,6 +62,12 @@ export function useMatchesData(): MatchesState {
     };
 
     init();
+
+    wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchEvents);
+    wsService.on(
+      BACKEND_SOCKETS_EVENTS.ONGOING_MATCH,
+      handleOngoingMatchEvents,
+    );
 
     // Cleanup de WebSockets
     return () => {

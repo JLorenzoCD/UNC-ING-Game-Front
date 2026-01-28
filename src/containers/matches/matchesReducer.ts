@@ -48,12 +48,7 @@ export function matchesReducer(
       return { ...state, loading: false, error: true };
 
     case "AVAILABLE_MATCH_UPDATE": {
-      let eventMatch = action.payload;
-
-      // Por el problema del mensaje que envía el server al evento "MATCH"
-      if (!("id" in eventMatch)) {
-        eventMatch = (eventMatch as any).status as MatchWithPlayerCount;
-      }
+      const eventMatch = action.payload;
 
       const exists = state.matches.find((match) => match.id === eventMatch.id);
       const matchStatus = eventMatch.status.toLocaleUpperCase();
@@ -67,11 +62,13 @@ export function matchesReducer(
           };
         } else {
           // Si el match existe y sigue en 'WAITING', se actualiza
+          const updateMatches = state.matches.map((match) =>
+            match.id === eventMatch.id ? eventMatch : match,
+          );
+
           return {
             ...state,
-            matches: state.matches.map((match) =>
-              match.id === eventMatch.id ? eventMatch : match,
-            ),
+            matches: updateMatches,
           };
         }
       } else if (matchStatus === "WAITING") {
@@ -103,11 +100,13 @@ export function matchesReducer(
         } else {
           // Si el match existe y su estatus es diferente de 'COMPLETED', entonces
           // se lo actualiza
+          const updateOngoingMatches = state.ongoingMatches.map((match) =>
+            match.id === eventMatch.id ? eventMatch : match,
+          );
+
           return {
             ...state,
-            ongoingMatches: state.ongoingMatches.map((match) =>
-              match.id === eventMatch.id ? eventMatch : match,
-            ),
+            ongoingMatches: updateOngoingMatches,
           };
         }
       } else if (matchStatus !== "COMPLETED") {

@@ -105,7 +105,11 @@ describe("ListMatches", () => {
 
   it('should show the "no games available" message when the matches list is empty and not loading', () => {
     render(
-      <MatchList title="title" emptyText="There are no games available, why don't you create one?" isLoading={false}>
+      <MatchList
+        title="title"
+        emptyText="There are no games available, why don't you create one?"
+        isLoading={false}
+      >
         {[].map((m) => (
           <MatchListItem key={m} match={m} />
         ))}
