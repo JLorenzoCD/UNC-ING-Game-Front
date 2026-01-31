@@ -576,15 +576,14 @@ export default function BasicGameContextProvider({
 
           if (secret.player_id == player?.id) {
             newState.isCurrPlayer = false;
-            newState.isSelecting = false;
+          }
 
-            newState.players_id = newState.players_id.filter(
-              (player_id) => player_id === player.id,
-            );
-          } else {
-            newState.players_id = newState.players_id.filter(
-              (player_id) => player_id === secret.player_id,
-            );
+          newState.players_id = newState.players_id.filter(
+            (player_id) => player_id !== secret.player_id,
+          );
+
+          if (newState.players_id.length === 0) {
+            newState.isSelecting = false;
           }
 
           return newState;
