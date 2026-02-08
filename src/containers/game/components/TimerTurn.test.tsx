@@ -82,7 +82,7 @@ const mockMatch: Match = {
 
 const baseuseBasicGameMock = {
   sets: [],
-  logs: [],
+  messages: [],
   secrets: [],
   cards: [],
   match: mockMatch,
@@ -158,7 +158,7 @@ beforeEach(() => {
 
   vi.mocked(useBasicGame).mockReturnValue({
     ...baseuseBasicGameMock,
-    logs: [
+    messages: [
       {
         event_type: "Turn",
         created_at: new Date().toISOString(),
@@ -416,7 +416,7 @@ describe("TimerTurn Component", () => {
         timer_turn: new Date().toISOString() as any,
       },
       players: [mockCurrGamePlayer, mockOtherGamePlayer],
-      logs: [
+      messages: [
         {
           event_type: "Turn",
           created_at: new Date().toISOString(),

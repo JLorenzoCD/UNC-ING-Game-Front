@@ -657,7 +657,7 @@ describe("GameContainer", () => {
 
     vi.mocked(useBasicGame).mockReturnValue({
       sets: [],
-      logs: [],
+      messages: [],
       secrets: mockSecrets,
       cards: mockCards,
       match: mockMatch,
@@ -807,7 +807,7 @@ describe("GameContainer", () => {
     it("should open discard modal when clicking on discard pile with discarded cards", async () => {
       vi.mocked(useBasicGame).mockReturnValue({
         sets: [],
-        logs: [],
+        messages: [],
         secrets: [],
         players: [],
         match: mockMatch,
@@ -887,7 +887,7 @@ describe("GameContainer", () => {
     it("should prevent hand actions when it's not the player's turn", () => {
       vi.mocked(useBasicGame).mockReturnValue({
         sets: [],
-        logs: [],
+        messages: [],
         secrets: [],
         cards: mockCards,
         players: [mockMatchPlayer],
@@ -1048,7 +1048,7 @@ describe("GameContainer", () => {
     it("should not call API when finishing turn without match", async () => {
       vi.mocked(useBasicGame).mockReturnValue({
         secrets: [],
-        logs: [],
+        messages: [],
         cards: mockCards,
         match: null,
         players: [],

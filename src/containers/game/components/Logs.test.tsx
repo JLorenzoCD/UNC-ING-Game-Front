@@ -8,12 +8,12 @@ import {
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { userEvent } from "@testing-library/user-event";
 
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 import Logs from "./Logs";
 
 const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
-  const mockLogs: MatchLog[] = [
+  const mockLogs: MatchMessage[] = [
     {
       id: "1",
       match_id: "match-1",
@@ -21,6 +21,7 @@ const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
       created_at: new Date("2025-11-09T10:00:00Z"),
       event_type: "Early Train To Paddington",
       player_id: crypto.randomUUID(),
+      is_system_msg: true,
     },
     {
       id: "2",
@@ -29,6 +30,7 @@ const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
       created_at: new Date("2025-11-09T10:05:00Z"),
       event_type: "Turn",
       player_id: crypto.randomUUID(),
+      is_system_msg: true,
     },
     {
       id: "3",
@@ -37,6 +39,7 @@ const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
       created_at: new Date("2025-11-09T10:10:00Z"),
       event_type: "Mr Satterthwaite",
       player_id: crypto.randomUUID(),
+      is_system_msg: true,
     },
   ];
 
@@ -56,11 +59,11 @@ describe("Logs", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockuseBasicGame.mockReturnValue({ logs: mockLogs });
+    mockuseBasicGame.mockReturnValue({ messages: mockLogs });
   });
 
   it("renders empty state when no logs available", () => {
-    mockuseBasicGame.mockReturnValue({ logs: [] });
+    mockuseBasicGame.mockReturnValue({ messages: [] });
     render(<Logs />);
 
     expect(screen.getByText("No logs available yet.")).toBeInTheDocument();

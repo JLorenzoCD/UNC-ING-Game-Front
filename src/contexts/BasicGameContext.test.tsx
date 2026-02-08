@@ -55,7 +55,7 @@ const {
     getMatchSecrets: vi.fn(),
     getMatchPlayers: vi.fn(),
     getMatchSets: vi.fn(),
-    getMatchLogs: vi.fn(),
+    getMatchMessages: vi.fn(),
   };
   const mockUseHttpService = vi.fn((): any => ({
     httpService: mockHttpService,
@@ -564,7 +564,7 @@ describe("BasicGameContext", () => {
         secrets: [],
         players: [],
         sets: [],
-        logs: [],
+        messages: [],
         isLoading: true,
         hasError: false,
         error: null,
