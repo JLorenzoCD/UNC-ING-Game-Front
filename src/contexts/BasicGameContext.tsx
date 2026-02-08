@@ -32,7 +32,7 @@ import type {
 } from "@/types/ws";
 import type { UUID } from "@/types/common";
 import { GAME_EVENTS } from "@/constants/game";
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 export interface GameContextType {
   match: Match | null;
@@ -41,7 +41,7 @@ export interface GameContextType {
   secrets: GameSecret[];
   players: GamePlayer[];
   sets: MatchSet[];
-  logs: MatchLog[];
+  messages: MatchMessage[];
 
   isLoading: boolean;
   hasError: boolean;
@@ -75,7 +75,7 @@ const BasicGameContext = createContext<GameContextType>({
   secrets: [],
   players: [],
   sets: [],
-  logs: [],
+  messages: [],
 
   isLoading: false,
   hasError: false,
@@ -168,7 +168,7 @@ export default function BasicGameContextProvider({
   const [secrets, setSecrets] = useState<GameSecret[]>([]);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [sets, setSets] = useState<MatchSet[]>([]);
-  const [logs, setLogs] = useState<MatchLog[]>([]);
+  const [messages, setMessage] = useState<MatchMessage[]>([]);
 
   const nsfTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -187,21 +187,22 @@ export default function BasicGameContextProvider({
     setIsLoading(true);
 
     try {
-      const [match, cards, secrets, players, sets, logs] = await Promise.all([
-        httpService.getMatch(matchId),
-        httpService.getMatchCards(matchId),
-        httpService.getMatchSecrets(matchId),
-        httpService.getMatchPlayers(matchId),
-        httpService.getMatchSets(matchId),
-        httpService.getMatchLogs(matchId),
-      ]);
+      const [match, cards, secrets, players, sets, messages] =
+        await Promise.all([
+          httpService.getMatch(matchId),
+          httpService.getMatchCards(matchId),
+          httpService.getMatchSecrets(matchId),
+          httpService.getMatchPlayers(matchId),
+          httpService.getMatchSets(matchId),
+          httpService.getMatchMessages(matchId),
+        ]);
 
       setMatch(match);
       setCards(cards);
       setSecrets(secrets);
       setPlayers(players);
       setSets(sets);
-      setLogs(logs);
+      setMessage(messages);
     } catch (error) {
       console.error("Error fetching match data:", error);
 
@@ -654,8 +655,19 @@ export default function BasicGameContextProvider({
       }
     };
 
-    const handleEventLog = (log: MatchLog) => {
-      setLogs((currentLogs) => [...currentLogs, log]);
+    const handleEventMessage = (msg: MatchMessage) => {
+      setMessage((prevMessages) => {
+        const newState = [...prevMessages];
+        const indexMsg = newState.findIndex((m) => m.id === msg.id);
+
+        if (indexMsg === -1) {
+          newState.push(msg);
+        } else {
+          newState[indexMsg] = msg;
+        }
+
+        return newState;
+      });
     };
 
     wsService.on(BACKEND_SOCKETS_EVENTS.CARDS, handleEventCards, matchId);
@@ -694,7 +706,7 @@ export default function BasicGameContextProvider({
       matchId,
     );
 
-    wsService.on(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog, matchId);
+    wsService.on(BACKEND_SOCKETS_EVENTS.MESSAGE, handleEventMessage, matchId);
 
     wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, {
       match_id: matchId,
@@ -743,7 +755,11 @@ export default function BasicGameContextProvider({
         matchId,
       );
 
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOG, handleEventLog, matchId);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.MESSAGE,
+        handleEventMessage,
+        matchId,
+      );
 
       wsService.off(
         BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE,
@@ -767,7 +783,7 @@ export default function BasicGameContextProvider({
       secrets,
       players,
       sets,
-      logs,
+      messages,
 
       isLoading,
       hasError,
@@ -789,7 +805,7 @@ export default function BasicGameContextProvider({
       secrets,
       players,
       sets,
-      logs,
+      messages,
       isLoading,
       hasError,
       error,

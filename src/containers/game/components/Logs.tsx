@@ -7,13 +7,13 @@ import { formatDistanceToNow } from "date-fns";
 
 import { RiCloseLine } from "@remixicon/react";
 
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 export default function Logs() {
-  const { logs } = useBasicGame();
+  const { messages } = useBasicGame();
   const [isOpen, setIsOpen] = useState(false);
 
-  const sortedLogs = [...logs].sort(
+  const sortedLogs = [...messages].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
@@ -87,7 +87,7 @@ export default function Logs() {
 }
 
 interface LogProps {
-  log: MatchLog;
+  log: MatchMessage;
   showDate?: boolean;
 }
 
@@ -102,13 +102,13 @@ function Log({ log, showDate = false }: LogProps) {
     <div
       data-testid="log-item"
       aria-details={type}
-      className="w-96 break-words text-start"
+      className="w-96 wrap-break-word text-start"
     >
       {showDate && (
         <div className="text-xs text-gray-500 mt-1">{ocurredAt}</div>
       )}
 
-      <p className="w-fit break-words">{message}</p>
+      <p className="w-fit wrap-break-word">{message}</p>
     </div>
   );
 }

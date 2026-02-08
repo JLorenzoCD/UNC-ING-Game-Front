@@ -5,7 +5,7 @@ import type { MatchSecret } from "./secret";
 import type { MatchSet } from "./set";
 import type { Player } from "./player";
 import { BACKEND_SOCKETS_EVENTS } from "@/constants/backend";
-import type { MatchLog } from "./log";
+import type { MatchMessage } from "./message";
 
 type MatchCompletedReason = "deck_finished" | "murderer_revealed";
 
@@ -177,7 +177,7 @@ export interface EventPendingResponsePayload {
   players_ids: UUID[];
 }
 
-type EventLogPayload = MatchLog;
+type EventMessagePayload = MatchMessage;
 
 export interface EventSubscribeOrUnsubscribePayload {
   /**
@@ -206,7 +206,7 @@ export interface WebSocketEventMap {
   [BACKEND_SOCKETS_EVENTS.CANCELLATION_WINDOW_OPEN]: EventNotSoFastPayload;
   [BACKEND_SOCKETS_EVENTS.CANCELED]: EventCanceledPayload;
   [BACKEND_SOCKETS_EVENTS.PENDING_RESPONSE]: EventPendingResponsePayload;
-  [BACKEND_SOCKETS_EVENTS.LOG]: EventLogPayload;
+  [BACKEND_SOCKETS_EVENTS.MESSAGE]: EventMessagePayload;
   [BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS]: EventSubscribeOrUnsubscribePayload;
   [BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS]: EventSubscribeOrUnsubscribePayload;
   connection: EventConnectionPayload;

@@ -15,7 +15,7 @@ import type {
   SetStolenData,
   SetUpdateData,
 } from "@/types/set";
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -179,8 +179,10 @@ export function createHttpService() {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
   };
 
-  const getMatchLogs = async (matchId: UUID): Promise<MatchLog[]> => {
-    return request<MatchLog[]>(BACKEND_ENDPOINTS.GET_MATCH_LOGS(matchId));
+  const getMatchMessages = async (matchId: UUID) => {
+    return request<MatchMessage[]>(
+      BACKEND_ENDPOINTS.GET_MATCH_MESSAGES(matchId),
+    );
   };
 
   const putTakeCards = async (
@@ -423,7 +425,7 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
-    getMatchLogs,
+    getMatchMessages,
     putTakeCards,
     putDiscardCards,
     putPassTurn,

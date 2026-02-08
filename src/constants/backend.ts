@@ -14,7 +14,7 @@ const BACKEND_ENDPOINTS = {
   GET_MATCH_SECRETS: (matchId: UUID) => `/matches/${matchId}/secrets`,
   GET_MATCH_PLAYERS: (matchId: UUID) => `/matches/${matchId}/players`,
   GET_MATCH_SETS: (matchId: UUID) => `/matches/${matchId}/sets`,
-  GET_MATCH_LOGS: (matchId: UUID) => `/matches/${matchId}/logs`,
+  GET_MATCH_MESSAGES: (matchId: UUID) => `/matches/${matchId}/messages`,
 
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
@@ -72,7 +72,7 @@ const BACKEND_SOCKETS_EVENTS = {
   CANCELLATION_WINDOW_OPEN: "cancellation_window_open",
   CANCELED: "event_cancelled",
   PENDING_RESPONSE: "pending_target_response",
-  LOG: "new_log",
+  MESSAGE: "message",
 
   SUBSCRIBE_TO_MATCH_EVENTS: "subscribe_match",
   UNSUBSCRIBE_TO_MATCH_EVENTS: "unsubscribe_match",

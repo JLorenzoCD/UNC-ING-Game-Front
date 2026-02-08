@@ -4,6 +4,7 @@
 export type MatchLogEventType =
   | "Player Join"
   | "Player Quit"
+  | "Player Send Message"
   | "Turn"
   | "Hercule Poirot"
   | "Miss Marple"
@@ -29,7 +30,7 @@ export type MatchLogEventType =
   | "Discard Cards"
   | "Take Cards";
 
-export interface MatchLog {
+export interface MatchMessage {
   /**
    * La ID del log.
    */
@@ -59,4 +60,9 @@ export interface MatchLog {
    * El tipo de evento del log.
    */
   event_type: MatchLogEventType;
+
+  /**
+   * Si es true, entonces es un mensaje del sistema, caso contrario, es de un jugador
+   */
+  is_system_msg: boolean;
 }
