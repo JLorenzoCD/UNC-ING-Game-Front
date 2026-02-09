@@ -22,7 +22,7 @@ import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
-import Logs from "./components/Logs";
+import Messages from "./components/Messages";
 
 import { GAME_EVENTS, EVENT_STEPS, GAME_RULES } from "@/constants/game";
 
@@ -683,7 +683,7 @@ export default function GameContainer() {
         data-testid="game-container"
         className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
-        <Logs />
+        <Messages />
 
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">

@@ -105,7 +105,7 @@ export default function Secret({
         />
       </div>
       {isSelfRevealed && (
-        <div className="absolute -top-[3px] -right-[3px] bg-red-500 rounded-full p-1.5 shadow-lg">
+        <div className="absolute -top-0.75 -right-0.75 bg-red-500 rounded-full p-1.5 shadow-lg">
           <RiEyeLine size={14} color="white" />
         </div>
       )}

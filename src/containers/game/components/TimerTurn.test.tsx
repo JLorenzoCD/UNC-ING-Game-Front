@@ -202,29 +202,33 @@ describe("Utility Functions", () => {
       NOW.getTime() - MOCK_TIME_TURN * 1000,
     ).toISOString();
 
-    const createLog = (type: string, date: string = NOW.toISOString()) =>
+    const createMsg = (type: string, date: string = NOW.toISOString()) =>
       ({ event_type: type, created_at: date }) as any;
 
     const createMatch = (timerTurn: string | null) =>
       ({ timer_turn: timerTurn }) as any;
 
-    it("should return false if there are no logs", () => {
+    it("should return false if there are no messages", () => {
       expect(isTimerExecuted(createMatch(NOW.toISOString()), [])).toBe(false);
     });
 
-    it("should return false if last log is not 'Turn'", () => {
-      const logs = [createLog("Action"), createLog("Draw")];
-      expect(isTimerExecuted(createMatch(NOW.toISOString()), logs)).toBe(false);
+    it("should return false if last msg is not 'Turn'", () => {
+      const messages = [createMsg("Action"), createMsg("Draw")];
+      expect(isTimerExecuted(createMatch(NOW.toISOString()), messages)).toBe(
+        false,
+      );
     });
 
-    it("should return true if last log is 'Turn' and timer_turn is still running (future time)", () => {
-      const logs = [createLog("Turn", NOW.toISOString())];
-      expect(isTimerExecuted(createMatch(NOW.toISOString()), logs)).toBe(true);
+    it("should return true if last msg is 'Turn' and timer_turn is still running (future time)", () => {
+      const messages = [createMsg("Turn", NOW.toISOString())];
+      expect(isTimerExecuted(createMatch(NOW.toISOString()), messages)).toBe(
+        true,
+      );
     });
 
-    it("should return false if last log is 'Turn' but timer_turn has expired (past time)", () => {
-      const logs = [createLog("Turn", NOW.toISOString())];
-      expect(isTimerExecuted(createMatch(PAST_TIME), logs)).toBe(false);
+    it("should return false if last msg is 'Turn' but timer_turn has expired (past time)", () => {
+      const messages = [createMsg("Turn", NOW.toISOString())];
+      expect(isTimerExecuted(createMatch(PAST_TIME), messages)).toBe(false);
     });
   });
 });

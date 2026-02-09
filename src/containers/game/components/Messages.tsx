@@ -9,35 +9,35 @@ import { RiCloseLine } from "@remixicon/react";
 
 import type { MatchMessage } from "@/types/message";
 
-export default function Logs() {
+export default function Messages() {
   const { messages } = useBasicGame();
   const [isOpen, setIsOpen] = useState(false);
 
-  const sortedLogs = [...messages].sort(
+  const sortedMsgs = [...messages].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
-  const lastLog = sortedLogs.at(0);
+  const lastMsg = sortedMsgs.at(0);
 
   return (
     <div
-      data-testid="logs-container"
+      data-testid="msgs-container"
       className={twMerge(
         "absolute top-2 right-2 min-w-sm p-2 bg-white rounded",
-        !lastLog && "opacity-50 cursor-default",
+        !lastMsg && "opacity-50 cursor-default",
       )}
     >
-      {lastLog ? (
+      {lastMsg ? (
         <button
           type="button"
           className="cursor-pointer"
           onClick={() => setIsOpen(true)}
         >
-          <Log log={lastLog} />
+          <Message msg={lastMsg} />
         </button>
       ) : (
-        <div className="text-gray-600">No logs available yet.</div>
+        <div className="text-gray-600">No messages available yet.</div>
       )}
 
       <AnimatePresence>
@@ -45,7 +45,7 @@ export default function Logs() {
           <motion.div
             tabIndex={-1}
             className="fixed inset-0 z-10 w-screen h-screen bg-black/50 backdrop-blur-[2px] flex justify-end"
-            data-testid="logs-drawer"
+            data-testid="msgs-drawer"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -61,7 +61,7 @@ export default function Logs() {
               className="bg-white min-w-96 h-full p-4 overflow-y-auto"
             >
               <div className="flex justify-between">
-                <h2 className="text-2xl font-bold mb-4">Match Logs</h2>
+                <h2 className="text-2xl font-bold mb-4">Match Messages</h2>
 
                 <button onClick={() => setIsOpen(false)}>
                   <RiCloseLine />
@@ -69,12 +69,12 @@ export default function Logs() {
               </div>
 
               <ul className="flex flex-col gap-y-2">
-                {sortedLogs.map((log) => (
+                {sortedMsgs.map((msg) => (
                   <li
-                    key={log.id}
+                    key={msg.id}
                     className="p-1 rounded border border-gray-300"
                   >
-                    <Log log={log} showDate />
+                    <Message msg={msg} showDate />
                   </li>
                 ))}
               </ul>
@@ -86,21 +86,21 @@ export default function Logs() {
   );
 }
 
-interface LogProps {
-  log: MatchMessage;
+interface MessageProps {
+  msg: MatchMessage;
   showDate?: boolean;
 }
 
-function Log({ log, showDate = false }: LogProps) {
-  const [type, message] = log.message.split(/\[.*?\]/);
+function Message({ msg, showDate = false }: MessageProps) {
+  const [type, message] = msg.message.split(/\[.*?\]/);
 
-  const ocurredAt = formatDistanceToNow(new Date(log.created_at), {
+  const ocurredAt = formatDistanceToNow(new Date(msg.created_at), {
     addSuffix: true,
   });
 
   return (
     <div
-      data-testid="log-item"
+      data-testid="msg-item"
       aria-details={type}
       className="w-96 wrap-break-word text-start"
     >

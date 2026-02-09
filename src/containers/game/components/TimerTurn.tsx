@@ -27,17 +27,17 @@ export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   }
 }
 
-export function isTimerExecuted(match: Match, logs: MatchMessage[]) {
-  const logsCopy = [...logs];
-  logsCopy.sort((a, b) => {
+export function isTimerExecuted(match: Match, messages: MatchMessage[]) {
+  const messagesCopy = [...messages];
+  messagesCopy.sort((a, b) => {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  if (logsCopy.length === 0) return false;
+  if (messagesCopy.length === 0) return false;
 
-  const lastLog = logsCopy[0];
+  const lastMsg = messagesCopy[0];
 
-  if (lastLog.event_type !== "Turn") return false;
+  if (lastMsg.event_type !== "Turn") return false;
 
   const turnTime = new Date(match.timer_turn as Date);
   turnTime.setSeconds(turnTime.getSeconds() + GAME_RULES.TIME_TURN);
@@ -80,10 +80,10 @@ export default function TimerTurn() {
     setShouldTimerBeRun(true);
 
     const turn_time = new Date(match.timer_turn);
-    const logStartTime = turn_time.getTime();
+    const msgStartTime = turn_time.getTime();
 
-    // Calcular el momento final: logStartTime + 60 segundos (en ms)
-    const endTime = logStartTime + GAME_RULES.TIME_TURN * 1000;
+    // Calcular el momento final: msgStartTime + 60 segundos (en ms)
+    const endTime = msgStartTime + GAME_RULES.TIME_TURN * 1000;
 
     const timerInterval = setInterval(async () => {
       const now = Date.now();

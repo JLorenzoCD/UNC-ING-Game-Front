@@ -750,9 +750,9 @@ describe("httpService", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("getMatchMessages fetches and returns match logs", async () => {
+  it("getMatchMessages fetches and returns match messages", async () => {
     const matchId = crypto.randomUUID();
-    const mockLogs: MatchMessage[] = [
+    const mockMessages: MatchMessage[] = [
       {
         id: crypto.randomUUID(),
         match_id: matchId,
@@ -775,7 +775,7 @@ describe("httpService", () => {
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: vi.fn().mockResolvedValueOnce(mockLogs),
+      json: vi.fn().mockResolvedValueOnce(mockMessages),
     });
 
     const result = await httpService.getMatchMessages(matchId);
@@ -789,7 +789,7 @@ describe("httpService", () => {
       },
     );
 
-    expect(result).toEqual(mockLogs);
+    expect(result).toEqual(mockMessages);
     expect(result).toHaveLength(2);
   });
 

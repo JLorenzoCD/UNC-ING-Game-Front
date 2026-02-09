@@ -10,10 +10,10 @@ import { userEvent } from "@testing-library/user-event";
 
 import type { MatchMessage } from "@/types/message";
 
-import Logs from "./Logs";
+import Messages from "./Messages";
 
-const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
-  const mockLogs: MatchMessage[] = [
+const { mockuseBasicGame, mockMessages } = vi.hoisted(() => {
+  const mockMessages: MatchMessage[] = [
     {
       id: "1",
       match_id: "match-1",
@@ -47,7 +47,7 @@ const { mockuseBasicGame, mockLogs } = vi.hoisted(() => {
 
   return {
     mockuseBasicGame,
-    mockLogs,
+    mockMessages,
   };
 });
 
@@ -55,23 +55,23 @@ vi.mock("@/contexts/BasicGameContext", () => ({
   useBasicGame: mockuseBasicGame,
 }));
 
-describe("Logs", () => {
+describe("Messages", () => {
   beforeEach(() => {
     vi.clearAllMocks();
 
-    mockuseBasicGame.mockReturnValue({ messages: mockLogs });
+    mockuseBasicGame.mockReturnValue({ messages: mockMessages });
   });
 
-  it("renders empty state when no logs available", () => {
+  it("renders empty state when no messages available", () => {
     mockuseBasicGame.mockReturnValue({ messages: [] });
-    render(<Logs />);
+    render(<Messages />);
 
-    expect(screen.getByText("No logs available yet.")).toBeInTheDocument();
-    expect(screen.getByTestId("logs-container")).toHaveClass("opacity-50");
+    expect(screen.getByText("No messages available yet.")).toBeInTheDocument();
+    expect(screen.getByTestId("msgs-container")).toHaveClass("opacity-50");
   });
 
-  it("displays most recent log in preview", () => {
-    render(<Logs />);
+  it("displays most recent message in preview", () => {
+    render(<Messages />);
 
     expect(
       screen.getByText(/has completed a detective set/),
@@ -82,40 +82,40 @@ describe("Logs", () => {
 
   it("opens drawer on button click", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
-    expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("msgs-drawer")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /completed/i }));
 
-    expect(screen.getByTestId("logs-drawer")).toBeInTheDocument();
-    expect(screen.getByText("Match Logs")).toBeInTheDocument();
+    expect(screen.getByTestId("msgs-drawer")).toBeInTheDocument();
+    expect(screen.getByText("Match Messages")).toBeInTheDocument();
   });
 
-  it("displays all logs in drawer sorted by most recent first", async () => {
+  it("displays all messages in drawer sorted by most recent first", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
 
-    const drawer = screen.getByTestId("logs-drawer");
-    const logItems = screen.getAllByTestId("log-item");
+    const drawer = screen.getByTestId("msgs-drawer");
+    const msgItems = screen.getAllByTestId("msg-item");
 
-    // One log in preview + 3 logs in drawer = 4 total
-    expect(logItems).toHaveLength(4);
+    // One msg in preview + 3 msgs in drawer = 4 total
+    expect(msgItems).toHaveLength(4);
 
-    // Check drawer logs (skip first which is the preview)
-    const drawerLogs = Array.from(
-      drawer.querySelectorAll('[data-testid="log-item"]'),
+    // Check drawer msgs (skip first which is the preview)
+    const drawerMsgs = Array.from(
+      drawer.querySelectorAll('[data-testid="msg-item"]'),
     );
-    expect(drawerLogs[0]).toHaveTextContent(/has completed a detective set/);
-    expect(drawerLogs[1]).toHaveTextContent(/has now the turn/);
-    expect(drawerLogs[2]).toHaveTextContent(/has played a card/);
+    expect(drawerMsgs[0]).toHaveTextContent(/has completed a detective set/);
+    expect(drawerMsgs[1]).toHaveTextContent(/has now the turn/);
+    expect(drawerMsgs[2]).toHaveTextContent(/has played a card/);
   });
 
-  it("shows timestamps in drawer logs", async () => {
+  it("shows timestamps in drawer messages", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
 
@@ -124,22 +124,22 @@ describe("Logs", () => {
 
   it("closes drawer when clicking backdrop", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
-    const drawer = screen.getByTestId("logs-drawer");
+    const drawer = screen.getByTestId("msgs-drawer");
     expect(drawer).toBeInTheDocument();
 
     await user.click(drawer);
 
     waitFor(() => {
-      expect(screen.queryByTestId("logs-drawer")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("msgs-drawer")).not.toBeInTheDocument();
     });
   });
 
   it("closes drawer when clicking close button", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
 
@@ -148,36 +148,36 @@ describe("Logs", () => {
 
     await user.click(closeButton!);
 
-    await waitForElementToBeRemoved(() => screen.queryByTestId("logs-drawer"));
+    await waitForElementToBeRemoved(() => screen.queryByTestId("msgs-drawer"));
   });
 
   it("does not close drawer when clicking inside drawer content", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
 
     const drawerContent =
-      screen.getByText("Match Logs").parentElement?.parentElement;
+      screen.getByText("Match Messages").parentElement?.parentElement;
     await user.click(drawerContent!);
 
-    expect(screen.getByTestId("logs-drawer")).toBeInTheDocument();
+    expect(screen.getByTestId("msgs-drawer")).toBeInTheDocument();
   });
 
   it("uses fixed positioning for modal overlay", async () => {
     const user = userEvent.setup();
-    render(<Logs />);
+    render(<Messages />);
 
     await user.click(screen.getByRole("button"));
 
-    const drawer = screen.getByTestId("logs-drawer");
+    const drawer = screen.getByTestId("msgs-drawer");
     expect(drawer).toHaveClass("fixed");
   });
 
   it("positions container absolutely in top-right corner", () => {
-    render(<Logs />);
+    render(<Messages />);
 
-    const container = screen.getByTestId("logs-container");
+    const container = screen.getByTestId("msgs-container");
     expect(container).toHaveClass("absolute", "top-2", "right-2");
   });
 });

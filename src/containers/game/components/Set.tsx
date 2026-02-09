@@ -102,7 +102,7 @@ export default function Set({
         <RiVipCrown2Fill
           color={set.quin_count === 1 ? "peru" : "gold"}
           size={30}
-          className="absolute -top-3 -left-3 -rotate-[20deg] z-2"
+          className="absolute -top-3 -left-3 -rotate-20 z-2"
         />
       )}
       <div className={twJoin(baseClasses, cardSize, boderClass)}>
