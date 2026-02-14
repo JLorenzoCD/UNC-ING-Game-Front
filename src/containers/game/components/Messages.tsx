@@ -1,24 +1,64 @@
-import { useState } from "react";
+import { useState, type ChangeEvent, type FormEvent } from "react";
 import { useBasicGame } from "@/contexts/BasicGameContext";
+import { useHttpService } from "@/contexts/HttpServiceContext";
+import { usePlayer } from "@/contexts/PlayerContext";
 
+import { toast } from "sonner";
 import { twMerge } from "tailwind-merge";
+
 import { AnimatePresence, motion } from "motion/react";
 import { formatDistanceToNow } from "date-fns";
-
 import { RiCloseLine } from "@remixicon/react";
+import Input from "@/components/Input";
+import Button from "@/components/Button";
 
 import type { MatchMessage } from "@/types/message";
 
 export default function Messages() {
-  const { messages } = useBasicGame();
+  const { messages, match } = useBasicGame();
+  const { httpService } = useHttpService();
+  const { player } = usePlayer();
+
   const [isOpen, setIsOpen] = useState(false);
+  const [userMessage, setUserMessage] = useState("");
 
   const sortedMsgs = [...messages].sort(
     (a, b) =>
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
-  const lastMsg = sortedMsgs.at(0);
+  const lastMsg = sortedMsgs.find((msg) => msg.is_system_msg);
+
+  const handleChangeUserMessage = (e: ChangeEvent<HTMLInputElement>) => {
+    setUserMessage(e.target.value);
+  };
+
+  const handleSendUserMessage = async (e: FormEvent<HTMLFormElement>) => {
+    if (httpService === null || player === null || match === null) return;
+
+    e.preventDefault();
+
+    if (userMessage.trim().length === 0) {
+      toast.error("You cannot send an empty message.");
+      return;
+    }
+
+    toast.info("The message is being sent.");
+    try {
+      await httpService.userSendMessage(
+        match.id,
+        player.id,
+        userMessage.trim(),
+      );
+
+      toast.success("The message has been sent successfully.");
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        "An unexpected error occurred while sending the message, please try again.",
+      );
+    }
+  };
 
   return (
     <div
@@ -67,6 +107,24 @@ export default function Messages() {
                   <RiCloseLine />
                 </button>
               </div>
+
+              <form
+                className="flex mb-2 gap-1"
+                onSubmit={handleSendUserMessage}
+              >
+                <Input
+                  type="text"
+                  placeholder="Your message..."
+                  value={userMessage}
+                  onChange={handleChangeUserMessage}
+                />
+                <Button
+                  type="submit"
+                  disabled={userMessage.trim().length === 0}
+                >
+                  Send
+                </Button>
+              </form>
 
               <ul className="flex flex-col gap-y-2">
                 {sortedMsgs.map((msg) => (
