@@ -409,6 +409,21 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const userSendMessage = async (
+    matchId: UUID,
+    playerId: UUID,
+    message: string,
+  ) => {
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        message: message,
+      }),
+    };
+    return request(BACKEND_ENDPOINTS.USER_SEND_MESSAGES(matchId), options);
+  };
+
   return {
     request,
     createPlayer,
@@ -439,5 +454,6 @@ export function createHttpService() {
     timeOutPlayerTurn,
     postPointYourSuspicions,
     postDeadCardFolly,
+    userSendMessage,
   };
 }

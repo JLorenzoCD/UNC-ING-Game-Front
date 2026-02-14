@@ -15,6 +15,7 @@ const BACKEND_ENDPOINTS = {
   GET_MATCH_PLAYERS: (matchId: UUID) => `/matches/${matchId}/players`,
   GET_MATCH_SETS: (matchId: UUID) => `/matches/${matchId}/sets`,
   GET_MATCH_MESSAGES: (matchId: UUID) => `/matches/${matchId}/messages`,
+  USER_SEND_MESSAGES: (matchId: UUID) => `/matches/${matchId}/messages`,
 
   JOIN_MATCH: (matchId: UUID, playerId: UUID) =>
     `/matches/${matchId}/join?player_id=${playerId}`,
