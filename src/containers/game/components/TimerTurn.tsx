@@ -28,7 +28,7 @@ export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
 }
 
 export function isTimerExecuted(match: Match, messages: MatchMessage[]) {
-  const messagesCopy = [...messages];
+  const messagesCopy = messages.filter((msg) => msg.is_system_msg);
   messagesCopy.sort((a, b) => {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
