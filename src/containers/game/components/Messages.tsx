@@ -27,7 +27,7 @@ export default function Messages() {
       new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
   );
 
-  const lastMsg = sortedMsgs.find((msg) => msg.is_system_msg);
+  const lastMsg = sortedMsgs.at(0);
 
   const handleChangeUserMessage = (e: ChangeEvent<HTMLInputElement>) => {
     setUserMessage(e.target.value);
@@ -52,6 +52,7 @@ export default function Messages() {
       );
 
       toast.success("The message has been sent successfully.");
+      setUserMessage("");
     } catch (err) {
       console.error(err);
       toast.error(
