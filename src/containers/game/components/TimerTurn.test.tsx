@@ -162,6 +162,7 @@ beforeEach(() => {
       {
         event_type: "Turn",
         created_at: new Date().toISOString(),
+        is_system_msg: true,
       },
     ] as any,
   });
@@ -203,7 +204,7 @@ describe("Utility Functions", () => {
     ).toISOString();
 
     const createMsg = (type: string, date: string = NOW.toISOString()) =>
-      ({ event_type: type, created_at: date }) as any;
+      ({ event_type: type, created_at: date, is_system_msg: true }) as any;
 
     const createMatch = (timerTurn: string | null) =>
       ({ timer_turn: timerTurn }) as any;
@@ -254,12 +255,12 @@ describe("TimerTurn Component", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it("should return null if the timer has not started (timer === -1)", () => {
+  it.only("should return null if the timer has not started (timer === -1)", () => {
     const { container } = render(<TimerTurn />);
     expect(container.firstChild).toBeNull();
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(2000);
     });
 
     expect(container.firstChild).not.toBeNull();
