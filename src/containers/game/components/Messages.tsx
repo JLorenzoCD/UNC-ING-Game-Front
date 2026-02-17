@@ -1,5 +1,4 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
-import { useBasicGame } from "@/contexts/BasicGameContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 
@@ -13,9 +12,14 @@ import Input from "@/components/Input";
 import Button from "@/components/Button";
 
 import type { MatchMessage } from "@/types/message";
+import type { Match } from "@/types/match";
 
-export default function Messages() {
-  const { messages, match } = useBasicGame();
+interface Props {
+  match: Match | null;
+  messages: MatchMessage[];
+}
+
+export default function Messages({ messages, match }: Props) {
   const { httpService } = useHttpService();
   const { player } = usePlayer();
 
