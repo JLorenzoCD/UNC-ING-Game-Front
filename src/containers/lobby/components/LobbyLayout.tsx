@@ -60,11 +60,10 @@ export default function LobbyLayout({
       </header>
 
       <main
-        className="relative flex-grow bg-cover bg-center flex justify-center items-center -z-20"
+        className="relative grow bg-cover bg-center flex justify-center items-center"
         style={{ backgroundImage: `url(${backgroundGame})` }}
       >
         <div className="absolute inset-0 bg-black opacity-45 -z-10"></div>
-
         <section>
           <div className="flex justify-center items-center flex-col mb-10 gap-3">
             <h1 className="text-6xl text-white text-center">
