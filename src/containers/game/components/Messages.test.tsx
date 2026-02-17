@@ -11,8 +11,21 @@ import { userEvent } from "@testing-library/user-event";
 import type { MatchMessage } from "@/types/message";
 
 import Messages from "./Messages";
+import type { Match } from "@/types/match";
+import type { UUID } from "@/types/common";
 
-const { mockuseBasicGame, mockMessages } = vi.hoisted(() => {
+const { mockMatch, mockMessages } = vi.hoisted(() => {
+  const mockMatch: Match = {
+    id: "match-1" as UUID,
+    min_players: 2,
+    max_players: 4,
+    name: "Test Match",
+    status: "IN_PROGRESS",
+    owner_id: crypto.randomUUID(),
+    current_player_order: 1,
+    timer_turn: new Date(),
+  };
+
   const mockMessages: MatchMessage[] = [
     {
       id: "1",
@@ -43,35 +56,26 @@ const { mockuseBasicGame, mockMessages } = vi.hoisted(() => {
     },
   ];
 
-  const mockuseBasicGame = vi.fn();
-
   return {
-    mockuseBasicGame,
     mockMessages,
+    mockMatch,
   };
 });
-
-vi.mock("@/contexts/BasicGameContext", () => ({
-  useBasicGame: mockuseBasicGame,
-}));
 
 describe("Messages", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    mockuseBasicGame.mockReturnValue({ messages: mockMessages });
   });
 
   it("renders empty state when no messages available", () => {
-    mockuseBasicGame.mockReturnValue({ messages: [] });
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={[]} />);
 
     expect(screen.getByText("No messages available yet.")).toBeInTheDocument();
     expect(screen.getByTestId("msgs-container")).toHaveClass("opacity-50");
   });
 
   it("displays most recent message in preview", () => {
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     expect(
       screen.getByText(/has completed a detective set/),
@@ -82,7 +86,7 @@ describe("Messages", () => {
 
   it("opens drawer on button click", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     expect(screen.queryByTestId("msgs-drawer")).not.toBeInTheDocument();
 
@@ -94,7 +98,7 @@ describe("Messages", () => {
 
   it("displays all messages in drawer sorted by most recent first", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
 
@@ -115,7 +119,7 @@ describe("Messages", () => {
 
   it("shows timestamps in drawer messages", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
 
@@ -124,7 +128,7 @@ describe("Messages", () => {
 
   it("closes drawer when clicking backdrop", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
     const drawer = screen.getByTestId("msgs-drawer");
@@ -139,7 +143,7 @@ describe("Messages", () => {
 
   it("closes drawer when clicking close button", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
 
@@ -153,7 +157,7 @@ describe("Messages", () => {
 
   it("does not close drawer when clicking inside drawer content", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
 
@@ -166,7 +170,7 @@ describe("Messages", () => {
 
   it("uses fixed positioning for modal overlay", async () => {
     const user = userEvent.setup();
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     await user.click(screen.getByRole("button"));
 
@@ -175,7 +179,7 @@ describe("Messages", () => {
   });
 
   it("positions container absolutely in top-right corner", () => {
-    render(<Messages />);
+    render(<Messages match={mockMatch} messages={mockMessages} />);
 
     const container = screen.getByTestId("msgs-container");
     expect(container).toHaveClass("absolute", "top-2", "right-2");
