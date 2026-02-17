@@ -1,9 +1,11 @@
 import type { MatchWithPlayerCount } from "@/types/match";
+import type { MatchMessage } from "@/types/message";
 import type { Player } from "@/types/player";
 
 export interface LobbyState {
   match: MatchWithPlayerCount | null;
   players: Player[];
+  messages: MatchMessage[];
   loading: boolean;
   error: boolean;
 }
@@ -12,12 +14,17 @@ export type LobbyAction =
   | { type: "FETCH_START" }
   | {
       type: "FETCH_SUCCESS";
-      payload: { match: MatchWithPlayerCount; players: Player[] };
+      payload: {
+        match: MatchWithPlayerCount;
+        players: Player[];
+        messages: MatchMessage[];
+      };
     }
   | { type: "FETCH_ERROR" }
   | { type: "PLAYER_JOINED"; payload: Player }
   | { type: "PLAYER_LEFT"; payload: Player }
   | { type: "PLAYERS_UPDATED"; payload: Player[] }
+  | { type: "NEW_MESSAGE"; payload: MatchMessage }
   | { type: "UPDATE_MATCH"; payload: MatchWithPlayerCount };
 
 export function lobbyReducer(
@@ -96,6 +103,23 @@ export function lobbyReducer(
         ...state,
         match: matchWithNewCount,
         players: action.payload,
+      };
+    }
+
+    case "NEW_MESSAGE": {
+      const updateMessage = [...state.messages];
+      const msg = action.payload;
+      const indexMsg = updateMessage.findIndex((m) => m.id === msg.id);
+
+      if (indexMsg === -1) {
+        updateMessage.push(msg);
+      } else {
+        updateMessage[indexMsg] = msg;
+      }
+
+      return {
+        ...state,
+        messages: updateMessage,
       };
     }
 

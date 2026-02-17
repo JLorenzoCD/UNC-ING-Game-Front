@@ -4,18 +4,19 @@ import { useLobbyData } from "./useLobbyData";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
+import Messages from "../game/components/Messages";
 import Loading from "@/components/Loading";
 import LobbyLayout from "./components/LobbyLayout";
 import PlayerCard, { EmptyPlayerPosition } from "./components/PlayerCard";
 
 import { FRONTEND_PATHS } from "@/constants/frontend";
 
+import { toast } from "sonner";
 import { isUUID } from "@/utils";
 import { fillAndShufflePlayers } from "./utils";
 import { handleApiError } from "@/utils/errorHandler";
 
 import type { UUID } from "@/types/common";
-import { toast } from "sonner";
 
 export default function LobbyContainer() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function LobbyContainer() {
 
   const { httpService } = useHttpService();
 
-  const { match, players, loading, error } = useLobbyData(
+  const { match, players, messages, loading, error } = useLobbyData(
     matchId as UUID | null,
   );
 
@@ -113,6 +114,8 @@ export default function LobbyContainer() {
       cancelGame={cancelGame}
       isOwner={player.id === match.owner_id}
     >
+      <Messages match={match} messages={messages} />
+
       {playersToView.map((p, index) =>
         p === null ? (
           <EmptyPlayerPosition key={`empty-${index}`} />
