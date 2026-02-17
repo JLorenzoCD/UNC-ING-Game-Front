@@ -255,7 +255,7 @@ describe("TimerTurn Component", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it.only("should return null if the timer has not started (timer === -1)", () => {
+  it("should return null if the timer has not started (timer === -1)", () => {
     const { container } = render(<TimerTurn />);
     expect(container.firstChild).toBeNull();
 
@@ -425,6 +425,7 @@ describe("TimerTurn Component", () => {
         {
           event_type: "Turn",
           created_at: new Date().toISOString(),
+          is_system_msg: true,
         },
       ] as any,
     });
