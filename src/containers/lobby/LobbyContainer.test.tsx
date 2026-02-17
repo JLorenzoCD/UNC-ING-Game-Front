@@ -169,6 +169,13 @@ vi.mock("./components/PlayerCard", () => ({
   )),
 }));
 
+vi.mock("../game/components/Messages", () => ({
+  default: vi.fn(() => <div data-testid="messages">Messages</div>),
+  EmptyPlayerPosition: vi.fn(() => (
+    <div data-testid="empty-position">Empty Slot</div>
+  )),
+}));
+
 vi.mock("./utils", () => ({
   fillAndShufflePlayers: mockFillAndShufflePlayers,
 }));

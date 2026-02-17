@@ -44,9 +44,11 @@ const {
   // Mock de HTTP
   const mockGetMatch = vi.fn().mockResolvedValue(mockMatch);
   const mockGetMatchPlayers = vi.fn().mockResolvedValue(mockPlayers);
+  const mockGetMatchMessages = vi.fn().mockResolvedValue([]);
   const mockHttpService = {
     getMatch: mockGetMatch,
     getMatchPlayers: mockGetMatchPlayers,
+    getMatchMessages: mockGetMatchMessages,
     startMatch: vi.fn(), // No se usa aquí, pero se mantiene para coherencia
   };
 
