@@ -39,6 +39,8 @@ const {
     owner_id: MOCK_OWNER_ID,
     current_player_count: 2,
     current_player_order: 0,
+    is_private: false,
+    timer_turn: null,
   } as MatchWithPlayerCount;
 
   const mockPlayers = [

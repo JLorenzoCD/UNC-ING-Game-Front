@@ -140,6 +140,7 @@ describe("CreateMatchForm", () => {
             name: mockUseCreateMatchForm.formData.name,
             min_players: parseInt(mockUseCreateMatchForm.formData.min_players),
             max_players: parseInt(mockUseCreateMatchForm.formData.max_players),
+            password: undefined,
           });
         },
     );

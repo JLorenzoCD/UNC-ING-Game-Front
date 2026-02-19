@@ -32,11 +32,13 @@ describe("useCreateMatchForm", () => {
       name: "",
       min_players: RANGE_PLAYERS.MIN.toString(),
       max_players: RANGE_PLAYERS.MAX.toString(),
+      password: "",
     });
     expect(result.current.formError).toEqual({
       name: "",
       min_players: "",
       max_players: "",
+      password: "",
     });
     expect(result.current.loading).toBe(false);
     expect(result.current.haveError).toBeFalsy();

@@ -312,6 +312,7 @@ describe("httpService", () => {
         max_players: 4,
         min_players: 2,
         owner_id: crypto.randomUUID(),
+        password: undefined,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -398,6 +399,7 @@ describe("httpService", () => {
         current_player_order: 0,
         current_player_count: 3,
         timer_turn: null,
+        is_private: false,
       };
 
       mockFetch.mockResolvedValueOnce({
