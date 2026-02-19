@@ -59,6 +59,18 @@ export default function CreateMatchForm({
             required
           />
         </label>
+        <label className="block my-5 font-medium">
+          <span className={formError.password ? "text-red-800" : ""}>
+            Password (OPTIONAL)
+          </span>{" "}
+          <Input
+            value={formData.password}
+            onChange={handleChange}
+            name="password"
+            type="password"
+            required={false}
+          />
+        </label>
         <div className="grid sm:grid-cols-2 sm:gap-6">
           <label className="block mb-2 font-medium">
             <span className={formError.min_players ? "text-red-800" : ""}>
@@ -91,12 +103,12 @@ export default function CreateMatchForm({
         </div>
       </section>
       <div className="flex gap-2">
-        <Link to={FRONTEND_PATHS.MATCH_LIST} className="flex-grow">
+        <Link to={FRONTEND_PATHS.MATCH_LIST} className="grow">
           <Button type="button" className="w-full" data-testid="cancel">
             Cancel
           </Button>
         </Link>
-        <Button type="submit" className="flex-grow" disabled={!!haveError}>
+        <Button type="submit" className="grow" disabled={!!haveError}>
           {loading ? "Loading..." : "Create"}
         </Button>
       </div>

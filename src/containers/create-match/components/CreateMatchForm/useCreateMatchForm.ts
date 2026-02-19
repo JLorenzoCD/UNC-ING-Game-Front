@@ -15,12 +15,14 @@ export default function useCreateMatchForm() {
     name: "",
     min_players: RANGE_PLAYERS.MIN.toString(),
     max_players: RANGE_PLAYERS.MAX.toString(),
+    password: "",
   });
 
   const [formError, setFormError] = useState<MatchFormError>({
     name: "",
     min_players: "",
     max_players: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState<boolean>(false);
@@ -58,6 +60,8 @@ export default function useCreateMatchForm() {
           name: formData.name.trim(),
           min_players,
           max_players,
+          password:
+            formData.password.length !== 0 ? formData.password : undefined,
         };
 
         setLoading(true);
