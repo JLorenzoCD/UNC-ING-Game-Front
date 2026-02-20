@@ -17,6 +17,7 @@ interface MatchListItemProps {
   joinMatch: (
     playerId: UUID,
     matchId: UUID,
+    password: string | null,
   ) => Promise<{
     match_id: UUID;
   }>;
@@ -47,8 +48,19 @@ export default function MatchListItem({
       return;
     }
 
+    let password: string | null = null;
+    const isPlayerInMatch = matchStatusValid.length !== 1;
+    if (!isPlayerInMatch && match.is_private) {
+      password = prompt(
+        "The match is private, please enter the password to enter.",
+        "",
+      );
+
+      if (password === null) return;
+    }
+
     try {
-      const result = await joinMatch(player.id, match.id);
+      const result = await joinMatch(player.id, match.id, password);
 
       if (
         result &&
@@ -71,9 +83,17 @@ export default function MatchListItem({
     } catch (err) {
       console.error(err);
 
-      toast.error(
-        `There was a problem joining game "${match.name}", please try again later.`,
-      );
+      if (
+        err instanceof Error &&
+        err.message.includes("400") &&
+        match.is_private
+      ) {
+        toast.error(`The password entered is invalid.`);
+      } else {
+        toast.error(
+          `There was a problem joining game "${match.name}", please try again later.`,
+        );
+      }
     }
   };
 
@@ -94,7 +114,7 @@ export default function MatchListItem({
         </p>
 
         <Button className="ml-5" onClick={handleClick}>
-          Join
+          {match.is_private ? "🔒️ " : ""} Join
         </Button>
       </span>
     </li>

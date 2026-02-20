@@ -124,8 +124,12 @@ export function createHttpService() {
   const joinMatch = async (
     playerId: UUID,
     matchId: UUID,
+    password: string | null,
   ): Promise<{ match_id: UUID }> => {
-    const options: RequestInit = { method: "POST" };
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({ password: password ?? undefined }),
+    };
 
     return request<{ match_id: UUID }>(
       BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
