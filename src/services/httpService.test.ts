@@ -431,7 +431,7 @@ describe("httpService", () => {
         json: vi.fn().mockResolvedValueOnce(expectedResponse),
       });
 
-      const result = await httpService.joinMatch(playerId, matchId);
+      const result = await httpService.joinMatch(playerId, matchId, null);
 
       expect(mockFetch).toHaveBeenCalledWith(
         `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
@@ -440,6 +440,7 @@ describe("httpService", () => {
           headers: {
             "Content-Type": "application/json",
           },
+          body: "{}",
         },
       );
 

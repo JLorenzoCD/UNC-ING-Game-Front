@@ -218,7 +218,7 @@ describe("MatchListItem", () => {
 
       await waitFor(() => {
         expect(joinMatch).toHaveBeenCalledTimes(1);
-        expect(joinMatch).toHaveBeenCalledWith(mockPlayerId, mockMatchId);
+        expect(joinMatch).toHaveBeenCalledWith(mockPlayerId, mockMatchId, null);
       });
     });
 
