@@ -1,8 +1,10 @@
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useMatchesData } from "./useMatchesData";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
 import { Link } from "react-router";
 import Button from "@/components/Button";
+import Input from "@/components/Input";
 import Loading from "@/components/Loading";
 import MatchList from "./components/MatchList";
 import MatchListItem from "./components/MatchListItem";
@@ -14,6 +16,26 @@ import type { UUID } from "@/types/common";
 export default function MatchesContainer() {
   const { httpService } = useHttpService();
   const { matches, ongoingMatches, loading } = useMatchesData();
+
+  const [seachMatches, setSeachMatches] = useState({
+    query: "",
+    matches,
+    ongoingMatches,
+  });
+
+  useEffect(() => {
+    // Si se actualizan matches o ongoingMatches, se vuelve a cargar los datos
+    // filtrando los valores según la query que estaba antes
+    setSeachMatches(({ query }) => ({
+      query,
+      matches: matches.filter((m) =>
+        m.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+      ongoingMatches: ongoingMatches.filter((m) =>
+        m.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+    }));
+  }, [matches, ongoingMatches]);
 
   if (loading) {
     return <Loading />;
@@ -32,6 +54,20 @@ export default function MatchesContainer() {
     };
   };
 
+  const handleInputSearch = (e: ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+
+    setSeachMatches(() => ({
+      query,
+      matches: matches.filter((m) =>
+        m.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+      ongoingMatches: ongoingMatches.filter((m) =>
+        m.name.toLowerCase().includes(query.toLowerCase()),
+      ),
+    }));
+  };
+
   return (
     <div data-testid="matches-container">
       <Link
@@ -41,15 +77,23 @@ export default function MatchesContainer() {
         <Button className="w-full">Create match</Button>
       </Link>
 
-      <div className="overflow-y-auto h-screen max-h-[75vh]">
-        {ongoingMatches.length ? (
+      <Input
+        className="mb-2 max-w-xl m-auto"
+        type="text"
+        placeholder="Search match by name..."
+        value={seachMatches.query}
+        onChange={handleInputSearch}
+      />
+
+      <div className="overflow-y-auto h-screen max-h-[75vh] pb-5">
+        {seachMatches.ongoingMatches.length ? (
           <MatchList
             title="List of matches you are involved in"
             emptyText="You have not entered any game"
             type="ONGOING_MATCH"
             isLoading={loading}
           >
-            {ongoingMatches.map((match) => (
+            {seachMatches.ongoingMatches.map((match) => (
               <MatchListItem
                 key={match.id}
                 match={match}
@@ -65,7 +109,7 @@ export default function MatchesContainer() {
           emptyText="There are no games available, why don't you create one?"
           isLoading={loading}
         >
-          {matches.map((match) => (
+          {seachMatches.matches.map((match) => (
             <MatchListItem
               key={match.id}
               match={match}
