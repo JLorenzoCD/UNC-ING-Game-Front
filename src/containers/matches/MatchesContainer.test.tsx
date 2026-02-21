@@ -84,6 +84,7 @@ describe("MatchesContainer", () => {
   it('should display "Loading..." when loading is in progress', () => {
     mockUseMatchesData.useMatchesData.mockReturnValue({
       matches: [],
+      ongoingMatches: [],
       loading: true,
       error: false,
     });
@@ -97,6 +98,7 @@ describe("MatchesContainer", () => {
   it("should display the connection error message when httpService is null", () => {
     mockUseMatchesData.useMatchesData.mockReturnValue({
       matches: [],
+      ongoingMatches: [],
       loading: false,
       error: false,
     });
