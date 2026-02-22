@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -83,7 +83,7 @@ export function useSetEvent() {
     playerSelectsOneOfHisSecrets,
     lastUpdatedSecretId,
     hasFinishedAction,
-  } = useGame();
+  } = useBasicGame();
   const { httpService } = useHttpService();
 
   const params = useParams();
@@ -91,7 +91,7 @@ export function useSetEvent() {
 
   const [setEvent, setSetEvent] = useState<SetEvent>(defaultStateSetEvent);
 
-  const isSetEventButtonDisabled = useMemo(() => {
+  const isSetEventPlaySetButtonDisabled = useMemo(() => {
     if (hasFinishedAction) return true;
 
     if (setEvent.canDownTheCardToASet && setEvent.isSelectingSet) return false;
@@ -690,23 +690,29 @@ export function useSetEvent() {
 
   return {
     setEvent,
-    isSetEventButtonDisabled,
-    isSetEventSelectSetButtonDisabled,
+    getSetCards,
+    clearSetEvent,
+    getTargetSetEvent,
+
     playSet,
     addDetectiveCardToSet,
     playStolenSet,
-    setTargetSet,
-    setTargeSetToDown,
+
     executeSetActionToTarget,
     executeFinishTurnSetEvent,
+
     isPlayerSelectableForSetEvent,
-    isOtherPlayerSecretSelectableForSetEvent,
-    isCurrPlayerSecretSelectableForSetEvent,
     isSetSelectableForSetEvent,
+    isCurrPlayerSecretSelectableForSetEvent,
+    isOtherPlayerSecretSelectableForSetEvent,
+
+    setTargetSet,
+    setTargeSetToDown,
+
     setEventToggleDisableButtonPlaySet,
     setEventToggleDisableButtonSelectSet,
-    getTargetSetEvent,
-    getSetCards,
-    clearSetEvent,
+
+    isSetEventPlaySetButtonDisabled,
+    isSetEventSelectSetButtonDisabled,
   };
 }

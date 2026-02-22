@@ -11,7 +11,7 @@ import type { GameSecret } from "@/types/secret";
 import type { MatchSet, SetCreationData, SetUpdateData } from "@/types/set";
 
 import { createHttpService, type HttpService } from "./httpService";
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 declare const global: any;
 
@@ -312,6 +312,7 @@ describe("httpService", () => {
         max_players: 4,
         min_players: 2,
         owner_id: crypto.randomUUID(),
+        password: undefined,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -356,6 +357,7 @@ describe("httpService", () => {
           min_players: 2,
           owner_id: crypto.randomUUID(),
           current_player_order: 0,
+          timer_turn: null,
         },
         {
           id: crypto.randomUUID(),
@@ -365,6 +367,7 @@ describe("httpService", () => {
           min_players: 2,
           owner_id: crypto.randomUUID(),
           current_player_order: 1,
+          timer_turn: new Date(),
         },
       ];
 
@@ -395,6 +398,8 @@ describe("httpService", () => {
         owner_id: crypto.randomUUID(),
         current_player_order: 0,
         current_player_count: 3,
+        timer_turn: null,
+        is_private: false,
       };
 
       mockFetch.mockResolvedValueOnce({
@@ -426,7 +431,7 @@ describe("httpService", () => {
         json: vi.fn().mockResolvedValueOnce(expectedResponse),
       });
 
-      const result = await httpService.joinMatch(playerId, matchId);
+      const result = await httpService.joinMatch(playerId, matchId, null);
 
       expect(mockFetch).toHaveBeenCalledWith(
         `http://localhost:8000/matches/${matchId}/join?player_id=${playerId}`,
@@ -435,6 +440,7 @@ describe("httpService", () => {
           headers: {
             "Content-Type": "application/json",
           },
+          body: "{}",
         },
       );
 
@@ -747,9 +753,9 @@ describe("httpService", () => {
     expect(result).toHaveLength(2);
   });
 
-  it("getMatchLogs fetches and returns match logs", async () => {
+  it("getMatchMessages fetches and returns match messages", async () => {
     const matchId = crypto.randomUUID();
-    const mockLogs: MatchLog[] = [
+    const mockMessages: MatchMessage[] = [
       {
         id: crypto.randomUUID(),
         match_id: matchId,
@@ -757,6 +763,7 @@ describe("httpService", () => {
         event_type: "Hercule Poirot",
         player_id: crypto.randomUUID(),
         message: "Player 1 played a set",
+        is_system_msg: true,
       },
       {
         id: crypto.randomUUID(),
@@ -765,18 +772,19 @@ describe("httpService", () => {
         event_type: "Discard Cards",
         player_id: crypto.randomUUID(),
         message: "Player 2 discarded cards",
+        is_system_msg: true,
       },
     ];
 
     mockFetch.mockResolvedValueOnce({
       ok: true,
-      json: vi.fn().mockResolvedValueOnce(mockLogs),
+      json: vi.fn().mockResolvedValueOnce(mockMessages),
     });
 
-    const result = await httpService.getMatchLogs(matchId);
+    const result = await httpService.getMatchMessages(matchId);
 
     expect(mockFetch).toHaveBeenCalledWith(
-      `http://localhost:8000/matches/${matchId}/logs`,
+      `http://localhost:8000/matches/${matchId}/messages`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -784,7 +792,7 @@ describe("httpService", () => {
       },
     );
 
-    expect(result).toEqual(mockLogs);
+    expect(result).toEqual(mockMessages);
     expect(result).toHaveLength(2);
   });
 

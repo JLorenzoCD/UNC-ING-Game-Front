@@ -33,7 +33,7 @@ vi.mock("./ListItemMatch", () => ({
 }));
 
 // Datos de prueba
-const testValidMatches: MatchWithPlayerCount[] = [
+const testValidMatches = [
   {
     id: crypto.randomUUID(),
     name: "Prueba 1",
@@ -54,9 +54,9 @@ const testValidMatches: MatchWithPlayerCount[] = [
     current_player_count: 3,
     current_player_order: 0,
   },
-];
+] as MatchWithPlayerCount[];
 
-const testInValidMatches: MatchWithPlayerCount[] = [
+const testInValidMatches = [
   {
     id: crypto.randomUUID(),
     name: "Invalid match item 1",
@@ -77,7 +77,7 @@ const testInValidMatches: MatchWithPlayerCount[] = [
     current_player_count: 3,
     current_player_order: 0,
   },
-];
+] as MatchWithPlayerCount[];
 
 describe("ListMatches", () => {
   beforeEach(() => {
@@ -87,7 +87,7 @@ describe("ListMatches", () => {
 
   it("should show the loading component when loading is true", () => {
     render(
-      <MatchList isLoading={true}>
+      <MatchList title="title" isLoading={true}>
         {[].map((m) => (
           <MatchListItem key={m} match={m} />
         ))}
@@ -105,7 +105,11 @@ describe("ListMatches", () => {
 
   it('should show the "no games available" message when the matches list is empty and not loading', () => {
     render(
-      <MatchList isLoading={false}>
+      <MatchList
+        title="title"
+        emptyText="There are no games available, why don't you create one?"
+        isLoading={false}
+      >
         {[].map((m) => (
           <MatchListItem key={m} match={m} />
         ))}
@@ -123,7 +127,7 @@ describe("ListMatches", () => {
 
   it("should render the correct ListItemMatch components when a list of matches is provided", () => {
     render(
-      <MatchList isLoading={false}>
+      <MatchList title="title" isLoading={false}>
         {[...testValidMatches, ...testInValidMatches].map((m) => (
           <MatchListItem key={m.id} match={m} />
         ))}

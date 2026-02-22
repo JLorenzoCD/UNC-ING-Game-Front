@@ -45,7 +45,7 @@ export interface MatchSecret {
    * El identificador único del jugador que tiene el secreto, en formato UUID v4
    * @example "550e8400-e29b-41d4-a716-446655440000"
    */
-  player_id: UUID | null;
+  player_id: UUID;
 
   /**
    * Indica si el secreto ha sido revelado

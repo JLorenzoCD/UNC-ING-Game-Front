@@ -15,6 +15,7 @@ const {
   mockHttpService,
   mockOn,
   mockOff,
+  mockSend,
   mockUseWebSocketService,
   mockNavigate,
   mockSocketsEvents,
@@ -33,6 +34,8 @@ const {
     owner_id: MOCK_OWNER_ID,
     current_player_count: 2,
     current_player_order: 0,
+    timer_turn: null,
+    is_private: false,
   } as MatchWithPlayerCount;
 
   const mockPlayers = [
@@ -43,17 +46,20 @@ const {
   // Mock de HTTP
   const mockGetMatch = vi.fn().mockResolvedValue(mockMatch);
   const mockGetMatchPlayers = vi.fn().mockResolvedValue(mockPlayers);
+  const mockGetMatchMessages = vi.fn().mockResolvedValue([]);
   const mockHttpService = {
     getMatch: mockGetMatch,
     getMatchPlayers: mockGetMatchPlayers,
+    getMatchMessages: mockGetMatchMessages,
     startMatch: vi.fn(), // No se usa aquí, pero se mantiene para coherencia
   };
 
   // Mock de WebSocket
   const mockOn = vi.fn();
   const mockOff = vi.fn();
+  const mockSend = vi.fn();
   const mockUseWebSocketService = vi.fn(() => ({
-    wsService: { on: mockOn, off: mockOff },
+    wsService: { on: mockOn, off: mockOff, send: mockSend },
     isConnected: true,
   }));
 
@@ -80,6 +86,7 @@ const {
     mockHttpService,
     mockOn,
     mockOff,
+    mockSend,
     mockUseWebSocketService,
     mockNavigate,
     mockSocketsEvents,
@@ -132,7 +139,7 @@ describe("useLobbyData", () => {
     mockGetMatchPlayers.mockResolvedValue(mockPlayers);
 
     mockUseWebSocketService.mockReturnValue({
-      wsService: { on: mockOn, off: mockOff },
+      wsService: { on: mockOn, off: mockOff, send: mockSend },
       isConnected: true,
     });
   });
@@ -194,10 +201,12 @@ describe("useLobbyData", () => {
       expect(mockOn).toHaveBeenCalledWith(
         mockSocketsEvents.LOBBY_JOIN,
         expect.any(Function),
+        MOCK_MATCH_ID,
       );
       expect(mockOn).toHaveBeenCalledWith(
         mockSocketsEvents.MATCH,
         expect.any(Function),
+        MOCK_MATCH_ID,
       );
     });
 
@@ -206,10 +215,12 @@ describe("useLobbyData", () => {
     expect(mockOff).toHaveBeenCalledWith(
       mockSocketsEvents.LOBBY_JOIN,
       expect.any(Function),
+      MOCK_MATCH_ID,
     );
     expect(mockOff).toHaveBeenCalledWith(
       mockSocketsEvents.MATCH,
       expect.any(Function),
+      MOCK_MATCH_ID,
     );
   });
 

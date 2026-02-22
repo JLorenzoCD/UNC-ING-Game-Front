@@ -116,17 +116,13 @@ describe("Sets", () => {
 
   it("should pass the correct props (type and quin_play) to each Set component", () => {
     const mockOnSelect = vi.fn();
-    const mockIsSelectable = vi.fn(() => true);
     const mockTarget = null;
-    const mockIsTargetSet = true;
 
     render(
       <Sets
         sets={playerSets}
         onSelectTargetEvent={mockOnSelect}
-        isSelectableSet={mockIsSelectable}
         target={mockTarget}
-        isTargetSet={mockIsTargetSet}
       />,
     );
 
@@ -134,9 +130,7 @@ describe("Sets", () => {
     const firstSetProps = MockSet.mock.calls[0][0];
     expect(firstSetProps.set).toBe(playerSets[0]);
     expect(firstSetProps.onSelectTargetEvent).toBe(mockOnSelect);
-    expect(firstSetProps.isSelectableSet).toBe(mockIsSelectable);
     expect(firstSetProps.target).toBe(mockTarget);
-    expect(firstSetProps.isTargetSet).toBe(mockIsTargetSet);
 
     // Verificamos las props pasadas a la segunda instancia (MISS MARPLE)
     const secondSetProps = MockSet.mock.calls[1][0];

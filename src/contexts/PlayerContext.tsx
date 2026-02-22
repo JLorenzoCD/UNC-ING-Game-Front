@@ -9,9 +9,12 @@ import {
   useMemo,
 } from "react";
 import { useNavigate, useLocation } from "react-router";
+import { useHttpService } from "./HttpServiceContext";
+
+import { FRONTEND_PATHS } from "@/constants/frontend";
 
 import type { Player } from "@/types/player";
-import { FRONTEND_PATHS } from "@/constants/frontend";
+import { isUUID } from "@/utils";
 
 interface PlayerContextType {
   player: Player | null;
@@ -28,6 +31,7 @@ interface PlayerProviderProps {
 }
 
 export function PlayerProvider({ children }: PlayerProviderProps) {
+  const { httpService } = useHttpService();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,23 +39,38 @@ export function PlayerProvider({ children }: PlayerProviderProps) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    try {
-      const storedPlayer = localStorage.getItem("player");
+    if (httpService === null) return;
 
-      if (storedPlayer) {
-        setPlayer(JSON.parse(storedPlayer));
+    const initFunc = async () => {
+      try {
+        const storedPlayer = localStorage.getItem("player");
+        if (!storedPlayer)
+          throw new Error(
+            "La entidad player almacenada en el localStorage es invalida",
+          );
+
+        const player = JSON.parse(storedPlayer) as Player;
+        if (!player.id && isUUID(player.id))
+          throw new Error(
+            "La entidad Player almacenada en el localStorage es invalida",
+          );
+
+        const validatePlayer = await httpService?.getPlayer(player.id);
+        setPlayer(validatePlayer);
+      } catch (error) {
+        console.error(
+          "Error al cargar datos del jugador desde localStorage:",
+          error,
+        );
+        // Limpiamos datos corruptos
+        localStorage.removeItem("player");
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error(
-        "Error al cargar datos del jugador desde localStorage:",
-        error,
-      );
-      // Limpiamos datos corruptos
-      localStorage.removeItem("player");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
+    };
+
+    initFunc();
+  }, [httpService]);
 
   useEffect(() => {
     if (player) {

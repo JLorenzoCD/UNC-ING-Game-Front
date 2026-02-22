@@ -11,10 +11,12 @@ import { FRONTEND_PATHS } from "@/constants/frontend";
 import type { UUID } from "@/types/common";
 import type { Player } from "@/types/player";
 import type { MatchWithPlayerCount } from "@/types/match";
+import type { MatchMessage } from "@/types/message";
 
 const initialState: LobbyState = {
   match: null,
   players: [],
+  messages: [],
   loading: false,
   error: false,
 };
@@ -82,21 +84,47 @@ export function useLobbyData(matchId: UUID | null) {
       }
     };
 
+    const handleEventMessage = (msg: MatchMessage) => {
+      dispatch({ type: "NEW_MESSAGE", payload: msg });
+    };
+
     const init = async () => {
       dispatch({ type: "FETCH_START" });
 
       try {
-        const [match, players] = await Promise.all([
+        const [match, players, messages] = await Promise.all([
           httpService.getMatch(matchId),
           httpService.getMatchPlayers(matchId),
+          httpService.getMatchMessages(matchId),
         ]);
 
-        dispatch({ type: "FETCH_SUCCESS", payload: { match, players } });
+        dispatch({
+          type: "FETCH_SUCCESS",
+          payload: { match, players, messages },
+        });
 
         if (isConnected) {
-          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-          wsService.on(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
+          wsService.on(
+            BACKEND_SOCKETS_EVENTS.LOBBY_JOIN,
+            handleLobbyJoin,
+            matchId,
+          );
+          wsService.on(
+            BACKEND_SOCKETS_EVENTS.LOBBY_QUIT,
+            handleLobbyQuit,
+            matchId,
+          );
           wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
+          wsService.on(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
+          wsService.on(
+            BACKEND_SOCKETS_EVENTS.MESSAGE,
+            handleEventMessage,
+            matchId,
+          );
+
+          wsService.send(BACKEND_SOCKETS_EVENTS.SUBSCRIBE_TO_MATCH_EVENTS, {
+            match_id: matchId,
+          });
         }
       } catch (err) {
         console.error(err);
@@ -110,9 +138,27 @@ export function useLobbyData(matchId: UUID | null) {
 
     // Cleanup de WebSockets
     return () => {
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_JOIN, handleLobbyJoin);
-      wsService.off(BACKEND_SOCKETS_EVENTS.LOBBY_QUIT, handleLobbyQuit);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.LOBBY_JOIN,
+        handleLobbyJoin,
+        matchId,
+      );
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.LOBBY_QUIT,
+        handleLobbyQuit,
+        matchId,
+      );
       wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart);
+      wsService.off(BACKEND_SOCKETS_EVENTS.MATCH, handleMatchStart, matchId);
+      wsService.off(
+        BACKEND_SOCKETS_EVENTS.MESSAGE,
+        handleEventMessage,
+        matchId,
+      );
+
+      wsService.send(BACKEND_SOCKETS_EVENTS.UNSUBSCRIBE_TO_MATCH_EVENTS, {
+        match_id: matchId,
+      });
     };
     // ! DUDAS: state.match
   }, [httpService, wsService, isConnected, navigate, matchId]);

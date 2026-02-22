@@ -1,9 +1,10 @@
 /**
  * @see /backend/src/app/matches/models.py
  */
-export type MatchLogEventType =
+export type MatchMsgEventType =
   | "Player Join"
   | "Player Quit"
+  | "Player Send Message"
   | "Turn"
   | "Hercule Poirot"
   | "Miss Marple"
@@ -29,9 +30,9 @@ export type MatchLogEventType =
   | "Discard Cards"
   | "Take Cards";
 
-export interface MatchLog {
+export interface MatchMessage {
   /**
-   * La ID del log.
+   * La ID del msg.
    */
   id: UUID;
 
@@ -41,22 +42,27 @@ export interface MatchLog {
   match_id: UUID;
 
   /**
-   * El mensaje del log.
+   * El mensaje del msg.
    */
   message: string;
 
   /**
-   * La fecha de creación del log.
+   * La fecha de creación del msg.
    */
   created_at: Date;
 
   /**
-   * La ID del jugador asociado al log (si aplica).
+   * La ID del jugador asociado al msg (si aplica).
    */
   player_id: UUID | null;
 
   /**
-   * El tipo de evento del log.
+   * El tipo de evento del msg.
    */
-  event_type: MatchLogEventType;
+  event_type: MatchMsgEventType;
+
+  /**
+   * Si es true, entonces es un mensaje del sistema, caso contrario, es de un jugador
+   */
+  is_system_msg: boolean;
 }

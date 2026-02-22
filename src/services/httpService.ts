@@ -15,7 +15,7 @@ import type {
   SetStolenData,
   SetUpdateData,
 } from "@/types/set";
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 const DEFAULT_BASE_URL = "http://localhost:8000";
 
@@ -91,6 +91,14 @@ export function createHttpService() {
     return request<Player>(BACKEND_ENDPOINTS.CREATE_PLAYER, options);
   };
 
+  const getPlayer = async (playerId: UUID) => {
+    const options: RequestInit = {
+      method: "GET",
+    };
+
+    return request<Player>(BACKEND_ENDPOINTS.GET_PLAYER(playerId), options);
+  };
+
   const createMatch = async (matchInput: MatchCreateInput): Promise<Match> => {
     const options = { method: "POST", body: JSON.stringify(matchInput) };
 
@@ -101,6 +109,14 @@ export function createHttpService() {
     return request<MatchWithPlayerCount[]>(BACKEND_ENDPOINTS.GET_MATCHES);
   };
 
+  const getOngoingMatchesFromPlayer = async (
+    playerId: UUID,
+  ): Promise<MatchWithPlayerCount[]> => {
+    return request<MatchWithPlayerCount[]>(
+      BACKEND_ENDPOINTS.GET_MATCHES_FROM_PLAYER(playerId),
+    );
+  };
+
   const getMatch = async (matchId: UUID): Promise<MatchWithPlayerCount> => {
     return request<MatchWithPlayerCount>(BACKEND_ENDPOINTS.GET_MATCH(matchId));
   };
@@ -108,8 +124,12 @@ export function createHttpService() {
   const joinMatch = async (
     playerId: UUID,
     matchId: UUID,
+    password: string | null,
   ): Promise<{ match_id: UUID }> => {
-    const options: RequestInit = { method: "POST" };
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({ password: password ?? undefined }),
+    };
 
     return request<{ match_id: UUID }>(
       BACKEND_ENDPOINTS.JOIN_MATCH(matchId, playerId),
@@ -163,8 +183,10 @@ export function createHttpService() {
     return request<MatchSet[]>(BACKEND_ENDPOINTS.GET_MATCH_SETS(matchId));
   };
 
-  const getMatchLogs = async (matchId: UUID): Promise<MatchLog[]> => {
-    return request<MatchLog[]>(BACKEND_ENDPOINTS.GET_MATCH_LOGS(matchId));
+  const getMatchMessages = async (matchId: UUID) => {
+    return request<MatchMessage[]>(
+      BACKEND_ENDPOINTS.GET_MATCH_MESSAGES(matchId),
+    );
   };
 
   const putTakeCards = async (
@@ -391,13 +413,30 @@ export function createHttpService() {
     return request(urlWithParams, options);
   };
 
+  const userSendMessage = async (
+    matchId: UUID,
+    playerId: UUID,
+    message: string,
+  ) => {
+    const options: RequestInit = {
+      method: "POST",
+      body: JSON.stringify({
+        player_id: playerId,
+        message: message,
+      }),
+    };
+    return request(BACKEND_ENDPOINTS.USER_SEND_MESSAGES(matchId), options);
+  };
+
   return {
     request,
     createPlayer,
+    getPlayer,
     createMatch,
     startMatch,
     cancelMatch,
     getMatches,
+    getOngoingMatchesFromPlayer,
     getMatch,
     joinMatch,
     quitMatch,
@@ -405,7 +444,7 @@ export function createHttpService() {
     getMatchCards,
     getMatchSecrets,
     getMatchSets,
-    getMatchLogs,
+    getMatchMessages,
     putTakeCards,
     putDiscardCards,
     putPassTurn,
@@ -419,5 +458,6 @@ export function createHttpService() {
     timeOutPlayerTurn,
     postPointYourSuspicions,
     postDeadCardFolly,
+    userSendMessage,
   };
 }

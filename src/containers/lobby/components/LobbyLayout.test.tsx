@@ -47,6 +47,8 @@ const mockMatch: MatchWithPlayerCount = {
   owner_id: "mock-owner-id" as UUID,
   current_player_order: 0,
   current_player_count: 1,
+  timer_turn: new Date(),
+  is_private: false,
 };
 const mockMatchNotEnoughPlayers: MatchWithPlayerCount = {
   ...mockMatch,

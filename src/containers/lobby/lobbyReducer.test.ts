@@ -19,6 +19,8 @@ const initialMatch: MatchWithPlayerCount = {
   owner_id: MOCK_PLAYER_1_ID,
   current_player_count: 2,
   current_player_order: 0,
+  timer_turn: null,
+  is_private: false,
 };
 
 const initialPlayers = [
@@ -29,6 +31,7 @@ const initialPlayers = [
 const initialState: LobbyState = {
   match: initialMatch,
   players: initialPlayers,
+  messages: [],
   loading: false,
   error: false,
 };
@@ -50,7 +53,7 @@ describe("lobbyReducer", () => {
 
     const newState = lobbyReducer(initialState, {
       type: "FETCH_SUCCESS",
-      payload: { match: newMatchData, players: newPlayers },
+      payload: { match: newMatchData, players: newPlayers, messages: [] },
     });
 
     expect(newState.loading).toBe(false);

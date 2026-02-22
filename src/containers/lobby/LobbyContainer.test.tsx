@@ -39,6 +39,8 @@ const {
     owner_id: MOCK_OWNER_ID,
     current_player_count: 2,
     current_player_order: 0,
+    is_private: false,
+    timer_turn: null,
   } as MatchWithPlayerCount;
 
   const mockPlayers = [
@@ -164,6 +166,13 @@ vi.mock("./components/PlayerCard", () => ({
       {player.name}
     </div>
   )),
+  EmptyPlayerPosition: vi.fn(() => (
+    <div data-testid="empty-position">Empty Slot</div>
+  )),
+}));
+
+vi.mock("../game/components/Messages", () => ({
+  default: vi.fn(() => <div data-testid="messages">Messages</div>),
   EmptyPlayerPosition: vi.fn(() => (
     <div data-testid="empty-position">Empty Slot</div>
   )),

@@ -1,27 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
+import { useLogicGame } from "@/contexts/LogicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { useHand } from "./hooks/useHand";
-import { useSetEvent } from "./hooks/useSetEvent";
 
-import type { UUID } from "@/types/common";
 import type { GameCard } from "@/types/card";
 import type { GamePlayer } from "@/types/player";
 import type { GameSecret } from "@/types/secret";
 import type { MatchSet } from "@/types/set";
-import type {
-  RegularAndDiscardEventPayload,
-  LookIntoTheAshesEventPayload,
-  AndThenThereWasOneMoreEventPayload,
-  CardsOffTheTableEventPayload,
-  AnotherVictimEventPayload,
-  CardTradeEventPayload,
-  DeadCardFollyEventPayload,
-} from "@/types/event";
-import type { EventPayload } from "@/types/event";
 
 import Hand from "./components/Hand";
 import Sets from "./components/Sets";
@@ -33,14 +22,9 @@ import DrawPile from "./components/DrawPile";
 import DiscardPile from "./components/DiscardPile";
 import HandActions from "./components/HandActions";
 import DiscardModal from "./components/DiscardModal";
-import Logs from "./components/Logs";
+import Messages from "./components/Messages";
 
-import {
-  GAME_EVENTS,
-  EVENT_STEPS,
-  GAME_RULES,
-  type EventStep,
-} from "@/constants/game";
+import { GAME_EVENTS, EVENT_STEPS, GAME_RULES } from "@/constants/game";
 
 import { handleApiError } from "@/utils/errorHandler";
 
@@ -54,19 +38,69 @@ export default function GameContainer() {
   const {
     match,
     secrets,
-    players,
-    cards,
     result,
     sets,
-    logs,
+    messages,
+
     hasFinishedAction,
     playerFinishActionTurn,
-    playerSelectsOneOfHisSecrets,
+
     notSoFastEvent,
     clearNotSoFastEvent,
     pendingResponse,
     clearPendingResponse,
-  } = useGame();
+  } = useBasicGame();
+
+  const {
+    isPlayerTurn,
+
+    cardsInDiscardPile,
+    cardsInDraft,
+    drawableCards,
+
+    playerSets,
+    playerSecrets,
+    isInSocialDisgrace,
+
+    hookSetEvent: {
+      setEvent,
+      clearSetEvent,
+
+      playSet,
+      addDetectiveCardToSet,
+      playStolenSet,
+
+      executeSetActionToTarget,
+      executeFinishTurnSetEvent,
+
+      setTargetSet,
+      setTargeSetToDown,
+
+      setEventToggleDisableButtonPlaySet,
+      setEventToggleDisableButtonSelectSet,
+
+      isSetEventPlaySetButtonDisabled,
+      isSetEventSelectSetButtonDisabled,
+    },
+
+    hookCardEvent: {
+      currentEventCard,
+      selectedTargetSet,
+      currentEventStep,
+      canSelectMeAsPlayer,
+
+      playEvent,
+      setTargetCardEvent,
+      executeCardEventActionToTarget,
+      executeCardEventActionToPlayerTarget,
+      cardEventSelectSecret,
+      clearCardEventStep,
+
+      ...cardEvent
+    },
+
+    getTarget,
+  } = useLogicGame();
 
   const {
     clearSelectedCards,
@@ -86,52 +120,12 @@ export default function GameContainer() {
     takeCards,
   } = useHand();
 
-  // Estados para eventos de cartas
-  const [currentEventCard, setCurrentEventCard] = useState<GameCard | null>(
-    null,
-  );
-  const [selectedTargetPlayer, setSelectedTargetPlayer] =
-    useState<GamePlayer | null>(null);
-  const [selectedTargetSecret, setSelectedTargetSecret] =
-    useState<GameSecret | null>(null);
-  const [selectedTargetSet, setSelectedTargetSet] = useState<MatchSet | null>(
-    null,
-  );
-  const [currentEventStep, setCurrentEventStep] = useState<EventStep>(null);
-
   const [discardModal, setDiscardModal] = useState({
     isOpen: false,
     isEventDiscard: false,
   });
 
-  const canSelectMeAsPlayer =
-    currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-    currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
-    selectedTargetPlayer === null;
-
-  const {
-    playSet,
-    addDetectiveCardToSet,
-    playStolenSet,
-    setEvent,
-    isSetEventButtonDisabled,
-    isSetEventSelectSetButtonDisabled,
-    setTargetSet,
-    setTargeSetToDown,
-    executeSetActionToTarget,
-    executeFinishTurnSetEvent,
-    isPlayerSelectableForSetEvent,
-    isOtherPlayerSecretSelectableForSetEvent,
-    isCurrPlayerSecretSelectableForSetEvent,
-    isSetSelectableForSetEvent,
-    setEventToggleDisableButtonPlaySet,
-    setEventToggleDisableButtonSelectSet,
-    getTargetSetEvent,
-    clearSetEvent,
-  } = useSetEvent();
-
   // -- Utilidades --
-
   const handleSelectDirection = (direction: "LEFT" | "RIGHT") => {
     handleEndEvent(undefined, direction);
   };
@@ -224,57 +218,8 @@ export default function GameContainer() {
   const handleSelectTargetEvent = (
     target: GamePlayer | GameSecret | MatchSet,
   ) => {
-    // Eventos de cartas
-    if (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE) {
-      if (
-        currentEventStep === EVENT_STEPS.SELECT_SECRET &&
-        "secret_id" in target
-      ) {
-        setSelectedTargetSecret(target as GameSecret);
-        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
-        return;
-      } else if (
-        currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
-        "avatar" in target
-      ) {
-        setSelectedTargetPlayer(target as GamePlayer);
-        return;
-      }
-    }
-
-    if (
-      pendingResponse.isPending &&
-      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS &&
-      "avatar" in target
-    ) {
-      setSelectedTargetPlayer(target as GamePlayer);
-      return;
-    }
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE &&
-      "avatar" in target
-    ) {
-      setSelectedTargetPlayer(target as GamePlayer);
-      return;
-    }
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
-      currentEventStep === EVENT_STEPS.SELECT_PLAYER &&
-      "avatar" in target
-    ) {
-      setSelectedTargetPlayer(target as GamePlayer);
-      return;
-    }
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
-      "quin_play" in target
-    ) {
-      setSelectedTargetSet(target as MatchSet);
-      return;
-    }
+    if (cardEvent.isInEvent || pendingResponse.isPending)
+      setTargetCardEvent(target);
 
     if (setEvent.isSelectingSet) setTargeSetToDown(target);
 
@@ -282,320 +227,58 @@ export default function GameContainer() {
   };
 
   const handleSelectedPlayer = async () => {
-    if (
-      (currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
-        currentEventCard?.name === GAME_EVENTS.CARD_TRADE) &&
-      currentEventStep === EVENT_STEPS.SELECT_PLAYER
-    ) {
-      if (selectedTargetPlayer) {
-        await handleEndEvent();
-      } else {
-        toast.error("You must select a player first.");
-      }
-      return; // Importante: Salir después de manejar el evento de carta
-    }
-
-    if (
-      pendingResponse.isPending &&
-      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
-    ) {
-      if (
-        !selectedTargetPlayer ||
-        !httpService ||
-        !player ||
-        !match ||
-        !pendingResponse.eventId
-      ) {
-        toast.error("You must select a player first.");
-        return;
-      }
-
-      try {
-        await httpService.postPointYourSuspicions(
-          match.id,
-          player.id,
-          pendingResponse.eventId,
-          selectedTargetPlayer.id,
-        );
-
-        toast.success("Your suspicion has been recorded.");
-        clearPendingResponse();
-        setSelectedTargetPlayer(null);
-      } catch (error) {
-        handleApiError(error, "Error registering suspicion");
-      }
-      return;
-    }
-
     if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
       playerFinishActionTurn();
-    } else if (canSelectMeAsPlayer) {
-      const cardToUse = currentEventCard;
-
-      if (
-        !httpService ||
-        !player ||
-        !match ||
-        !cardToUse ||
-        !selectedTargetSecret
-      ) {
-        return;
-      }
-
-      const eventPayload = {
-        target_secret_id: selectedTargetSecret.id,
-        target_player_id: player.id,
-      } as AndThenThereWasOneMoreEventPayload;
-
-      setSelectedTargetSecret(null);
-      setCurrentEventStep(null);
-
-      try {
-        // Llamada a la API para jugar el evento
-        await httpService.postEvent(
-          match.id,
-          player.id,
-          cardToUse.id,
-          eventPayload,
-        );
-
-        clearSelectedCards();
-      } catch (error) {
-        handleApiError(error, "Error al ejecutar el evento");
-      }
-    }
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-      currentEventStep === EVENT_STEPS.SELECT_PLAYER
-    ) {
-      if (
-        (selectedTargetPlayer || canSelectMeAsPlayer) &&
-        selectedTargetSecret
-      ) {
-        await handleEndEvent();
-      } else {
-        toast.error("You must select a secret and a player first.");
-      }
       return;
     }
+
+    await executeCardEventActionToPlayerTarget(
+      handleEndEvent,
+      clearSelectedCards,
+    );
   };
 
   const handleSelectedSecret = async () => {
-    if (
-      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-      currentEventStep === EVENT_STEPS.SELECT_SECRET
-    ) {
-      if (selectedTargetSecret) {
-        // ¡Avanzamos al siguiente paso!
-        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
-        toast.info("Now select a player.");
-      } else {
-        toast.error("You must select a secret first.");
-      }
-      return; // Salir para no ejecutar la lógica de set event
-    }
-
     if (setEvent.isInEvent) {
       const ok = await executeSetActionToTarget();
       if (!ok) return;
 
       playerFinishActionTurn();
-    }
-  };
-
-  const isSelectablePlayer = (checkPlayer: GamePlayer) => {
-    //* Validacion por eventos
-    if (
-      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
-      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
-        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
-    ) {
-      return checkPlayer.id !== player?.id;
+      return;
     }
 
-    if (
-      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-      currentEventStep === EVENT_STEPS.SELECT_PLAYER
-    ) {
-      return true;
-    }
-
-    if (
-      pendingResponse.isPending &&
-      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
-    ) {
-      return checkPlayer.id !== player?.id;
-    }
-
-    // Se deben de poner todos los posibles eventos validos
-    if (setEvent.isInEvent) return isPlayerSelectableForSetEvent(checkPlayer);
-
-    return false;
+    cardEventSelectSecret();
   };
 
-  const isSelectableSecret = (secret: GameSecret) => {
-    if (
-      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-      currentEventStep === EVENT_STEPS.SELECT_SECRET
-    ) {
-      return secret.is_revealed;
-    } else if (setEvent.isInEvent) {
-      return isOtherPlayersSecretSelectable(secret);
-    }
-
-    return false;
-  };
-
-  const isOtherPlayersSecretSelectable = (secret: GameSecret) => {
-    if (setEvent.isInEvent)
-      return isOtherPlayerSecretSelectableForSetEvent(secret);
-
-    return false;
-  };
-
-  const isCurrPlayersSecretSelectable = (secret: GameSecret) => {
-    if (setEvent.isInEvent || playerSelectsOneOfHisSecrets.isCurrPlayer)
-      return isCurrPlayerSecretSelectableForSetEvent(secret);
-
-    if (
-      currentEventCard?.name === "AND THEN THERE WAS ONE MORE" &&
-      currentEventStep === "select_secret"
-    ) {
-      return secret.is_revealed;
-    }
-
-    return false;
-  };
-
-  const isTargetPlayerEvent = () => {
-    if (notSoFastEvent.isActivate) return false;
-
-    if (setEvent.isTargetPlayer) return true;
-
-    if (
-      pendingResponse.isPending &&
-      pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS
-    )
-      return true;
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.CARDS_OFF_THE_TABLE ||
-      (currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-        currentEventStep === EVENT_STEPS.SELECT_PLAYER) ||
-      (currentEventCard?.name === GAME_EVENTS.CARD_TRADE &&
-        currentEventStep === EVENT_STEPS.SELECT_PLAYER)
-    )
-      return true;
-
-    return false;
-  };
-
-  const isTargetSecretEvent = () => {
-    if (notSoFastEvent.isActivate) return false;
-
-    if (setEvent.isTargetSecret || playerSelectsOneOfHisSecrets.isCurrPlayer)
-      return true;
-
-    if (
-      currentEventCard?.name === GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE &&
-      currentEventStep === EVENT_STEPS.SELECT_SECRET
-    ) {
-      return true;
-    }
-
-    return false;
-  };
-
-  const isSelectableSet = (set: MatchSet) => {
-    if (
-      currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
-      currentEventStep === EVENT_STEPS.SELECT_SET
-    ) {
-      // No puedes seleccionar tus propios sets
-      if (set.player_id === player?.id) return false;
-
-      // Aquí puedes añadir más lógica si es necesario (ej. no seleccionar sets de HARLEY QUIN)
-      return true;
-    } else if (
-      !setEvent.isInEvent &&
-      !setEvent.isValidSet &&
-      setEvent.canDownTheCardToASet &&
-      setEvent.cards.length === 1 &&
-      setEvent.isSelectingSet
-    ) {
-      return isSetSelectableForSetEvent(set);
-    }
-
-    return false;
-  };
   // -- Valores memoizados --
 
-  const isPlayerTurn = useMemo(() => {
-    if (!match || !player) return false;
-
-    const matchPlayer = players.find((p) => p.id === player.id);
-
-    if (!matchPlayer) return false;
-
-    return match.current_player_order === matchPlayer.order;
-  }, [match, player, players]);
-
   const canTakeCards = useMemo(() => {
-    // El jugador puede tomar cartas si está en su turno.
-    // y su mano no está llena.
-    return !hasTakenCards && !isHandFull && isPlayerTurn;
-  }, [hasTakenCards, isHandFull, isPlayerTurn]);
+    // El jugador puede tomar cartas si está en su turno, su mano no está llena
+    // y no esta en medio de un evento.
+    const currPlayerInEvent =
+      setEvent.isInEvent ||
+      cardEvent.isInEvent ||
+      pendingResponse.isPending ||
+      notSoFastEvent.isActivate;
+
+    return !hasTakenCards && !isHandFull && isPlayerTurn && !currPlayerInEvent;
+  }, [
+    hasTakenCards,
+    isHandFull,
+    isPlayerTurn,
+    setEvent.isInEvent,
+    cardEvent.isInEvent,
+    pendingResponse.isPending,
+    notSoFastEvent.isActivate,
+  ]);
 
   const canDiscardCards = useMemo(() => {
     // El jugador puede descartar cartas si está en su turno.
     return !hasDiscardedCards && isPlayerTurn;
   }, [hasDiscardedCards, isPlayerTurn]);
-
-  const playerSecrets = useMemo(() => {
-    if (!player) return [];
-
-    return secrets.filter((secret) => secret.player_id === player.id);
-  }, [secrets, player]);
-
-  const isInSocialDisgrace = useMemo(() => {
-    return playerSecrets.every((secret) => secret.is_revealed);
-  }, [playerSecrets]);
-
-  const playerSets = useMemo(() => {
-    if (!player) return [];
-
-    return sets.filter((set) => set.player_id === player.id);
-  }, [sets, player]);
-
-  const cardsInDiscardPile = useMemo(() => {
-    return cards
-      .filter((card) => card.is_discarded)
-      .sort((a, b) => {
-        if (a.discarded_at && b.discarded_at) {
-          return b.discarded_at < a.discarded_at ? -1 : 1;
-        } else if (a.discarded_at) {
-          return -1;
-        } else return 1;
-      });
-  }, [cards]);
-
-  const cardsInDraft = useMemo(() => {
-    return cards
-      .filter((card) => card.player_id === null && !card.is_discarded)
-      .slice(0, DRAFT_SIZE);
-  }, [cards]);
-
-  const drawableCards = useMemo(() => {
-    return cards.filter((card) => {
-      // Una carta es tomable si no pertenece a ningún jugador
-      // y no está descartada.
-      return card.player_id === null && !card.is_discarded;
-    });
-  }, [cards]);
 
   const isPlayable = useMemo(() => {
     const selectedCardsArray = Object.values(selectedCards);
@@ -697,6 +380,15 @@ export default function GameContainer() {
       return "Your hand is full.";
     }
 
+    if (
+      setEvent.isInEvent ||
+      cardEvent.isInEvent ||
+      pendingResponse.isPending ||
+      notSoFastEvent.isActivate
+    ) {
+      return "You cannot pick up a card while in the event.";
+    }
+
     return "There was an error taking cards.";
   };
 
@@ -724,8 +416,11 @@ export default function GameContainer() {
     setDiscardModal((prev) => ({ ...prev, isOpen: false }));
   };
 
+  const clearDiscardModal = () => {
+    setDiscardModal({ isOpen: false, isEventDiscard: false });
+  };
+
   const handleEventDiscard = () => {
-    // Se realiza en otro ticket
     setDiscardModal({
       isOpen: true,
       isEventDiscard: true,
@@ -752,11 +447,7 @@ export default function GameContainer() {
         // Esto es relevante para permitirle
         // tomar cartas del draft sin impedir tomar de
         // la pila regular.
-        emptySlots === 1 ||
-        // Tomar una carta del draft
-        // estando en desgracia social cuenta al lìmite
-        // de tomar solo una carta por turno.
-        isInSocialDisgrace
+        emptySlots === 1
       ) {
         setHasTakenCards(true);
       }
@@ -778,10 +469,10 @@ export default function GameContainer() {
 
     if (emptyHandPositions.length === 0) return;
 
-    // En desgracia social, tomamos exactamente una carta.
-    const cardsToTake = isInSocialDisgrace
-      ? 1
-      : Math.min(emptyHandPositions.length, drawableCards.length);
+    const cardsToTake = Math.min(
+      emptyHandPositions.length,
+      drawableCards.length,
+    );
 
     // Tenemos que tomar los índices por detrás
     // de las cartas del draft (las que están en la pila).
@@ -916,14 +607,13 @@ export default function GameContainer() {
       // Reseteamos los estados relacionados con el descarte
       setHasTakenCards(false);
       setHasDiscardedCards(false);
-      setCurrentEventStep(null);
 
+      clearCardEventStep();
       clearSelectedCards();
+      clearSetEvent();
     } catch (error) {
       handleApiError(error, "Failed to finish turn");
     }
-
-    clearSetEvent();
   };
 
   const handlePlayEvent = async () => {
@@ -941,66 +631,7 @@ export default function GameContainer() {
       return;
     }
 
-    const cardEvent = selectedCardsArray[0];
-
-    // 1. Lógica Local: Chequeamos el tipo de evento, para mostrarle al jugador que hacer
-    const nameEvent = cardEvent.name;
-
-    switch (nameEvent) {
-      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
-        setCurrentEventCard(cardEvent);
-        handleEndEvent(cardEvent);
-        break;
-      }
-
-      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
-        setCurrentEventCard(cardEvent);
-        handleEventDiscard();
-        break;
-      }
-
-      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
-        setCurrentEventCard(cardEvent);
-        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
-        break;
-      }
-
-      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
-        setCurrentEventCard(cardEvent);
-        setCurrentEventStep(EVENT_STEPS.SELECT_SECRET);
-        break;
-      }
-
-      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
-        setCurrentEventCard(cardEvent);
-        handleEndEvent(cardEvent);
-        break;
-      }
-
-      case GAME_EVENTS.ANOTHER_VICTIM: {
-        setCurrentEventCard(cardEvent);
-        setCurrentEventStep(EVENT_STEPS.SELECT_SET);
-        break;
-      }
-
-      case GAME_EVENTS.CARD_TRADE: {
-        setCurrentEventCard(cardEvent);
-        setCurrentEventStep(EVENT_STEPS.SELECT_PLAYER);
-        break;
-      }
-
-      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
-        setCurrentEventCard(cardEvent);
-        handleEndEvent(cardEvent);
-        break;
-      }
-
-      case GAME_EVENTS.DEAD_CARD_FOLLY: {
-        setCurrentEventCard(cardEvent);
-        setCurrentEventStep(EVENT_STEPS.SELECT_DIRECTION);
-        break;
-      }
-    }
+    playEvent(selectedCardsArray, handleEventDiscard, handleEndEvent);
   };
 
   const handleEndEvent = async (
@@ -1008,165 +639,23 @@ export default function GameContainer() {
     direction?: "LEFT" | "RIGHT",
   ) => {
     const cardToUse = currentEventCard || eventCard;
-    if (!httpService || !player || !match || !cardToUse) {
+    if (!cardToUse) {
       console.error("Faltan datos necesarios para completar el evento");
       return;
     }
 
-    const nameEvent = cardToUse.name;
-    let eventPayload: EventPayload | undefined;
+    const selectedCardsArr = Object.values(selectedCards);
 
-    switch (nameEvent) {
-      case GAME_EVENTS.LOOK_INTO_THE_ASHES: {
-        // Validamos que haya una carta seleccionada del descarte
-        const selectedDiscardedCardsArray = Object.values(selectedCards);
-
-        if (selectedDiscardedCardsArray.length !== 2) {
-          console.warn("Debe seleccionar exactamente una carta del descarte");
-          return;
-        }
-
-        const selectedDiscardedCard = selectedDiscardedCardsArray[1];
-
-        // Construimos el payload para el evento
-        eventPayload = {
-          target_card_id: selectedDiscardedCard.id,
-        } as LookIntoTheAshesEventPayload;
-
-        // Cerramos el modal
-        setDiscardModal({
-          isOpen: false,
-          isEventDiscard: false,
-        });
-
-        break;
-      }
-
-      case GAME_EVENTS.DELAY_THE_MURDERER_ESCAPE: {
-        const idsInDiscardPile = cardsInDiscardPile.map((card) => card.id);
-        const latestFive = idsInDiscardPile.slice(0, 5);
-
-        eventPayload = {
-          cards_ids: latestFive,
-        } as RegularAndDiscardEventPayload;
-        break;
-      }
-
-      case GAME_EVENTS.CARDS_OFF_THE_TABLE: {
-        if (!selectedTargetPlayer) {
-          console.warn("Debe seleccionar un jugador objetivo");
-          return;
-        }
-
-        eventPayload = {
-          target_player_id: selectedTargetPlayer.id,
-        } as CardsOffTheTableEventPayload;
-
-        setSelectedTargetPlayer(null);
-        setCurrentEventStep(null);
-        break;
-      }
-
-      case GAME_EVENTS.AND_THEN_THERE_WAS_ONE_MORE: {
-        if (!selectedTargetPlayer || !selectedTargetSecret) {
-          console.warn("Debe seleccionar un jugador objetivo y un secreto");
-          return;
-        }
-        eventPayload = {
-          target_secret_id: selectedTargetSecret.id,
-          target_player_id: selectedTargetPlayer.id,
-        } as AndThenThereWasOneMoreEventPayload;
-
-        setSelectedTargetPlayer(null);
-        setSelectedTargetSecret(null);
-        setCurrentEventStep(null);
-        break;
-      }
-
-      case GAME_EVENTS.EARLY_TRAIN_TO_PADDINGTON: {
-        // Saltar las primeras 3 cartas y tomar las siguientes 6
-        const cardsToReveal = drawableCards.slice(3, 9);
-
-        // Construir el payload con los IDs de las 6 cartas
-        eventPayload = {
-          cards_ids: cardsToReveal.map((card) => card.id),
-        } as RegularAndDiscardEventPayload;
-        break;
-      }
-
-      case GAME_EVENTS.ANOTHER_VICTIM: {
-        if (!selectedTargetSet) {
-          console.warn("Set no seleccionado");
-        }
-        eventPayload = {
-          target_set_id: selectedTargetSet?.id,
-        } as AnotherVictimEventPayload;
-        break;
-      }
-
-      case GAME_EVENTS.CARD_TRADE: {
-        if (!selectedTargetPlayer) {
-          toast.error("Player not selected");
-        }
-        eventPayload = {
-          target_player_id: selectedTargetPlayer?.id,
-        } as CardTradeEventPayload;
-        setSelectedTargetPlayer(null);
-        setCurrentEventStep(null);
-        break;
-      }
-
-      case GAME_EVENTS.POINT_YOUR_SUSPICIONS: {
-        eventPayload = {
-          cards_ids: [],
-        } as RegularAndDiscardEventPayload;
-        break;
-      }
-
-      case GAME_EVENTS.DEAD_CARD_FOLLY: {
-        if (!direction) {
-          toast.error("You must select a direction first.");
-          return;
-        }
-        eventPayload = {
-          direction: direction,
-        } as DeadCardFollyEventPayload;
-        setCurrentEventStep(null);
-        break;
-      }
-
-      default:
-        console.warn(`Evento no manejado: ${nameEvent}`);
-        return;
-    }
-    // Llamada a la API
-    try {
-      // Llamada a la API para jugar el evento
-      await httpService.postEvent(
-        match.id,
-        player.id,
-        cardToUse.id,
-        eventPayload,
-      );
-
-      if (nameEvent === GAME_EVENTS.ANOTHER_VICTIM) {
-        // Se establece los valores del setEvent
-        const setId = selectedTargetSet?.id as UUID;
-        playStolenSet(setId);
-
-        // Se limpia el evento Another_victim
-        setSelectedTargetSet(null);
-        setCurrentEventStep(null);
-      } else {
-        // Los otros eventos ya terminaron y no se puede continuar.
-        playerFinishActionTurn();
-      }
-
-      setCurrentEventCard(null);
-      clearSelectedCards();
-    } catch (error) {
-      handleApiError(error, "Error al ejecutar el evento");
-    }
+    await executeCardEventActionToTarget(
+      cardToUse,
+      selectedCardsArr,
+      cardsInDiscardPile,
+      drawableCards,
+      clearDiscardModal,
+      clearSelectedCards,
+      playStolenSet,
+      direction,
+    );
   };
 
   // -- Effects --
@@ -1183,13 +672,11 @@ export default function GameContainer() {
     setEventToggleDisableButtonSelectSet,
   ]);
 
-  const isSelectPlayerButtonEnabled = isTargetPlayerEvent();
-
-  const isSelectSecretButtonEnabled = isTargetSecretEvent();
-
   const isSelectDirectionEvent =
     currentEventCard?.name === GAME_EVENTS.DEAD_CARD_FOLLY &&
     currentEventStep === EVENT_STEPS.SELECT_DIRECTION;
+
+  const target = useMemo(() => getTarget(), [getTarget]);
 
   return (
     <>
@@ -1197,7 +684,7 @@ export default function GameContainer() {
         data-testid="game-container"
         className="h-screen overflow-y-hidden relative bg-[url('/src/assets/background.png')] bg-cover bg-center"
       >
-        <Logs logs={logs} />
+        <Messages match={match} messages={messages} />
 
         {/* Formamos una grilla de 3x3 para posicionar los elementos de la partida. */}
         <div className="h-full w-full grid grid-cols-3 grid-rows-3">
@@ -1223,30 +710,6 @@ export default function GameContainer() {
               />
             }
             onSelectTargetEvent={handleSelectTargetEvent}
-            isSelectablePlayer={isSelectablePlayer}
-            isSelectableSecret={isSelectableSecret}
-            isSelectableSet={isSelectableSet}
-            isEvent={
-              setEvent.isInEvent ||
-              currentEventCard !== null ||
-              setEvent.isSelectingSet ||
-              (pendingResponse.isPending &&
-                pendingResponse.eventType === GAME_EVENTS.POINT_YOUR_SUSPICIONS)
-            }
-            isTargetPlayer={isTargetPlayerEvent()}
-            isTargetSecret={isTargetSecretEvent()}
-            isTargetSet={
-              (currentEventCard?.name === GAME_EVENTS.ANOTHER_VICTIM &&
-                currentEventStep === EVENT_STEPS.SELECT_SET) ||
-              setEvent.isSelectingSet
-            }
-            target={
-              getTargetSetEvent() ||
-              selectedTargetPlayer ||
-              selectedTargetSecret ||
-              selectedTargetSet ||
-              setEvent.set
-            }
           />
 
           <div className="col-start-1 col-span-3 row-start-3 w-full flex items-center justify-around">
@@ -1259,18 +722,14 @@ export default function GameContainer() {
 
               <Secrets
                 secrets={playerSecrets}
-                isSelectableSecret={isCurrPlayersSecretSelectable}
-                isTargetSecret={isTargetSecretEvent()}
                 onSelectTargetEvent={handleSelectTargetEvent}
-                target={getTargetSetEvent() || selectedTargetSecret}
+                target={target}
               />
 
               <Sets
                 sets={playerSets}
                 onSelectTargetEvent={handleSelectTargetEvent}
-                isSelectableSet={isSelectableSet}
-                isTargetSet={setEvent.isSelectingSet}
-                target={setEvent.set}
+                target={target}
               />
             </div>
 
@@ -1309,12 +768,10 @@ export default function GameContainer() {
                 currentEventStep === EVENT_STEPS.SELECT_SET
               }
               isAddingCardToSet={setEvent.isSelectingSet}
-              isSetButtonDisabled={isSetEventButtonDisabled}
+              isSetButtonDisabled={isSetEventPlaySetButtonDisabled}
               isSetEventSelectSetButtonDisabled={
                 isSetEventSelectSetButtonDisabled
               }
-              isSelectionPlayerEvent={isSelectPlayerButtonEnabled}
-              isSelectionSecretEvent={isSelectSecretButtonEnabled}
               isSelectDirectionEvent={isSelectDirectionEvent}
               onSelectDirection={handleSelectDirection}
             />

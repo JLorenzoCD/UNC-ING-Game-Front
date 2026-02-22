@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 
 import type { GameCard } from "@/types/card";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 import { GAME_RULES } from "@/constants/game";
@@ -19,7 +19,7 @@ const HAND_SIZE = GAME_RULES.HAND_SIZE;
 
 export function useHand() {
   const { httpService } = useHttpService();
-  const { cards, match, playerFinishActionTurn } = useGame();
+  const { cards, match, playerFinishActionTurn } = useBasicGame();
   const { player } = usePlayer();
 
   /* -- Estado y referencias --  */

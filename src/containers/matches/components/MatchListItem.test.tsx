@@ -70,6 +70,8 @@ describe("MatchListItem", () => {
     current_player_count: 3,
     owner_id: crypto.randomUUID() as UUID,
     current_player_order: 0,
+    timer_turn: null,
+    is_private: false,
   };
 
   const longNameMatch: MatchWithPlayerCount = {
@@ -81,6 +83,8 @@ describe("MatchListItem", () => {
     status: "WAITING",
     owner_id: crypto.randomUUID() as UUID,
     current_player_order: 0,
+    timer_turn: null,
+    is_private: false,
   };
 
   const mockInvalidMatch: MatchWithPlayerCount = {
@@ -92,6 +96,8 @@ describe("MatchListItem", () => {
     current_player_count: 100,
     owner_id: crypto.randomUUID() as UUID,
     current_player_order: 0,
+    timer_turn: new Date(),
+    is_private: false,
   };
 
   // Configuración para simular la alerta y evitar que aparezca en el test.
@@ -167,6 +173,8 @@ describe("MatchListItem", () => {
       status: "WAITING",
       owner_id: crypto.randomUUID() as UUID,
       current_player_order: 0,
+      timer_turn: null,
+      is_private: false,
     };
 
     render(
@@ -183,6 +191,8 @@ describe("MatchListItem", () => {
       status: "WAITING",
       owner_id: crypto.randomUUID() as UUID,
       current_player_order: 0,
+      timer_turn: null,
+      is_private: false,
     };
 
     render(
@@ -208,7 +218,7 @@ describe("MatchListItem", () => {
 
       await waitFor(() => {
         expect(joinMatch).toHaveBeenCalledTimes(1);
-        expect(joinMatch).toHaveBeenCalledWith(mockPlayerId, mockMatchId);
+        expect(joinMatch).toHaveBeenCalledWith(mockPlayerId, mockMatchId, null);
       });
     });
 

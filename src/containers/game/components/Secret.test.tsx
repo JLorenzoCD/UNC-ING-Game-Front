@@ -9,6 +9,16 @@ import { usePlayer } from "@/contexts/PlayerContext";
 
 import Secret from "./Secret";
 
+const { mockuseLogicGame } = vi.hoisted(() => {
+  const mockuseLogicGame = vi.fn();
+
+  return { mockuseLogicGame };
+});
+
+vi.mock("@/contexts/LogicGameContext", () => ({
+  useLogicGame: mockuseLogicGame,
+}));
+
 vi.mock("../utils/secretClassName", () => ({
   getBoderClass: vi.fn(() => "mock-border-class"),
 }));
@@ -34,7 +44,6 @@ import { getBoderClass } from "../utils/secretClassName";
 
 const mockGetBoderClass = getBoderClass as Mock;
 const mockUsePlayer = usePlayer as Mock;
-const mockIsSelectableSecret = vi.fn();
 
 describe("Secret Component", () => {
   const mockPlayer = { id: crypto.randomUUID(), name: "TestPlayer" };
@@ -64,23 +73,22 @@ describe("Secret Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+
     vi.spyOn(console, "warn").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     mockGetBoderClass.mockClear(); // Limpiar el mock de la función de clase
+
+    mockuseLogicGame.mockReturnValue({
+      isSelectableSecret: () => false,
+      isTargetSecretEvent: () => false,
+    });
   });
 
   describe("Rendering secrets correctly", () => {
     it("should render INNOCENT secret for current player", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(
-        <Secret
-          secret={mockSecrets.innocent}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
-      );
+      render(<Secret secret={mockSecrets.innocent} target={null} />);
 
       const image = screen.getByRole("img", { name: /Secret card: INNOCENT/i });
       expect(image).toBeInTheDocument();
@@ -99,14 +107,7 @@ describe("Secret Component", () => {
         player_id: otherPlayer.id,
       };
 
-      render(
-        <Secret
-          secret={otherPlayerSecret}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
-      );
+      render(<Secret secret={otherPlayerSecret} target={null} />);
 
       const image = screen.getByRole("img", {
         name: /Secret card \(hidden\)/i,
@@ -131,12 +132,7 @@ describe("Secret Component", () => {
       };
 
       const { container } = render(
-        <Secret
-          secret={revealedSecret}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
+        <Secret secret={revealedSecret} target={null} />,
       );
 
       const image = screen.getByRole("img");
@@ -158,12 +154,7 @@ describe("Secret Component", () => {
       };
 
       const { container } = render(
-        <Secret
-          secret={revealedSecret}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
+        <Secret secret={revealedSecret} target={null} />,
       );
 
       const image = screen.getByRole("img", { name: /Secret card: MURDERER/i });
@@ -180,14 +171,7 @@ describe("Secret Component", () => {
     it("should not render when secret prop is null", () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
 
-      render(
-        <Secret
-          secret={null}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
-      );
+      render(<Secret secret={null} target={null} />);
 
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
     });
@@ -197,14 +181,7 @@ describe("Secret Component", () => {
 
       const invalidSecret = { ...mockSecrets.innocent, type: undefined as any };
 
-      render(
-        <Secret
-          secret={invalidSecret}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
-          target={null}
-        />,
-      );
+      render(<Secret secret={invalidSecret} target={null} />);
 
       expect(screen.queryByRole("img")).not.toBeInTheDocument();
       expect(console.warn).toHaveBeenCalledWith(
@@ -221,6 +198,11 @@ describe("Secret Component", () => {
       // 3. El target es NULL (estamos en el paso de selección: isSelectingTarget = true).
       // 4. El secreto ES una opción válida (isSelectableSecret retorna true).
 
+      mockuseLogicGame.mockReturnValue({
+        isSelectableSecret: () => true,
+        isTargetSecretEvent: () => true,
+      });
+
       const targetSecret = {
         ...mockSecrets.other,
         id: "selected-secret-id" as UUID,
@@ -228,17 +210,7 @@ describe("Secret Component", () => {
         is_revealed: false,
       };
 
-      mockUsePlayer.mockReturnValue({ player: mockPlayer });
-      mockIsSelectableSecret.mockReturnValue(true);
-
-      render(
-        <Secret
-          secret={targetSecret}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={true}
-          target={null}
-        />,
-      );
+      render(<Secret secret={targetSecret} target={null} />);
 
       // Argumentos que deben calcularse en Secret.tsx:
       // isSessionPlayer = false, isRevealed = false
@@ -277,13 +249,15 @@ describe("Secret Component", () => {
 
     it("should call onSelectTargetEvent with the secret object when clicked and callback is provided", async () => {
       mockUsePlayer.mockReturnValue({ player: mockPlayer });
+      mockuseLogicGame.mockReturnValue({
+        isSelectableSecret: () => true,
+        isTargetSecretEvent: () => false,
+      });
 
       render(
         <Secret
           secret={secretToSelect}
           onSelectTargetEvent={mockOnSelectTargetEvent}
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={true}
           target={null}
         />,
       );
@@ -303,8 +277,6 @@ describe("Secret Component", () => {
         <Secret
           secret={secretToSelect}
           // onSelectTargetEvent NO se pasa (o se pasa undefined)
-          isSelectableSecret={mockIsSelectableSecret}
-          isTargetSecret={false}
           target={null}
         />,
       );

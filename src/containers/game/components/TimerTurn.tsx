@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -8,7 +8,7 @@ import { GAME_RULES } from "@/constants/game";
 
 import type { GamePlayer } from "@/types/player";
 import type { Match } from "@/types/match";
-import type { MatchLog } from "@/types/log";
+import type { MatchMessage } from "@/types/message";
 
 export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   const defaultColor = "bg-[#535353] border-[#313030]";
@@ -27,17 +27,17 @@ export function getTimerColor(timer: number, isCurrPlayerTurn: boolean) {
   }
 }
 
-export function isTimerExecuted(match: Match, logs: MatchLog[]) {
-  const logsCopy = [...logs];
-  logsCopy.sort((a, b) => {
+export function isTimerExecuted(match: Match, messages: MatchMessage[]) {
+  const messagesCopy = messages.filter((msg) => msg.is_system_msg);
+  messagesCopy.sort((a, b) => {
     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
   });
 
-  if (logsCopy.length === 0) return false;
+  if (messagesCopy.length === 0) return false;
 
-  const lastLog = logsCopy[0];
+  const lastMsg = messagesCopy[0];
 
-  if (lastLog.event_type !== "Turn") return false;
+  if (lastMsg.event_type !== "Turn") return false;
 
   const turnTime = new Date(match.timer_turn as Date);
   turnTime.setSeconds(turnTime.getSeconds() + GAME_RULES.TIME_TURN);
@@ -48,7 +48,7 @@ export function isTimerExecuted(match: Match, logs: MatchLog[]) {
 }
 
 export default function TimerTurn() {
-  const { match, players, logs, hasFinishedAction } = useGame();
+  const { match, players, messages, hasFinishedAction } = useBasicGame();
   const { player } = usePlayer();
   const { httpService } = useHttpService();
 
@@ -70,8 +70,8 @@ export default function TimerTurn() {
       match === null ||
       match.timer_turn === null ||
       match.status.toUpperCase() !== "IN_PROGRESS" ||
-      logs.length === 0 ||
-      !isTimerExecuted(match, logs) ||
+      messages.length === 0 ||
+      !isTimerExecuted(match, messages) ||
       httpService === null
     ) {
       setShouldTimerBeRun(false);
@@ -80,10 +80,10 @@ export default function TimerTurn() {
     setShouldTimerBeRun(true);
 
     const turn_time = new Date(match.timer_turn);
-    const logStartTime = turn_time.getTime();
+    const msgStartTime = turn_time.getTime();
 
-    // Calcular el momento final: logStartTime + 60 segundos (en ms)
-    const endTime = logStartTime + GAME_RULES.TIME_TURN * 1000;
+    // Calcular el momento final: msgStartTime + 60 segundos (en ms)
+    const endTime = msgStartTime + GAME_RULES.TIME_TURN * 1000;
 
     const timerInterval = setInterval(async () => {
       const now = Date.now();
@@ -108,7 +108,7 @@ export default function TimerTurn() {
     }, 1000); // Actualizar cada 1 segundo
 
     return () => clearInterval(timerInterval);
-  }, [match, logs, httpService, currPlayerInTurn]);
+  }, [match, messages, httpService, currPlayerInTurn]);
 
   // Si cambia el match, es porque se cambio de turno o el status paso a "COMPLETE"
   // Si cambio el hasFinishedAction, entonces ya se ejecuto una acción.

@@ -2,7 +2,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-import { useGame } from "@/contexts/GameContext";
+import { useBasicGame } from "@/contexts/BasicGameContext";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useHttpService } from "@/contexts/HttpServiceContext";
 
@@ -80,9 +80,9 @@ const mockMatch: Match = {
   timer_turn: new Date().toISOString() as any,
 };
 
-const baseUseGameMock = {
+const baseuseBasicGameMock = {
   sets: [],
-  logs: [],
+  messages: [],
   secrets: [],
   cards: [],
   match: mockMatch,
@@ -117,8 +117,8 @@ const baseUseGameMock = {
 
 // --- Mocking Hooks ---
 
-vi.mock("@/contexts/GameContext", () => ({
-  useGame: vi.fn(),
+vi.mock("@/contexts/BasicGameContext", () => ({
+  useBasicGame: vi.fn(),
 }));
 
 vi.mock("@/contexts/PlayerContext", () => ({
@@ -151,17 +151,18 @@ beforeEach(() => {
   });
 
   // El match time debe ser dinámico para simular el inicio del turno
-  baseUseGameMock.match = {
+  baseuseBasicGameMock.match = {
     ...mockMatch,
     timer_turn: new Date().toISOString() as any,
   };
 
-  vi.mocked(useGame).mockReturnValue({
-    ...baseUseGameMock,
-    logs: [
+  vi.mocked(useBasicGame).mockReturnValue({
+    ...baseuseBasicGameMock,
+    messages: [
       {
         event_type: "Turn",
         created_at: new Date().toISOString(),
+        is_system_msg: true,
       },
     ] as any,
   });
@@ -202,37 +203,41 @@ describe("Utility Functions", () => {
       NOW.getTime() - MOCK_TIME_TURN * 1000,
     ).toISOString();
 
-    const createLog = (type: string, date: string = NOW.toISOString()) =>
-      ({ event_type: type, created_at: date }) as any;
+    const createMsg = (type: string, date: string = NOW.toISOString()) =>
+      ({ event_type: type, created_at: date, is_system_msg: true }) as any;
 
     const createMatch = (timerTurn: string | null) =>
       ({ timer_turn: timerTurn }) as any;
 
-    it("should return false if there are no logs", () => {
+    it("should return false if there are no messages", () => {
       expect(isTimerExecuted(createMatch(NOW.toISOString()), [])).toBe(false);
     });
 
-    it("should return false if last log is not 'Turn'", () => {
-      const logs = [createLog("Action"), createLog("Draw")];
-      expect(isTimerExecuted(createMatch(NOW.toISOString()), logs)).toBe(false);
+    it("should return false if last msg is not 'Turn'", () => {
+      const messages = [createMsg("Action"), createMsg("Draw")];
+      expect(isTimerExecuted(createMatch(NOW.toISOString()), messages)).toBe(
+        false,
+      );
     });
 
-    it("should return true if last log is 'Turn' and timer_turn is still running (future time)", () => {
-      const logs = [createLog("Turn", NOW.toISOString())];
-      expect(isTimerExecuted(createMatch(NOW.toISOString()), logs)).toBe(true);
+    it("should return true if last msg is 'Turn' and timer_turn is still running (future time)", () => {
+      const messages = [createMsg("Turn", NOW.toISOString())];
+      expect(isTimerExecuted(createMatch(NOW.toISOString()), messages)).toBe(
+        true,
+      );
     });
 
-    it("should return false if last log is 'Turn' but timer_turn has expired (past time)", () => {
-      const logs = [createLog("Turn", NOW.toISOString())];
-      expect(isTimerExecuted(createMatch(PAST_TIME), logs)).toBe(false);
+    it("should return false if last msg is 'Turn' but timer_turn has expired (past time)", () => {
+      const messages = [createMsg("Turn", NOW.toISOString())];
+      expect(isTimerExecuted(createMatch(PAST_TIME), messages)).toBe(false);
     });
   });
 });
 
 describe("TimerTurn Component", () => {
   it("should return null if match is null", () => {
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       match: null,
     });
 
@@ -255,7 +260,7 @@ describe("TimerTurn Component", () => {
     expect(container.firstChild).toBeNull();
 
     act(() => {
-      vi.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(2000);
     });
 
     expect(container.firstChild).not.toBeNull();
@@ -382,8 +387,8 @@ describe("TimerTurn Component", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
 
     // Sucede alguna acción
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       hasFinishedAction: true,
     });
 
@@ -408,18 +413,19 @@ describe("TimerTurn Component", () => {
     expect(screen.getByText("30")).toBeInTheDocument();
 
     // Cambia match
-    vi.mocked(useGame).mockReturnValue({
-      ...baseUseGameMock,
+    vi.mocked(useBasicGame).mockReturnValue({
+      ...baseuseBasicGameMock,
       match: {
         ...mockMatch,
         current_player_order: 2, // New turn
         timer_turn: new Date().toISOString() as any,
       },
       players: [mockCurrGamePlayer, mockOtherGamePlayer],
-      logs: [
+      messages: [
         {
           event_type: "Turn",
           created_at: new Date().toISOString(),
+          is_system_msg: true,
         },
       ] as any,
     });

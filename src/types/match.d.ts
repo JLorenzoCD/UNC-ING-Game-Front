@@ -55,8 +55,11 @@ export interface Match {
 export type MatchCreateInput = Pick<
   Match,
   "name" | "min_players" | "max_players" | "owner_id"
->;
+> & { password: string | undefined };
 
-export type MatchWithPlayerCount = Match & { current_player_count: number };
+export type MatchWithPlayerCount = Match & {
+  current_player_count: number;
+  is_private: boolean;
+};
 
 export type MatchResult = EventMatchCompletedPayload;
